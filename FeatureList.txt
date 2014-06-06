@@ -1,0 +1,86 @@
+
+
+This is the TODO list of features/bugs to fix:
+
+- Dialogs for Accounts and Contacts
+- Search from selected text
+- Add the Search dialog to the Message Log and Error Log
+- Use syntax coloring for the search rather than changing the font format.
+
+- Send multi line text properly
+
+=================
+
+
+[4:41:12 PM] (Channel) Hiro2: http://elidourado.com/blog/bitcoin-arbitration/
+[5:09:16 PM] (Channel) Hiro2: Core PGP Functions
+[5:09:25 PM] (Channel) Hiro2: - Each User with Key
+[5:09:30 PM] (Channel) Hiro2: - Encrypt Messages
+[5:09:34 PM] (Channel) Hiro2: - Decrypt Messages
+[5:09:52 PM] (Channel) Hiro2: - Sign Messages
+[5:10:07 PM] (Channel) Hiro2: - Authenticate Messages
+
+
+===========================================
+http://xmpp.org/rfcs/rfc3921.html#intro-requirements
+
+~<iq type='get' to='^C' id='time_1'><time xmlns='urn:xmpp:time'/></iq>
+
+To get the version of a client:
+~<iq type='get' to='^C'><query xmlns='jabber:iq:version'/></iq>
+~<iq type='get' to='^C' id='0'><query xmlns='jabber:iq:version'/></iq>
+~<iq type='get' to='^C' from='^A'><query xmlns='jabber:iq:version'/></iq>
+
+
+~<iq type='get' to='^C'><query xmlns='jabber:iq:last'></query></iq>
+~<iq type='get' to='^C' id='0'><query xmlns='jabber:iq:last'></query></iq>
+~<iq type='get' to='^c' id='0'><query xmlns='jabber:iq:last'></query></iq>
+
+
+To Query the Roster:
+~<iq type='get'><query xmlns='jabber:iq:roster'/></iq>
+
+To Add a Contact to the Roster:
+~<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^c'></item></query></iq>
+
+If the user wants to request a subscription to the contact's presence information:
+~<presence to='^c' type='subscribe'/>
+~<presence to='^c' type='subscribed'/>
+
+~<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^c' subscription='both'></item></query></iq>
+~<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^c' subscription='from' ask='subscribe'></item></query></iq>
+
+
+To Remove from Roster:
+~<iq id="123" type="set"><query xmlns="jabber:iq:roster"><item jid="^c" subscription="remove"></item></query></iq>
+~<iq type="set"><query xmlns="jabber:iq:roster"><item jid="^c" subscription="remove"></item></query></iq>
+
+=========================
+~<iq type='get' from='^C' to='^s'><ping xmlns='urn:xmpp:ping'/></iq>
+
+=========================
+~<presence xmlns='jabber:client' from='test11@chat.cambrian.org' to='danx@chat.cambrian.org' type='subscribe'/>
+
+~<iq xmlns='jabber:client' to='danx@chat.cambrian.org' type='set'><query xmlns='jabber:iq:roster'><item ask='subscribe' subscription='both' jid='test11@chat.cambrian.org'></item></query></iq>
+
+- Remove data corruption of when saving the comment of an invitation
+
+
+~<message to='^C'><body>m</body><xcp s='abc'>sdfsdf</xcp></message>
+
+/////////////////
+http://www.youtube.com/watch?feature=player_detailpage&v=H_imYEe1FA8 (Gavin & Etherium)
+
+
+[08:42] Jon: https://otr.cypherpunks.ca/Protocol-v3-4.0.0.html
+[08:42] Jon: http://en.wikipedia.org/wiki/Jingle_(protocol)
+[08:42] Jon: https://news.ycombinator.com/item?id=7251461
+[08:42] Jon: https://developers.google.com/talk/libjingle/
+
+
+<iq id="3SGd;R~" type="error" to="danx@chat.cambrian.org/Cambrian" from="dan@jabber.example.com/worker">
+	<error type="cancel">
+		<remote-server-not-found xmlns="urn:ietf:params:xml:ns:xmpp-stanzas"/>
+		<text xmlns="urn:ietf:params:xml:ns:xmpp-stanzas">Server-to-server connection failed: Connecting failed: closed</text>
+	</error>
+</iq>
