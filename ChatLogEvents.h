@@ -28,7 +28,7 @@
 class CVaultEvents // (vault)
 {
 public:
-	ITreeItemChatLogEvents * m_pParent;				// Parent of the vault
+	ITreeItemChatLogEvents * m_pParent;				// Parent of the vault which is either a contact or a group
 	CArrayPtrEvents m_arraypaEvents;				// Events which belongs to the current vault (file). This array is sorted in chronological order.
 private:
 	IEvent * m_pEventLastSaved;						// Pointer to the last event saved to disk.  If this pointer is NULL, it means the vault was modified and must be saved to disk.  This pointer is the equivalent of the 'dirty' flag.
@@ -105,7 +105,7 @@ public:
 	CChatConfiguration * PGetConfiguration() const;
 
 	CVaultEvents * Vault_PGet_NZ();
-	void Vault_AddEventToVault(PA_CHILD IEvent * paEvent);
+	void Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD IEvent * paEvent);
 	void Vault_SetNotModified();
 	void Vault_SetModified();
 	IEvent * Vault_PFindEventByID(TIMESTAMP tsEventID) CONST_MCC;

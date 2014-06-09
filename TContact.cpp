@@ -22,6 +22,7 @@ TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	m_uFlagsContact = FC_kfContactNeedsInvitation | FC_kfNoCambrianProtocol;	// Until proven otherwise, any new contact needs an invitation and is assumed to not understand the Cambrian Protocol <xcp>
 	m_uFlagsContactSerialized = 0;
 	m_plistAliases = NULL;
+	m_cVersionXCP = 0;
 	}
 
 TContact::~TContact()
@@ -49,10 +50,7 @@ ITreeItemChatLogEvents::XmppUploadFile(PSZUC pszFileUpload)
 	Assert(m_pawLayoutChatLog != NULL);
 	if (pszFileUpload == NULL || pszFileUpload[0] == '\0')
 		return;
-	CEventFileSent * pEvent = new CEventFileSent(this, pszFileUpload);
-	Vault_AddEventToVault(PA_CHILD pEvent);
-	if (m_pawLayoutChatLog != NULL)
-		m_pawLayoutChatLog->ChatLog_EventAppend(pEvent);
+	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventFileSent(pszFileUpload));
 	}
 
 //	Upload multiple files.
@@ -594,10 +592,7 @@ TContact::XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence)
 void
 TContact::Xmpp_Ping()
 	{
-	CEventPing * pEvent = new CEventPing(this);
-	Vault_AddEventToVault(PA_CHILD pEvent);
-	if (m_pawLayoutChatLog != NULL)
-		m_pawLayoutChatLog->ChatLog_EventAppend(pEvent);
+	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventPing);
 	}
 
 

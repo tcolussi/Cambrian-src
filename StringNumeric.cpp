@@ -176,6 +176,7 @@ CheckTail:
 INT_P
 NStringToNumber_ZZR_ML(PSZUC pszString)
 	{
+	Assert(pszString != NULL);
 	SStringToNumber stn;
 	stn.uFlags = STN_mskzDecimalBase;
 	stn.pszuSrc = pszString;
@@ -189,6 +190,7 @@ NStringToNumber_ZZR_ML(PSZUC pszString)
 L64
 LStringToNumber_ZZR_ML(PSZUC pszString)
 	{
+	Assert(pszString != NULL);
 	BOOL fIsNegative = FALSE;
 	if (*pszString == '-')
 		{

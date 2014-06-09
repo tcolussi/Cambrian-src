@@ -33,7 +33,7 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 			{
 			if (oXmlTreeEvents.FCompareTagName(c_szE) || oXmlTreeEvents.FCompareTagName("Events"))
 				{
-				m_arraypaEvents.EventsUnserializeFromDisk(oXmlTreeEvents.m_pElementsList, m_pParent);
+				m_arraypaEvents.EventsUnserializeFromDisk(IN oXmlTreeEvents.m_pElementsList, m_pParent);
 				// TODO: We need to check if this is the first vault in the chain.  So far, there is always only one, however this code will have to be revised when chaining vaults.
 				// Update the timestamps so they reflect actual messages in the Chat Log.
 				IEvent * pEventLastReceived = NULL;
@@ -78,7 +78,7 @@ CVaultEvents::WriteEventsToDiskIfModified()
 	if (pEventLastSaved != m_pEventLastSaved)
 		{
 		int cEvents = m_arraypaEvents.GetSize();
-		CBin binXmlEvents;
+		CBinXcpStanzaTypeInfo binXmlEvents;
 		binXmlEvents.PvSizeAlloc(100 + 64 * cEvents);	// Pre-allocate about 64 bytes per event.  This estimate will reduce the number of memory re-allocations.
 		binXmlEvents.BinAppendTextSzv_VE("<Events v='1' c='$i'>\n", cEvents);
 		m_arraypaEvents.EventsSerializeForDisk(INOUT &binXmlEvents);
@@ -168,135 +168,6 @@ ITreeItemChatLog::_FSetNickname(PSZUC pszBegin, PCHUC pchCopyUntil) CONST_MODIFI
 		}
 	return TRUE;
 	}
-
-#if 0
-const char c_szaEvents[] = "Events";
-
-void
-ITreeItemChatLogEvents::Events_Serialize(OUT CBin * pbinXmlChatLog)
-	{
-	Assert(pbinXmlChatLog != NULL);
-	pbinXmlChatLog->PvSizeAlloc(100 + 64 * m_arraypaEventsChatLog.GetSize());	// Pre-allocate about 64 bytes per event.  This estimate will reduce the number of memory re-allocations.
-	pbinXmlChatLog->BinAppendTextSzv_VE("<$s $s='1'>\n", c_szaEvents, c_szaVersion);
-	m_arraypaEventsChatLog.SerializeEvents(INOUT pbinXmlChatLog);
-	pbinXmlChatLog->BinAppendTextSzv_VE("</$s>", c_szaEvents);
-	} // Events_Serialize()
-
-void
-ITreeItemChatLogEvents::Events_Unserialize(const CXmlNode * pXmlNodeRoot)
-	{
-	Assert(pXmlNodeRoot != NULL);
-	if (pXmlNodeRoot->FCompareTagName(c_szaEvents))
-		{
-		m_arraypaEventsChatLog.UnserializeEvents(pXmlNodeRoot->m_pElementsList, this);
-		}
-	else
-		{
-		// Old legacy code to read the history from previous version (this code will be eventually deleted).
-		// To keep it simple, just import the messages sent and received.  Nothing else.
-		while (pXmlNodeRoot != NULL)
-			{
-			#define eMessageType_Chat	0
-			if (pXmlNodeRoot->UFindAttributeValueDecimal_ZZR("mt") == eMessageType_Chat)
-				{
-				const TIMESTAMP tsMessage = QDateTime::fromString((PSZAC)pXmlNodeRoot->PszuFindAttributeValue("d"), Qt::ISODate).toMSecsSinceEpoch();
-				IEventMessageText * pEventMessage;
-				if (pXmlNodeRoot->PFindAttribute("f") != NULL)
-					pEventMessage = new CEventMessageTextReceived(this, IN &tsMessage);
-				else
-					pEventMessage = new	CEventMessageTextSent(this, IN &tsMessage);
-				pXmlNodeRoot->UpdateAttributeValueCStr('h', OUT_F_UNCH &pEventMessage->m_strMessage);
-				if (!pEventMessage->m_strMessage.FIsEmptyString())
-					pEventMessage->m_uFlagsMessage |= IEventMessageText::FM_kfMessageHtml;
-				else
-					pXmlNodeRoot->UpdateAttributeValueCStr('t', OUT_F_UNCH &pEventMessage->m_strMessage);
-				Assert(pEventMessage->m_tsOther == d_tsOther_ezEventCompleted);	// All events from the old message file format 'completed'
-				m_arraypaEventsChatLog.Add(PA_CHILD pEventMessage);
-				} // if
-			pXmlNodeRoot = pXmlNodeRoot->m_pNextSibling;		// Get the next message
-			} // while
-		} // if...else
-
-	// This is a temporary fix until the invitation process is revised
-	if (EGetRuntimeClass() == RTI(TContact))
-		{
-		TContact * pContact = (TContact *)this;
-		if (pContact->m_uFlagsContact & TContact::FC_kfContactNeedsInvitation)
-			{
-			// Apparently we need to invite the contact, however before showing the invitation, search in the history if there has been any message received
-			IEvent ** ppEventStop;
-			IEvent ** ppEvent = pContact->m_arraypaEventsChatLog.PrgpGetEventsStop(OUT &ppEventStop);
-			while (ppEvent != ppEventStop)
-				{
-				IEvent * pEvent = *ppEvent++;
-				if (pEvent->EGetEventType() == eEventType_MessageReceived)
-					{
-					pContact->m_uFlagsContact &= ~TContact::FC_kfContactNeedsInvitation;
-					pContact->TreeItemContact_UpdateIcon();	// Update the icon to remove the "invitation"
-					break;
-					}
-				}
-			}
-		} // if
-	} // Events_Unserialize()
-
-
-// Check if there are any event newer than the time the Chat Log was last saved to disk.
-BOOL
-ITreeItemChatLogEvents::Events_FNewEventsSinceLastSave() const
-	{
-	Assert(m_arraypaEventsChatLog.FEventsSortedByIDs());
-	IEvent * pEventLast = m_arraypaEventsChatLog.PGetEventLast_YZ();
-	if (pEventLast != NULL)
-		return (pEventLast->m_tsEventID > m_tsLastSavedToDisk);
-	return FALSE;
-	}
-
-//	Update m_tsLastSavedToDisk to the latest timestamp
-void
-ITreeItemChatLogEvents::Events_FileSuccessfullySavedToDisk()
-	{
-	Assert(m_arraypaEventsChatLog.FEventsSortedByIDs());
-	IEvent * pEventLast = m_arraypaEventsChatLog.PGetEventLast_YZ();
-	if (pEventLast != NULL)
-		{
-		Assert(m_tsLastSavedToDisk < pEventLast->m_tsEventID);
-		m_tsLastSavedToDisk = pEventLast->m_tsEventID;
-		TRACE1("Events_FileSuccessfullySavedToDisk() for $s", TreeItem_PszGetNameDisplay());
-		}
-	}
-#endif
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-void
-ITreeItemChatLogEvents::Events_ReadFromDisk(const SHashSha1 * pHashFileName)
-	{
-	Assert(m_pawLayout != NULL);
-	CWaitCursor wait;
-	CXmlTree oXmlTreeEvents;
-	if (Configuration_EFileRead(IN pHashFileName, OUT &oXmlTreeEvents.m_binXmlFileData) == errSuccess)
-		{
-		if (oXmlTreeEvents.EParseFileDataToXmlNodes_ML() == errSuccess)
-			{
-			Events_Unserialize(IN &oXmlTreeEvents);
-			m_pawLayout->ChatLog_EventsAppend(m_arraypaEventsChatLog);
-			}
-		}
-	}
-
-void
-ITreeItemChatLogEvents::Events_SaveToDisk(const SHashSha1 * pHashFileName)
-	{
-	if (Events_FNewEventsSinceLastSave())
-		{
-		CBin binXmlEvents;
-		Events_Serialize(IOUT &binXmlEvents);
-		if (Configuration_EFileWrite_ML(IN pHashFileName, IN &binXmlEvents) == errSuccess)
-			Events_FileSuccessfullySavedToDisk();
-		}
-	}
-*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ITreeItemChatLogEvents::ITreeItemChatLogEvents(TAccountXmpp * pAccount)
@@ -417,10 +288,12 @@ ITreeItemChatLogEvents::Vault_PGet_NZ()
 	}
 
 void
-ITreeItemChatLogEvents::Vault_AddEventToVault(PA_CHILD IEvent * paEvent)
+ITreeItemChatLogEvents::Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD IEvent * paEvent)
 	{
 	AssertValidEvent(paEvent);
-	Vault_PGet_NZ()->m_arraypaEvents.Add(PA_CHILD paEvent);
+	paEvent->EventAddToVault(PA_PARENT Vault_PGet_NZ());
+	if (m_pawLayoutChatLog != NULL)
+		m_pawLayoutChatLog->ChatLog_EventAppend(IN paEvent);
 	}
 
 void

@@ -118,20 +118,20 @@ CSocketXmpp::Socket_WriteData(PCVOID pvData, int cbData)
 //		^C	- Append the full JID of the contact
 //		^s	- Append the name of the server of the socket
 void
-CSocketXmpp::Socket_WriteXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml)
+CBinXcpStanzaType::BinInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml)
 	{
 	Assert(pContactOrGroup->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == pContactOrGroup);
 	Assert(pszMessageXml != NULL);
 	Assert(pszMessageXml[0] == d_chXmlPrefixSocketRawData && pszMessageXml[1] == '<');
+	Empty();
 
 	// We have a "~<" for a raw message, so reformat it
-	g_strScratchBufferSocket.Empty();
 	while (TRUE)
 		{
 		UINT ch = *++pszMessageXml;
 		if (ch != '^')
 			{
-			g_strScratchBufferSocket.BinAppendByte(ch);
+			BinAppendByte(ch);
 			if (ch == '\0')
 				break;
 			continue;
@@ -141,32 +141,30 @@ CSocketXmpp::Socket_WriteXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC 
 			{
 		case 'a':
 		case 'A':
-			g_strScratchBufferSocket.BinAppendXmlTextStr((chTemplate == 'a') ? pContactOrGroup->m_pAccount->m_strJID : pContactOrGroup->m_pAccount->m_strJIDwithResource);
+			BinAppendXmlTextStr((chTemplate == 'a') ? pContactOrGroup->m_pAccount->m_strJID : pContactOrGroup->m_pAccount->m_strJIDwithResource);
 			break;
 		case 'c':
 		case 'C':
 			if (pContactOrGroup->EGetRuntimeClass() == RTI(TContact))
 				{
-				g_strScratchBufferSocket.BinAppendXmlTextStr(((TContact *)pContactOrGroup)->m_strJidBare);
+				BinAppendXmlTextStr(((TContact *)pContactOrGroup)->m_strJidBare);
 				if (chTemplate == 'C')
-					g_strScratchBufferSocket.BinAppendXmlTextStr(((TContact *)pContactOrGroup)->m_strRessource);
+					BinAppendXmlTextStr(((TContact *)pContactOrGroup)->m_strRessource);
 				}
 			break;
 		case 's':
-			g_strScratchBufferSocket.BinAppendXmlTextStr(m_pAccount->m_strServerName);
+			BinAppendXmlTextStr(pContactOrGroup->m_pAccount->m_strServerName);
 			break;
 		default:
 			Assert(FALSE && "Invalid template");
-			g_strScratchBufferSocket.BinAppendByte('^');
+			BinAppendByte('^');
 		case '^':
-			g_strScratchBufferSocket.BinAppendByte(ch);
+			BinAppendByte(ch);
 			if (ch == '\0')
-				goto Done;
+				return;	// We are done (we include the null-terminator so we also have a string)
 			} // switch
 		} // while
-	Done:
-	Socket_WriteBin(g_strScratchBufferSocket);
-	} // Socket_WriteXmlRaw()
+	} // BinInitStanzaWithXmlRaw()
 
 void
 CSocketXmpp::Socket_WriteXmlNodeStanza(const CXmlNode * pXmlNodeStanza)
@@ -246,7 +244,7 @@ void
 CSocketXmpp::Socket_WriteXmlPresence()
 	{
 	Assert(m_pAccount != NULL);
-	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><xcp/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
+	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><" d_szCambrianProtocol_xcp " v='1'/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
 	}
 
 void
@@ -752,6 +750,7 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingEventID()
 	if (m_pXmlNodeStanzaCurrent_YZ == NULL)
 		return FALSE;		// Just in case, otherwise the application will crash
 	TIMESTAMP tsEventID = m_pXmlNodeStanzaCurrent_YZ->LFindAttributeValueIdTimestamp_ZZR();
+	/*
 	if (tsEventID != 0)
 		{
 		// Try to find which task the stanza belongs to
@@ -767,6 +766,7 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingEventID()
 			pTask = (ITask *)pTask->pNext;
 			} // while
 		} // if
+	*/
 	return FALSE;
 	} // FStanzaProcessedByTaskMatchingEventID()
 
@@ -776,6 +776,7 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingDownloadSID(PSZAC pszaVerbContext)
 	Assert(pszaVerbContext != NULL);
 	Assert(m_pXmlNodeStanzaCurrent_YZ != NULL);
 	const CXmlNode * pXmlNodeVerb = m_pXmlNodeStanzaCurrent_YZ->PFindElement(pszaVerbContext);
+	/*
 	if (pXmlNodeVerb != NULL)
 		{
 		CTaskFileDownload * pTaskDownload = m_pAccount->m_arraypTasksDownloading.PFindTaskMatchingSessionIdentifier(pXmlNodeVerb->PszFindAttributeValueSid_NZ());
@@ -786,6 +787,7 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingDownloadSID(PSZAC pszaVerbContext)
 			}
 		MessageLog_AppendTextFormatSev(eSeverityWarning, "Ignoring element <$s> from stanza because of missing/invalid Session Identifier '$s'.\n", pszaVerbContext, pXmlNodeVerb->PszFindAttributeValueSid_NZ());
 		}
+	*/
 	return FALSE;
 	}
 
@@ -1250,14 +1252,26 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 	CXmlNode * pXmlNodeXCP = m_pXmlNodeStanzaCurrent_YZ->PFindElement(c_sza_xcp);
 	if (pXmlNodeXCP != NULL)
 		{
+		TContact * pContact = m_pAccount->Contacts_PFindContactByJID(IN m_pXmlNodeStanzaCurrent_YZ->PszFindAttributeValueFrom_NZ(), TAccountXmpp::eFindContactCreate);	// Find the contact matching the the stanza
 		if (pXmlNodeXCP->m_pszuTagValue != NULL)
 			{
-			TContact * pContact = m_pAccount->Contacts_PFindContactByJID(IN m_pXmlNodeStanzaCurrent_YZ->PszFindAttributeValueFrom_NZ(), TAccountXmpp::eFindContactCreate);	// Find the contact matching the the stanza
 			if (pContact != NULL)
 				pContact->XmppXcp_ProcessStanza(pXmlNodeXCP);
 			else
 				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "XMPP Stanza contains an invalid contact:\n^N", m_pXmlNodeStanzaCurrent_YZ);	// This happens when the stanza is incomplete and the JID is not adequate to create a new contact
 			return;
+			}
+		const CXmlNode * pXmlAttributeVersion = pXmlNodeXCP->PFindAttribute('v');
+		if (pXmlAttributeVersion != NULL)
+			{
+			// Fetch the XCP version
+			if (pContact != NULL)
+				{
+				pContact->m_cVersionXCP = NStringToNumber_ZZR_ML(pXmlAttributeVersion->m_pszuTagValue);
+				MessageLog_AppendTextFormatSev(eSeverityComment, "Contact ^j is supporting XCP version $i\n", pContact, pContact->m_cVersionXCP);
+				}
+			//else
+			//	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "No contact for stanza: ^N", m_pXmlNodeStanzaCurrent_YZ);
 			}
 		}
 

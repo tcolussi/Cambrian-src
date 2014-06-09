@@ -53,7 +53,7 @@ public:
 	CStr m_strPassword;		// Password for the XMPP account.  This password will be hashed with the username during XMPP authentication.
 	CArrayPtrContacts m_arraypaContacts;	// Contacts related to the XMPP account.
 	CArrayPtrGroups m_arraypaGroups;
-	CArrayPtrTasksDownloading m_arraypTasksDownloading;
+//	CArrayPtrTasksDownloading m_arraypTasksDownloading;
 	CArrayPtrContacts m_arraypContactsComposing;		// All contacts currently composing (this list is important for optimization)
 	CArrayPtrEvents m_arraypEventsUnsent;				// All events which have never been sent.  As soon as the socket is ready, those events will be dispatched.
 protected:

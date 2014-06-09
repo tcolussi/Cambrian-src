@@ -1388,7 +1388,10 @@ void OTableRow::AddAmount_mBTC(AMOUNT amtSatoshis)
 
 void OTableRow::AddInt(int nValue)
 	{
-	AddData(QString::number(nValue));
+	if (nValue != 0)
+		AddData(QString::number(nValue));
+	else
+		AddData(c_sEmpty);
 	}
 void OTableRow::AddData_VEZ(PSZAC pszData, ...)
 	{

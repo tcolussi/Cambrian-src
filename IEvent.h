@@ -48,10 +48,8 @@ enum EEventClass
 	eEventClass_eMessageTextSent					= _USZU1('I'),
 	eEventClass_eMessageTextReceived				= _USZU1('i'),
 	eEventClass_eMessageTextReceived_class			= eEventClass_eMessageTextReceived | eEventClass_kfReceivedByRemoteClient,
-	eEventClass_eMessageTextReceivedToGroup			= _USZU2(_g_, 't'),
-	eEventClass_eMessageTextReceivedToGroup_class	= eEventClass_eMessageTextReceivedToGroup | eEventClass_kfReceivedByRemoteClient,
 	eEventClass_eMessageXmlRaw						= _USZU1('~'),	// Send raw XML directly to the server (this message is never serialized in any way
-	eEventClass_eMessageXmlRaw_class				= eEventClass_eMessageXmlRaw | eEventClass_mfNeverSerialize,	// The raw XML is never 'serialized' as part of the Cambrian Protocol because it is sent directly to the server unencrypted.
+	eEventClass_eMessageXmlRaw_class				= eEventClass_eMessageXmlRaw | eEventClass_kfNeverSerializeToDisk,	// The raw XML is never 'serialized' as part of the Cambrian Protocol because it is sent directly to the server unencrypted.
 
 	eEventClassLegacy_eFileSent						= _USZU1('F'),
 	eEventClassLegacy_eFileReceived					= _USZU1('f'),	// Basic compatibility with old file format so
@@ -59,11 +57,11 @@ enum EEventClass
 	eEventClass_eFileSent							= _USZU2('F', 'D'),
 	eEventClass_eFileReceived						= _USZU2('f', 'd'),
 	eEventClass_eFileReceived_class					= eEventClass_eFileReceived | eEventClass_kfReceivedByRemoteClient,
-	eEventClass_eFileReceivedToGroup				= _USZU2(_g_, 'f'),
-	eEventClass_eFileReceivedToGroup_class			= eEventClass_eFileReceivedToGroup | eEventClass_kfReceivedByRemoteClient,
 
 	eEventClass_ePing								= _USZU1('P'),	// There is no 'pong' event as the remote client direcly replies to the ping, without allocating any event.
 	eEventClass_ePing_class							= eEventClass_ePing | eEventClass_kfNeverSerializeToDisk,
+		#define d_chXCPa_PingTime								't'
+		#define d_szXCPa_PingTime_t								" t='$t'"
 
 	/*
 	eEventClass_eGroupEventReceived					= _USZU1('g'),	// ALL EVENTS received for a group must begin with this letter.  This way, the method TContact::Xcp_ProcessStanzasAndUnserializeEvents() will know it is a group message and assign the sender
@@ -97,8 +95,7 @@ enum EStanzaType
 	{
 	eStanzaType_zInformation,		// The stanza is sent directly to the remote client, or it is ignored if the remote client is unavailable
 	eStanzaType_eMessage,			// The stanza is cached on the XMPP server if the remote client is unavailable to receive it
-	eStanzaType_eBroadcast,			// The stanza is broadcasted by the server to every contact on the roster
-	eStanzaType_eIgnore,			// The content of CBinXcpStanzaType should be ignored, as the XML data has already been sent (this is no longer needed!!!)
+	eStanzaType_eBroadcast			// The stanza is broadcasted by the server to every contact on the roster
 	};
 
 //	Object to store information necessary to send an XCP stanza.
@@ -111,14 +108,13 @@ public:
 protected:
 	CBinXcpStanzaType(EStanzaType eStanzaType);
 public:
-	void SetStanzaTypeToIgnore() { m_eStanzaType = eStanzaType_eIgnore; }
-
-	void BinInitStanzaTypeWithGroupSelector(TGroup * pGroup);
+	inline BOOL FSerializingEventToDisk() const { return (m_pContact == NULL); }
+	void BinInitStanzaWithGroupSelector(TGroup * pGroup);
+	void BinInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml);
+	void XmppWriteStanzaToSocket();
+	void XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE(PSZAC pszFmtTemplate, ...);
 	void XcpSendStanzaToContact(TContact * pContact) const;
 	void XcpSendStanza() const;
-
-public:
-	static void S_XcpSendStanzaToContact_VE(TContact * pContact, PSZAC pszFmtTemplate, ...);
 };
 
 class CBinXcpStanzaTypeInfo : public CBinXcpStanzaType
@@ -189,19 +185,8 @@ CHS ChGetCambrianActionFromUrl(PSZUC pszUrl);
 class IEvent	// (event)
 {
 public:
-	union
-		{
-		ITreeItemChatLogEvents * pTreeItem;	// Generic pointer of the parent owner.
-		TContact * pContact;				// For convenience when casting to a contact
-		TGroup * pGroup;					// For convenience when casting to a group
-		} mu_parentowner;	// Parent where the event belongs to.  Typically the event is held (allocated) in ITreeItemChatLogEvents::m_arraypaEventsChatLog, however it may be otherwise.
-	union
-		{
-		ITask * paTask;		// Generic pointer to the task (if any)
-		CTaskFileUpload * paTaskFileUpload;
-		CTaskFileDownload * paTaskFileDownload;
-		CTaskPing * paTaskPing;
-		} mu_task;
+	CVaultEvents * m_pVaultParent_NZ;		// Pointer of the vault holding the event
+	TContact * m_pContactGroupSender_YZ;	// Pointer to the contact who sent the group event.  If this pointer is NULL, it means the event is not part of group conversation.
 	TIMESTAMP m_tsEventID;		// Timestamp to identify the event.  This field is initialized with Timestamp_GetCurrentDateTime()
 	TIMESTAMP m_tsOther;		// Other timestamp related to the event.  Typically this timestamp is the time when the event completed, however it may be interpreted as the time when the event started, such as the time the remote contact typed the message.  This timestame is useful to determine how long it took for the event/task to complete.
 	enum
@@ -214,16 +199,18 @@ public:
 	mutable UINT m_uFlagsEvent;				// Flags related to the event (not serialized)
 
 public:
-	IEvent(ITreeItemChatLogEvents * pTreeItemParentOwner, const TIMESTAMP * ptsEventID);
+	IEvent(const TIMESTAMP * ptsEventID = NULL);
 	virtual ~IEvent();
+	void EventAddToVault(PA_PARENT CVaultEvents * pVaultParent);
+	void EventAddToVault(PA_PARENT TContact * pContactParent);
 
 	virtual EEventClass EGetEventClass() const  = 0;
 	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
-	virtual void XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const;
+	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	void XmlSerializeAttributeContactIdentifierOfGroupSender(IOUT CBin * pbinXml);
-	void XmlSerializeForDisk(IOUT CBin * pbinXmlDisk);
-	void XmlSerializeForXCP(IOUT CBin * pbinXcpStanza, const TContact * pContactToSerializeFor);
+	void XmlSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlDisk);
+	void XmlSerializeForXCP(INOUT CBinXcpStanzaType * pbinXcpStanza);
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData);
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData);
 	void XcpRequesExtraData();
@@ -232,13 +219,8 @@ public:
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
-	virtual TContact ** PpGetContactGroupSender();
-	TContact * PGetContactSender();
 
-	CVaultEvents * PGetVault_NZ() const;
-	void TimestampOther_UpdateAsEventSentOnce();
 	void TimestampOther_UpdateAsEventCompletedNow();
-	void TimestampOther_UpdateAsMessageWrittenTime(const CXmlNode * pXmlNodeMessageStanza);
 	void Event_WriteToSocketIfNeverSent(CSocketXmpp * pSocket);
 	BOOL Event_FIsEventBelongsToGroup() const;
 	BOOL Event_FIsEventTypeSent() const;
@@ -246,12 +228,15 @@ public:
 	void Event_SetCompleted(QTextEdit * pwEditChatLog);
 	BOOL Event_FHasCompleted() const;
 	inline void Event_SetFlagOutOfSync() { m_uFlagsEvent |= FE_kfEventOutOfSync; }
-	inline void event_SetFlagErrorProtocol() { m_uFlagsEvent |= FE_kfEventErrorProtocol; }
+	inline void Event_SetFlagErrorProtocol() { m_uFlagsEvent |= FE_kfEventErrorProtocol; }
 
 	QTextBlock ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const;
 	QTextBlock ChatLog_GetTextBlockRelatedToWidget(QTextEdit * pwEditChatLog) const;
 	void ChatLog_UpdateEventWithinWidget(QTextEdit * pwEditChatLog);
-	TAccountXmpp * PGetAccount() const;
+	const QBrush & ChatLog_OGetBrushForEvent() const;
+	PSZUC ChatLog_PszGetNickNameOfContact() const;
+	ITreeItemChatLogEvents * PGetContactOrGroup_NZ() const;
+	TAccountXmpp * PGetAccount_NZ() const;
 	CSocketXmpp * PGetSocket_YZ() const;
 	void Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...);
 	void Socket_WriteXmlIqError_VE_Gso(PSZAC pszErrorType, PSZUC pszErrorID, PSZAC pszFmtTemplate, ...);
@@ -268,8 +253,8 @@ protected:
 	void _TaskDestroy();
 
 public:
-	static EEventClass S_EGetEventClassFromXmlStanzaXCP(IN const CXmlNode * pXmlNodeEventsStanza, INOUT TContact * pContact, INOUT ITreeItemChatLogEvents * pChatLogEvents, IOUT CBin * pbinXmlStanzaReply);
-	static IEvent * S_PaAllocateEvent_YZ(EEventClass eEventClass, ITreeItemChatLogEvents * pTreeItemParentOwner, const TIMESTAMP * ptsEventID);
+	static EEventClass S_EGetEventClassFromXmlStanzaXCP(IN const CXmlNode * pXmlNodeEventsStanza, INOUT TContact * pContact, INOUT ITreeItemChatLogEvents * pChatLogEvents, INOUT CBinXcpStanzaType * pbinXmlStanzaReply);
+	static IEvent * S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEventID);
 	static int S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort = d_zNA);
 }; // IEvent
 
@@ -302,8 +287,8 @@ public:
 		};
 	UINT m_uFlagsMessage;		// Flags related to the message, such as HTML and formatting.
 public:
-	IEventMessageText(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsEventID);
-	virtual void XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const;
+	IEventMessageText(const TIMESTAMP * ptsEventID);
+	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	void _BinHtmlInitWithTimeAndMessage(OUT CBin * pbinTextHtml) CONST_VIRTUAL;
 }; // IEventMessageText
@@ -311,50 +296,39 @@ public:
 class CEventMessageXmlRawSent : public IEventMessageText	// This class is mostly for debugging by sending raw XML data directly to the socket
 {
 public:
-	CEventMessageXmlRawSent(ITreeItemChatLogEvents * pContact, const CStr & strMessage);
+	CEventMessageXmlRawSent(const CStr & strMessage);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eMessageXmlRaw_class; }
+	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
 
 class CEventMessageTextSent : public IEventMessageText
 {
 public:
-	CEventMessageTextSent(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsEventID);
-	CEventMessageTextSent(ITreeItemChatLogEvents * pContactOrGroup, const CStr & strMessageText);
+	static const EEventClass c_eEventClass = eEventClass_eMessageTextSent;
+public:
+	CEventMessageTextSent(const TIMESTAMP * ptsEventID);
+	CEventMessageTextSent(const CStr & strMessageText);
 	virtual ~CEventMessageTextSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	void MessageDeliveredConfirmed();
 	void MessageResendUpdate(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate);
-
-	static const EEventClass c_eEventClass = eEventClass_eMessageTextSent;
 };
 
 class CEventMessageTextReceived : public IEventMessageText
 {
 public:
-	CEventMessageTextReceived(ITreeItemChatLogEvents * pContact, const TIMESTAMP * ptsEventID);
+	static const EEventClass c_eEventClass = eEventClass_eMessageTextReceived_class;
+public:
+	CEventMessageTextReceived(const TIMESTAMP * ptsEventID);
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return CEventMessageTextSent::c_eEventClass; }
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 	void MessageUpdated(PSZUC pszMessageUpdated, INOUT WChatLog * pwChatLog);
 
-	static const EEventClass c_eEventClass = eEventClass_eMessageTextReceived_class;
-};
-
-class CEventMessageTextReceivedToGroup : public CEventMessageTextReceived
-{
-protected:
-	TContact * m_pContactGroupSender;	// Contact who sent the message to the group
-public:
-	CEventMessageTextReceivedToGroup(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsEventID) : CEventMessageTextReceived(pContactOrGroup, ptsEventID) { m_pContactGroupSender = NULL; }
-	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
-	virtual TContact ** PpGetContactGroupSender() { return &m_pContactGroupSender; }
-
-	static const EEventClass c_eEventClass = eEventClass_eMessageTextReceivedToGroup_class;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -373,9 +347,9 @@ private:
 	CFile * m_paFile;			// Pointer to the file object to read (or write) the data.  If this pointer is non-NULL, it means the event is transmitting data.
 
 public:
-	IEventFile(ITreeItemChatLogEvents * pContact, const TIMESTAMP * ptsEventID);
+	IEventFile(const TIMESTAMP * ptsEventID);
 	virtual ~IEventFile();
-	virtual void XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const;
+	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -389,8 +363,8 @@ public:
 class CEventFileSent : public IEventFile
 {
 public:
-	CEventFileSent(ITreeItemChatLogEvents * pContact, const TIMESTAMP * ptsEventID);
-	CEventFileSent(ITreeItemChatLogEvents * pContact, PSZUC pszFileToSend);
+	CEventFileSent(const TIMESTAMP * ptsEventID);
+	CEventFileSent(PSZUC pszFileToSend);
 	virtual ~CEventFileSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP(const TContact *) const;
@@ -404,7 +378,10 @@ public:
 class CEventFileReceived : public IEventFile
 {
 public:
-	CEventFileReceived(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsEventID);
+	static const EEventClass c_eEventClass = eEventClass_eFileReceived_class;
+
+public:
+	CEventFileReceived(const TIMESTAMP * ptsEventID);
 	virtual ~CEventFileReceived();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return eEventClass_eFileSent; }
@@ -412,22 +389,8 @@ public:
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
-
-	static const EEventClass c_eEventClass = eEventClass_eFileReceived_class;
 };
 
-class CEventFileReceivedToGroup : public CEventFileReceived
-{
-protected:
-	TContact * m_pContactGroupSender;	// Contact who sent the file to the group
-public:
-	CEventFileReceivedToGroup(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsEventID) : CEventFileReceived(pContactOrGroup, ptsEventID) { m_pContactGroupSender = NULL; }
-	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
-	virtual TContact ** PpGetContactGroupSender() { return &m_pContactGroupSender; }
-
-	static const EEventClass c_eEventClass = eEventClass_eFileReceivedToGroup_class;
-};
 
 /*
 //	The file was received (offered) from an XMPP contact.  Since non-Cambrian clients do not have access to the "Extra Data", we need to remember the Stanza and Stream Identifier.
@@ -442,7 +405,7 @@ public:
 	CEventFileReceived(TContact * pContactSendingFile, const CXmlNode * pXmlNodeStreamInitiation);
 	virtual ~CEventFileReceived();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual void XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const;
+	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -464,7 +427,10 @@ enum EWalletViewFlags	// Various flags to determine what data to display to the 
 
 class CArrayPtrEvents : public CArray
 {
+protected:
+
 public:
+	inline void EventAdd(IEvent * pEvent) { Add(pEvent); }
 	BOOL Event_FoosAddSorted(IEvent * pEventNew);
 	inline IEvent ** PrgpGetEventsStop(OUT IEvent *** pppEventStop) const { return (IEvent **)PrgpvGetElementsStop(OUT (void ***)pppEventStop); }
 	inline IEvent * PGetEventLast_YZ() const { return (IEvent *)PvGetElementLast_YZ(); }
@@ -476,7 +442,7 @@ public:
 	TIMESTAMP TsEventOtherLast() const;
 	TIMESTAMP TsEventIdLast() const;
 
-	void EventsSerializeForDisk(INOUT CBin * pbinXmlEvents) const;
+	void EventsSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlEvents) const;
 	void EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITreeItemChatLogEvents * pParent);
 	CEventMessageTextReceived * PFindEventMessageReceivedByTimestamp(TIMESTAMP tsOther) const;
 	IEvent * PFindEventByID(TIMESTAMP tsEventID) const;
@@ -499,7 +465,7 @@ public:
 public:
 	CEventWalletTransaction(TContact * pContactParent,  const TIMESTAMP * ptsEventID);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eWalletTransactionSent; }
-	virtual void XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const;
+	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	BOOL FuIsTransactionMatchingViewFlags(EWalletViewFlags eWalletViewFlags) const;
@@ -516,10 +482,13 @@ public:
 class CEventPing : public IEvent
 {
 public:
+	TIMESTAMP m_tsContact;	// Date & time (in UTC) of the device (computer) of the contact
 	CStr m_strError;		// Error response from the server (if any)
 public:
-	CEventPing(ITreeItemChatLogEvents * pContact);
+	CEventPing();
 	virtual EEventClass EGetEventClass() const { return eEventClass_ePing_class; }
+	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
 

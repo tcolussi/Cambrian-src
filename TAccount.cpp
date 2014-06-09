@@ -129,6 +129,7 @@ TAccountXmpp::Contacts_PFindContactByJID(PSZUC pszContactJID, EFindContact eFind
 								MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "Contact $S: Updating resource from '$S' to '$s'\n", &pContact->m_strJidBare, &pContact->m_strRessource, pszResource);
 							//pContact->Xcp_ServiceDiscovery();	// The resource changed, therefore query the remote client for its capabilities
 							pContact->SetFlagXcpComposingSendTimestampsOfLastKnownEvents();	// Each time the resource change, re-send the timestamps of the last known events so we give an opportunity to synchronie
+							pContact->m_cVersionXCP = 0;	// Also, reset the XCP version, to make sure the device connects properly
 							}
 						pContact->m_strRessource.InitFromStringU(pszResource);
 						}

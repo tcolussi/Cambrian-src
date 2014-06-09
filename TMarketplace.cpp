@@ -175,7 +175,7 @@ WLayoutWallet::WLayoutWallet(ITreeItem * pTreeItemFilterBy, EWalletViewFlags eWa
 //		Assert(pTransaction->EGetEventType() == eEventType_SendBitcoins);
 		OTableRow oRow;
 		oRow.AddDateTime(pTransaction->m_tsEventID);
-		oRow.AddData(pTransaction->mu_parentowner.pTreeItem->TreeItem_PszGetNameDisplay());
+		oRow.AddData(pTransaction->ChatLog_PszGetNickNameOfContact());
 		oRow.AddAmount_mBTC(pTransaction->m_amtQuantity);
 		oRow.AddData(pTransaction->m_strValue);
 		oRow.AddData(pTransaction->m_strComment);

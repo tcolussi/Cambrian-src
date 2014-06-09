@@ -134,7 +134,7 @@ GridCellGetTextTransaction(CEventWalletTransaction * pTransaction, const CGridCo
 	case iColumn_Date:
 		return QDateTime::fromMSecsSinceEpoch(pTransaction->m_tsEventID).toString();
 	case iColumn_Contact:
-		return pTransaction->mu_parentowner.pTreeItem->ChatLog_PszGetNickname();
+		return pTransaction->ChatLog_PszGetNickNameOfContact();
 	case iColumn_Amount:
 		return Amount_SFormat(pTransaction->m_amtQuantity, d_chEncodingAmountMilliBitcoin);
 	case iColumn_Value:

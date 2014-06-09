@@ -172,9 +172,10 @@ TWallet::S_FileOpen_MB(PSZUC pszPassword)
 	} // S_FileOpen_MB()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventWalletTransaction::CEventWalletTransaction(TContact * pContactParent,  const TIMESTAMP * ptsEventID) : IEvent(pContactParent, ptsEventID)
+CEventWalletTransaction::CEventWalletTransaction(TContact * pContactParent,  const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 	{
 	Assert(pContactParent->EGetRuntimeClass() == RTI(TContact));
+	Assert(FALSE && "This code needs to be re-implemented and will crash!");
 	pContactParent->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEventsRepopulateAll | TContact::FTI_kfChatLogEventsIncludeFromWallet;
 	m_amtQuantity = 0;
 	}
@@ -185,7 +186,7 @@ CEventWalletTransaction::CEventWalletTransaction(TContact * pContactParent,  con
 
 //	CEventWalletTransaction::IEvent::XmlSerializeCore()
 void
-CEventWalletTransaction::XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact *) const
+CEventWalletTransaction::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeL64(d_chAttribute_nAmount, m_amtQuantity);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strValue, m_strValue);
@@ -204,10 +205,9 @@ CEventWalletTransaction::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 void
 CEventWalletTransaction::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
-	Assert(mu_parentowner.pTreeItem->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == mu_parentowner.pTreeItem);
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
 	g_strScratchBufferStatusBar.BinAppendTextSzv_VE("<img src=':/ico/Bitcoin' valign='bottom' style='valign:bottom'/> You sent <b>{Am}</b> to <b>$s</b>",
-		-m_amtQuantity, mu_parentowner.pTreeItem->ChatLog_PszGetNickname());
+		-m_amtQuantity, ChatLog_PszGetNickNameOfContact());
 	if (!m_strComment.FIsEmptyString())
 		g_strScratchBufferStatusBar.BinAppendTextSzv_VE(": <i>$S</i>", &m_strComment);
 	/*
@@ -397,6 +397,7 @@ UINT
 CVaultEventsForContact::EventsEncryptCb()
 	{
 	Assert(m_binEventsEncrypted.FIsEmptyBinary());
+	/*
 	g_strScratchBufferStatusBar.Empty();
 	m_arraypaEvents.EventsSerializeForDisk(INOUT &g_strScratchBufferStatusBar);
 	int cbEvents = g_strScratchBufferStatusBar.CbGetData();
@@ -404,6 +405,8 @@ CVaultEventsForContact::EventsEncryptCb()
 		m_binEventsEncrypted.BinAppendBinaryData(g_strScratchBufferStatusBar.PvGetDataUnsafe(), cbEvents);
 	Assert(cbEvents >= 0);
 	return cbEvents;
+	*/
+	return 0;
 	}
 
 //	Serialize a vault only if it has events.

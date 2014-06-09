@@ -84,12 +84,13 @@ ITreeItemChatLogEvents::ChatLog_FindText()
 	{
 	ChatLog_PwGetLayout_NZ()->WidgetFindText_Show();
 	}
-
+/*
 void
 ITreeItemChatLogEvents::ChatLog_DisplayNewEvent(IEvent * pEvent)
 	{
 	ChatLog_PwGetLayout_NZ()->ChatLog_EventAppend(pEvent);
 	}
+*/
 
 WChatLog *
 ITreeItemChatLogEvents::ChatLog_PwGet_YZ() const
@@ -145,7 +146,7 @@ ITreeItemChatLogEvents::Xmpp_PGetSocketOnlyIfReady() const
 CSocketXmpp *
 TContact::Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp() const
 	{
-	if (m_uFlagsContact & FC_kfNoCambrianProtocol)
+	if (m_cVersionXCP <= 0)
 		return m_pAccount->Socket_PGetOnlyIfReadyToSendMessages();
 	return NULL;
 	}
@@ -551,15 +552,12 @@ WLayoutChatLog::FGotFocus()
 	return m_pwChatInput->hasFocus() || m_pwChatLog_NZ->hasFocus();
 	}
 
+//	Send a message to the contact.
+//	TODO: Move this code to ITreeItemChatLogEvents
 void
 TContact::Contact_SendMessage(const CStr & strMessage)
 	{
-	Assert(FALSE && "Move this code to ITreeItemChatLogEvents");
-	/*
-	IEvent * pEvent = Vault_PAllocateEventMessageToSend(strMessage);
-	if (m_pawLayoutChatLog != NULL)
-		m_pawLayoutChatLog->ChatLog_EventAppend(pEvent);
-	*/
+	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageTextSent(strMessage));
 	}
 
 //	Send an instant message to the chat contact.
@@ -576,22 +574,13 @@ WLayoutChatLog::EMessageSendToServer(IN_MOD_INV CStr & strMessage)
 		if (pszMessage[0] != d_chXmlPrefixSocketRawData || pszMessage[1] != '<')
 			{
 			// Send a normal text message
-			CEventMessageTextSent * pEvent = new CEventMessageTextSent(pContactOrGroup, strMessage);
-			pContactOrGroup->Vault_AddEventToVault(PA_CHILD pEvent);
-			m_pwChatLog_NZ->ChatLog_EventDisplay(pEvent);
+			pContactOrGroup->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageTextSent(strMessage));
 			return eChatState_fPaused;
 			}
 		else
 			{
 			// The message starts with "~<", therefore send raw XML data directly to the socket
-			CSocketXmpp * pSocket = pContactOrGroup->m_pAccount->PGetSocket_YZ();
-			if (pSocket != NULL)
-				{
-				CEventMessageXmlRawSent * pEvent = new CEventMessageXmlRawSent(pContactOrGroup, strMessage);
-				pContactOrGroup->Vault_AddEventToVault(PA_CHILD pEvent);
-				m_pwChatLog_NZ->ChatLog_EventDisplay(pEvent);
-				pSocket->Socket_WriteXmlRaw(pContactOrGroup, pszMessage);
-				}
+			pContactOrGroup->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageXmlRawSent(strMessage));
 			} // if...else
 		}
 	else
@@ -601,13 +590,6 @@ WLayoutChatLog::EMessageSendToServer(IN_MOD_INV CStr & strMessage)
 		}
 	return eChatState_zComposing;
 	} // EMessageSendToServer()
-/*
-IEvent *
-TContact::Event_PFindByID(TIMESTAMP tsEventID) const
-	{
-	return m_arraypaEventsChatLog.PFindEventByID(tsEventID);
-	}
-*/
 
 #pragma GCC diagnostic ignored "-Wswitch"
 
@@ -681,9 +663,7 @@ TContact::Vault_AllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode *
 			MessageLog_AppendTextFormatSev(eSeverityWarning, "Ignoring the update of message ID '$t' because its timestamp is too old (the message was written $L minutes ago).\n", pEvent->m_tsEventID, dtsDelaySinceMessageWasWritten / d_ts_cMinutes);
 			} // if (event)
 		}
-	CEventMessageTextReceived * pEvent = new CEventMessageTextReceived(this, NULL);
-	Vault_AddEventToVault(PA_CHILD pEvent);
-	//pEvent->TimestampOther_UpdateAsMessageWrittenTime(pXmlNodeMessageStanza);
+	CEventMessageTextReceived * pEvent = new CEventMessageTextReceived(NULL);
 	pEvent->m_tsOther = tsMessageWritten;
 	pEvent->m_strMessageText = pszuMessageBody;
 	const CXmlNode * pXmlNodeHtml = pXmlNodeMessageStanza->PFindElement("html");
@@ -706,7 +686,7 @@ TContact::Vault_AllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode *
 				}
 			}
 		}
-	pwChatLog->ChatLog_EventDisplay(pEvent);
+	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEvent);
 	} // Event_AllocateEventMessageReceivedAndDisplayToChatLog()
 
 /*

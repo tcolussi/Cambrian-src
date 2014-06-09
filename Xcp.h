@@ -26,7 +26,7 @@ public:
 public:
 	IData(PA_PARENT IEventData * pEventParent);
 	virtual ~IData();
-	virtual void XmlSerialize(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const;
+	virtual void XmlSerialize(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserialize(const CXmlNode * pXmlNodeElement);
 	virtual void XcpDataWriteToSocket(L64 ibData, int cbData) = 0;
 	virtual void XcpDataArrived(L64 ibData, int cbData, const void * pvData) = 0;
@@ -66,7 +66,7 @@ public:
 public:
 	IEventDataFile(ITreeItemChatLogEvents * pContact, const TIMESTAMP * ptsEventID);
 	~IEventDataFile();
-	virtual void XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const;
+	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 };
 

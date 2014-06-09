@@ -68,29 +68,30 @@ Timestamp_GetCurrentDateTime()
 	}
 
 IEvent *
-IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, PA_PARENT ITreeItemChatLogEvents * pTreeItemParentOwner, const TIMESTAMP * ptsEventID)
+IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEventID)
 	{
-	Assert(pTreeItemParentOwner->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == pTreeItemParentOwner);
 	Endorse(ptsEventID == NULL);	// Assign the value of the current date and time (aka: now)
 	switch (eEventClass)
 		{
 	case eEventClass_eMessageTextSent:
 	case eEventClassLegacy_chMessageSent:
-		return new CEventMessageTextSent(pTreeItemParentOwner, ptsEventID);
+		return new CEventMessageTextSent(ptsEventID);
 
 	case eEventClass_eMessageTextReceived:
 	case eEventClassLegacy_chMessageReceived:
-		return new CEventMessageTextReceived(pTreeItemParentOwner, ptsEventID);
+		return new CEventMessageTextReceived(ptsEventID);
+	/*
 	case eEventClass_eMessageTextReceivedToGroup:
-		return new CEventMessageTextReceivedToGroup(pTreeItemParentOwner, ptsEventID);
-
+		return new CEventMessageTextReceivedToGroup(ptsEventID);
+	*/
 	case eEventClass_eFileSent:
-		return new CEventFileSent(pTreeItemParentOwner, ptsEventID);
+		return new CEventFileSent(ptsEventID);
 	case eEventClass_eFileReceived:
-		return new CEventFileReceived(pTreeItemParentOwner, ptsEventID);
+		return new CEventFileReceived(ptsEventID);
+/*
 	case eEventClass_eFileReceivedToGroup:
-		return new CEventFileReceivedToGroup(pTreeItemParentOwner, ptsEventID);
-
+		return new CEventFileReceivedToGroup(ptsEventID);
+*/
 	/*
 	case eEventClass_eGroupMemberJoins:
 		return new CEventGroupMemberJoin((TGroup *)pTreeItemParentOwner, ptsEventID);
@@ -120,26 +121,36 @@ IEvent::S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lPa
 	}
 
 //	Base constructor for all events.
-//	The parent owner may hold the event, however the event may be in the possession another object, such as a CVaultEventsForContact.
-//
-IEvent::IEvent(ITreeItemChatLogEvents * pTreeItemParentOwner, const TIMESTAMP * ptsEventID)
+IEvent::IEvent(const TIMESTAMP * ptsEventID)
 	{
-	Assert(pTreeItemParentOwner->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == pTreeItemParentOwner);
-	mu_parentowner.pTreeItem = pTreeItemParentOwner;
-	mu_task.paTask = NULL;
+	m_pVaultParent_NZ = NULL;					// Although this pointer is declared 'non-zero', it is initialized to NULL because as soon ad the event is added to a vault, this poiinter will become valid
+	m_pContactGroupSender_YZ = NULL;
 	m_uFlagsEvent = FE_kzDefault;
 	m_tsOther = d_tsOther_ezEventNeverSent;		// Initialize m_tsOther to something so we don't get unpleasant surprises
 	if (ptsEventID != NULL)
-		m_tsEventID = *ptsEventID;				// We are creating an event with an existing timestamp, which is typically when an event is being unserialized
+		m_tsEventID = *ptsEventID;						// We are creating an event with an existing timestamp, which is typically when an event is being unserialized from disk or XCP
 	else
 		m_tsEventID = Timestamp_GetCurrentDateTime();	// We are creating a new event, so use the current date & time as the timestamp.
 	}
 
 IEvent::~IEvent()
 	{
-	delete mu_task.paTask;
 	}
 
+void
+IEvent::EventAddToVault(PA_PARENT CVaultEvents * pVaultParent)
+	{
+	Assert(m_pVaultParent_NZ == NULL);
+	m_pVaultParent_NZ = pVaultParent;
+	(void)pVaultParent->m_arraypaEvents.Event_FoosAddSorted(PA_CHILD this);
+	}
+
+void
+IEvent::EventAddToVault(PA_PARENT TContact * pContactParent)
+	{
+	Assert(pContactParent != NULL);
+	EventAddToVault(PA_PARENT pContactParent->Vault_PGet_NZ());
+	}
 
 //	EGetEventClassForXCP(), virtual
 //
@@ -151,7 +162,7 @@ IEvent::EGetEventClassForXCP(const TContact * pContactToSerializeFor) const
 	{
 	Assert(pContactToSerializeFor != NULL);
 	Assert(pContactToSerializeFor->EGetRuntimeClass() == RTI(TContact));
-	return eEventClass_kfNeverSerializeToXCP;	// By default, to not serialize events for the XCP
+	return EGetEventClass();		// By default, return the same as the event class.  This is useful for objects which may not be serialized, however may send data such as a ping or raw XML stanzas.
 	}
 
 //	XmlSerializeCore(), virtual
@@ -160,18 +171,18 @@ IEvent::EGetEventClassForXCP(const TContact * pContactToSerializeFor) const
 //	Since most events are made of simple data types, such as strings, numbers and timestamps, the entire event is often
 //	serialized as multiple attributes.  Later, an event may be serialized as an XML element (TBD).
 //
-//	The parameter pContactToSerializeFor is necessary for serializing for the XCP protocol (rather than disk), where the destination contact is necessary for proper serializing.
-//	If pContactToSerializeFor is NOT NULL, then the parameter pbinXmlAttributes is actually a pointer to a CBinXcpStanzaType where the field m_eStanzaType may be modified.
+//	Originally this method was using a CBin object to store the XML information, however the Cambrian Protocol requires to know
+//	the destination contact.  As a result, the CBinXcpStanzaType is used to store the XML info as well as providing additional information for the XCP.
 //
 //
 //	IMPLEMENTATION NOTES
 //	Most implementations of XmlSerializeCore() will use a single letter of the alphabet to designe an attribute name.
 //	Using a single character makes the comparison faster to find an attribute, while reducing the storage requirement of the XML file.
 void
-IEvent::XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const
+IEvent::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	Assert(pbinXmlAttributes != NULL);
-	Endorse(pContactToSerializeFor == NULL);	// NULL => Serialize to disk
+	Endorse(pbinXmlAttributes->m_pContact == NULL);	// NULL => Serialize to disk
 	Assert(FALSE && "No need to call this virtual method");
 	}
 
@@ -195,6 +206,7 @@ void
 IEvent::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData)
 	{
 	Assert(pXmlNodeExtraData != NULL);
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "IEvent::XcpExtraDataArrived($U): ^N", EGetEventClass(), pXmlNodeExtraData);	// The event must implement this virtual method
 	}
 
 //	ChatLogUpdateTextBlock(), virtual
@@ -228,28 +240,17 @@ IEvent::PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) cons
 	return NULL;
 	}
 
-TContact **
-IEvent::PpGetContactGroupSender()
-	{
-	return NULL;
-	}
-
+/*
 //	Always return the pointer of the contact who sent the event
 TContact *
 IEvent::PGetContactSender()
 	{
-	TContact ** ppContactGroupSender = PpGetContactGroupSender();
-	if (ppContactGroupSender != NULL)
-		{
-		if (*ppContactGroupSender != NULL)
-			return *ppContactGroupSender;
-		}
-	if (mu_parentowner.pContact->EGetRuntimeClass() == RTI(TContact))
-		return mu_parentowner.pContact;
+	return m_pContact_NZ;
 	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "eEventClass $U, tsEventID $t has no contact\n", EGetEventClass(), m_tsEventID);
 	return NULL;
 	}
-
+*/
+/*
 //	Return the parent vault of the event.
 //	Ideally, the vault should be a member pointer, however the current implementation requires to get the vault from pTreeItem
 CVaultEvents *
@@ -258,23 +259,8 @@ IEvent::PGetVault_NZ() const
 	Assert(mu_parentowner.pTreeItem->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == mu_parentowner.pTreeItem);
 	return mu_parentowner.pTreeItem->Vault_PGet_NZ();
 	}
-/*
-void
-IEvent::TimestampOther_UpdateAsEventSentOnce()
-	{
-	Assert(mu_parentowner.pTreeItem->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == mu_parentowner.pTreeItem);
-	if (m_tsOther == d_tsOther_ezEventNeverSent)
-		{
-		m_tsOther = d_tsOther_eEventSentOnce;
-		mu_parentowner.pTreeItem->Vault_SetModified();	// This line is important so m_tsOther is saved to disk
-		}
-	else
-		{
-		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t\t\t TimestampOther_UpdateAsEventSentOnce() - m_tsOther $t remains unchanged for EventID $t.\n", m_tsOther, m_tsEventID);
-		}
-	}
 */
-
+/*
 //	Assing m_tsOther to the current timestamp (now)
 void
 IEvent::TimestampOther_UpdateAsEventCompletedNow()
@@ -290,41 +276,14 @@ IEvent::TimestampOther_UpdateAsEventCompletedNow()
 	m_tsOther = Timestamp_GetCurrentDateTime();
 	Assert(Event_FHasCompleted());
 	}
-
-/*
-//	Attempt to update m_tsOther using the timestamp of the stanza identifier ad the time the message was written/sent.
-//	This will work only if the message was sent from another Cambrian client.
-void
-IEvent::TimestampOther_UpdateAsMessageWrittenTime(const CXmlNode * pXmlNodeMessageStanza)
-	{
-	Assert(pXmlNodeMessageStanza != NULL);
-	TIMESTAMP tsMessageWritten = pXmlNodeMessageStanza->LFindAttributeValueIdTimestamp_ZZR();
-	TIMESTAMP_DELTA dtsMessageDeliveryDelay = (m_tsEventID - tsMessageWritten);
-	if (dtsMessageDeliveryDelay > d_ts_cMinutes * 10)
-		{
-		// Only record message delays larger than 10 minutes.  This is because the clock of the remote user will always vary of a few seconds/minutes, and displaying such a delay would be meaningless.
-		if (dtsMessageDeliveryDelay <= d_ts_cDays * 15)
-			{
-			// The message was sent within 15 days before m_tsEventID, therefore assume its timestamp is valid
-			m_tsOther = tsMessageWritten;
-			return;
-			}
-		}
-	if (dtsMessageDeliveryDelay >= 0)
-		MessageLog_AppendTextFormatCo(d_coGreenDark, "TimestampOther_UpdateAsMessageWrittenTime($t) - message sent $T before event\n", tsMessageWritten, dtsMessageDeliveryDelay);
-	else
-		MessageLog_AppendTextFormatCo(d_coOrange, "TimestampOther_UpdateAsMessageWrittenTime($t) - ignoring timestamp because its value indicates the message was sent $T AFTER receiving the message\n", tsMessageWritten, -dtsMessageDeliveryDelay);
-	m_tsOther = d_tsOther_ezEventCompleted;	// The timestamp is out of range, so assume the event completed, however without a specific timestamp
-	}
 */
 
 //	Return TRUE if the event belong to a group, otherwise to a contact.
 BOOL
 IEvent::Event_FIsEventBelongsToGroup() const
 	{
-	Assert(mu_parentowner.pTreeItem != NULL);
-	Assert(mu_parentowner.pTreeItem->EGetRuntimeClass() == RTI(TContact) || mu_parentowner.pTreeItem->EGetRuntimeClass() == RTI(TGroup));
-	return (mu_parentowner.pTreeItem->EGetRuntimeClass() == RTI(TGroup));
+	Assert(m_pVaultParent_NZ != NULL);
+	return (m_pVaultParent_NZ->m_pParent->EGetRuntimeClass() == RTI(TGroup));
 	}
 
 BOOL
@@ -342,13 +301,14 @@ IEvent::Event_FIsEventTypeReceived() const
 void
 IEvent::Event_SetCompleted(QTextEdit * pwEditChatLog)
 	{
+	Endorse(pwEditChatLog == NULL);		// Don't update the event in the Chat Log, typically because there is no Chat Log.  The events may be loaded in memory, however not displayed in any Chat Log.
 	if (m_tsOther > d_tsOther_kmReserved)
 		{
 		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t\t\t Event_SetCompleted() - m_tsOther $t remains unchanged for EventID $t.\n", m_tsOther, m_tsEventID);
 		return;	// The task already completed, so keep the first timestamp.  This is likely to be a duplicate message.
 		}
 	m_tsOther = Timestamp_GetCurrentDateTime();
-	mu_parentowner.pTreeItem->Vault_SetModified();		// This line is important so the modified event is always saved to disk (otherwise an event may be updated, however not serialized because ITreeItemChatLogEvents will never know the event was updated)
+	m_pVaultParent_NZ->SetModified();		// This line is important so the modified event is always saved to disk (otherwise an event may be updated, however not serialized because ITreeItemChatLogEvents will never know the event was updated)
 	Assert(Event_FHasCompleted());
 	ChatLog_UpdateEventWithinWidget(pwEditChatLog);
 	}
@@ -399,12 +359,35 @@ IEvent::ChatLog_UpdateEventWithinWidget(QTextEdit * pwEditChatLog)
 		}
 	}
 
+const QBrush &
+IEvent::ChatLog_OGetBrushForEvent() const
+	{
+	Assert(m_pVaultParent_NZ != NULL);
+	return m_pVaultParent_NZ->m_pParent->ChatLog_OGetBrushForNewMessageReceived();
+	}
+
+//	Return the nick name of the contact related to event
+PSZUC
+IEvent::ChatLog_PszGetNickNameOfContact() const
+	{
+	Assert(m_pVaultParent_NZ != NULL);
+	if (m_pContactGroupSender_YZ != NULL)
+		return m_pContactGroupSender_YZ->ChatLog_PszGetNickname();
+	return m_pVaultParent_NZ->m_pParent->ChatLog_PszGetNickname();	// This may return the nickname of the group (although this is somewhat an error, it will not cause any harm)
+	}
+
+ITreeItemChatLogEvents *
+IEvent::PGetContactOrGroup_NZ() const
+	{
+	Assert(m_pVaultParent_NZ != NULL);
+	return m_pVaultParent_NZ->m_pParent;
+	}
 
 TAccountXmpp *
-IEvent::PGetAccount() const
+IEvent::PGetAccount_NZ() const
 	{
-	Assert(mu_parentowner.pTreeItem->m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
-	return mu_parentowner.pTreeItem->m_pAccount;
+	Assert(m_pVaultParent_NZ != NULL);
+	return m_pVaultParent_NZ->m_pParent->m_pAccount;
 	}
 
 //	Return the socket related to the event in the Chat Log.
@@ -413,10 +396,10 @@ IEvent::PGetAccount() const
 CSocketXmpp *
 IEvent::PGetSocket_YZ() const
 	{
-	Assert(mu_parentowner.pTreeItem->m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
-	return mu_parentowner.pTreeItem->m_pAccount->PGetSocket_YZ();
+	return PGetAccount_NZ()->PGetSocket_YZ();
 	}
 
+/*
 void
 IEvent::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...)
 	{
@@ -425,7 +408,8 @@ IEvent::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...)
 	va_start(OUT vlArgs, pszFmtTemplate);
 	PGetSocket_YZ()->Socket_WriteXmlFormatted_VL(pszFmtTemplate, vlArgs);
 	}
-
+*/
+/*
 void
 IEvent::Socket_WriteXmlIqError_VE_Gso(PSZAC pszErrorType, PSZUC pszErrorID, PSZAC pszFmtTemplate, ...)
 	{
@@ -443,6 +427,7 @@ IEvent::Socket_WriteXmlIqError_VE_Gso(PSZAC pszErrorType, PSZUC pszErrorID, PSZA
 	g_strScratchBufferSocket.BinAppendBinaryData("</error></iq>", 13);
 	pSocket->Socket_WriteBin(g_strScratchBufferSocket);
 	}
+*/
 
 const char c_szHtmlMessageDelivered[] = "<img src=':/ico/Delivered' style='float:right'/>";
 const char c_szHtmlTemplateNickname[] = "<b>{sH}</b>: ";
@@ -451,7 +436,8 @@ void
 IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) CONST_VIRTUAL
 	{
 	Assert(pbinTextHtml != NULL);
-	ITreeItemChatLog * pTreeItemNickname;
+	Assert(m_pVaultParent_NZ != NULL);
+	ITreeItemChatLog * pTreeItemNickname;		// This pointer should be a TContact, however if there is a 'bug' where a group message has m_pContactGroupSender_YZ == NULL, then this will point to a group (which is no big deal)
 	const QDateTime dtlMessage = QDateTime::fromMSecsSinceEpoch(m_tsEventID).toLocalTime();
 	const QString sTime = dtlMessage.toString("hh:mm");
 	const QString sDateTime = dtlMessage.toString(Qt::SystemLocaleLongDate); // DefaultLocaleLongDate);
@@ -460,25 +446,13 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) CONST_VIRTUAL
 	const EEventClass eEventClass = EGetEventClass();
 	if (eEventClass & eEventClass_kfReceivedByRemoteClient)
 		{
-		// This is a received message typed by someone else
+		// The event was received (typically a message typed by someone else)
 		if (dts < -10 * d_ts_cMinutes && dts > -15 * d_ts_cDays)
 			pbinTextHtml->BinAppendTextSzv_VE("[$T] ", dts);
 		#if 0
 		pbinTextHtml->BinAppendTextSzv_VE("<span title='Message was sent {T_} before you received it'>[{T-}] </span>", dts);
 		#endif
-		// Check if the sender is not part of a group
-		TContact ** ppContactGroupSender = PpGetContactGroupSender();
-		if (ppContactGroupSender != NULL)
-			{
-			pTreeItemNickname = *ppContactGroupSender;
-			if (pTreeItemNickname == NULL)
-				goto AssignNicknameOfGroup;	// This is a bug, however we need to display something as the 'sender', therefore we will use the name of the group (as if the group 'sent' the event)
-			}
-		else
-			{
-			AssignNicknameOfGroup:
-			pTreeItemNickname = mu_parentowner.pContact;
-			}
+		pTreeItemNickname = (m_pContactGroupSender_YZ != NULL) ? m_pContactGroupSender_YZ : m_pVaultParent_NZ->m_pParent;	// Use the name of the group sender (if any, otherwise the name of the contact)
 		}
 	pbinTextHtml->BinAppendTextSzv_VE("<span title='^Q'>[^Q] </span>", &sDateTime, &sTime);
 	if (m_uFlagsEvent & FE_kfEventErrorProtocol)
@@ -498,7 +472,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) CONST_VIRTUAL
 				pbinTextHtml->BinAppendBinaryData(c_szHtmlMessageDelivered, sizeof(c_szHtmlMessageDelivered) - 1);
 				}
 			}
-		pTreeItemNickname = mu_parentowner.pContact->m_pAccount;
+		pTreeItemNickname = PGetAccount_NZ();	// Use the name of the user
 		}
 	#ifdef DEBUG_DISPLAY_TIMESTAMPS
 	pbinTextHtml->BinAppendTextSzv_VE("<code>[i=<b>$t</b> o=<b>$t</b>] </code>", m_tsEventID, m_tsOther);
@@ -635,13 +609,13 @@ IEvent::_Socket_QueueTask(INOUT_LATER ITask * pTask)
 	Assert(mu_parentowner.pTreeItem->m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
 	mu_parentowner.pTreeItem->m_pAccount->SocketTask_AddToQueue(INOUT_LATER pTask);
 	}
-*/
 void
 IEvent::_TaskDestroy()
 	{
 	delete mu_task.paTask;
 	mu_task.paTask = NULL;
 	}
+*/
 
 
 void
@@ -653,27 +627,16 @@ ITreeItemChatLogEvents::ChatLog_EventEditMessageSent(CEventMessageTextSent * pEv
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-IEventMessageText::IEventMessageText(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsEventID) : IEvent(pContactOrGroup, ptsEventID)
+IEventMessageText::IEventMessageText(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 	{
 	m_uFlagsMessage = FM_kzMessagePlainText;
 	}
 
 //	IEventMessageText::IEvent::XmlSerializeCore()
 void
-IEventMessageText::XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const
+IEventMessageText::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
-	if (pContactToSerializeFor != NULL)
-		{
-		Assert(pContactToSerializeFor->EGetRuntimeClass() == RTI(TContact));
-		// If we are sending a text message to a contact, make sure the contact understands the Cambrian Protocol (XCP), otherwise send the message via the normal XMPP
-		CSocketXmpp * pSocket = pContactToSerializeFor->Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp();
-		if (pSocket != NULL)
-			{
-			pSocket->Socket_WriteXmlFormatted("<message to='^J' id='$t'><body>^S</body><request xmlns='urn:xmpp:receipts'/></message>", pContactToSerializeFor, m_tsEventID, &m_strMessageText);
-			((CBinXcpStanzaType *)pbinXmlAttributes)->SetStanzaTypeToIgnore();
-			return;
-			}
-		}
+	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<message to='^J' id='$t'><body>^S</body><request xmlns='urn:xmpp:receipts'/></message>", pbinXmlAttributes->m_pContact, m_tsEventID, &m_strMessageText);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strText, m_strMessageText);
 	pbinXmlAttributes->BinAppendXmlAttributeUInt(d_chAttribute_uFlags, m_uFlagsMessage);
 	}
@@ -701,10 +664,16 @@ IEventMessageText::_BinHtmlInitWithTimeAndMessage(OUT CBin * pbinTextHtml) CONST
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventMessageXmlRawSent::CEventMessageXmlRawSent(ITreeItemChatLogEvents * pContact, const CStr & strMessage) : IEventMessageText(pContact, NULL)
+CEventMessageXmlRawSent::CEventMessageXmlRawSent(const CStr & strMessage) : IEventMessageText(NULL)
 	{
-	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 	m_strMessageText = strMessage;
+	}
+
+void
+CEventMessageXmlRawSent::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
+	{
+	pbinXmlAttributes->BinInitStanzaWithXmlRaw(m_pVaultParent_NZ->m_pParent, m_strMessageText);
+	pbinXmlAttributes->XmppWriteStanzaToSocket();
 	}
 
 //	CEventMessageXmlRawSent::IEvent::ChatLogUpdateTextBlock()
@@ -716,11 +685,11 @@ CEventMessageXmlRawSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBloc
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventMessageTextSent::CEventMessageTextSent(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsEventID) : IEventMessageText(pContactOrGroup, ptsEventID)
+CEventMessageTextSent::CEventMessageTextSent(const TIMESTAMP * ptsEventID) : IEventMessageText(ptsEventID)
 	{
 	}
 
-CEventMessageTextSent::CEventMessageTextSent(ITreeItemChatLogEvents * pContactOrGroup, const CStr & strMessageText) : IEventMessageText(pContactOrGroup, NULL)
+CEventMessageTextSent::CEventMessageTextSent(const CStr & strMessageText) : IEventMessageText(NULL)
 	{
 	m_strMessageText = strMessageText;
 	}
@@ -732,31 +701,14 @@ CEventMessageTextSent::~CEventMessageTextSent()
 EEventClass
 CEventMessageTextSent::EGetEventClassForXCP(const TContact *) const
 	{
-	return (Event_FIsEventBelongsToGroup() ? CEventMessageTextReceivedToGroup::c_eEventClass : CEventMessageTextReceived::c_eEventClass);
-	}
-
-//	CEventMessageTextReceivedToGroup::IEvent::EGetEventClassForXCP()
-//	The class CEventMessageTextReceivedToGroup is often serialized as CEventMessageTextSent, however if serialized for another contact, then it is just another instance of itself
-EEventClass
-CEventMessageTextReceivedToGroup::EGetEventClassForXCP(const TContact * pContactToSerializeFor) const
-	{
-	Assert(pContactToSerializeFor != NULL);
-	return (m_pContactGroupSender != pContactToSerializeFor) ? CEventMessageTextReceivedToGroup::c_eEventClass : CEventMessageTextSent::c_eEventClass;
+	return CEventMessageTextReceived::c_eEventClass;
 	}
 
 EEventClass
 CEventFileSent::EGetEventClassForXCP(const TContact *) const
 	{
-	return (Event_FIsEventBelongsToGroup() ? CEventFileReceivedToGroup::c_eEventClass : CEventFileReceived::c_eEventClass);
+	return CEventFileReceived::c_eEventClass;
 	}
-
-EEventClass
-CEventFileReceivedToGroup::EGetEventClassForXCP(const TContact * pContactToSerializeFor) const
-	{
-	Assert(pContactToSerializeFor != NULL);
-	return (m_pContactGroupSender != pContactToSerializeFor) ? CEventFileReceivedToGroup::c_eEventClass : CEventFileReceived::c_eEventClass;
-	}
-
 
 //	CEventMessageTextSent::IEvent::ChatLogUpdateTextBlock()
 void
@@ -778,7 +730,7 @@ CEventMessageTextSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock)
 	} // ChatLogUpdateTextBlock()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventMessageTextReceived::CEventMessageTextReceived(ITreeItemChatLogEvents * pContact, const TIMESTAMP * ptsEventID) : IEventMessageText(pContact, ptsEventID)
+CEventMessageTextReceived::CEventMessageTextReceived(const TIMESTAMP * ptsEventID) : IEventMessageText(ptsEventID)
 	{
 	}
 
@@ -787,11 +739,11 @@ void
 CEventMessageTextReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
 	_BinHtmlInitWithTimeAndMessage(OUT &g_strScratchBufferStatusBar);
-	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, mu_parentowner.pTreeItem->ChatLog_OGetBrushForNewMessageReceived());
+	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, ChatLog_OGetBrushForEvent());
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-IEventFile::IEventFile(ITreeItemChatLogEvents * pContact, const TIMESTAMP * ptsEventID) : IEvent(pContact, ptsEventID)
+IEventFile::IEventFile(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 	{
 	m_cblFileSize = 0;
 	m_cblDataTransferred = 0;
@@ -831,12 +783,13 @@ IEventFile::_PFileOpenWriteOnly_NZ()
 
 //	IEventFile::IEvent::XmlSerializeCore()
 void
-IEventFile::XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const
+IEventFile::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
-	pbinXmlAttributes->BinAppendXmlAttributeText(d_chIEventFile_Attribute_strFileName, (pContactToSerializeFor == NULL) ? m_strFileName.PszuGetDataNZ() : m_strFileName.PathFile_PszGetFileNameOnly_NZ());	// When serializing for a contact, only send the filename (sending the full path is a violation of privacy)
+	const BOOL fSerializingEventToDisk = pbinXmlAttributes->FSerializingEventToDisk();
+	pbinXmlAttributes->BinAppendXmlAttributeText(d_chIEventFile_Attribute_strFileName, fSerializingEventToDisk ? m_strFileName.PszuGetDataNZ() : m_strFileName.PathFile_PszGetFileNameOnly_NZ());	// When serializing for a contact (via XCP), only send the filename (sending the full path is a violation of privacy)
 	pbinXmlAttributes->BinAppendXmlAttributeL64(d_chIEventFile_Attribute_cblFileSize, m_cblFileSize);
-	if (pContactToSerializeFor == NULL)
-		pbinXmlAttributes->BinAppendXmlAttributeL64(d_chIEventFile_Attribute_cblDataTransferred, m_cblDataTransferred);	// Serializing the data transferred only when saving to disk
+	if (fSerializingEventToDisk)
+		pbinXmlAttributes->BinAppendXmlAttributeL64(d_chIEventFile_Attribute_cblDataTransferred, m_cblDataTransferred);	// The number of bytes transferred is serialized only to disk, never through XCP
 	}
 
 //	IEventFile::IEvent::XmlUnserializeCore()
@@ -884,10 +837,10 @@ IEventFile::HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstr
 		pstrTooltipText->Format("Cancel the transfer of file $s", m_strFileName.PathFile_PszGetFileNameOnly_NZ());
 		return;
 	case d_chActionForEvent_ButtonDecline:
-		pstrTooltipText->Format("Decline the file offer from $s", mu_parentowner.pTreeItem->ChatLog_PszGetNickname());
+		pstrTooltipText->Format("Decline the file offer from $s", ChatLog_PszGetNickNameOfContact());
 		return;
 	case d_chActionForEvent_ButtonSave:
-		pstrTooltipText->Format("Save file in the folder:\n$s", mu_parentowner.pTreeItem->ChatLog_PszGetPathFolderDownload());
+		pstrTooltipText->Format("Save file in the folder:\n$s", m_pVaultParent_NZ->m_pParent->ChatLog_PszGetPathFolderDownload());
 		return;
 	case d_chActionForEvent_ButtonSaveAs:
 		pstrTooltipText->Format("Save file in a designated folder");
@@ -929,7 +882,7 @@ IEventFile::_BinAppendHtmlForEvent(INOUT CBin * pbinTextHtml, PSZAC pszTextHtmlT
 			switch (chFormat)
 				{
 			case 'C':
-				pbinTextHtml->BinAppendXmlTextU(mu_parentowner.pTreeItem->ChatLog_PszGetNickname());
+				pbinTextHtml->BinAppendXmlTextU(ChatLog_PszGetNickNameOfContact());
 				break;
 			case 'F':
 				pbinTextHtml->BinAppendXmlTextStr(m_strFileName);
@@ -969,16 +922,16 @@ void
 IEventFile::_FileTransferCancelledByLocalUser(INOUT OCursor * poCursorTextBlock)
 	{
 	m_cblDataTransferred = d_IEventFile_cblDataTransferred_CancelledByLocalUser;
-	mu_parentowner.pTreeItem->Vault_SetModified();
+	m_pVaultParent_NZ->SetModified();
 	ChatLogUpdateTextBlock(poCursorTextBlock);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventFileSent::CEventFileSent(ITreeItemChatLogEvents * pContact, const TIMESTAMP * ptsEventID) : IEventFile(pContact, ptsEventID)
+CEventFileSent::CEventFileSent(const TIMESTAMP * ptsEventID) : IEventFile(ptsEventID)
 	{
 	}
 
-CEventFileSent::CEventFileSent(ITreeItemChatLogEvents * pContact, PSZUC pszFileToSend) : IEventFile(pContact, NULL)
+CEventFileSent::CEventFileSent(PSZUC pszFileToSend) : IEventFile(NULL)
 	{
 	m_strFileName = pszFileToSend;
 	(void)_PFileOpenReadOnly_NZ();	// Open the file so we can update m_cblFileSize
@@ -1028,7 +981,7 @@ CEventFileSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_
 	} // ChatLogUpdateTextBlock()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventFileReceived::CEventFileReceived(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsEventID) : IEventFile(pContactOrGroup, ptsEventID)
+CEventFileReceived::CEventFileReceived(const TIMESTAMP * ptsEventID) : IEventFile(ptsEventID)
 	{
 	}
 /*
@@ -1056,7 +1009,7 @@ CEventFileReceived::~CEventFileReceived()
 /*
 //	CEventFileReceived::IEvent::XmlSerializeCore()
 void
-CEventFileReceived::XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact * pContactToSerializeFor) const
+CEventFileReceived::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	IEventFile::XmlSerializeCore(IOUT pbinXmlAttributes, pContactToSerializeFor);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strxStanzaID, m_strxStanzaID);
@@ -1148,110 +1101,11 @@ CEventFileReceived::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor *
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-ITask::ITask(IEvent * pEventParent, const OCursor * poCursorTextBlock)
-	{
-	mu_parent.pEvent = pEventParent;
-	m_pAccount = pEventParent->mu_parentowner.pTreeItem->m_pAccount;
-	Assert(m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
-	m_oTextBlockMessageLog = poCursorTextBlock->block();
-	}
-
-// This destructor is virtual mostly to suppress the warning -Wdelete-non-virtual-dtor: deleting object of polymorphic class type 'CSocketTaskEvent*' which has non-virtual destructor might cause undefined behaviour
-ITask::~ITask()
-	{
-	List_DetachNode(this);	// Detach the node from its parent (typically the CSocketXmpp::m_listTasksWaitingForCompletion, or TAccountXmpp::m_listEvents).  This is safe (ie, it will not crash) as long as the task was queued to a CListTasks once)
-	//MessageLog_AppendTextFormatSev(eSeverityNoise, "Destroying task 0x$p for EventID $t for account $S", this, mu_parent.pEvent->m_tsEventID, &m_pAccount->m_strJID);
-	}
-
-CSocketXmpp *
-ITask::PGetSocket_YZ() const
-	{
-	return m_pAccount->PGetSocket_YZ();
-	}
-
-void
-ITask::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...)
-	{
-	va_list vlArgs;
-	va_start(OUT vlArgs, pszFmtTemplate);
-	PGetSocket_YZ()->Socket_WriteXmlFormatted_VL(pszFmtTemplate, vlArgs);
-	}
-
-void
-ITask::Socket_WriteXmlIqSet_VE_Gso(PSZAC pszFmtTemplate, ...)
-	{
-	Assert(pszFmtTemplate != NULL);
-	g_strScratchBufferSocket.Empty();
-	g_strScratchBufferSocket.BinAppendTextSzv_VE("<iq type='set' from='^J' to='^J' id='$t'>", m_pAccount, mu_parent.pEvent->mu_parentowner.pTreeItem, mu_parent.pEvent->m_tsEventID);
-	va_list vlArgs;
-	va_start(OUT vlArgs, pszFmtTemplate);
-	g_strScratchBufferSocket.BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
-	g_strScratchBufferSocket.BinAppendBinaryData("</iq>", 5);
-	PGetSocket_YZ()->Socket_WriteBin(g_strScratchBufferSocket);
-	}
-
-void
-ITask::Socket_WriteXmlIqReplyAcknowledge()
-	{
-	PGetSocket_YZ()->Socket_WriteXmlIqReplyAcknowledge();
-	}
-
-void
-ITask::ChatLog_UpdateEventWithinWidget(INOUT OCursor * poCursorTextBlock)
-	{
-	mu_parent.pEvent->ChatLogUpdateTextBlock(INOUT poCursorTextBlock);
-	}
-void
-ITask::ChatLog_UpdateEventWithinWidget()
-	{
-	OCursorSelectBlock oCursor(m_oTextBlockMessageLog);
-	mu_parent.pEvent->ChatLogUpdateTextBlock(INOUT &oCursor);
-	}
-
-/*
-//	Change the state of the parent event to indicate the data was sent once over the wire.
-void
-ITask::TaskSentOnce()
-	{
-	mu_parent.pEvent->TimestampOther_UpdateAsEventSentOnce();
-	// In the future, there could be a GUI update.  At the moment it cannot be done because there is a bug in QTextBrowser where an image cannot be updated without moving left.
-	}
-*/
-
-void
-ITask::TaskCompleted(PA_DELETING)
-	{
-	mu_parent.pEvent->TimestampOther_UpdateAsEventCompletedNow();
-	ChatLog_UpdateEventWithinWidget();
-	Assert(mu_parent.pEvent->mu_task.paTask == this);
-	mu_parent.pEvent->mu_task.paTask = NULL;
-	delete this;
-	}
-
-//	EWriteDataToSocket(), virtual
-ETaskCompletion
-ITask::EWriteDataToSocket()
-	{
-	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "ITask::EWriteDataToSocket(pEvent=0x$p, ^J)\n", mu_parent.pEvent, mu_parent.pEvent->mu_parentowner.pTreeItem);
-	return eTaskCompleted;
-	}
-
-//	ProcessStanza(), virtual
-void
-ITask::ProcessStanza(const CXmlNode * pXmlNodeStanza, PSZAC pszaVerbContext, const CXmlNode * pXmlNodeVerb)
-	{
-	Assert(pXmlNodeStanza != NULL);
-	Endorse(pszaVerbContext == NULL);
-	Endorse(pXmlNodeVerb == NULL);
-	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "ITask::ProcessStanza(pEvent=0x$p, ^J)\n^N", mu_parent.pEvent, mu_parent.pEvent->mu_parentowner.pTreeItem, pXmlNodeStanza);
-	}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 void
 CEventMessageTextSent::MessageDeliveredConfirmed()
 	{
-	TimestampOther_UpdateAsEventCompletedNow();
+	Event_SetCompleted(NULL);
+	//TimestampOther_UpdateAsEventCompletedNow();
 	/*
 	if (mu_task.paTask == NULL)
 		return;		// This happens when receiving twice a confirmation receipt for the same event/message
@@ -1285,18 +1139,8 @@ CEventMessageTextReceived::MessageUpdated(PSZUC pszMessageUpdated, INOUT WChatLo
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-ITaskFile::ITaskFile(IEvent * pEventParent, const OCursor * poCursorTextBlock) : ITask(pEventParent, poCursorTextBlock)
-	{
-	}
-
-CTaskFileUpload::CTaskFileUpload(CEventFileSent * pEventParent, const OCursor * poCursorTextBlock) : ITaskFile(pEventParent, poCursorTextBlock)
-	{
-	m_uSequence = 0;
-	}
-
-
+/*
 #define d_cbBufferSizeDefaultTransferFiles		4096	// 4 KiB default block size to transfer files
-
 ETaskCompletion
 CTaskFileUpload::EWriteDataToSocket()
 	{
@@ -1322,7 +1166,7 @@ CTaskFileUpload::EWriteDataToSocket()
 			"<si id='$t' profile='^*ft' ^:si><file ^:ft name='^s' size='$l'/>"
 				"<feature ^:fn><x ^:xd type='form'><field var='stream-method' type='list-single'><option><value>^*ib</value></option></field></x></feature>"
 			"</si>", mu_parent.pEventFileSent->m_tsEventID, pstrFileName->PathFile_PszGetFileNameOnly_NZ(), mu_parent.pEventFileSent->m_cblFileSize);
-		mu_parent.pEvent->TimestampOther_UpdateAsEventSentOnce();
+
 		// mu_parent.pEventFileSent->m_cblDataTransferred = d_cblDataTransferred_FileOffered;
 		}
 	#endif
@@ -1394,31 +1238,13 @@ CTaskFileUpload::ProcessStanza(const CXmlNode * pXmlNodeStanza, PSZAC pszaVerbCo
 	#endif
 	ChatLog_UpdateEventWithinWidget();	// Whatever stanza we received, always update the text block
 	} // ProcessStanza()
-
-void
-CTaskFileUpload::OnEventTransferCompleted()
-	{
-	m_oFile.close();
-//	mu_parent.pEventFileSent->m_cblDataTransferred = mu_parent.pEventFileSent->m_cblFileSize;
-	ChatLog_UpdateEventWithinWidget();
-	}
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CTaskFileDownload::CTaskFileDownload(CEventFileReceived * pEventParent, const OCursor * poCursorTextBlock) : ITaskFile(pEventParent, poCursorTextBlock)
-	{
-	Assert(pEventParent == mu_parent.pEventFileReceived);
-	m_pAccount->m_arraypTasksDownloading.TaskEventAdd(pEventParent);
-	}
-
-CTaskFileDownload::~CTaskFileDownload()
-	{
-	m_pAccount->m_arraypTasksDownloading.TaskEventRemove(mu_parent.pEventFileReceived);
-	}
-
+	/*
 ETaskCompletion
 CTaskFileDownload::EWriteDataToSocket()
 	{
-	/*
 	CStr * pstrFileName = &mu_parent.pEventFileReceived->m_strFileName;
 	m_oFile.setFileName(*pstrFileName);
 	if (!m_oFile.open(QFile::WriteOnly))
@@ -1433,7 +1259,6 @@ CTaskFileDownload::EWriteDataToSocket()
 		"<si id='$S' profile='^*ft' ^:si><feature ^:fn><x ^:xd type='submit'><field var='stream-method'><value>^*ib</value></field></x></feature></si></iq>",
 		&mu_parent.pEventFileReceived->m_strxStanzaID, m_pAccount, mu_parent.pEvent->mu_parentowner.pTreeItem, &mu_parent.pEventFileReceived->m_strxSID);
 	ChatLog_UpdateEventWithinWidget();
-	*/
 	return eTaskCompletionNeedsMoreProcessing;
 	}
 
@@ -1467,6 +1292,7 @@ CTaskFileDownload::ProcessStanza(const CXmlNode * pXmlNodeStanza, PSZAC pszaVerb
 	ChatLog_UpdateEventWithinWidget();
 	} // ProcessStanza()
 
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /*
@@ -1674,11 +1500,10 @@ CVaultEvents::PFindEventReceivedByTimestampOtherMatchingContactSender(TIMESTAMP 
 		{
 		IEvent * pEvent = *--ppEventStop;
 		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		TContact ** ppContactGroupSender = pEvent->PpGetContactGroupSender();
-		if (ppContactGroupSender == NULL)
+		if (pEvent->m_pContactGroupSender_YZ != pContactGroupSender)
 			continue;	// The event has not been received by a group... therefore ignore it
 		Assert(pEvent->m_tsOther > d_tsOther_kmReserved);
-		if (*ppContactGroupSender == pContactGroupSender && pEvent->m_tsOther == tsOther)
+		if (pEvent->m_tsOther == tsOther)
 			return pEvent;
 		if (pEvent->m_tsOther < tsOtherStop)
 			break;	// We went far enough in the list to conclude the event does not match the timestamp
@@ -1698,12 +1523,11 @@ CVaultEvents::PFindEventReceivedLastMatchingContactSender(TContact * pContactGro
 		{
 		IEvent * pEvent = *--ppEventStop;
 		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		TContact ** ppContactGroupSender = pEvent->PpGetContactGroupSender();
-		if (ppContactGroupSender == NULL)
-			continue;	// The event has not been received by a group... therefore ignore it
-		Assert(pEvent->m_tsOther > d_tsOther_kmReserved);
-		if (*ppContactGroupSender == pContactGroupSender)
+		if (pEvent->m_pContactGroupSender_YZ == pContactGroupSender)
+			{
+			Assert(pEvent->m_tsOther > d_tsOther_kmReserved);
 			return pEvent;
+			}
 		} // while
 	return NULL;
 	}
@@ -1875,6 +1699,7 @@ CArrayPtrEvents::DeleteAllEventsReceivedHavingDuplicateTsOther()
 	m_paArrayHdr->cElements = ppEventDst - ppEventStart;
 	} // DeleteAllEventsReceivedHavingDuplicateTsOther
 
+#if 0
 CTaskFileDownload *
 CArrayPtrTasksDownloading::PFindTaskMatchingSessionIdentifier(PSZUC pszSessionIdentifier) const
 	{
@@ -1897,20 +1722,10 @@ CArrayPtrTasksDownloading::PFindTaskMatchingSessionIdentifier(PSZUC pszSessionId
 		}
 	return NULL;
 	}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class CTaskPing : public ITask
-{
-public:
-	CTaskPing(CEventPing * pEventParent, const OCursor * poCursorTextBlock);
-	virtual ETaskCompletion EWriteDataToSocket();
-	virtual void ProcessStanza(const CXmlNode * pXmlNodeStanza, PSZAC pszaVerbContext, const CXmlNode * pXmlNodeVerb);
-};
-
-CTaskPing::CTaskPing(CEventPing * pEventParent, const OCursor * poCursorTextBlock) : ITask(pEventParent, poCursorTextBlock)
-	{
-	}
-
+/*
 ETaskCompletion
 CTaskPing::EWriteDataToSocket()
 	{
@@ -1924,29 +1739,40 @@ CTaskPing::ProcessStanza(const CXmlNode * pXmlNodeStanza, PSZAC, const CXmlNode 
 	mu_parent.pEventPing->m_strError = pXmlNodeStanza->PszFindElementStanzaErrorDescription();
 	TaskCompleted(PA_DELETING);
 	}
-
-CEventPing::CEventPing(ITreeItemChatLogEvents * pContact) : IEvent(pContact, NULL)
+*/
+CEventPing::CEventPing()
 	{
+	m_tsContact = d_ts_zNULL;
+	}
+
+void
+CEventPing::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
+	{
+	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><ping xmlns='urn:xmpp:ping'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
+	}
+
+void
+CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData)
+	{
+	if (m_tsContact == d_ts_zNULL)
+		m_tsContact = pXmlNodeExtraData->TsGetAttributeValueTimestamp_ML(d_chXCPa_PingTime);
+	Event_SetCompleted(NULL);
 	}
 
 //	CEventPing::IEvent::ChatLogUpdateTextBlock()
 void
 CEventPing::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
-	const TIMESTAMP_DELTA dtsResponse = m_tsOther - m_tsEventID;
-	const BOOL fValidResponse = (dtsResponse > 0);
-	if (!fValidResponse)
-		{
-		/*
-		if (mu_task.paTaskPing == NULL)
-			_TaskSet(PA_TASK new CTaskPing(this, poCursorTextBlock));
-		Assert(mu_task.paTaskPing != NULL);
-		*/
-		}
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
-	g_strScratchBufferStatusBar.BinAppendTextSzv_VE("Pinging <b>^s</b>...", mu_parentowner.pTreeItem->ChatLog_PszGetNickname());
-	if (fValidResponse > 0)
+	g_strScratchBufferStatusBar.BinAppendTextSzv_VE("Pinging <b>^s</b>...", ChatLog_PszGetNickNameOfContact());
+	const TIMESTAMP_DELTA dtsResponse = m_tsOther - m_tsEventID;
+	if (dtsResponse > 0)
+		{
 		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("  response time: <b>$L</b> ms", dtsResponse);
+		const TIMESTAMP_DELTA dtsClockDifference = m_tsContact - (m_tsEventID + m_tsOther) / 2;
+		if (dtsClockDifference > -1000 * d_ts_cDays && dtsClockDifference < 1000 * d_ts_cDays)
+			g_strScratchBufferStatusBar.BinAppendTextSzv_VE(" (clock difference: $T)", dtsClockDifference);	// Display the clock difference only if it is less than 1000 days (about 3 years).  Typically the clock difference should be a few seconds for systems connected to the UTC server, otherwise it may be a few at most a few minutes
+		}
 	if (!m_strError.FIsEmptyString())
 		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("  <b>(error: ^S)</b>", &m_strError);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(0xE8CFD8));

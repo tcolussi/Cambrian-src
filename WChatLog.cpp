@@ -82,7 +82,7 @@ WChatLog::ChatLog_EventDisplay(IEvent * pEvent)
 	if (pEvent == NULL)
 		return;
 	CArrayPtrEvents arraypEvents;
-	arraypEvents.Add(pEvent);
+	arraypEvents.EventAdd(pEvent);
 	ChatLog_EventsDisplay(arraypEvents);
 	}
 
@@ -124,11 +124,6 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 		oTextBlockEvent = oCursor.block();	// Get the current block under the cursor
 		Assert(oTextBlockEvent.userData() == NULL);
 		oTextBlockEvent.setUserData(PA_CHILD new OTextBlockUserDataEvent(pEvent));		// Assign an event for each text block
-		if (pEvent->mu_task.paTask != NULL)
-			{
-			// Update the text block of the task.  This line is important because of the Chat Log was cleared (reset), then all references to QTextBlock from tasks are dangling pointers.
-			pEvent->mu_task.paTask->m_oTextBlockMessageLog = oTextBlockEvent;
-			}
 		if (pSocket != NULL)
 			pEvent->Event_WriteToSocketIfNeverSent(pSocket);
 		pEvent->ChatLogUpdateTextBlock(INOUT &oCursor);

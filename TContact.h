@@ -27,6 +27,7 @@ public:
 		FCS_kmServiceDiscovery					= 0x0000000F,
 		};
 	UINT m_uFlagsContactSerialized;
+	int m_cVersionXCP;								// Which version of the Cambrian Protocol is supported by the contact.  This field is a temporary 'hack' to determine if an XMPP stanza should be sent through XCP or regular XMPP.
 
 protected:
 	enum
@@ -86,7 +87,6 @@ public:
 	virtual const QBrush & ChatLog_OGetBrushForNewMessageReceived();
 	virtual void Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const;
 	virtual void Vault_GetEventsForChatLog(OUT CArrayPtrEvents * parraypEventsChatLog) CONST_MCC;
-	//CEventMessageTextSent * Vault_PAllocateEventMessageToSend(const CStr & strMessage);
 	void Vault_AllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, WChatLog * pwChatLog);
 	CEventFileReceived * Vault_PAllocateEventFileReceived(const CXmlNode * pXmlNodeStreamInitiation);
 
@@ -135,7 +135,7 @@ public:
 	static IXmlExchange * S_PaAllocateContact(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
 	friend class WLayoutChatLog;	// Access m_uFlagsContact
 	friend class IContactAlias;
-	friend class ITreeItemChatLogEvents;
+	//friend class ITreeItemChatLogEvents;
 	friend class CArrayPtrContacts;
 	RTI_IMPLEMENTATION(TContact)
 }; // TContact
