@@ -104,7 +104,7 @@ public:
 	BOOL Socket_FIsConnected() const;
 	void Socket_DisconnectUI();
 	void Socket_WriteXmlPresence();
-	void Socket_WriteXmlPing();
+	void OnTimerNetworkIdle();
 	CSocketXmpp * Socket_PGetOnlyIfReadyToSendMessages() const;
 	CSocketXmpp * PGetSocket_YZ() const { return m_paSocket; }
 	void SocketTask_AddToQueue(ITask * pTask);

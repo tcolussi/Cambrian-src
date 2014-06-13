@@ -92,8 +92,8 @@ public:
 	TAccountXmpp * m_pAccount;				// Account where the object (Tree Item) belongs to.  Essentially, this pointer is the 'parent' of the contact or group.
 	CVaultEvents * m_paVaultEvents;			// Vault containing the events of the Chat Log.  This vault contains a linked list of its chained history, however this implementation is transparently handled by CVaultEvents.
 	TIMESTAMP m_tsCreated;					// Date & time when the contact or group was created.  This gives an idea to the user when the contact was first added to the GUI.
-	TIMESTAMP m_tsEventIdLastSent;
-	TIMESTAMP m_tsOtherLastReceived;		// Timestamp of the last received message.  This timestamp is useful to display in the GUI how long it has been since a message was received, but most importantly it is used to synchronize to determine if there are any missing message(s)
+	TIMESTAMP m_tsEventIdLastSentCached;	// Cached version of the event last sent (this cache is useful when a user is only receiving message, aka listening, and therefore to prevent Cambrian to constantly search the entire vault of events to find the last message sent)
+//	TIMESTAMP m_tsOtherLastReceived;		// Timestamp of the last received message.  This timestamp is useful to display in the GUI how long it has been since a message was received, but most importantly it is used to synchronize to determine if there are any missing message(s)
 	CStr m_strPathFolderDownload;			// Path to store where the downloaded files should be stored (each contact may have a different folder, so it is easier to categorize the download by projects). This field is in this class because if a class is capable to display a Chat Log, then it is also capable to receive files.
 protected:
 	int m_cMessagesUnread;					// Number of unread messages from the contact (this number is displayed in parenthesis after the contact name)
@@ -113,6 +113,7 @@ public:
 	void Vault_WriteEventsToDiskIfModified();
 	QString Vault_SGetPath() const;
 
+	WLayoutChatLog * ChatLog_PwGetLayout_YZ() const { return m_pawLayoutChatLog; }
 	WLayoutChatLog * ChatLog_PwGetLayout_NZ() CONST_MCC;
 	PSZUC ChatLog_PszGetPathFolderDownload() const;
 	inline int ChatLog_GetCountMessagesUnread() const { return m_cMessagesUnread; }
@@ -141,10 +142,9 @@ public:
 	void XmppUploadFile(PSZUC pszFileUpload);
 	void XmppUploadFiles(IN_MOD_INV PSZU pszmFilesUpload);
 	CSocketXmpp * Xmpp_PGetSocketOnlyIfReady() const;
-	//void Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...) const;
-	void XcpStanza_AppendTimestampsOfLastKnownEvents(IOUT CBinXcpStanzaType * pbinXcpStanza) const;
 
 	void DisplayDialogSendFile();
+	void DisplayDialogAddContactsToGroup();
 	friend class CVaultEvents;
 }; // ITreeItemChatLogEvents
 

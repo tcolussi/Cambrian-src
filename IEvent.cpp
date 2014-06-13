@@ -197,15 +197,17 @@ IEvent::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	}
 
 void
-IEvent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData)
+IEvent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
 	{
 	Assert(pXmlNodeExtraData != NULL);
+	Assert(pbinXcpStanzaReply != NULL);
 	}
 
 void
-IEvent::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData)
+IEvent::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
 	{
 	Assert(pXmlNodeExtraData != NULL);
+	Assert(pbinXcpStanzaReply != NULL);
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "IEvent::XcpExtraDataArrived($U): ^N", EGetEventClass(), pXmlNodeExtraData);	// The event must implement this virtual method
 	}
 
@@ -311,6 +313,13 @@ IEvent::Event_SetCompleted(QTextEdit * pwEditChatLog)
 	m_pVaultParent_NZ->SetModified();		// This line is important so the modified event is always saved to disk (otherwise an event may be updated, however not serialized because ITreeItemChatLogEvents will never know the event was updated)
 	Assert(Event_FHasCompleted());
 	ChatLog_UpdateEventWithinWidget(pwEditChatLog);
+	}
+
+void
+IEvent::Event_SetCompletedAndUpdateWidgetWithinChatLog()
+	{
+	Assert(m_pVaultParent_NZ != NULL);
+	Event_SetCompleted(m_pVaultParent_NZ->m_pParent->ChatLog_PwGet_YZ());
 	}
 
 //	Return TRUE if the event completed.
@@ -433,7 +442,7 @@ const char c_szHtmlMessageDelivered[] = "<img src=':/ico/Delivered' style='float
 const char c_szHtmlTemplateNickname[] = "<b>{sH}</b>: ";
 
 void
-IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) CONST_VIRTUAL
+IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	{
 	Assert(pbinTextHtml != NULL);
 	Assert(m_pVaultParent_NZ != NULL);
@@ -764,7 +773,7 @@ IEventFile::_PFileOpenReadOnly_NZ()
 		if (m_paFile->open(QIODevice::ReadOnly))
 			m_cblFileSize = m_paFile->size();
 		else
-			m_cblFileSize = d_IEventFile_cblFileSize_Invalid;
+			m_cblFileSize = d_IEventFile_cblFileSize_FileNotFound;
 		}
 	return m_paFile;
 	}
@@ -773,8 +782,29 @@ CFile *
 IEventFile::_PFileOpenWriteOnly_NZ()
 	{
 	if (m_paFile == NULL)
-		m_paFile = new CFileOpenWrite(m_strFileName);
+		{
+		m_paFile = new CFile(m_strFileName);
+		if (m_paFile->open(QIODevice::WriteOnly))
+			{
+			QFileInfo oFileInfo(*m_paFile);
+			m_strFileName = oFileInfo.absoluteFilePath();	// Get the full path
+			MessageLog_AppendTextFormatSev(eSeverityComment, "IEventFile::_PFileOpenWriteOnly_NZ($S) for tsEventID = $t\n", &m_strFileName, m_tsEventID);
+			m_cblDataTransferred = 0;
+			}
+		else
+			m_cblDataTransferred = d_IEventFile_cblDataTransferred_WriteError;
+		}
 	return m_paFile;
+	}
+
+void
+IEventFile::_FileClose()
+	{
+	if (m_paFile != NULL)
+		{
+		m_paFile->close();
+		m_paFile = NULL;
+		}
 	}
 
 #define d_chIEventFile_Attribute_strFileName		'n'
@@ -959,7 +989,7 @@ CEventFileSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_
 				}
 			else
 				{
-				Assert(m_cblFileSize == d_IEventFile_cblFileSize_Invalid);
+				Assert(m_cblFileSize == d_IEventFile_cblFileSize_FileNotFound);
 				pszTextHtmlTemplate = "Offering file to <b>@C</b>: @L @Z (file not found)";
 				}
 			break;
@@ -1042,6 +1072,10 @@ CEventFileReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CO
 			{
 		default:
 			pszTextHtmlTemplate = "File to download: @L @Z @s @a @d";	// Display to the user the opportunity to download the file, or decline the offer
+			break;
+		case d_IEventFile_cblDataTransferred_WriteError:
+			// If unable to write to disk, then do not offer the 'save' option
+			pszTextHtmlTemplate = "File to download: @L @Z <b>(write error)</b> @a @d";
 			break;
 		case d_IEventFile_cblDataTransferred_CancelledByLocalUser:
 			pszTextHtmlTemplate = "You declined to download file @L @Z";
@@ -1725,26 +1759,13 @@ CArrayPtrTasksDownloading::PFindTaskMatchingSessionIdentifier(PSZUC pszSessionId
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-ETaskCompletion
-CTaskPing::EWriteDataToSocket()
-	{
-	Socket_WriteXmlFormatted("<iq id='$t' type='get' from='^J' to='^J'><ping xmlns='urn:xmpp:ping'/></iq>", mu_parent.pEvent->m_tsEventID, m_pAccount, mu_parent.pEvent->mu_parentowner.pTreeItem);
-	return eTaskCompletionNeedsMoreProcessing;
-	}
-
-void
-CTaskPing::ProcessStanza(const CXmlNode * pXmlNodeStanza, PSZAC, const CXmlNode *)
-	{
-	mu_parent.pEventPing->m_strError = pXmlNodeStanza->PszFindElementStanzaErrorDescription();
-	TaskCompleted(PA_DELETING);
-	}
-*/
 CEventPing::CEventPing()
 	{
 	m_tsContact = d_ts_zNULL;
 	}
 
+//	CEventPing::IEvent::XmlSerializeCore()
+//	Send a ping request, both in XMPP and XCP.  Since the ping contains no 'data', the XCP ping is automaticaly handled by the core XCP routines handling the protocol.
 void
 CEventPing::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
@@ -1752,7 +1773,7 @@ CEventPing::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	}
 
 void
-CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData)
+CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType *)
 	{
 	if (m_tsContact == d_ts_zNULL)
 		m_tsContact = pXmlNodeExtraData->TsGetAttributeValueTimestamp_ML(d_chXCPa_PingTime);

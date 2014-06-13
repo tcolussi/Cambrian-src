@@ -5,7 +5,6 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-
 /*
 #define Q_ASSERT(cond) if(!(cond))
 { QMessageBox::critical(NULL, QApplication::tr("Critical error"), QApplication::tr("Assertion '<em>%1</em>' has failed\n in file '<strong>%2</strong>', line %3.").arg($cond).arg(__FILE__).arg(__LINE__));
@@ -19,6 +18,81 @@ L64 g_cAssertionsFailed;			// Number of failed assertions
 
 BOOL g_fIgnoreAllAsserts;
 CStr g_strAssertLast;	// Remember the content of the last assertion.  This is to prevent the same assertion to be displayed over and over again, as a long loop could have the same assertion failure several thousand times
+
+//#define DEBUG_ASSERT_NON_BLOCKING	// Comment this line to have a blocking Assert().  A blocking Assert() is useful to step into the debugger at the moment the assertion fails.
+
+#if 1
+#include "DialogAccountNew.h"
+
+DDialogAssertionFailure * g_pawlistAssertionFailures;	// Linked list of all the assertion failures (this list is used so Cambrian does not display the same assertion failure twice)
+
+DDialogAssertionFailure::DDialogAssertionFailure(const CStr & strMessageHtml, const CStr & strAssert) : DDialogOkCancelWithLayouts(c_szInternalErrorDetected, eMenuAction_ShowLogErrors)
+	{
+	m_pNext = g_pawlistAssertionFailures;
+	g_pawlistAssertionFailures = this;
+	m_strAssert = strAssert;
+	m_cAsserts = 1;
+	setMinimumWidth(500);
+	DialogBody_AddRowWidget_PA(new WLabelSelectableWrap(strMessageHtml));
+
+	WButtonTextWithIcon * pwButtonClose = new WButtonTextWithIcon("&Close|Dismiss this error message", eMenuAction_Close);
+	WButtonTextWithIcon * pwButtonCopyToClipboard = new WButtonTextWithIcon("Copy|Copy the invitation link into the clipboard", eMenuAction_Copy);
+	WButtonTextWithIcon * pwButtonViewErrorLog = new WButtonTextWithIcon("View Error Log...|Display the Error Log which displays detailed information about previous errors", eMenuAction_ShowLogErrors);
+	m_poLayoutButtons->Layout_AddWidgetsAndResizeWidths_VEZA(pwButtonClose, pwButtonCopyToClipboard, pwButtonViewErrorLog, NULL);
+	connect(pwButtonClose, SIGNAL(clicked()), this, SLOT(reject()));
+	connect(pwButtonCopyToClipboard, SIGNAL(clicked()), this, SLOT(SL_CopyToClipboard()));
+	connect(pwButtonViewErrorLog, SIGNAL(clicked()), this, SLOT(SL_ShowErrorLog()));
+	show();
+	}
+
+DDialogAssertionFailure::~DDialogAssertionFailure()
+	{
+	//MessageLog_AppendTextFormatSev(eSeverityNoise, "DDialogAssertionFailure::~DDialogAssertionFailure(0x$p)\n$S\n", this, &m_strAssert);
+	DDialogAssertionFailure * pwDialogPrevious = NULL;
+	DDialogAssertionFailure * pwDialog = g_pawlistAssertionFailures;
+	while (pwDialog != NULL)
+		{
+		if (pwDialog == this)
+			{
+			if (pwDialogPrevious == NULL)
+				g_pawlistAssertionFailures = m_pNext;
+			else
+				pwDialogPrevious->m_pNext = m_pNext;
+			return;
+			}
+		pwDialogPrevious = pwDialog;
+		pwDialog = pwDialog->m_pNext;
+		} // while
+	Assert(FALSE && "Unreachable code");
+	}
+
+void
+DDialogAssertionFailure::reject()
+	{
+	deleteLater();	// Delete the 'this' pointer
+	}
+
+void
+DDialogAssertionFailure::IncreaseAssert()
+	{
+	Dialog_SetCaptionFormat_VE("$s ($i times)", c_szInternalErrorDetected, ++m_cAsserts);
+	showNormal();
+	raise();
+	}
+
+void
+DDialogAssertionFailure::SL_CopyToClipboard()
+	{
+	m_strAssert.CopyStringToClipboard();
+	}
+
+void
+DDialogAssertionFailure::SL_ShowErrorLog()
+	{
+	ErrorLog_Show();
+	}
+
+#endif // DEBUG_ASSERT_NON_BLOCKING
 
 /////////////////////////////////////////////////////////////////////
 //	Return TRUE to break into the debugger
@@ -36,24 +110,43 @@ _FAssertionFailed(
 	// Dump the content of the assertion to the Message Log and Error Log
 	CStr strAssert;
 	PSZUC pszuAssert = strAssert.Format("[$@] $s($s)\n\tFile $s, line $i.", pszAssert, pszExpression, pszFile, nLine);
-	if (!g_strAssertLast.FCompareBinary(strAssert))
+	const BOOL fAssertionFailureSameAsPrevious = g_strAssertLast.FCompareBinary(strAssert);
+	if (!fAssertionFailureSameAsPrevious)
 		{
 		g_strAssertLast = strAssert;
 		MessageLog_AppendTextWithNewLine(COX_MakeBold(d_coAssert), pszuAssert);
 		MessageLog_Show();
 		ErrorLog_AddNewMessage(c_szInternalErrorDetected, pszuAssert);
 		}
+	CStr strMessageHtml;
+	strMessageHtml.Format("<b>$s</b>(<b>^s</b>)<br/>File $s, line $i.<br/><br/>"
+		"You have discovered a potential bug; <u>please</u> contact the developers of Cambrian.",
+		pszAssert, pszExpression, pszFile, nLine);
+
+	#ifdef DEBUG_ASSERT_NON_BLOCKING
+	// Before displaying a new window with the error, search if the assertion is already there
+	strAssert.Format("$s($s)\n\tFile $s, line $i.", pszAssert, pszExpression, pszFile, nLine);	// Reformat the assertion without the timestamp
+	DDialogAssertionFailure * pwDialog = g_pawlistAssertionFailures;
+	while (pwDialog != NULL)
+		{
+		if (pwDialog->m_strAssert.FCompareBinary(strAssert))
+			{
+			pwDialog->IncreaseAssert();
+			return FALSE;
+			}
+		pwDialog = pwDialog->m_pNext;
+		}
+	(void)new DDialogAssertionFailure(strMessageHtml, strAssert);
+	return FALSE;	// Non-blocking assertion never break into the debugger
+	#endif
 
 	if (g_fIgnoreAllAsserts)
 		return FALSE;
 	g_fIgnoreAllAsserts = TRUE;	// Prevent recursive entries
-	// Show the error to the user
-	CStr strMessageBox;
-	strMessageBox.Format("<b>$s</b>(<b>^s</b>)<br/>File $s, line $i.<br/><br/>"
-		"You have discovered a potential bug; <u>please</u> contact the developers of Cambrian.<br/><br/>"
-		"You may hold down the <b>Shift</b> key while clicking on the button <b>Ignore Error</b> to prevent future display of this error message.",
-		pszAssert, pszExpression, pszFile, nLine);
-	int iButton = QMessageBox::critical(g_pwMainWindow, c_szInternalErrorDetected, strMessageBox, "  Copy Error to Clipboard  ", "  Break Into Debugger  ", "  Ignore Error  ", 2, 2);
+
+	strMessageHtml.AppendTextU((PSZUC)"<br/><br/>You may hold down the <b>Shift</b> key while clicking on the button <b>Ignore Error</b> to prevent future display of this error message.");
+	// Show the assertion failure to the user with a Message Box (this code will block the thread until the user click on one of the button)
+	int iButton = QMessageBox::critical(g_pwMainWindow, c_szInternalErrorDetected, strMessageHtml, "  Copy Error to Clipboard  ", "  Break Into Debugger  ", "  Ignore Error  ", 2, 2);
 	g_fIgnoreAllAsserts = FALSE;
 
 	switch (iButton)

@@ -360,6 +360,23 @@ PszroGetToolTipNext(PSZAC pszmTextAndToolTip)
 	return pszmTextAndToolTip;
 	}
 
+BOOL
+FTextContainsTooltip(PSZAC pszmTextAndToolTip)
+	{
+	if (pszmTextAndToolTip != NULL)
+		{
+		while (TRUE)
+			{
+			UINT ch = *pszmTextAndToolTip++;
+			if (ch == '\0')
+				break;
+			if (ch == d_chSeparatorTextAndToolTip)
+				return TRUE;
+			}
+		}
+	return FALSE;
+	}
+
 //	Return NULL if the username is valid.
 //	Return a pointer to illegal character for a username, according to XEP-0029 and RFC 6122.
 //	Although the characters '?' and '*' are allowed in a JID, this function considers them as invalid.

@@ -13,6 +13,7 @@ public:
 	TGroup * m_pGroup;	// Parent group where the member belongs to
 	UINT m_uRolesAffiliationsPrivileges;
 	int m_cMessagesUnread;					// Number of unread messages from the contact (this number is displayed in parenthesis after the contact name)
+	TIMESTAMP m_tsOtherLastSynchronized;			// Timestamp of last synchronization
 public:
 	TGroupMember(TGroup * pGroup, TContact * pContact);
 	void TreeItemGroupMember_DisplayWithinNavigationTree();
@@ -48,12 +49,14 @@ public:
 	inline void DeleteAllAliasesRelatedToContactsAboutBeingDeleted() { m_arraypaMembers.DeleteAllAliasesRelatedToContactsAboutBeingDeleted(); }
 	void GroupInitNewIdentifier();
 	void DisplayDialogProperties();
+	void DisplayDialogAddContacts();
 
 	void Member_Add_UI(TContact * pContact);
 	void Member_Remove_UI(PA_DELETING TGroupMember * pMember);
 	TGroupMember * Member_PFindOrAddContact_NZ(TContact * pContact);
 	TGroupMember * Member_PFindOrAllocate_NZ(PSZUC pszMemberJID);
 	void Members_BroadcastChatState(EChatState eChatState) const;
+	void Members_GetContacts(IOUT CArrayPtrContacts * parraypContacts) const;
 
 	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;					// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);					// From IXmlExchange

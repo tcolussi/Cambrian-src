@@ -379,6 +379,19 @@ CArrayPtrTreeItems::DeleteAllTreeItems()
 	}
 
 void
+CArrayPtrTreeItems::ForEach_ClearFlagTreeItem(UINT kfFlagTreeItem) const
+	{
+	ITreeItem ** ppTreeItemStop;
+	ITreeItem ** ppTreeItem = PrgpGetTreeItemsStop(OUT &ppTreeItemStop);
+	while (ppTreeItem != ppTreeItemStop)
+		{
+		ITreeItem * pTreeItem = *ppTreeItem++;
+		Assert(pTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) == pTreeItem);
+		pTreeItem->m_uFlagsTreeItem &= ~kfFlagTreeItem;
+		}
+	}
+
+void
 CArrayPtrTreeItems::ForEach_SetFlagTreeItem(UINT kfFlagTreeItem) const
 	{
 	ITreeItem ** ppTreeItemStop;
@@ -392,13 +405,7 @@ CArrayPtrTreeItems::ForEach_SetFlagTreeItem(UINT kfFlagTreeItem) const
 	}
 
 void
-CArrayPtrTreeItems::ForEach_SetFlagTreeItemAboutBeingDeleted() const
-	{
-	ForEach_SetFlagTreeItem(ITreeItem::FTI_kfTreeItemAboutBeingDeleted);
-	}
-
-void
-CArrayPtrTreeItems::RemoveAllTreeItemsAboutBeingDeleted()
+CArrayPtrTreeItems::RemoveAllTreeItemsMatchingFlag(UINT kfFlagTreeItem)
 	{
 	if (m_paArrayHdr == NULL)
 		return;
@@ -410,8 +417,29 @@ CArrayPtrTreeItems::RemoveAllTreeItemsAboutBeingDeleted()
 		{
 		ITreeItem * pTreeItem = *ppTreeItemSrc++;
 		Assert(pTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) == pTreeItem);
-		if ((pTreeItem->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItemAboutBeingDeleted) == 0)
+		if ((pTreeItem->m_uFlagsTreeItem & kfFlagTreeItem) == 0)
 			*ppTreeItemDst++ = pTreeItem;
 		}
 	m_paArrayHdr->cElements = ppTreeItemDst - ppTreeItemStart;
+	}
+
+void
+CArrayPtrTreeItems::ForEach_SetFlagTreeItemAboutBeingDeleted() const
+	{
+	ForEach_SetFlagTreeItem(ITreeItem::FTI_kfTreeItemAboutBeingDeleted);
+	}
+
+void
+CArrayPtrTreeItems::RemoveAllTreeItemsAboutBeingDeleted()
+	{
+	RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfTreeItemAboutBeingDeleted);
+	}
+
+//	IMPLEMENTATION NOTES: Could also use ForEach_SetCookieValue()
+void
+CArrayPtrTreeItems::RemoveTreeItems(const CArrayPtrTreeItems & arraypTreeItemsToRemove)
+	{
+	ForEach_ClearFlagTreeItem(ITreeItem::FTI_kfTreeItemBit);
+	arraypTreeItemsToRemove.ForEach_SetFlagTreeItem(ITreeItem::FTI_kfTreeItemBit);
+	RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfTreeItemBit);
 	}

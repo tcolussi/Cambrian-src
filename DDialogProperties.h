@@ -1,3 +1,7 @@
+//	DDialogProperties.h
+//
+//	Core classes to create "property pages" as well as the implementation of a few of them.
+
 #ifndef DDIALOGPROPERTIES_H
 #define DDIALOGPROPERTIES_H
 #ifndef PRECOMPILEDHEADERS_H
@@ -90,5 +94,45 @@ protected:
 public:
 	DDialogPropertiesGroup(TGroup * pGroup);
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Widget displaying a list of contacts
+class WListContacts : public QListWidget
+{
+public:
+	QIcon m_oIconContact;
+
+public:
+	WListContacts();
+	void ContactAdd(TContact * pContact);
+	void ContactsAdd(const CArrayPtrContacts & arraypContacts);
+	void ContactAddTransfer(PA_DELETING QListWidgetItem * paItem);
+	void ContactRemove(TContact * pContact);
+	void ContactsGetAll(IOUT CArrayPtrContacts * parraypContacts) const;
+};
+class DDialogGroupAddContacts : public DDialogOkCancelWithLayouts
+{
+	Q_OBJECT
+protected:
+	ITreeItemChatLogEvents * m_pContactOrGroup;
+	TGroup * m_pGroup;
+	TGroup * m_paGroup;
+	WListContacts * m_pwListContactsAvailable;
+	WListContacts * m_pwListContactsInGroup;
+
+	// Array of contacts when the dialog was initialized
+	CArrayPtrContacts m_arraypContactsInGroup;
+	CArrayPtrContacts m_arraypContactsAvailable;
+
+public:
+	DDialogGroupAddContacts(ITreeItemChatLogEvents * pContactOrGroup);
+	~DDialogGroupAddContacts();
+
+protected slots:
+	void SL_ContactAvailableDoubleClicked(QListWidgetItem * paItem);
+	void SL_ContactInGroupDoubleClicked(QListWidgetItem * paItem);
+	void SL_ButtonOK();
+};
+
 
 #endif // DDIALOGPROPERTIES_H

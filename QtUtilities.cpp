@@ -167,6 +167,7 @@ WButtonIcon::WButtonIcon(QWidget * pwParent, EMenuAction eMenuIcon) : QToolButto
 WButtonIcon::WButtonIcon(EMenuAction eMenuIcon, PSZAC pszmToolTip)
 	{
 	_Init(eMenuIcon);
+	Assert(!FTextContainsTooltip(pszmToolTip));	// The text is already the tooltip, so there is no need to include the tooltip separator
 	setToolTip(pszmToolTip);
 	}
 

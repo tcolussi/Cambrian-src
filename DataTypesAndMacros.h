@@ -134,7 +134,7 @@ typedef LU64 TIMESTAMP;		// ts	- Unique value to identify  events in a chronolog
 	#define d_ts_cSeconds		1000		// Number of seconds in a timestamp
 	#define d_ts_cMinutes		60000		// Number of minutes in a timestamp
 	#define d_ts_cHours			3600000		// Number of hours in a timestamp
-	#define d_ts_cDays			86400000	// Number of days in a timestamp
+	#define d_ts_cDays			86400000LL	// Number of days in a timestamp
 	#define d_cSecondsPerHour	3600
 	#define d_cSecondsPerDay	86400
 	#define d_cSecondsPerWeek	604800

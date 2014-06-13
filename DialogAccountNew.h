@@ -126,4 +126,34 @@ protected slots:
 
 
 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Create a modeless dialog to display an assertion failure.
+//	The motivation for this dialog is to prevent Cambrian to block (pause) when there is an assertion failure.
+//	Blocking is useful when debugging, however may freeze (crash) the application if the assertion fails while processing a socket message,
+//	as each sockets are serialized with a mutex, and blocking may result in a mutex deadlock.
+class DDialogAssertionFailure : public DDialogOkCancelWithLayouts
+{
+	Q_OBJECT
+public:
+	DDialogAssertionFailure * m_pNext;
+	CStr m_strAssert;		// Text representing the Assert() or Report().  This text may be copied into the clipboard.
+	int m_cAsserts;			// Number of times this message was displayed
+
+public:
+	DDialogAssertionFailure(const CStr & strMessageHtml, const CStr & strAssert);
+	virtual ~DDialogAssertionFailure();
+	virtual void reject();
+	void IncreaseAssert();
+
+public slots:
+	void SL_CopyToClipboard();
+	void SL_ShowErrorLog();
+};
+
+
+
 #endif // DIALOGACCOUNTNEW_H
+
+

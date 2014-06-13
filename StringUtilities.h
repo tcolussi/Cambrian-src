@@ -8,6 +8,7 @@
 PSZROU PszroGetTextAfterCharacter(PSZUC pszText, UINT chCompare);
 PSZROU PszroGetServerNameFromJid(PSZUC pszJidOrEmail);
 PSZROA PszroGetToolTipNext(PSZAC pszmTextAndToolTip);
+BOOL FTextContainsTooltip(PSZAC pszmTextAndToolTip);
 PCHERROR PcheValidateUsername(PSZUC pszUsername);
 PCHERROR PcheValidateServername(PSZUC pszServername);
 PCHERROR PcheValidateJID(PSZUC pszJID);

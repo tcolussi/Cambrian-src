@@ -99,7 +99,7 @@ public:
 	void Socket_WriteXmlIqResult_Gsb(PSZAC pszFmtTemplate, ...);
 	void Socket_WriteXmlIqReplyAcknowledge();
 	void Socket_WriteXmlPresence();
-	void Socket_WriteXmlPingToServer();
+	void Socket_WriteXmlPingToServerIfIdle();
 	void Socket_WriteXmlPingToContact(TContact * pContact);
 	void Socket_WriteRequestForContactAuthorization(TContact * pContactAuthorizing);
 	void Socket_WriteXmlStartTls();

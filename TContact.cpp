@@ -22,6 +22,7 @@ TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	m_uFlagsContact = FC_kfContactNeedsInvitation | FC_kfNoCambrianProtocol;	// Until proven otherwise, any new contact needs an invitation and is assumed to not understand the Cambrian Protocol <xcp>
 	m_uFlagsContactSerialized = 0;
 	m_plistAliases = NULL;
+	m_tsOtherLastSynchronized = d_ts_zNA;
 	m_cVersionXCP = 0;
 	}
 
@@ -129,7 +130,8 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
 	pXmlExchanger->XmlExchangeStr("JID", INOUT_F_UNCH_S &m_strJidBare);
 	pXmlExchanger->XmlExchangeFlags("Flags", INOUT &m_uFlagsContact, FC_kmFlagsSerializeMask);
-	pXmlExchanger->XmlExchangeUIntHex("F", INOUT &m_uFlagsContactSerialized);
+//	pXmlExchanger->XmlExchangeUIntHex("F", INOUT &m_uFlagsContactSerialized);
+	pXmlExchanger->XmlExchangeTimestamp("tsSync", INOUT_F_UNCH_S &m_tsOtherLastSynchronized);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT_F_UNCH_S &m_strComment);
 	m_strJidBare.StringTruncateAtCharacter('/');	// Remove the resource from the JID. In earlier version of the chat, the serialized JID could contain the resource.  Eventually this line should go away.
 	} // XmlExchange()
@@ -264,7 +266,7 @@ TContact::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	pMenu->ActionAdd(eMenuAction_ContactSubscribe);
 	pMenu->ActionAdd(eMenuAction_ContactUnsubscribe);
 	*/
-	WMenu * pMenuGroup = pMenu->PMenuAdd("Add Contact to Group", eMenuAction_GroupAddContact);
+	WMenu * pMenuGroup = pMenu->PMenuAdd("Add Contact to Group", eMenuAction_ContactAddToGroup);
 	int eMenuActionGroup = eMenuSpecialAction_GroupFirst;
 	TGroup ** ppGroupStop;
 	TGroup ** ppGroup = m_pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);

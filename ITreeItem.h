@@ -15,17 +15,18 @@
 //	The class CTreeWidgetItem provides a layer of abstraction between the QTreeWidget and the CChatConfiguration.
 //	This way, if for some reason, it is better to use a different control, such as a QTreeView, then the impact on the code is minimal.
 //
-//	Every tree item in the navigation tree must inherit CTreeWidgetItem so we can easily determine
+//	Every Tree Item in the navigation tree must inherit CTreeWidgetItem so we can easily determine
 //	which ITReeItem is selected in the navigation tree.
 //	Of course, the m_piTreeItem could be stored in the 'type' (aka member variable rtti) of the QTreeWidgetItem,
-//	however this small optimization may be done later.
+//	however since the member variable rtti is declared as an 'int', I feel it is quite risky to store a pointer on a 64-bit architecture.
+//	Anyways, if there is a need for such optimization, we may do it later.
 //
 //	INTERFACE NOTES
 //	Although the class CTreeWidgetItem contains the word 'Widget', its parent class QTreeWidgetItem is NOT inheriting from QWidget nor from QObject.
 class CTreeWidgetItem : public QTreeWidgetItem
 {
 public:
-	ITreeItem * m_piTreeItem;	// Interface of the object containing the data of the tree item.  The data is stored and allocated by the CChatConfiguration object.
+	ITreeItem * m_piTreeItem;	// Interface of the object containing the data of the Tree Item.  The data is stored and allocated by the CChatConfiguration object.
 
 public:
 	inline void setVisible(bool fVisible) { setHidden(!fVisible); }
@@ -74,8 +75,9 @@ public:
 		FTI_kefIconWarning						= 0x0001,
 		FTI_kefIconError						= 0x0002,
 		FTI_kemIconMask							= 0x000F,
-		FTI_kfTreeItemAboutBeingDeleted			= 0x0010,	// The Tree Item is about being deleted (therefore any reference/pointer to it must be removed).  This flag is typically used when deleting accounts and contacts.
-		FTI_kfTreeItemNameDisplayedGenerated	= 0x0020,	// The member variable m_strNameDisplayTyped has been generated, and therefore should not be serialized (saved to disk).  Since this flag is not stored to disk nor m_strNameDisplayTyped, the display name will be re-geneated each time Cambrian starts.
+		FTI_kfTreeItemBit						= 0x0010,	// Generic bit to store a boolean value (this bit is used to efficiently merge or delete arrays)
+		FTI_kfTreeItemAboutBeingDeleted			= 0x0020,	// The Tree Item is about being deleted (therefore any reference/pointer to it must be removed).  This flag is typically used when deleting accounts and contacts.
+		FTI_kfTreeItemNameDisplayedGenerated	= 0x0040,	// The member variable m_strNameDisplayTyped has been generated, and therefore should not be serialized (saved to disk).  Since this flag is not stored to disk nor m_strNameDisplayTyped, the display name will be re-geneated each time Cambrian starts.
 		// The following flags FTI_kfChatLog* are used by ITreeItemChatLog and ITreeItemChatLogEvents.  The motivation for storing those flags in m_uFlagsTreeItem is avoiding another member variable.
 		FTI_kfChatLogBrushColor					= 0x0100,	// Which brush color to use when displaying events in the Chat Log.
 		FTI_kfChatLogEventsRepopulateAll		= 0x0200,	// Repopulate all events of the Chat Log next time the Tree Item gets the focus
@@ -158,9 +160,14 @@ public:
 	inline ITreeItem ** PrgpGetTreeItemsStop(OUT ITreeItem *** pppTreeItemStop) const { return (ITreeItem **)PrgpvGetElementsStop(OUT (void ***)pppTreeItemStop); }
 	void DeleteTreeItem(PA_DELETING ITreeItem * paTreeItem);
 	void DeleteAllTreeItems();
+
+	void ForEach_ClearFlagTreeItem(UINT kfFlagTreeItem) const;
 	void ForEach_SetFlagTreeItem(UINT kfFlagTreeItem) const;
+	void RemoveAllTreeItemsMatchingFlag(UINT kfFlagTreeItem);
+
 	void ForEach_SetFlagTreeItemAboutBeingDeleted() const;
 	void RemoveAllTreeItemsAboutBeingDeleted();
+	void RemoveTreeItems(const CArrayPtrTreeItems & arraypTreeItemsToRemove);
 };
 
 #endif // ITREEITEM_H

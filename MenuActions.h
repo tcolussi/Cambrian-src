@@ -39,13 +39,14 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_AccountProperties,		// Display the properties of the selected account
 	eMenuAction_AccountReconnect,		// Reconnect to the server
 
-	eMenuAction_Contact,			// Generic icon for a contact
-	eMenuAction_ContactAdd,			// Add a new contact to the selected account
+	eMenuAction_Contact,				// Generic icon for a contact
+	eMenuAction_ContactAdd,				// Add a new contact to the selected account
+	eMenuAction_ContactAddToGroup,		// Add the selected contact to an existing group
 	eMenuAction_ContactRename,
 	eMenuAction_ContactRemove,			// Delete/remove the selected contact
 	eMenuAction_ContactSendFile,		// Send a file to a contact
-	eMenuAction_ContactInvite,		// Create an invitation for a new contact
-	eMenuAction_ContactApprove,		// Add the selected contact to your list of approved contacts
+	eMenuAction_ContactInvite,			// Create an invitation for a new contact
+	eMenuAction_ContactApprove,			// Add the selected contact to your list of approved contacts
 	eMenuAction_ContactSubscribe,
 	eMenuAction_ContactUnsubscribe,
 	eMenuAction_ContactProperties,		// Display the properties of the selected contact
@@ -57,7 +58,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_GroupNew,
 	eMenuAction_GroupDelete,
 	eMenuAction_GroupRename,
-	eMenuAction_GroupAddContact,
+	eMenuAction_GroupAddContacts,
 	eMenuAction_GroupRemoveContact,
 	eMenuAction_GroupProperties,	// Display the properties of the group
 

@@ -611,14 +611,14 @@ Configuration_NetworkReconnectIfDisconnected()
 	}
 
 void
-Configuration_NetworkBroadcastPing()
+Configuration_OnTimerNetworkIdle()
 	{
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = g_arraypAccounts.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
-		pAccount->Socket_WriteXmlPing();
+		pAccount->OnTimerNetworkIdle();
 		}
 	}
 

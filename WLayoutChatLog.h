@@ -22,7 +22,7 @@ public:
 protected:
 	class WFindText * m_pwFindText;			// Widget to search text within the chat history.  Eventually this widget should be built-in to WChatLog
 	WButtonIcon * m_pwButtonSendBitcoin;
-	WButtonIcon * m_pwButtonSendFile;
+	//WButtonIcon * m_pwButtonSendFile;
 
 public:
 	explicit WLayoutChatLog(ITreeItemChatLogEvents * pParent);
@@ -53,6 +53,7 @@ public:
 public slots:
 	void SL_ButtonSendBitcoin();
 	void SL_ButtonSendFile();
+	void SL_ButtonAddContacts();
 }; // WLayoutChatLog
 
 

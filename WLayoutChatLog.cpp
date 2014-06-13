@@ -230,17 +230,18 @@ TContact::ChatLogContact_DisplayStanzaToUI(const CXmlNode * pXmlNodeMessageStanz
 	#endif
 
 	PSZUC pszuMessageBody = ChatLog_PwGetLayout_NZ()->ChatLog_DisplayStanzaToUser(pXmlNodeMessageStanza);
-	if (pszuMessageBody != NULL)
-		TreeItemContact_IconUpdateOnNewMessageArrived(pszuMessageBody);
+	TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(pszuMessageBody, this);
 	} // ChatLogContact_DisplayStanzaToUI()
 
 
 void
 ITreeItemChatLogEvents::TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(PSZUC pszMessage, TContact * pContact)
 	{
-	Assert(pszMessage != NULL);
 	Assert(pContact != NULL);
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+	if (pszMessage == NULL)
+		return;
+	Assert(pszMessage[0] != '\0');
 	if (m_pawLayoutChatLog == NULL || !m_pawLayoutChatLog->FGotFocus())
 		m_cMessagesUnread++;				// The layout does not have the focus (or does not exist), so display a special icon to indicate a new message arrived from the contact
 	TreeItemChatLog_UpdateTextAndIcon();	// Always update the text and icon when a new message arrives.  This is important because before a message arrive, there is usually the 'composing' icon, and after the message arrives, this icon must be changed by either the online presence, or an icon indicating there is a new unread message.
@@ -252,13 +253,13 @@ ITreeItemChatLogEvents::TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact
 		}
 	MainWindow_SystemTrayNewMessageArrived(pContact, pszMessage);
 	}
-
+/*
 void
 TContact::TreeItemContact_IconUpdateOnNewMessageArrived(PSZUC pszMessage)
 	{
 	TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(pszMessage, this);
 	}
-
+*/
 #if 0
 void
 TGroup::TreeItemGroup_NewMessageArrived(PSZUC pszMessage, TContact * pContact)
@@ -521,9 +522,13 @@ WLayoutChatLog::WLayoutChatLog(ITreeItemChatLogEvents * pParent)
 	pLayoutButtons->addWidget(m_pwButtonSendBitcoin);
 	connect(m_pwButtonSendBitcoin, SIGNAL(clicked()), this, SLOT(SL_ButtonSendBitcoin()));
 
-	m_pwButtonSendFile = new WButtonIcon(eMenuAction_ContactSendFile, "Send File\n\nYou may drag and drop the file, or copy & paste the file from Windows Explorer");
-	pLayoutButtons->addWidget(m_pwButtonSendFile);
-	connect(m_pwButtonSendFile, SIGNAL(clicked()), this, SLOT(SL_ButtonSendFile()));
+	WButtonIcon * pwButtonSendFile = new WButtonIcon(eMenuAction_ContactSendFile, "Send File\n\nYou may drag and drop the file, or copy & paste the file from Windows Explorer");
+	pLayoutButtons->addWidget(pwButtonSendFile);
+	connect(pwButtonSendFile, SIGNAL(clicked()), this, SLOT(SL_ButtonSendFile()));
+
+	WButtonIcon * pwButton = new WButtonIcon(eMenuAction_ContactAdd, "Add people to the converstation");
+	pLayoutButtons->addWidget(pwButton);
+	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonAddContacts()));
 
 	setChildrenCollapsible(false);		// Do not allow the widget WChatInput() to collapse; it would be very confusing to the user
 
@@ -664,7 +669,10 @@ TContact::Vault_AllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode *
 			} // if (event)
 		}
 	CEventMessageTextReceived * pEvent = new CEventMessageTextReceived(NULL);
-	pEvent->m_tsOther = tsMessageWritten;
+	if (tsMessageWritten != d_ts_zNULL)
+		pEvent->m_tsOther = tsMessageWritten;
+	else
+		pEvent->m_tsOther = pEvent->m_tsEventID;	// Use the same timestamp
 	pEvent->m_strMessageText = pszuMessageBody;
 	const CXmlNode * pXmlNodeHtml = pXmlNodeMessageStanza->PFindElement("html");
 	if (pXmlNodeHtml != NULL)
@@ -720,11 +728,18 @@ WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStan
 		if (pXmlNodeRequest != NULL)
 			{
 			// The client sending the message stanza requested a confirmation receipt.  Therefore send the confirmation receipt
-			CSocketXmpp * pSocket = m_pContactParent_YZ->Xmpp_PGetSocketOnlyIfReady();
-			Assert(pSocket != NULL);	// At this point, the socket should be valid
+			//CSocketXmpp * pSocket = m_pContactParent_YZ->Xmpp_PGetSocketOnlyIfReady();
+			//Endorse(pSocket == NULL);	// Although this may sound obvious the socket is ready to send messages, it is not always the case, as sometimes a message is received while connecting to a server (the server cached the message)
+			CSocketXmpp * pSocket = m_pContactParent_YZ->m_pAccount->PGetSocket_YZ();
+			Assert(pSocket != NULL);
 			if (pSocket != NULL)
+				#if 0
+				pSocket->Socket_WriteXmlFormatted("<message to='$s'><received xmlns='urn:xmpp:receipts' id='$s'/></message>",
+					pXmlNodeMessageStanza->PszFindAttributeValueFrom_NZ(), pXmlNodeMessageStanza->PszFindAttributeValueId_NZ());
+				#else
 				pSocket->Socket_WriteXmlFormatted("<message from='^s' to='$s'><received xmlns='urn:xmpp:receipts' id='$s'/></message>",
 					pXmlNodeMessageStanza->PszFindAttributeValueTo_NZ(), pXmlNodeMessageStanza->PszFindAttributeValueFrom_NZ(), pXmlNodeMessageStanza->PszFindAttributeValueId_NZ());
+				#endif
 			}
 		}
 	else
@@ -737,10 +752,11 @@ WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStan
 			CEventMessageTextSent * pEvent = (CEventMessageTextSent *)m_pContactParent_YZ->Vault_PFindEventByID(tsMessageReceived);	// TODO: Search within the socket, it will be much faster
 			if (pEvent != NULL)
 				{
-				Assert(pEvent->EGetEventClass() == eEventClass_eMessageTextSent);
+				Assert(pEvent->EGetEventClass() == CEventMessageTextSent::c_eEventClass);
 				if (pEvent->EGetEventClass() == eEventClass_eMessageTextSent)
 					{
-					pEvent->MessageDeliveredConfirmed();
+					//pEvent->MessageDeliveredConfirmed();
+					pEvent->Event_SetCompletedAndUpdateWidgetWithinChatLog();
 					if (m_pContactParent_YZ->m_uFlagsContact & TContact::FC_kfContactNeedsInvitation)
 						m_pContactParent_YZ->ChatLogContact_RemoveInvitationMessage();
 					}
@@ -893,4 +909,10 @@ void
 WLayoutChatLog::SL_ButtonSendFile()
 	{
 	PGetContactOrGroup_NZ()->DisplayDialogSendFile();
+	}
+
+void
+WLayoutChatLog::SL_ButtonAddContacts()
+	{
+	PGetContactOrGroup_NZ()->DisplayDialogAddContactsToGroup();
 	}

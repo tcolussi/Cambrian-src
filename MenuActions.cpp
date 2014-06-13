@@ -59,6 +59,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 
 	"Contact" _ "i=Contact" _, //eMenuAction_Contact
 	"Add Contact..." _ /*"a=Ctrl+Shift+C" _*/ "i=ContactAdd" _ "s=Add a new contact for the selected account" _,	// eMenuAction_ContactAdd
+	"Add Contact to Group" _ "i=ContactAdd" _ "s=Add the selected contact to a group" _,	// eMenuAction_ContactAddToGroup
 	"Rename Contact..." _ "i=ContactEdit" _ "s=Change the display name of the selected contact" _,	// eMenuAction_ContactRename
 	"Remove Contact..." _ "i=ContactRemove" _ "s=Remove the selected contact from your list of approved contacts" _,	// eMenuAction_ContactRemove
 	"Send File to Contact..." _ "i=FileUpload" _ "s=Upload a file to the selected contact" _, // eMenuAction_ContactSendFile	("a=Ctrl+Shift+F" does not work because it is not connected to the main menu)
@@ -75,7 +76,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"<New Group...>" _ "i=GroupAdd" _, // eMenuAction_GroupNew
 	"Delete Group" _ "i=GroupDelete" _, // eMenuAction_GroupDelete
 	"Rename Group" _ "i=GroupEdit" _, // eMenuAction_GroupRename
-	"Add Contact to Group" _ "i=ContactAdd" _, // eMenuAction_GroupAddContact
+	"Add Contacts to Group..." _ "i=ContactAdd" _ "s=Add people to the group" _, // eMenuAction_GroupAddContacts
 	"Remove Contact from Group" _ "i=ContactRemove" _, // eMenuAction_GroupRemoveContact
 	"Group Properties..." _ "i=Properties" _, // eMenuAction_GroupProperties
 

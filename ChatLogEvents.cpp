@@ -34,9 +34,10 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 			if (oXmlTreeEvents.FCompareTagName(c_szE) || oXmlTreeEvents.FCompareTagName("Events"))
 				{
 				m_arraypaEvents.EventsUnserializeFromDisk(IN oXmlTreeEvents.m_pElementsList, m_pParent);
-				// TODO: We need to check if this is the first vault in the chain.  So far, there is always only one, however this code will have to be revised when chaining vaults.
-				// Update the timestamps so they reflect actual messages in the Chat Log.
-				IEvent * pEventLastReceived = NULL;
+				// TODO: We need to check if this is the first vault in the chain.  So far, there is always only one vault, however this code will have to be revised when chaining vaults.
+
+				/*
+				TIMESTAMP tsOtherLastReceived = d_ts_zNA;
 				IEvent * pEventLastSent = NULL;
 				IEvent ** ppEventStop;
 				IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
@@ -65,8 +66,21 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 							break;	// We are done
 						} // if...else
 					} // while
-				MessageLog_AppendTextFormatSev(eSeverityNoise, "CVaultEvents::ReadEventsFromDisk(\"{h!}.dat\") - m_tsEventIdLastSent=$t, m_tsOtherLastReceived=$t\n", pHashFileName, m_pParent->m_tsEventIdLastSent, m_pParent->m_tsOtherLastReceived);
-				}
+				*/
+				} // if
+			}
+		}
+	m_pParent->m_tsEventIdLastSentCached = m_arraypaEvents.TsEventIdLastEventSent();	// Update the timestamp so it is what is from the vault, rather than what was loaded from the configuration, as the Chat Log may have been deleted.
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "CVaultEvents::ReadEventsFromDisk(\"{h!}.dat\") - m_tsEventIdLastSentCached=$t\n", pHashFileName, m_pParent->m_tsEventIdLastSentCached);
+	if (m_pParent->EGetRuntimeClass() == RTI(TContact))
+		{
+		TContact * pContact = (TContact *)m_pParent;
+		TIMESTAMP tsOtherLastReceived = m_arraypaEvents.TsEventOtherLastEventReceived();
+		if (tsOtherLastReceived < pContact->m_tsOtherLastSynchronized || pContact->m_tsOtherLastSynchronized == d_ts_zNA)
+			{
+			if (tsOtherLastReceived != d_ts_zNA)
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastSynchronized from $t to $t\n", pContact->m_tsOtherLastSynchronized, tsOtherLastReceived);
+			pContact->m_tsOtherLastSynchronized = tsOtherLastReceived;
 			}
 		}
 	} // ReadEventsFromDisk()
@@ -74,6 +88,7 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 void
 CVaultEvents::WriteEventsToDiskIfModified()
 	{
+	Endorse(m_pEventLastSaved == NULL);	// Always write the vault to disk
 	IEvent * pEventLastSaved = PGetEventLast_YZ();
 	if (pEventLastSaved != m_pEventLastSaved)
 		{
@@ -176,14 +191,8 @@ ITreeItemChatLogEvents::ITreeItemChatLogEvents(TAccountXmpp * pAccount)
 	Assert(pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
 	m_pAccount = pAccount;
 	m_paVaultEvents = NULL;
-//	m_tsLastSavedToDisk = d_zNA;
 	m_tsCreated = d_ts_zNULL;
-	/*
-	m_synchronization.tsEventID = d_zNA;
-	m_synchronization.tsOther = d_zNA;
-	*/
-	m_tsEventIdLastSent = d_ts_zNULL;
-	m_tsOtherLastReceived = d_ts_zNULL;
+	m_tsEventIdLastSentCached = d_ts_zNA;
 	m_cMessagesUnread = 0;
 	m_pawLayoutChatLog = NULL;
 	}
@@ -236,7 +245,6 @@ ITreeItemChatLogEvents::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	#if 0
 	pXmlExchanger->XmlExchangeTimestamp("tsEventSyncSent", INOUT_F_UNCH_S &m_synchronization.tsEventID);
 	pXmlExchanger->XmlExchangeTimestamp("tsEventSyncReceived", INOUT_F_UNCH_S &m_synchronization.tsOther);
-//	pXmlExchanger->XmlExchangeTimestamp("tsEventLast", INOUT_F_UNCH_S &m_tsLastSavedToDisk);
 	#endif
 	pXmlExchanger->XmlExchangeStr("DownloadFolder", INOUT_F_UNCH_S &m_strPathFolderDownload);
 	pXmlExchanger->XmlExchangeInt("MessagesUnread", INOUT_F_UNCH_S &m_cMessagesUnread);

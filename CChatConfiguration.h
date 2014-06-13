@@ -79,7 +79,7 @@ void Configuration_Save();
 void Configuration_SaveAs();
 void Configuration_Restore();
 void Configuration_GlobalSettingsPresenceUpdate(EMenuAction eMenuAction);
-void Configuration_NetworkBroadcastPing();
+void Configuration_OnTimerNetworkIdle();
 void Configuration_NetworkReconnectIfDisconnected();
 
 #endif // CCHATCONFIGURATION_H

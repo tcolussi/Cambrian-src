@@ -346,11 +346,11 @@ TAccountXmpp::Socket_WriteXmlPresence()
 	}
 
 void
-TAccountXmpp::Socket_WriteXmlPing()
+TAccountXmpp::OnTimerNetworkIdle()
 	{
 	m_arraypContactsComposing.RemoveAllContactsComposingWhoAreIdle();
 	if (Socket_FIsConnected())
-		m_paSocket->Socket_WriteXmlPingToServer();
+		m_paSocket->Socket_WriteXmlPingToServerIfIdle();
 	}
 
 void

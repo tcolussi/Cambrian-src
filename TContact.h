@@ -28,6 +28,7 @@ public:
 		};
 	UINT m_uFlagsContactSerialized;
 	int m_cVersionXCP;								// Which version of the Cambrian Protocol is supported by the contact.  This field is a temporary 'hack' to determine if an XMPP stanza should be sent through XCP or regular XMPP.
+	TIMESTAMP m_tsOtherLastSynchronized;			// Timestamp of last synchronization
 
 protected:
 	enum
@@ -137,6 +138,7 @@ public:
 	friend class IContactAlias;
 	//friend class ITreeItemChatLogEvents;
 	friend class CArrayPtrContacts;
+	friend class IEvent;
 	RTI_IMPLEMENTATION(TContact)
 }; // TContact
 

@@ -113,6 +113,8 @@ public:
 	void BinInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml);
 	void XmppWriteStanzaToSocket();
 	void XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE(PSZAC pszFmtTemplate, ...);
+	void XcpAppendTimestampsToSynchronizeWithContact(TContact * pContact);
+	void XcpAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember);
 	void XcpSendStanzaToContact(TContact * pContact) const;
 	void XcpSendStanza() const;
 };
@@ -211,8 +213,8 @@ public:
 	void XmlSerializeAttributeContactIdentifierOfGroupSender(IOUT CBin * pbinXml);
 	void XmlSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlDisk);
 	void XmlSerializeForXCP(INOUT CBinXcpStanzaType * pbinXcpStanza);
-	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData);
-	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData);
+	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	void XcpRequesExtraData();
 
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
@@ -226,6 +228,7 @@ public:
 	BOOL Event_FIsEventTypeSent() const;
 	BOOL Event_FIsEventTypeReceived() const;
 	void Event_SetCompleted(QTextEdit * pwEditChatLog);
+	void Event_SetCompletedAndUpdateWidgetWithinChatLog();
 	BOOL Event_FHasCompleted() const;
 	inline void Event_SetFlagOutOfSync() { m_uFlagsEvent |= FE_kfEventOutOfSync; }
 	inline void Event_SetFlagErrorProtocol() { m_uFlagsEvent |= FE_kfEventErrorProtocol; }
@@ -242,7 +245,7 @@ public:
 	void Socket_WriteXmlIqError_VE_Gso(PSZAC pszErrorType, PSZUC pszErrorID, PSZAC pszFmtTemplate, ...);
 
 protected:
-	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) CONST_VIRTUAL;
+	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const;
 	void _BinHtmlInitWithTimeAndNickname(OUT CBin * pbinTextHtml, PSZUC pszNickname) const;
 	void _BinHtmlInitWithTimeAndNickname(OUT CBin * pbinTextHtml, ITreeItemChatLog * pTreeItemNickname) const;
 	void _BinHtmlInitWithTimeAsSender(OUT CBin * pbinTextHtml) const;
@@ -332,8 +335,9 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-#define d_IEventFile_cblFileSize_Invalid							(-1)	// Those values are arbitrary chosen
+//	The following #define must be negative (however their values have been arbitrary chosen)
+#define d_IEventFile_cblFileSize_FileNotFound						(-1)	// The file could not be found (this is for a file offer where the offered file has been moved and/or deleted)
+#define d_IEventFile_cblDataTransferred_WriteError					(-1)	// Unable to save the file disk
 #define d_IEventFile_cblDataTransferred_CancelledByLocalUser		(-2)
 #define d_IEventFile_cblDataTransferred_CancelledByRemoteContact	(-3)
 
@@ -357,6 +361,7 @@ public:
 	void _FileTransferCancelledByLocalUser(OCursor * poCursorTextBlock);
 	CFile * _PFileOpenReadOnly_NZ();
 	CFile * _PFileOpenWriteOnly_NZ();
+	void _FileClose();
 }; // IEventFile
 
 //	The user is offering a file to the contact(s)
@@ -368,7 +373,7 @@ public:
 	virtual ~CEventFileSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP(const TContact *) const;
-	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData);
+	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 
 	static const EEventClass c_eEventClass = eEventClass_eFileSent;
@@ -379,13 +384,12 @@ class CEventFileReceived : public IEventFile
 {
 public:
 	static const EEventClass c_eEventClass = eEventClass_eFileReceived_class;
-
 public:
 	CEventFileReceived(const TIMESTAMP * ptsEventID);
 	virtual ~CEventFileReceived();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return eEventClass_eFileSent; }
-	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData);
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
@@ -482,15 +486,17 @@ public:
 class CEventPing : public IEvent
 {
 public:
+	static const EEventClass c_eEventClass = eEventClass_ePing_class;
+public:
 	TIMESTAMP m_tsContact;	// Date & time (in UTC) of the device (computer) of the contact
 	CStr m_strError;		// Error response from the server (if any)
 public:
 	CEventPing();
-	virtual EEventClass EGetEventClass() const { return eEventClass_ePing_class; }
+	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
-	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData);
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
-};
+}; // CEventPing
 
 
 #ifdef DEBUG_WANT_ASSERT

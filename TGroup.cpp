@@ -11,6 +11,7 @@ TGroupMember::TGroupMember(TGroup * pGroup, TContact * pContact) : IContactAlias
 	m_pGroup = pGroup;
 	m_uRolesAffiliationsPrivileges = 0;
 	m_cMessagesUnread = 0;
+	m_tsOtherLastSynchronized = d_ts_zNA;
 	}
 
 void
@@ -26,6 +27,7 @@ TGroupMember::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	Assert(pXmlExchanger != NULL);
 	XmlExchangeContactAlias(pXmlExchanger, d_chAttributeGroupMember_Contact);
 	pXmlExchanger->XmlExchangeInt("MessagesUnread", INOUT_F_UNCH_S &m_cMessagesUnread);
+	pXmlExchanger->XmlExchangeTimestamp("tsSync", INOUT_F_UNCH_S &m_tsOtherLastSynchronized);
 	}
 
 //	TGroupMember::ITreeItem::TreeItem_MenuAppendActions()
@@ -212,6 +214,21 @@ TGroup::Member_PFindOrAllocate_NZ(PSZUC pszMemberJID)
 	return pMember;
 	} // Member_PFindOrAllocate_NZ()
 
+void
+TGroup::Members_GetContacts(IOUT CArrayPtrContacts * parraypContacts) const
+	{
+	Assert(parraypContacts != NULL);
+	TGroupMember ** ppMemberStop;
+	TGroupMember ** ppMember = m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);
+	while (ppMember != ppMemberStop)
+		{
+		TGroupMember * pMember = *ppMember++;
+		Assert(pMember != NULL);
+		Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
+		Assert(pMember->m_pContact->EGetRuntimeClass() == RTI(TContact));
+		parraypContacts->Add(pMember->m_pContact);
+		}
+	}
 
 //	TGroup::IRuntimeObject::PGetRuntimeInterface()
 //
@@ -249,6 +266,7 @@ TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 
 const EMenuActionByte c_rgzeActionsMenuContactGroup[] =
 	{
+	eMenuAction_GroupAddContacts,
 	eMenuAction_GroupRename,
 	eMenuAction_GroupDelete,
 	eMenuAction_GroupProperties,
@@ -269,6 +287,9 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	{
 	switch (eMenuAction)
 		{
+	case eMenuAction_GroupAddContacts:
+		DisplayDialogAddContactsToGroup();
+		return ezMenuActionNone;
 	case eMenuAction_GroupDelete:
 		m_pAccount->Group_Delete(PA_DELETING this);
 		return ezMenuActionNone;
@@ -381,7 +402,7 @@ TGroup::Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const
 	}
 
 void
-TAccountXmpp::Group_AddNewMember_UI(TContact * pContact, int iGroup)	// Group_AddNewMember_UI()
+TAccountXmpp::Group_AddNewMember_UI(TContact * pContact, int iGroup)
 	{
 	Assert(pContact != NULL);
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));

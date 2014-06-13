@@ -581,7 +581,7 @@ WMainWindow::timerEvent(QTimerEvent * pTimerEvent)
 		//if ((++g_cMinutesIdleNetworkDataReceived & 0x00) == 0)
 			{
 			// Every 4 minutes, ping each socket to make sure the connection is alive.
-			Configuration_NetworkBroadcastPing();	// Send a 'ping' to the server.  This is workaround because the socket(s) get disconnected without any notification.  I have the feeling this 'temporary' workaround will stay there for many decades.
+			Configuration_OnTimerNetworkIdle();	// Send a 'ping' to the server.  This is workaround because the socket(s) get disconnected without any notification.  I have the feeling this 'temporary' workaround will stay there for many decades.
 			}
 		if (++g_cMinutesIdleKeyboardOrMouse > 20 || g_eIdleState != eIdleState_zActive)
 			{

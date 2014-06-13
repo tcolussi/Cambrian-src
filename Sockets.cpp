@@ -72,7 +72,7 @@ ISocketUI::SocketUI_DisplayMessage(ESeverity eSeverity, PSZUC pszuTextMessage)
 		m_pwEditSocketMessageLog_YZ->show();		// Make sure the message log is visible
 		m_pwEditSocketMessageLog_YZ->repaint();		// Force the widget to redraw itself
 		}
-	else
+	else if (eSeverity > eSeverityNoise)
 		StatusBar_DisplayFunctionDefault(eSeverity, pszuTextMessage);
 	if (eSeverity >= eSeverityErrorWarning)
 		{
@@ -248,7 +248,7 @@ CSocketXmpp::Socket_WriteXmlPresence()
 	}
 
 void
-CSocketXmpp::Socket_WriteXmlPingToServer()
+CSocketXmpp::Socket_WriteXmlPingToServerIfIdle()
 	{
 	const int cMinutesIdle = g_tsmMinutesSinceApplicationStarted - m_tsmLastStanzaReceived;
 	Assert(cMinutesIdle >= 0);
@@ -257,7 +257,7 @@ CSocketXmpp::Socket_WriteXmlPingToServer()
 		Socket_WriteXmlFormatted("<iq type='get' from='^S' to='^S'><ping xmlns='urn:xmpp:ping'/></iq>", &m_pAccount->m_strJID, &m_pAccount->m_strServerName);
 		if (cMinutesIdle >= 15)
 			{
-			MessageLog_AppendTextFormatSev(eSeverityWarning, "Socket_WriteXmlPingToServer($S) - Closing socket after $i minutes without network response\n", &m_pAccount->m_strServerName, cMinutesIdle);
+			MessageLog_AppendTextFormatSev(eSeverityWarning, "Socket_WriteXmlPingToServerIfIdle($S) - Closing socket after $i minutes without network response\n", &m_pAccount->m_strServerName, cMinutesIdle);
 			m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;	// Reset the timer
 			// No response, therefore close the connection.  Hopefully the next timetick will reconnect
 			Socket_Disconnect();
@@ -750,23 +750,20 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingEventID()
 	if (m_pXmlNodeStanzaCurrent_YZ == NULL)
 		return FALSE;		// Just in case, otherwise the application will crash
 	TIMESTAMP tsEventID = m_pXmlNodeStanzaCurrent_YZ->LFindAttributeValueIdTimestamp_ZZR();
-	/*
-	if (tsEventID != 0)
+	if (tsEventID > d_ts_zNULL)
 		{
-		// Try to find which task the stanza belongs to
-		ITask * pTask = (ITask *)m_listTasksWaitingForCompletion.pHead;
-		while (pTask != NULL)
+		TContact * pContact = PFindContactFromStanza();
+		if (pContact != NULL)
 			{
-			Assert(pTask->PGetAccount() == m_pAccount);
-			if (pTask->GetEventID() == tsEventID)
+			IEvent * pEvent = pContact->Vault_PGet_NZ()->PFindEventByID(tsEventID);
+			if (pEvent != NULL)
 				{
-				pTask->ProcessStanza(m_pXmlNodeStanzaCurrent_YZ);
-				return TRUE;
+				if (pEvent->EGetEventClass() == CEventPing::c_eEventClass)
+					pEvent->Event_SetCompletedAndUpdateWidgetWithinChatLog();
+
 				}
-			pTask = (ITask *)pTask->pNext;
-			} // while
-		} // if
-	*/
+			}
+		}
 	return FALSE;
 	} // FStanzaProcessedByTaskMatchingEventID()
 
@@ -873,7 +870,6 @@ CSocketXmpp::OnEventXmppStanzaIq()
 
 		return;
 		} // if ("result")
-
 
 	CXmlNode * pXmlNodeQuery = m_pXmlNodeStanzaCurrent_YZ->PFindElementQuery();
 	PSZUC pszuQueryXmlns = (pXmlNodeQuery != NULL) ? pXmlNodeQuery->PszFindAttributeValueXmlns_NZ() : c_szuEmpty;
@@ -1221,7 +1217,7 @@ CSocketXmpp::DisplayErrorMessageToUser(EDisplayExtraError eDisplayExtraError, PS
 		}
 
 	PSZUC pszMessageError = strError.TrimTailingWhiteSpacesNZ();
-	m_piSocketUI->SocketUI_DisplayMessage(eSeverityErrorWarning, pszMessageError);
+	m_piSocketUI->SocketUI_DisplayMessage((eDisplayExtraError & eDisplayExtraError_kfSetIconOffline) ? eSeverityNoise : eSeverityErrorWarning, pszMessageError);
 //	StatusBar_SetTextErrorU(pszMessageError);
 	ErrorLog_AddNewMessage((PSZAC)pszMessageError, IN m_pXmlNodeStanzaCurrent_YZ); // Add the error to the Error Log with the entire stanza
 
