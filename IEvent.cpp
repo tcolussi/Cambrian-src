@@ -818,11 +818,17 @@ IEventFile::_FileClose()
 void
 IEventFile::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
+	PSZUC pszFileNameOnly = m_strFileName.PathFile_PszGetFileNameOnly_NZ();
 	const BOOL fSerializingEventToDisk = pbinXmlAttributes->FSerializingEventToDisk();
-	pbinXmlAttributes->BinAppendXmlAttributeText(d_chIEventFile_Attribute_strFileName, fSerializingEventToDisk ? m_strFileName.PszuGetDataNZ() : m_strFileName.PathFile_PszGetFileNameOnly_NZ());	// When serializing for a contact (via XCP), only send the filename (sending the full path is a violation of privacy)
+	pbinXmlAttributes->BinAppendXmlAttributeText(d_chIEventFile_Attribute_strFileName, fSerializingEventToDisk ? m_strFileName.PszuGetDataNZ() : pszFileNameOnly);	// When serializing for a contact (via XCP), only send the filename (sending the full path is a violation of privacy)
 	pbinXmlAttributes->BinAppendXmlAttributeL64(d_chIEventFile_Attribute_cblFileSize, m_cblFileSize);
 	if (fSerializingEventToDisk)
 		pbinXmlAttributes->BinAppendXmlAttributeL64(d_chIEventFile_Attribute_cblDataTransferred, m_cblDataTransferred);	// The number of bytes transferred is serialized only to disk, never through XCP
+
+	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE(
+			"<si id='$t' profile='^*ft' ^:si><file ^:ft name='^s' size='$l'/>"
+				"<feature ^:fn><x ^:xd type='form'><field var='stream-method' type='list-single'><option><value>^*ib</value></option></field></x></feature>"
+			"</si>", m_tsEventID, pszFileNameOnly, m_cblFileSize);
 	}
 
 //	IEventFile::IEvent::XmlUnserializeCore()
@@ -1460,83 +1466,48 @@ CArrayPtrEvents::PFindEventMessageReceivedByTimestamp(TIMESTAMP tsOther) const
 	return NULL;
 	}
 
+//	Find the event received matching the timestamp and the group member.
+//	If there is no group member, then the event is for a one-to-one chat, rather than group chat.
 IEvent *
-CVaultEvents::PFindEventByTimestampOther(TIMESTAMP tsOther) CONST_MCC
+CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TGroupMember * pMember) CONST_MCC
 	{
-	if (tsOther != d_ts_zNULL)
+	Endorse(pMember == NULL);		// In a single chat, the pContactGroupSender alway NULL. The member variable IEvent::m_pContactGroupSender_YZ is valid only for group chat
+	Assert(pMember == NULL || pMember->EGetRuntimeClass() == RTI(TGroupMember));
+	if (tsOther > d_tsOther_kmReserved)
 		{
+		const TIMESTAMP tsOtherStop = tsOther - (25 * d_ts_cHours);	// In a chat, the m_tsOther are semi-sorted for message received, as they represent the timestamps from the remote computers.  Therefore any timestamp older than one day (25 hours) is considered out of range, and there is no need to search the entire list of event.
+		TContact * pContactGroupSender = (pMember != NULL) ? pMember->m_pContact : NULL;
+		Assert(pContactGroupSender == NULL || pContactGroupSender->EGetRuntimeClass() == RTI(TContact));
 		IEvent ** ppEventStop;
 		IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 		while (ppEvent != ppEventStop)
 			{
 			IEvent * pEvent = *--ppEventStop;
-			Assert(pEvent->m_tsEventID != d_ts_zNULL);
-			Assert(pEvent->m_tsOther != d_ts_zNULL);
-			if (pEvent->m_tsOther <= tsOther)
+			Assert(pEvent->m_tsEventID > d_tsOther_kmReserved);
+			Endorse(pEvent->m_tsOther <= d_tsOther_kmReserved);		// tsOther may be anything
+			if (pEvent->EGetEventClass() & eEventClass_kfReceivedByRemoteClient)
 				{
-				if (pEvent->m_tsOther == tsOther)
+				Assert(pEvent->Event_FIsEventTypeReceived());
+				Assert(pEvent->m_tsOther > d_tsOther_kmReserved);
+				if (pEvent->m_tsOther == tsOther && pEvent->m_pContactGroupSender_YZ == pContactGroupSender)
 					return pEvent;
-				break;
-				}
+				if (pEvent->m_tsOther < tsOtherStop)
+					{
+					MessageLog_AppendTextFormatSev(eSeverityNoise, "PFindEventByTimestampOther_($t, 0x$p) - Stopping search at pEvent->m_tsOther $t\n", tsOther, pContactGroupSender, pEvent->m_tsOther);
+					break;	// We went far enough in the list to conclude the event does not match the timestamp
+					}
+				} // if
 			} // while
 		} // if
 	return NULL;
-	}
+	} // PFindEventReceivedByTimestampOther()
 
-//	Return the event received matching tsOther
+//	Find the next event after tsEventID, and return how many events are remaining.
+//	Since this method is for XCP, the method will skip returning non-XCP events and only return events which may be transmitted throught XCP.
+//	For instance, a 'ping' event will not be returned by this method.
+//
 IEvent *
-CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther) CONST_MCC
-	{
-	if (tsOther != d_ts_zNULL)
-		{
-		IEvent ** ppEventStop;
-		IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
-		while (ppEvent != ppEventStop)
-			{
-			IEvent * pEvent = *--ppEventStop;
-			Assert(pEvent->m_tsEventID != d_ts_zNULL);
-			if (!pEvent->Event_FIsEventTypeReceived())
-				continue;
-			Assert(pEvent->m_tsOther != d_ts_zNULL);
-			if (pEvent->m_tsOther <= tsOther)
-				{
-				if (pEvent->m_tsOther == tsOther)
-					return pEvent;
-				break;
-				}
-			} // while
-		} // if
-	return NULL;
-	}
-
-//	Find the group event received matching the timestamp and the contact.
-IEvent *
-CVaultEvents::PFindEventReceivedByTimestampOtherMatchingContactSender(TIMESTAMP tsOther, TContact * pContactGroupSender) CONST_MCC
-	{
-	Assert(tsOther > d_tsOther_kmReserved);
-	Assert(pContactGroupSender != NULL);
-	Assert(pContactGroupSender->EGetRuntimeClass() == RTI(TContact));
-	const TIMESTAMP tsOtherStop = tsOther - (25 * d_ts_cHours);	// In group chat, the m_tsOther are semi-sorted for message received, as they represent the timestamps from the remote computers.  Therefore any timestamp older than one day (25 hours) is considered out of range, and there is no need to search the entire list of event.
-	IEvent ** ppEventStop;
-	IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
-	while (ppEvent != ppEventStop)
-		{
-		IEvent * pEvent = *--ppEventStop;
-		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		if (pEvent->m_pContactGroupSender_YZ != pContactGroupSender)
-			continue;	// The event has not been received by a group... therefore ignore it
-		Assert(pEvent->m_tsOther > d_tsOther_kmReserved);
-		if (pEvent->m_tsOther == tsOther)
-			return pEvent;
-		if (pEvent->m_tsOther < tsOtherStop)
-			break;	// We went far enough in the list to conclude the event does not match the timestamp
-		} // while
-	return NULL;
-	}
-
-//	Find the next event after tsEventID, and return how many events are remaining
-IEvent *
-CArrayPtrEvents::PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const
+CArrayPtrEvents::PFindEventNextForXcp(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const
 	{
 	Endorse(tsEventID == d_ts_zNULL);	// Return the first event in the array
 	Assert(pcEventsRemaining != NULL);
@@ -1557,28 +1528,34 @@ CArrayPtrEvents::PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining
 				if (pEvent->m_tsEventID <= tsEventID)
 					break;
 				} // while
-			if (++ppEventCompare < ppEventStop)
+
+			// Loop until we have a valid event for XCP
+			while (++ppEventCompare < ppEventStop)
 				{
-				*pcEventsRemaining = (ppEventStop - ppEventCompare) - 1;
-				Assert(*pcEventsRemaining >= 0);
-				return *ppEventCompare;	// Return the next event
-				}
+				IEvent * pEvent = *ppEventCompare;	// Get the next event
+				if ((pEvent->EGetEventClass() & eEventClass_kfNeverSerializeToXCP) == 0)
+					{
+					*pcEventsRemaining = (ppEventStop - ppEventCompare) - 1;
+					Assert(*pcEventsRemaining >= 0);
+					return pEvent;
+					}
+				} // while
 			} // if
 		} // if
 	*pcEventsRemaining = 0;
 	return NULL;
-	} // PFindEventNext()
+	} // PFindEventNextForXcp()
 
 IEvent *
 CVaultEvents::PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) CONST_MCC
 	{
-	return m_arraypaEvents.PFindEventNext(tsEventID, OUT pcEventsRemaining);
+	return m_arraypaEvents.PFindEventNextForXcp(tsEventID, OUT pcEventsRemaining);
 	}
 
 IEvent *
 CArrayPtrEvents::PFindEventByID(TIMESTAMP tsEventID) const
 	{
-	if (tsEventID != 0)
+	if (tsEventID > d_tsOther_kmReserved)
 		{
 		// Search the array from the end, as the event to search is likely to be a recent one
 		IEvent ** ppEventStop;
@@ -1587,7 +1564,7 @@ CArrayPtrEvents::PFindEventByID(TIMESTAMP tsEventID) const
 			{
 			IEvent * pEvent = *--ppEventStop;
 			AssertValidEvent(pEvent);
-			Assert(pEvent->m_tsEventID != d_ts_zNULL);
+			Assert(pEvent->m_tsEventID > d_tsOther_kmReserved);
 			if (pEvent->m_tsEventID == tsEventID)
 				return pEvent;
 			}

@@ -75,6 +75,54 @@ CVaultEvents::PFindEventSentLargerThanTimestamp(TIMESTAMP tsEventID) CONST_MCC
 	return NULL;
 	}
 
+IEvent *
+CVaultEvents::PFindEventByTimestampOther(TIMESTAMP tsOther) CONST_MCC
+	{
+	if (tsOther != d_ts_zNULL)
+		{
+		IEvent ** ppEventStop;
+		IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+		while (ppEvent != ppEventStop)
+			{
+			IEvent * pEvent = *--ppEventStop;
+			Assert(pEvent->m_tsEventID != d_ts_zNULL);
+			Assert(pEvent->m_tsOther != d_ts_zNULL);
+			if (pEvent->m_tsOther <= tsOther)
+				{
+				if (pEvent->m_tsOther == tsOther)
+					return pEvent;
+				break;
+				}
+			} // while
+		} // if
+	return NULL;
+	}
+
+//	Return the event received matching tsOther
+IEvent *
+CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther) CONST_MCC
+	{
+	if (tsOther != d_ts_zNULL)
+		{
+		IEvent ** ppEventStop;
+		IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+		while (ppEvent != ppEventStop)
+			{
+			IEvent * pEvent = *--ppEventStop;
+			Assert(pEvent->m_tsEventID != d_ts_zNULL);
+			if (!pEvent->Event_FIsEventTypeReceived())
+				continue;
+			Assert(pEvent->m_tsOther != d_ts_zNULL);
+			if (pEvent->m_tsOther <= tsOther)
+				{
+				if (pEvent->m_tsOther == tsOther)
+					return pEvent;
+				break;
+				}
+			} // while
+		} // if
+	return NULL;
+	}
 
 IEvent *
 CArrayPtrEvents::PFindEventLastReceived() const

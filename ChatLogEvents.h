@@ -53,9 +53,7 @@ public:
 	int UEventsRemaining(IEvent * pEvent) const;
 	inline IEvent * PGetEventLast_YZ() const { return m_arraypaEvents.PGetEventLast_YZ(); }
 	inline IEvent * PFindEventByID(TIMESTAMP tsEventID) const { return m_arraypaEvents.PFindEventByID(tsEventID); }
-	IEvent * PFindEventByTimestampOther(TIMESTAMP tsOther) CONST_MCC;
-	IEvent * PFindEventReceivedByTimestampOther(TIMESTAMP tsOther) CONST_MCC;
-	IEvent * PFindEventReceivedByTimestampOtherMatchingContactSender(TIMESTAMP tsOther, TContact * pContactGroupSender) CONST_MCC;
+	IEvent * PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TGroupMember * pMember) CONST_MCC;
 	IEvent * PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) CONST_MCC;
 }; // CVaultEvents
 

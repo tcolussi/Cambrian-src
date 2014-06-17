@@ -1027,7 +1027,7 @@ void
 CBin::BinAppendTextBytesKiB(L64 cbBytes)
 	{
 	if (cbBytes < 100000)
-		BinAppendTextSzv_VE("$L bytes", cbBytes);
+		BinAppendTextSzv_VE((cbBytes > 0) ? "$L bytes" : "? bytes", cbBytes);
 	else
 		BinAppendTextSzv_VE("$L KiB", cbBytes / 1024);
 	}

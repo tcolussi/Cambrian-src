@@ -476,7 +476,7 @@ public:
 	inline IEvent ** PrgpGetEventsStop(OUT IEvent *** pppEventStop) const { return (IEvent **)PrgpvGetElementsStop(OUT (void ***)pppEventStop); }
 	inline IEvent * PGetEventLast_YZ() const { return (IEvent *)PvGetElementLast_YZ(); }
 	IEvent * PFindEventLastSent() const;
-	IEvent * PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const;
+	IEvent * PFindEventNextForXcp(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const;
 	TIMESTAMP TsEventIdLastEventSent() const;
 	TIMESTAMP TsEventOtherLastEventReceived() const;
 	TIMESTAMP TsEventOtherLast() const;
