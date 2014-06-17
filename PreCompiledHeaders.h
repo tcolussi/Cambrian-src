@@ -8,8 +8,8 @@
 #define d_szApplicationName				"Cambrian"
 #define d_szwApplicationName		   L"Cambrian"
 #define d_szwApplicationNameSetup	   L"Cambrian Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.0.6.1"
-#define d_szwApplicationVersion		   L"0.0.6.1"
+#define d_szApplicationVersion			"0.0.6.3"
+#define d_szwApplicationVersion		   L"0.0.6.3"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 

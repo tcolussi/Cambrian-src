@@ -1571,7 +1571,7 @@ UINT
 Base85_CchEncodeToText(OUT PSZU pszStringBase85, const BYTE prgbDataBinary[], int cbDataBinary)
 	{
 	Assert(pszStringBase85 != NULL);
-	Assert(prgbDataBinary != NULL);
+	Assert(prgbDataBinary != NULL || cbDataBinary == 0);
 	PSZU pszStringBase85Begin = pszStringBase85;
 	const int cbDataBinaryAligned32 = (cbDataBinary & ~3);
 	const BYTE * pbDataStopAligned32 = prgbDataBinary + cbDataBinaryAligned32;
@@ -3243,7 +3243,6 @@ TEST_StringRoutines()
 	uszu = UszuFromPsz((PSZUC)"abc");
 	Assert(uszu == _USZU3('a', 'b', 'c'));
 	Assert(FCompareStrings(PszFromUSZU(uszu), "abc"));
-
 	} // TEST_StringRoutines()
 
 #endif // DEBUG

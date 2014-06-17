@@ -102,6 +102,9 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 	case eEventType_SendBitcoins:
 		return new CEventWalletTransaction((TContact *)pTreeItemParentOwner, ptsEventID);
 	*/
+	case eEventClass_eDownloader:
+		return new CEventDownloader(ptsEventID);
+
 	default:
 		return NULL;
 		} // switch
@@ -179,7 +182,7 @@ IEvent::EGetEventClassForXCP(const TContact * pContactToSerializeFor) const
 //	Most implementations of XmlSerializeCore() will use a single letter of the alphabet to designe an attribute name.
 //	Using a single character makes the comparison faster to find an attribute, while reducing the storage requirement of the XML file.
 void
-IEvent::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
+IEvent::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	Assert(pbinXmlAttributes != NULL);
 	Endorse(pbinXmlAttributes->m_pContact == NULL);	// NULL => Serialize to disk
@@ -464,7 +467,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 		pTreeItemNickname = (m_pContactGroupSender_YZ != NULL) ? m_pContactGroupSender_YZ : m_pVaultParent_NZ->m_pParent;	// Use the name of the group sender (if any, otherwise the name of the contact)
 		}
 	pbinTextHtml->BinAppendTextSzv_VE("<span title='^Q'>[^Q] </span>", &sDateTime, &sTime);
-	if (m_uFlagsEvent & FE_kfEventErrorProtocol)
+	if (m_uFlagsEvent & FE_kfEventProtocolError)
 		{
 		pbinTextHtml->BinAppendStringWithoutNullTerminator(" <img src=':/ico/Error' title='XCP Protocol Error: One of the contact has an old version of Cambrian and cannot process this event because it is unknown'/> ");
 		}
@@ -643,7 +646,7 @@ IEventMessageText::IEventMessageText(const TIMESTAMP * ptsEventID) : IEvent(ptsE
 
 //	IEventMessageText::IEvent::XmlSerializeCore()
 void
-IEventMessageText::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
+IEventMessageText::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<message to='^J' id='$t'><body>^S</body><request xmlns='urn:xmpp:receipts'/></message>", pbinXmlAttributes->m_pContact, m_tsEventID, &m_strMessageText);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strText, m_strMessageText);
@@ -679,9 +682,9 @@ CEventMessageXmlRawSent::CEventMessageXmlRawSent(const CStr & strMessage) : IEve
 	}
 
 void
-CEventMessageXmlRawSent::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventMessageXmlRawSent::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
-	pbinXmlAttributes->BinInitStanzaWithXmlRaw(m_pVaultParent_NZ->m_pParent, m_strMessageText);
+	pbinXmlAttributes->BinXmlInitStanzaWithXmlRaw(m_pVaultParent_NZ->m_pParent, m_strMessageText);
 	pbinXmlAttributes->XmppWriteStanzaToSocket();
 	}
 
@@ -813,7 +816,7 @@ IEventFile::_FileClose()
 
 //	IEventFile::IEvent::XmlSerializeCore()
 void
-IEventFile::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
+IEventFile::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	const BOOL fSerializingEventToDisk = pbinXmlAttributes->FSerializingEventToDisk();
 	pbinXmlAttributes->BinAppendXmlAttributeText(d_chIEventFile_Attribute_strFileName, fSerializingEventToDisk ? m_strFileName.PszuGetDataNZ() : m_strFileName.PathFile_PszGetFileNameOnly_NZ());	// When serializing for a contact (via XCP), only send the filename (sending the full path is a violation of privacy)
@@ -1039,7 +1042,7 @@ CEventFileReceived::~CEventFileReceived()
 /*
 //	CEventFileReceived::IEvent::XmlSerializeCore()
 void
-CEventFileReceived::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventFileReceived::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	IEventFile::XmlSerializeCore(IOUT pbinXmlAttributes, pContactToSerializeFor);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strxStanzaID, m_strxStanzaID);
@@ -1382,21 +1385,6 @@ CArrayPtrEvents::Event_FoosAddSorted(IEvent * pEventNew)
 	return FALSE;
 	} // Event_FoosAddSorted()
 
-IEvent *
-CArrayPtrEvents::PFindEventLastReceived() const
-	{
-	IEvent ** ppEventStop;
-	IEvent ** ppEvent = PrgpGetEventsStop(OUT &ppEventStop);
-	while (ppEvent != ppEventStop)
-		{
-		IEvent * pEvent = *--ppEventStop;
-		AssertValidEvent(pEvent);
-		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		if (pEvent->Event_FIsEventTypeReceived())
-			return pEvent;
-		}
-	return NULL;
-	}
 
 TIMESTAMP
 CArrayPtrEvents::TsEventIdLastEventSent() const
@@ -1448,6 +1436,7 @@ CArrayPtrEvents::TsEventIdLast() const
 	return d_ts_zNULL;
 	}
 
+//	This method should be merged with CVaultEvent
 CEventMessageTextReceived *
 CArrayPtrEvents::PFindEventMessageReceivedByTimestamp(TIMESTAMP tsOther) const
 	{
@@ -1545,48 +1534,6 @@ CVaultEvents::PFindEventReceivedByTimestampOtherMatchingContactSender(TIMESTAMP 
 	return NULL;
 	}
 
-//	Find the last group event received
-IEvent *
-CVaultEvents::PFindEventReceivedLastMatchingContactSender(TContact * pContactGroupSender) CONST_MCC
-	{
-	Assert(pContactGroupSender != NULL);
-	Assert(pContactGroupSender->EGetRuntimeClass() == RTI(TContact));
-	IEvent ** ppEventStop;
-	IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
-	while (ppEvent != ppEventStop)
-		{
-		IEvent * pEvent = *--ppEventStop;
-		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		if (pEvent->m_pContactGroupSender_YZ == pContactGroupSender)
-			{
-			Assert(pEvent->m_tsOther > d_tsOther_kmReserved);
-			return pEvent;
-			}
-		} // while
-	return NULL;
-	}
-
-
-//	Return the first event larger than the timestamp
-IEvent *
-CVaultEvents::PFindEventSentLargerThanTimestamp(TIMESTAMP tsEventID) CONST_MCC
-	{
-	Endorse(tsEventID == d_ts_zNULL);	// Return the first event sent
-	IEvent ** ppEventStop;
-	IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
-	while (ppEvent != ppEventStop)
-		{
-		IEvent * pEvent = *ppEvent++;
-		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		if (pEvent->Event_FIsEventTypeSent())
-			{
-			if (pEvent->m_tsEventID > tsEventID)
-				return pEvent;
-			}
-		} // while
-	return NULL;
-	}
-
 //	Find the next event after tsEventID, and return how many events are remaining
 IEvent *
 CArrayPtrEvents::PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const
@@ -1626,39 +1573,6 @@ IEvent *
 CVaultEvents::PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) CONST_MCC
 	{
 	return m_arraypaEvents.PFindEventNext(tsEventID, OUT pcEventsRemaining);
-	}
-
-IEvent *
-CVaultEvents::PFindEventLargerThanTimestamp(TIMESTAMP tsEventID) CONST_MCC
-	{
-	Endorse(tsEventID == d_ts_zNULL);	// Return the first event
-	IEvent ** ppEventStop;
-	IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
-	while (ppEvent != ppEventStop)
-		{
-		IEvent * pEvent = *ppEvent++;
-		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		if (pEvent->m_tsEventID > tsEventID)
-			return pEvent;
-		} // while
-	return NULL;
-	}
-
-IEvent *
-CVaultEvents::PFindEventLargerThanTimestampOther(TIMESTAMP tsOther) CONST_MCC
-	{
-	Endorse(tsOther == d_ts_zNULL);	// Return the first event
-	IEvent ** ppEventStop;
-	IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
-	while (ppEvent != ppEventStop)
-		{
-		IEvent * pEvent = *ppEvent++;
-		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		Assert(pEvent->m_tsOther != d_ts_zNULL);	// Not sure about this Assert()
-		if (pEvent->m_tsOther > tsOther)
-			return pEvent;
-		} // while
-	return NULL;
 	}
 
 IEvent *
@@ -1767,7 +1681,7 @@ CEventPing::CEventPing()
 //	CEventPing::IEvent::XmlSerializeCore()
 //	Send a ping request, both in XMPP and XCP.  Since the ping contains no 'data', the XCP ping is automaticaly handled by the core XCP routines handling the protocol.
 void
-CEventPing::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventPing::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><ping xmlns='urn:xmpp:ping'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
 	}

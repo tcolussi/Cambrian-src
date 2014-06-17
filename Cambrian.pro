@@ -144,8 +144,7 @@ FORMS +=
 RC_ICONS = Icons/HavenIcon.ico
 
 OTHER_FILES += \
-    FeatureList.txt \
-    TheEnablerProtocol.txt
+    FeatureList.txt
 
 RESOURCES += \
     Resources.qrc

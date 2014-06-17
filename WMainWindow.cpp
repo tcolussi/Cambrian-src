@@ -577,8 +577,8 @@ WMainWindow::timerEvent(QTimerEvent * pTimerEvent)
 			g_strScratchBufferStatusBar.FreeBuffer();
 			g_strScratchBufferSocket.FreeBuffer();
 			}
-		if ((++g_cMinutesIdleNetworkDataReceived & 0x03) == 0)
-		//if ((++g_cMinutesIdleNetworkDataReceived & 0x00) == 0)
+		//if ((++g_cMinutesIdleNetworkDataReceived & 0x03) == 0)
+		if (++g_cMinutesIdleNetworkDataReceived > 0)		// This line is for debugging by forcing an 'idle' every timer tick.  This helps to test the code paths which may rarely be taken
 			{
 			// Every 4 minutes, ping each socket to make sure the connection is alive.
 			Configuration_OnTimerNetworkIdle();	// Send a 'ping' to the server.  This is workaround because the socket(s) get disconnected without any notification.  I have the feeling this 'temporary' workaround will stay there for many decades.

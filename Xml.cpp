@@ -1306,6 +1306,12 @@ CXmlNode::GetAttributeValueCStr(PSZAC pszaAttributeName, OUT CStr * pstrValue) c
 	}
 
 void
+CXmlNode::UpdateAttributeValueInt(CHS chAttributeName, OUT_F_UNCH int * pnValue) const
+	{
+	UpdateAttributeValueUInt(chAttributeName, (UINT *)pnValue);
+	}
+
+void
 CXmlNode::UpdateAttributeValueUInt(CHS chAttributeName, OUT_F_UNCH UINT * puValue) const
 	{
 	Assert(puValue != NULL);
@@ -1345,7 +1351,6 @@ CXmlNode::UpdateAttributeValueCStr(CHS chAttributeName, OUT_F_UNCH CStr * pstrVa
 void
 CXmlNode::UpdateAttributeValueCBin(CHS chAttributeName, OUT_F_UNCH CBin * pbinValue) const
 	{
-	Assert(FALSE && "Never tested!");
 	CXmlNode * pNodeAttribute = PFindAttribute(chAttributeName);
 	if (pNodeAttribute != NULL)
 		{
@@ -1677,23 +1682,25 @@ CXmlNode::PszFindAttributeValueId_NZ() const
 	{
 	return PszuFindAttributeValue_NZ(c_sza_id);
 	}
+/*
 UINT
 CXmlNode::UFindAttributeValueId_ZZR() const
 	{
 	return UFindAttributeValueDecimal_ZZR(c_sza_id);
 	}
-
+*/
 TIMESTAMP
 CXmlNode::LFindAttributeValueIdTimestamp_ZZR() const
 	{
 	return Timestamp_FromString_ZZR(PszuFindAttributeValue_NZ(c_sza_id));
 	}
-
+/*
 UINT
 CXmlNode::UFindAttributeValueStanzaId_ZZR() const
 	{
 	return UFindAttributeValueHexadecimal_ZZR(c_sza_id);
 	}
+*/
 
 CXmlNode * CXmlNode::PFindElementQuery() const 	{ 	return PFindElement(c_sza_query); 	}
 CXmlNode * CXmlNode::PFindElementIq() const { return PFindElement(c_sza_iq); }
@@ -2427,7 +2434,17 @@ CXmlTree::EParseFileDataToXmlNodes(INOUT_F_VALID CErrorMessage * pError, INOUT P
 	*/
 
 PrematureEndOfFile:
-	TRACE1("Unexpected end of file: pchuData='$s'", pchuData);
+	#ifdef DEBUG
+	PSZAC pszEllipsis = NULL;
+	int ibEndOfFile = pchuData - pszuFileDataToParse;
+	if (ibEndOfFile > 100)
+		{
+		pszuFileDataToParse = pchuData - 100;	// Just display the tailing 100 characters
+		pszEllipsis = " [...]";
+		}
+	TRACE6("Unexpected end of XML data at offset $I (chStop = $i, '{s1}'):$s {Pn}", ibEndOfFile, *pchuData, pchuData, pszEllipsis, pszuFileDataToParse, pchuData);
+	#endif
+
 	pError->SetErrorCodeFormatted(errParseXmlPrematureEof_i, nLineTag);	// Unexpected end of file at line $i
 	pError->SetLineErrorSilent(nLineTag);
 	return errParseXmlPrematureEof_i;

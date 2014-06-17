@@ -218,13 +218,14 @@ WListContacts::ContactAddTransfer(PA_DELETING QListWidgetItem * paItem)
 	ContactAdd((TContact *)((CListWidgetTreeItem *)paItem)->m_piTreeItem);
 	delete paItem;	// Deleting the QListWidgetItem will automatically remove it from its parent WListContacts
 	}
-
+/*
 void
 WListContacts::ContactRemove(TContact * pContact)
 	{
 	// Find the contact in the list and delete it
 	Assert(FALSE && "NYI");
 	}
+*/
 
 //	Get all the contacts in the list
 void

@@ -10,18 +10,10 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-//	The structure SFileSizeAndMd5 is useful to remember how big was a file and its content.
-//	With this structure, we can optimize the IO by saving the files in which the content actually changed.
-struct SFileSizeAndMd5
-	{
-	UINT cbFileSize;
-	SHashMd5 md5;
-	};
-
 /////////////////////////////////////////////////////////////////////
 //	class CBin
 //
-//	Storage-efficient class to handle binary data.
+//	Storage-efficient class to handle binary data.  Sometimes in the documentation, this object is called 'blob' which stands for 'Binary Large OBject'.
 //	This class is also used to build and transform strings, as a string is a special case of binary data where the end of the string is denoted by a null-terminator.
 //
 //	To ensure code reliability and remove ambiguity when implementing the class CStr, every method transforming binary data will start with "Bin_".
@@ -37,7 +29,7 @@ struct SFileSizeAndMd5
 //	Sz()	The method returns a string zero-terminated (which means the pointer will never be NULL).  The Sz() is a shortcut of the decoration Psz_NZ().
 //	Szv()	The method returns a string zero-terminated with a virtual null-terminator.  This applies only to the class CBin, as this class is the building block for the class CStr.
 //
-class CBin	// bin
+class CBin	// bin (or blob)
 {
 protected:
 	struct SHeaderOnly
@@ -110,6 +102,7 @@ public:
 	void BinAppendTextInteger(int nInteger, UINT uFlagsITS = 0);
 	void BinAppendTextBytesKiB(L64 cbBytes);
 	void BinAppendTextBytesKiBPercent(L64 cbBytesReceived, L64 cbBytesTotal);
+	void BinAppendTextBytesKiBPercentProgress(L64 cbBytesReceived, L64 cbBytesTotal);
 	void BinAppendTimestamp(TIMESTAMP ts);
 	PSZR BinAppendTextUntilCharacterPszr(PSZUC pszuSource, UINT chCopyUntil);
 	void BinAppendTextFromCharacter(PSZUC pszuSource, UINT chCopyFrom);
@@ -129,6 +122,7 @@ public:
 	void BinAppendXmlTextW(PSZWC pszwText);
 	void BinAppendXmlAttributeUInt(PSZAC pszAttributeName, UINT uAttributeValue);
 	void BinAppendXmlAttributeUInt(CHS chAttributeName, UINT uAttributeValue);
+	void BinAppendXmlAttributeInt(CHS chAttributeName, int nAttributeValue);
 	void BinAppendXmlAttributeL64(PSZAC pszAttributeName, L64 lAttributeValue);
 	void BinAppendXmlAttributeL64(CHS chAttributeName, L64 lAttributeValue);
 	void BinAppendXmlAttributeText(CHS chAttributeName, PSZUC pszAttributeValue);
@@ -136,10 +130,12 @@ public:
 	void BinAppendXmlAttributeTimestamp(CHS chAttributeName, const TIMESTAMP & tsAttributeValue);
 	void BinAppendXmlAttributeCStr(CHS chAttributeName, const CStr & strAttributeValue);
 	void BinAppendXmlAttributeCStr2(CHS chAttributeName, const CStr & strAttributeValue, PSZUC pszAttributeValuePriority = NULL);
+	void BinAppendXmlAttributeCBin(CHS chAttributeName, const CBin & binAttributeValue);
 	void BinAppendXmlElementText(PSZAC pszElementName, PSZUC pszElementValue);
 	void BinAppendXmlElementText(PSZAC pszElementName, WEdit * pwEdit);
 	void BinAppendXmlElementInt(PSZAC pszElementName, int nElementValue);
 	void BinAppendXmlElementBinaryBase64(PSZAC pszElementName, const CBin & binElementValue);
+	void BinAppendXmlForSelfClosingElement();
 
 	void BinAppendXmlNode(const CXmlNode * pXmlNode);
 	void BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding);
@@ -169,6 +165,8 @@ public:
 
 	BOOL FIsPointerAddressWithinBinaryObject(const void * pvData) const;
 
+	int CbGetDataAfterOffset(int ibData, int cbDataMax, OUT int * pcbDataRemaining) const;
+	PVOID PvGetDataAtOffset(int ibData) const;
 	PVOID TruncateDataPv(UINT cbDataKeep);
 	void TruncateData(UINT cbDataKeep);
 	void TruncateDataAt(const void * pvDataEnd);
@@ -184,6 +182,7 @@ public:
 
 	BOOL FCompareBinary(const CBin & binCompare) const;
 	BOOL FCompareBinary(const QByteArray & arraybCompare) const;
+	BOOL FCompareFingerprint(const SHashSha1 & hashSha1) const;
 	BOOL FCompareFingerprintWithCertificateBinaryData(const CSslCertificate & oCertificate) const;
 	BOOL FCompareFingerprintWithCertificateBinaryData(const CBin & binCertificateBinaryData) const;
 	BOOL BinAppendBinaryFingerprintF_MB(const QLineEdit * pwEdit);
@@ -202,6 +201,9 @@ public:
 
 	EError BinFileReadE(const QString & sFileName);
 	EError BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExtra = QIODevice::NotOpen) const;
+
+	SBlobPvCb GetBlobAfterOffset(int ibData) const;
+	SBlobPvCb GetBlobAfterOffsetForXmppStanza(const CXmlNode * pXmlNodeStanza) const;
 	void DataEncryptAES256(const SHashKey256 * pKey);
 	void DataDecryptAES256(const SHashKey256 * pKey);
 

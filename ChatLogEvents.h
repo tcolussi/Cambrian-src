@@ -56,11 +56,7 @@ public:
 	IEvent * PFindEventByTimestampOther(TIMESTAMP tsOther) CONST_MCC;
 	IEvent * PFindEventReceivedByTimestampOther(TIMESTAMP tsOther) CONST_MCC;
 	IEvent * PFindEventReceivedByTimestampOtherMatchingContactSender(TIMESTAMP tsOther, TContact * pContactGroupSender) CONST_MCC;
-	IEvent * PFindEventReceivedLastMatchingContactSender(TContact * pContactGroupSender) CONST_MCC;
-	IEvent * PFindEventSentLargerThanTimestamp(TIMESTAMP tsEventID) CONST_MCC;
 	IEvent * PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) CONST_MCC;
-	IEvent * PFindEventLargerThanTimestamp(TIMESTAMP tsEventID) CONST_MCC;
-	IEvent * PFindEventLargerThanTimestampOther(TIMESTAMP tsOther) CONST_MCC;
 }; // CVaultEvents
 
 enum EChatState

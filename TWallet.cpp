@@ -186,7 +186,7 @@ CEventWalletTransaction::CEventWalletTransaction(TContact * pContactParent,  con
 
 //	CEventWalletTransaction::IEvent::XmlSerializeCore()
 void
-CEventWalletTransaction::XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventWalletTransaction::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeL64(d_chAttribute_nAmount, m_amtQuantity);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strValue, m_strValue);

@@ -290,22 +290,6 @@ TAccountXmpp::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		} // switch
 	} // TreeItem_EDoMenuAction()
 
-/*
-void
-TAccountXmpp::SocketTask_AddToQueue(ITask * pTask)
-	{
-	Assert(pTask != NULL);
-	m_listTasks.InsertNodeAtTail(pTask);
-	Socket_ReconnectIfDisconnected();
-	}
-
-ITask *
-TAccountXmpp::SocketTask_PGetNextFromQueue()
-	{
-	return (ITask *)m_listTasks.PDetachNodeFromHead();
-	}
-*/
-
 void
 TAccountXmpp::Socket_ReconnectIfDisconnected()
 	{
@@ -349,6 +333,7 @@ void
 TAccountXmpp::OnTimerNetworkIdle()
 	{
 	m_arraypContactsComposing.RemoveAllContactsComposingWhoAreIdle();
+	m_listaDataXmlLargeEvents.DeleteIdleNodes();
 	if (Socket_FIsConnected())
 		m_paSocket->Socket_WriteXmlPingToServerIfIdle();
 	}

@@ -118,7 +118,7 @@ CSocketXmpp::Socket_WriteData(PCVOID pvData, int cbData)
 //		^C	- Append the full JID of the contact
 //		^s	- Append the name of the server of the socket
 void
-CBinXcpStanzaType::BinInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml)
+CBinXcpStanzaType::BinXmlInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml)
 	{
 	Assert(pContactOrGroup->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == pContactOrGroup);
 	Assert(pszMessageXml != NULL);
@@ -164,7 +164,7 @@ CBinXcpStanzaType::BinInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGr
 				return;	// We are done (we include the null-terminator so we also have a string)
 			} // switch
 		} // while
-	} // BinInitStanzaWithXmlRaw()
+	} // BinXmlInitStanzaWithXmlRaw()
 
 void
 CSocketXmpp::Socket_WriteXmlNodeStanza(const CXmlNode * pXmlNodeStanza)

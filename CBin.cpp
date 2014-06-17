@@ -257,7 +257,7 @@ CBin::ReleaseBufferA(int cchLength)
 //
 //	USAGE
 //	Use this method to allocate bytes before using the object.
-//	Pre-allocating the bin will avoid the need to reallocate and copy the binary data when more bytes are added.
+//	Pre-allocating the binary will avoid the need to reallocate and copy the binary data when more bytes are added.
 //
 //	INTERFACE NOTES
 //	This method destroys the content of the object.
@@ -378,9 +378,9 @@ CBin::PvSizeInit(int cbData)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Allocate more storage to the bin and return pointer to the end of the bin.
-//	The allocated storage does NOT change the size of the bin.
-//	To update the size of the bin, the caller must invoke either BinAppendBytesEmpty(), SetSizeGrowBy() or some other method appending data.
+//	Allocate more storage to the blob and return pointer to the end of the blob.
+//	The allocated storage does NOT change the size of the blob.
+//	To update the size of the blob, the caller must invoke either BinAppendBytesEmpty(), SetSizeGrowBy() or some other method appending data.
 //
 //	This method never return NULL.
 BYTE *
@@ -415,7 +415,50 @@ CBin::PbAllocateExtraDataWithVirtualNullTerminator(int cbDataGrowBy)
 	return (pbData + cbData);
 	}
 
-//	Same as TruncateData() however return pointer to the end of the (typically where the data was truncated).
+//	Return the number of bytes available after an offset with a value smaller or equal to cbDataMax.
+//	This method also returns the number of bytes remaining for a subsequent call.
+int
+CBin::CbGetDataAfterOffset(int ibData, int cbDataMax, OUT int * pcbDataRemaining) const
+	{
+	Assert(ibData >= 0);
+	Assert(cbDataMax > 0);
+	Assert(pcbDataRemaining != NULL);
+	if (m_paData != NULL)
+		{
+		Assert(ibData <= m_paData->cbData);
+		int cbRemain = m_paData->cbData - ibData;
+		if (cbRemain >= 0)
+			{
+			if (cbRemain <= cbDataMax)
+				{
+				*pcbDataRemaining = 0;
+				return cbRemain;
+				}
+			*pcbDataRemaining = cbRemain - cbDataMax;
+			Assert(*pcbDataRemaining > 0);
+			return cbDataMax;
+			}
+		}
+	*pcbDataRemaining = 0;
+	return 0;
+	}
+
+//	Return a pointer of the data at an offset.
+//	Return NULL if the offset is out of range.
+PVOID
+CBin::PvGetDataAtOffset(int ibData) const
+	{
+	Assert(ibData >= 0);
+	if (m_paData != NULL)
+		{
+		Assert(ibData <= m_paData->cbData);
+		if (m_paData->cbData >= ibData)
+			return m_paData->rgbData + ibData;
+		}
+	return NULL;
+	}
+
+//	Same as TruncateData() however return pointer to where the data was truncated (or return NULL if there is an error because the offset is out of range)
 PVOID
 CBin::TruncateDataPv(UINT cbDataKeep)
 	{
@@ -997,7 +1040,8 @@ CBin::BinAppendTextBytesKiB(L64 cbBytes)
 void
 CBin::BinAppendTextBytesKiBPercent(L64 cbBytesReceived, L64 cbBytesTotal)
 	{
-	Assert(cbBytesTotal >= 0);		// This value should be positive
+	Endorse(cbBytesTotal < 0);		// This is the case when the total is unknown, and therefore to display the amount of data received without any percentage
+//	Assert(cbBytesTotal >= 0);		// This value should be positive
 	if (cbBytesTotal > 0)
 		{
 		// If we have the total number of bytes, we may calculate the percentage
@@ -1011,6 +1055,19 @@ CBin::BinAppendTextBytesKiBPercent(L64 cbBytesReceived, L64 cbBytesTotal)
 		// If the percentage is zero, display the number of bytes (this may happen if the file is very large, and it is important to display to the user some feedback the transfer has begun
 		}
 	BinAppendTextBytesKiB(cbBytesReceived);
+	}
+
+void
+CBin::BinAppendTextBytesKiBPercentProgress(L64 cbBytesReceived, L64 cbBytesTotal)
+	{
+	if (cbBytesReceived > 0)
+		{
+		BinAppendTextBytesKiBPercent(cbBytesReceived, cbBytesTotal);
+		BinAppendStringWithNullTerminator(" of ");
+		}
+	else
+		BinAppendStringWithNullTerminator(" total of ");
+	BinAppendTextBytesKiB(cbBytesTotal);
 	}
 
 void
@@ -1300,6 +1357,7 @@ CBin::BinAppendHtmlTextUntilPch(PCHUC pchTextBegin, PCHUC pchTextEnd)
 			break;
 		case '\'':	// Single quote
 			BinAppendBinaryData("&#39;", 5);	// This should be encoded as &apos; however it does not work with IE, so we encode it as a numeric value
+			//BinAppendBinaryData("&apos;", 6);
 			break;
 		case '\r':
 		case '\n':
@@ -1459,6 +1517,7 @@ CBin::BinAppendXmlTextU(PSZUC pszText)
 			break;
 		case '\'':	// Single quote
 			BinAppendBinaryData("&#39;", 5);	// This should be encoded as &apos; however it does not work with IE, so we encode it as a numeric value
+			//BinAppendBinaryData("&apos;", 6);
 			break;
 		default:
 			const int cbData = m_paData->cbData;
@@ -1854,8 +1913,9 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chSourceTIMESTAMP				't'	// {t|}
 #define d_chSourceTIMESTAMP_DELTA		'T'	// {T-} {T_}
 #define d_chSourceAmount				'A' // {AB} {Am} {A$} {A*}
-#define d_chSourcePEventList			'E'	// Pointer to linked list of SEventList.  Example: {Et}	- Displays the timestamps of each event in the list.
-//#define d_chSourceXCP					'X'	// {XC}
+#define d_chSourceKiB_32				'k'
+#define d_chSourceKiB_64				'K'
+
 
 struct SEventList
 {
@@ -1881,9 +1941,12 @@ struct SEventList
 #define d_chEncodingHtml				'H'	// Encode the source string in HTML.  The source MUST be a null-terminated string.  Since method BinAppendDataEncoded() ignores the parameter cbData, the valid options are {sH}, {SH}, {BH} and {YH}.
 //#define d_chEncodingHtmlLink			'l' // Encode an HTML hyperlink
 //#define d_chEncodingHtmlButton			'b' // Encode an HTML button (implemented as an hyperlink, but with styles and colors making it look as a button)
-#define d_chEncodingCharacterSingle		'1'	// Encode (add) a single Unicode character (this is useful to report an invalid character when parsing data)
+#define d_chEncodingCharacterSingle		'1'	// Encode (add) a single Unicode character (this is useful to report an invalid character when parsing data).  Typically {s1} is supported
 #define d_chEncodingFingerprint			'G'	// Encode the CBin* into a fingerprint.  At the moment, only {hG} and {BG} are valid.
-#define d_chEncodingPercentURL			'%'
+#define d_chEncodingPercentURL			'%'	// Encode a URL with the % escape (it is called percent encode)
+#define d_chEncodingKiB					'K'	// Show the value in Bytes or KiB
+#define d_chEncodingKiB_Percent			'%'	// Show the percentage (%) by dividing two values (this is useful to show the progress of a download)
+#define d_chEncodingKiB_PercentOfTotal	'T'	// Show the the percentage (%) as well as the total
 
 void
 CBin::BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding)
@@ -1934,11 +1997,27 @@ CBin::BinAppendTextSzv_VE(PSZAC pszFmtTemplate, ...)
 	return BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
 	}
 
+union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outside BinAppendTextSzv_VL() because Qt Creator' auto-complete does not handle the declaration inside of a method
+	{
+	PSZUC pszuString;
+	PSZWC pszwString;
+	const CStr * pstr;
+	const CBin * pbin;
+	const QString * psString;
+	const QByteArray * parrayb;
+	const CArrayPsz * parraypsz;
+	const ITreeItem * piTreeItem;
+	QDateTime * pdtuDateTime;
+	UINT uValue;
+	UINT bValue;
+	BOOL fValue;
+	};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	BinAppendTextSzv_VL()
 //
-//	The bin is ALWAYS appended with a null-terminator, but this null-terminator
-//	is not included in the length/size of the bin.
+//	The binary object is ALWAYS appended with a null-terminator, but this null-terminator is not included in the length/size of the binary object.
+//	Return pointer to the BEGINNING of the string (binary object).
 //
 //	FORMATS SUPPORTED
 //	This method supports rudimentary formats
@@ -1989,22 +2068,6 @@ CBin::BinAppendTextSzv_VE(PSZAC pszFmtTemplate, ...)
 //		{ /} - Encode in Base64
 //		{ _} - Encode in Base64url
 //
-
-union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outside BinAppendTextSzv_VL() because Qt Creator' auto-complete does not handle the declaration inside of a method
-	{
-	PSZUC pszuString;
-	PSZWC pszwString;
-	const CStr * pstr;
-	const CBin * pbin;
-	const QString * psString;
-	const QByteArray * parrayb;
-	const CArrayPsz * parraypsz;
-	const ITreeItem * piTreeItem;
-	QDateTime * pdtuDateTime;
-	UINT uValue;
-	UINT bValue;
-	};
-
 PSZU
 CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 	{
@@ -2099,12 +2162,12 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				case d_chSourcePCXmlNode:
 					{
 					Assert(chEncoding == 'f');
-					// For performance reasons, serialize the XML node in the bin, and then calculate the MD5 value
+					// For performance reasons, serialize the XML node in the blob, and then calculate the MD5 value
 					int cbPrevious = m_paData->cbData;
 					BinAppendXmlNode(va_arg(vlArgs, CXmlNode *));
 					SHashMd5 md5;
 					HashMd5_CalculateFromBinary(OUT &md5, m_paData->rgbData + cbPrevious, m_paData->cbData - cbPrevious);
-					m_paData->cbData = cbPrevious;	// Flush the content of the XML node
+					m_paData->cbData = cbPrevious;	// Flush (truncate) the content of the XML node to restore it to its original state
 					BinAppendStringBase16FromBinaryData(IN &md5, sizeof(md5));
 					}
 					break;
@@ -2121,13 +2184,24 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				case d_chSourceAmount:
 					m_paData->cbData += Amount_CchFormat(OUT PbAllocateExtraMemory(64), va_arg(vlArgs, AMOUNT), chEncoding);
 					break;
-				/*
-				case d_chSourceXCP:
-					Assert(chEncoding == 'C');
-					u.pbin = va_arg(vlArgs, CBin *);
-					BinAppendXmlCambrianProtocol(const_cast<CBin *>(u.pbin), va_arg(vlArgs, TContact *));
+				case d_chSourceKiB_32:
+				case d_chSourceKiB_64:
+					Assert(chEncoding == d_chEncodingKiB || chEncoding == d_chEncodingKiB_Percent || chEncoding == d_chEncodingKiB_PercentOfTotal);
+					{
+					u.fValue = (chSource == d_chSourceKiB_32);
+					L64 cblValue = u.fValue ? va_arg(vlArgs, int) : va_arg(vlArgs, L64);
+					if (chEncoding == d_chEncodingKiB)
+						BinAppendTextBytesKiB(cblValue);
+					else
+						{
+						L64 cblTotal = u.fValue ? va_arg(vlArgs, int) : va_arg(vlArgs, L64);
+						if (chSource == d_chEncodingKiB_Percent)
+							BinAppendTextBytesKiBPercent(cblValue, cblTotal);
+						else
+							BinAppendTextBytesKiBPercentProgress(cblValue, cblTotal);
+						}
+					}
 					break;
-				*/
 				default:
 					Assert(FALSE && "Unknown source template character for { }");
 					goto AppendCharacter;
@@ -2386,6 +2460,17 @@ CBin::BinAppendXmlAttributeUInt(CHS chAttributeName, UINT uAttributeValue)
 	}
 
 void
+CBin::BinAppendXmlAttributeInt(CHS chAttributeName, int nAttributeValue)
+	{
+	if (nAttributeValue != 0)
+		{
+		CHU szValue[16];
+		IntegerToString(OUT szValue, nAttributeValue);
+		BinAppendXmlAttributeText(chAttributeName, szValue);
+		}
+	}
+
+void
 CBin::BinAppendXmlAttributeL64(PSZAC pszAttributeName, L64 lAttributeValue)
 	{
 	if (lAttributeValue != 0)
@@ -2437,6 +2522,7 @@ CBin::BinAppendXmlAttributeText(PSZAC pszaAttributeName, PSZUC pszAttributeValue
 void
 CBin::BinAppendXmlAttributeText(CHS chAttributeName, PSZUC pszAttributeValue)
 	{
+	Assert(chAttributeName != '\0');
 	const CHA szAttributeName[2] = { (CHA)chAttributeName, '\0' };
 	BinAppendXmlAttributeText(szAttributeName, pszAttributeValue);
 	}
@@ -2465,6 +2551,14 @@ CBin::BinAppendXmlAttributeCStr2(CHS chAttributeName, const CStr & strAttributeV
 	BinAppendXmlAttributeCStr(chAttributeName, (pszAttributeValuePriority != NULL) ? pszAttributeValuePriority : strAttributeValue);
 	}
 */
+
+void
+CBin::BinAppendXmlAttributeCBin(CHS chAttributeName, const CBin & binAttributeValue)
+	{
+	Assert(chAttributeName != '\0');
+	if (!binAttributeValue.FIsEmptyBinary())
+		BinAppendTextSzv_VE(" $b='{B|}'", chAttributeName, &binAttributeValue);
+	}
 
 void
 CBin::BinAppendXmlElementText(PSZAC pszElementName, PSZUC pszElementValue)

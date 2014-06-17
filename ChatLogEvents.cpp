@@ -78,7 +78,7 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 		TIMESTAMP tsOtherLastReceived = m_arraypaEvents.TsEventOtherLastEventReceived();
 		if (tsOtherLastReceived < pContact->m_tsOtherLastSynchronized || pContact->m_tsOtherLastSynchronized == d_ts_zNA)
 			{
-			if (tsOtherLastReceived != d_ts_zNA)
+			if (pContact->m_tsOtherLastSynchronized != tsOtherLastReceived)
 				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastSynchronized from $t to $t\n", pContact->m_tsOtherLastSynchronized, tsOtherLastReceived);
 			pContact->m_tsOtherLastSynchronized = tsOtherLastReceived;
 			}

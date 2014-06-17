@@ -115,6 +115,7 @@ public:
 	void GetAttributeValueDateTime_ML(PSZAC pszaAttributeName, OUT_ZZR QDateTime * pDateTime) const;
 	void GetAttributeValueL64(PSZAC pszaAttributeName, OUT_ZZR L64 * plValue) const;
 	void GetAttributeValueCStr(PSZAC pszaAttributeName, OUT CStr * pstrValue) const;
+	void UpdateAttributeValueInt(CHS chAttributeName, OUT_F_UNCH int * pnValue) const;
 	void UpdateAttributeValueUInt(CHS chAttributeName, OUT_F_UNCH UINT * puValue) const;
 	void UpdateAttributeValueL64(CHS chAttributeName, OUT_F_UNCH L64 * plValue) const;
 	void UpdateAttributeValueTimestamp(CHS chAttributeName, OUT_F_UNCH TIMESTAMP * ptsValue) const;
@@ -178,6 +179,8 @@ public:
 	PSZUC PszFindAttributeValueSid_NZ() const;
 	PSZUC PszFindAttributeValueFrom_NZ() const;
 	PSZUC PszFindAttributeValueTo_NZ() const;
+
+	L64 LFindAttributeXcpOffset() const;
 
 }; // CXmlNode
 

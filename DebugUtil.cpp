@@ -19,7 +19,7 @@ L64 g_cAssertionsFailed;			// Number of failed assertions
 BOOL g_fIgnoreAllAsserts;
 CStr g_strAssertLast;	// Remember the content of the last assertion.  This is to prevent the same assertion to be displayed over and over again, as a long loop could have the same assertion failure several thousand times
 
-//#define DEBUG_ASSERT_NON_BLOCKING	// Comment this line to have a blocking Assert().  A blocking Assert() is useful to step into the debugger at the moment the assertion fails.
+#define DEBUG_ASSERT_NON_BLOCKING	// Comment this line to have a blocking Assert().  A blocking Assert() is useful to step into the debugger at the moment the assertion fails.
 
 #if 1
 #include "DialogAccountNew.h"
@@ -33,7 +33,15 @@ DDialogAssertionFailure::DDialogAssertionFailure(const CStr & strMessageHtml, co
 	m_strAssert = strAssert;
 	m_cAsserts = 1;
 	setMinimumWidth(500);
-	DialogBody_AddRowWidget_PA(new WLabelSelectableWrap(strMessageHtml));
+	#if 1
+	WLabel * pwLabel = new WLabel;
+	//pwLabel->setTextFormat(Qt::RichText);
+	pwLabel->setText(strMessageHtml);
+	pwLabel->setWordWrap(true);
+	DialogBody_AddRowWidget_PA(pwLabel);
+	#else
+	DialogBody_AddRowWidget_PA(new WLabelSelectableWrap(strMessageHtml));	// I have no idea this code does not work, especially when an assertion contains the logical OR operator ("||")
+	#endif
 
 	WButtonTextWithIcon * pwButtonClose = new WButtonTextWithIcon("&Close|Dismiss this error message", eMenuAction_Close);
 	WButtonTextWithIcon * pwButtonCopyToClipboard = new WButtonTextWithIcon("Copy|Copy the invitation link into the clipboard", eMenuAction_Copy);
@@ -75,7 +83,8 @@ DDialogAssertionFailure::reject()
 void
 DDialogAssertionFailure::IncreaseAssert()
 	{
-	Dialog_SetCaptionFormat_VE("$s ($i times)", c_szInternalErrorDetected, ++m_cAsserts);
+	CStr strCaption;
+	Dialog_SetCaption(IN (PSZAC)strCaption.Format("$s ($i times)", c_szInternalErrorDetected, ++m_cAsserts));
 	showNormal();
 	raise();
 	}
@@ -122,6 +131,7 @@ _FAssertionFailed(
 	strMessageHtml.Format("<b>$s</b>(<b>^s</b>)<br/>File $s, line $i.<br/><br/>"
 		"You have discovered a potential bug; <u>please</u> contact the developers of Cambrian.",
 		pszAssert, pszExpression, pszFile, nLine);
+	//qDebug(strMessageHtml);
 
 	#ifdef DEBUG_ASSERT_NON_BLOCKING
 	// Before displaying a new window with the error, search if the assertion is already there

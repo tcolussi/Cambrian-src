@@ -329,6 +329,13 @@ CBin::DataDecryptAES256(const SHashKey256 * pKey)
 
 	}
 
+BOOL
+CBin::FCompareFingerprint(const SHashSha1 & hashSha1) const
+	{
+	SHashSha1 hash;
+	HashSha1_CalculateFromCBin(OUT &hash, IN *this);
+	return HashSha1_FCompareEqual(IN &hash, IN &hashSha1);
+	}
 
 BOOL
 CBin::FCompareFingerprintWithCertificateBinaryData(const CSslCertificate & oCertificate) const

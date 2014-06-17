@@ -192,4 +192,19 @@ void HashValue_CalculateFromBinary(OUT SHashValue * pHashValue, IN const void * 
 struct SHashKey256 { BYTE rgbData[32];	};	//	Structure holding a key of 256 bits.  This structure is to encrypt and decrypt data.
 void HashKey256_CalculateKeyFromPassword(OUT SHashKey256 * pHashKey, IN PSZUC pszuPassword);
 
+//	The structure SFileSizeAndMd5 is useful to remember how big was a file and its content.
+//	With this structure, we can optimize the IO by saving the files in which the content actually changed.
+struct SFileSizeAndMd5
+	{
+	UINT cbFileSize;
+	SHashMd5 md5;
+	};
+
+//	Structure holding a pointer and a number of bytes of data.
+struct SBlobPvCb
+	{
+	void * pv;
+	int cb;
+	};
+
 #endif // STRINGUTILITIES_H

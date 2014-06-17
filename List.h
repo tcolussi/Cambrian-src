@@ -56,8 +56,9 @@ void List_InsertNodeAfter(INOUT SList * pList, INOUT SListNode * pNodeBefore, OU
 void List_InsertNodeBefore(INOUT SListNode * pNodeAfterInsertion, OUT SListNode * pNodeInsertBefore);
 void List_InsertNodeAtHead(INOUT SList * pList, OUT SListNode * pNodeInsert);
 void List_InsertNodeAtTail(INOUT SList * pList,	OUT SListNode * pNodeInsert);
-
 void List_InsertNodeSortClbk(INOUT SList * pList, OUT SListNode * pNodeInsert, IN List_PFnSortCallback pfnSortCallback);
+
+void List_MoveNodeToHead(INOUT SList * pList, OUT SListNode * pNode);
 
 void List_DetachNode(INOUT SList * pList, INOUT SListNode * pNode);
 VOID List_DetachNode(INOUT SListNode * pNode);
@@ -74,7 +75,10 @@ class CList : public SList
 public:
 	inline CList() { pHead = pTail = NULL; }
 	inline SListNode * PDetachNodeFromHead() { return List_PDetachNodeFromHead(INOUT this); }
+	inline void DetachNode(INOUT SListNode * pNode) { List_DetachNode(INOUT this, pNode); }
+	inline void InsertNodeAtHead(OUT SListNode * pNodeInsert) { List_InsertNodeAtHead(INOUT this, pNodeInsert); }
 	inline void InsertNodeAtTail(OUT SListNode * pNodeInsert) { List_InsertNodeAtTail(INOUT this, pNodeInsert); }
+	inline void MoveNodeToHead(INOUT SListNode * pNode)	{ List_MoveNodeToHead(INOUT this, pNode); }
 	inline UINT ULength() const { return List_UCalculateLength(IN this); }
 };
 

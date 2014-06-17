@@ -16,7 +16,7 @@ public:
 	CEventGroupMemberJoin(TGroup * pGroupParentOwner, const TIMESTAMP * ptsEventID);
 	CEventGroupMemberJoin(TGroupMember * pMember);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eGroupMemberJoins; }
-	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
@@ -31,7 +31,7 @@ public:
 	virtual ~CEventGroupMessageReceived();
 	virtual EEventClass EGetEventClass() const { return eEventClass_eGroupMessageTextReceived_class; }
 	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
-	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual BOOL SystemTray_FDisplayEvent() const;

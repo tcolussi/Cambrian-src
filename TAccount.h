@@ -62,7 +62,7 @@ protected:
 	CSocketXmpp * m_paSocket;							// Socket to send and receive XMPP messages.
 	CBin m_binFingerprintCertificate;					// The fingerprint (typically SHA-1) of the pinned certificate encrypting the connection with the server.  Any change to this value will cutoff the socket communication until manually approved by the user.
 	TCertificateServerName * m_pCertificateServerName;	// Pinned certificate for the account.  Any change of certificate automatically notifies the user, and often require manual approval by the user.
-	//CListTasks m_listTasks;							// Tasks for the socket is ready
+	CListaDataXmlLargeEvents m_listaDataXmlLargeEvents;	// Cache of large events waiting to be transmitted
 	TContactNew * m_pTreeItemContactNew;				// Pointer to the node <New Contact...>   (this pointer is necessary so we may insert new contact(s) and group(s) before it)
 
 public:
@@ -107,8 +107,7 @@ public:
 	void OnTimerNetworkIdle();
 	CSocketXmpp * Socket_PGetOnlyIfReadyToSendMessages() const;
 	CSocketXmpp * PGetSocket_YZ() const { return m_paSocket; }
-	void SocketTask_AddToQueue(ITask * pTask);
-	ITask * SocketTask_PGetNextFromQueue();
+	CDataXmlLargeEvent * PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanzaType * pbinXcpStanza);
 
 	void Certificate_RegisterCertificateChainFromSocket();
 	BOOL Certificate_FRegisterCertificateChainFromSocketAndAcceptAllErrors(const QList<QSslError> & listErrorsSsl);

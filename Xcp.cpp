@@ -8,54 +8,51 @@
 #endif
 #include "Xcp.h"
 
-//	Essentially, there are 3 reserved attributes by the Cambrian Protocol ('i', 'o' and 'g')
-//	The following attributes 'make sense' for the receiver of the XCP data.
-#define d_chXCPa_tsEventID				d_chEvent_Attribute_tsEventID
-#define d_szXCPa_tsEventID_t			d_szEvent_Attribute_tsEventID_t
-#define d_chXCPa_tsOther				d_chEvent_Attribute_tsOther
-#define d_szXCPa_tsOther_t				d_szEvent_Attribute_tsOther_t
-#define d_chXCPa_pContactGroupSender	'g'		// Pointer of the contact who sent the event/message to the group.  Of course, this attribute is present only when receiving a group message
-
-#define _tsI		d_szXCPa_tsEventID_t
-#define _tsO		d_szXCPa_tsOther_t
-
-
 //	The XCP protocol uses lowercase and uppercase letters:
 //	A lowercase letter designates an xcp-stanza (a stanza within an xmpp-stanza) where there could be a reply.
 //	An uppercase letter designates a reply to an xcp-stanza.  There is never a reply to a reply, otherwise it may cause an infinite loop.
 //	The tsOther and tsEventID 'make sense' for the receiver of the xcp-stanza; it is the responsibility of the sender to swap those values accordingly.
 
-#define d_chXCPe_GroupSelector							'g'	// Which group to assign the events.  The body of the XML element is the identifier of the group.
-#define d_szXCPe_GroupSelector					d_szXCP_"g"
+#define d_chXCPe_GroupSelector								'g'	// Which group to assign the events.  The body of the XML element is the identifier of the group.
+#define d_szXCPe_GroupSelector						d_szXCP_"g"
 
-#define d_chXCPe_EventPrevious							'p'	// Send the timestamp of the previous event, as well as the synchronization
-#define d_szXCPe_EventPrevious_tsO_tsI			d_szXCP_"p"	_tsO _tsI
-#define d_chXCPe_EventsMissing							'M'	// Notification to the remote client some events are missing, and therefore should synchronize
-#define d_szXCPe_EventsMissing					d_szXCP_"M"
+#define d_chXCPe_EventPrevious								'p'	// Send the timestamp of the previous event, as well as the synchronization
+#define d_szXCPe_EventPrevious_tsO_tsI				d_szXCP_"p"	_tsO _tsI
+#define d_chXCPe_EventsMissing								'M'	// Notification to the remote client some events are missing, and therefore should synchronize
+#define d_szXCPe_EventsMissing						d_szXCP_"M"
 
-#define d_chXCPe_EventNextRequest						'n'	// Ask the remote client to send its next event after tsEventID
-#define d_szXCPe_EventNextRequest_tsI			d_szXCP_"n"	_tsI
-#define d_chXCPe_EventNextReply							'N'	// Reply to the sender regarding the request of tsEventID and tsOther (the following xcp-stanzas contains serialized IEvents)
-#define d_szXCPe_EventNextReply_tsO				d_szXCP_"N" _tsO
-#define d_chXCPe_EventsOutstandingReply					'O'	// Any message reply 'N' must end with 'O' to indicate hoe many outstanding IEvents remain.
-#define d_szXCPe_EventsOutstandingReply_i_tsO	d_szXCP_"O c='$i'" _tsO // ('R' = Remaining)
+#define d_chXCPe_EventNextRequest							'n'	// Ask the remote client to send its next event after tsEventID
+#define d_szXCPe_EventNextRequest_tsI				d_szXCP_"n"	_tsI
+#define d_chXCPe_EventNextReply								'N'	// Reply to the sender regarding the request of tsEventID and tsOther (the following xcp-stanzas contains serialized IEvents)
+#define d_szXCPe_EventNextReply_tsO					d_szXCP_"N" _tsO
+#define d_chXCPe_EventsOutstandingReply						'O'	// Any message reply 'N' must end with 'O' to indicate hoe many outstanding IEvents remain.
+#define d_szXCPe_EventsOutstandingReply_i_tsO		d_szXCP_"O c='$i'" _tsO // ('R' = Remaining)
 	#define d_chXCPa_EventsOutstandingReply_cEvents				'c'
-#define d_chXCPe_EventConfirmation						'C'	// Confirmation an event was processed successfully (the confirmation only includes tsEventID of the sender)
-#define d_szXCPe_EventConfirmation_tsI			d_szXCP_"C" _tsI
-#define d_chXCPe_EventError								'E'	// The event was received, however could not be processed because its class/type is unknown. 'C' and 'E' are mutually exclusive.
-#define d_szXCPe_EventError_tsI_s				d_szXCP_"E" _tsI " e='^s'"	// e=event, c=code of the error (if any), t=friendly text to display to the user (if any)
+#define d_chXCPe_EventConfirmation							'C'	// Confirmation an event was processed successfully (the confirmation only includes tsEventID of the sender)
+#define d_szXCPe_EventConfirmation_tsI				d_szXCP_"C" _tsI
+#define d_chXCPe_EventError									'E'	// The event was received, however could not be processed because its class/type is unknown. 'C' and 'E' are mutually exclusive.
+#define d_szXCPe_EventError_tsI_s					d_szXCP_"E" _tsI " e='^s'"	// e=event, c=code of the error (if any), t=friendly text to display to the user (if any)
 
-#define d_chXCPe_EventExtraDataRequest					'x'	// Request an event to send extra data (for instance, downloading the content of a file)
-#define d_szXCPe_EventExtraDataRequest_tsI		d_szXCP_"x" _tsI
-#define d_chXCPe_EventExtraDataReply					'X'	// Reply from the event with the data payload
-#define d_szXCPe_EventExtraDataReply			d_szXCP_"X"
-#define d_szXCPe_EventExtraDataReply_tsO		d_szXCP_"X" _tsO
+#define d_chXCPe_EventExtraDataRequest						'x'	// Request an event to send extra data (for instance, downloading the content of a file)
+#define d_szXCPe_EventExtraDataRequest_tsI			d_szXCP_"x" _tsI
+#define d_chXCPe_EventExtraDataReply						'X'	// Reply from the event with the data payload
+#define d_szXCPe_EventExtraDataReply				d_szXCP_"X"
+#define d_szXCPe_EventExtraDataReply_tsO			d_szXCP_"X" _tsO
 
 	#define d_chXCPa_EventExtraData_strxIdentifier				'I'		// Identifier of the extra data (this is optional, as sometimes there is only one extra data)
 	#define d_chXCPa_EventExtraData_iblOffset					'O'		// Offset of the extra data (this is important, because the extra data is sent by smaller pieced of about 4 KiB)
-	#define d_szXCPa_EventExtraData_iblOffset_l					" O='$l'"
-	#define d_chXCPa_EventExtraData_binPayloadBase85			'b'
-	#define d_szXCPa_EventExtraData_binPayloadBase85			"b"
+	#define d_szXCPa_EventExtraData_iblOffset_i					" O='$i'"	// 32 bit offset
+	#define d_szXCPa_EventExtraData_iblOffset_l					" O='$l'"	// 64 bit offset
+	#define d_chXCPa_EventExtraData_bin85Payload				'b'			// Binary payload
+	#define d_szXCPa_EventExtraData_bin85Payload_pvcb			" b='{p|}'"
+	#define d_chXCPa_EventExtraData_shaData						'h'	// SHA-1 of the data (to ensure its integrity)
+	#define d_szXCPa_EventExtraData_shaData_h					" h='{h|}'"
+
+#define d_chXCPe_EventSplitDataRequest						's'
+#define d_szXCPe_EventSplitDataRequest_tsI_i		d_szXCP_"s" _tsI d_szXCPa_EventExtraData_iblOffset_i
+#define d_chXCPe_EventSplitDataReply						'S'
+#define d_szXCPe_EventSplitDataReply_tsO_i_pvcb		d_szXCP_"S" _tsO d_szXCPa_EventExtraData_iblOffset_i d_szXCPa_EventExtraData_bin85Payload_pvcb
+
 
 #define d_chXCPe_zNA									'\0'	// Not applicable
 
@@ -85,7 +82,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 	Assert(pVault->PFindEventNext(d_ts_zNULL, OUT &cEventsRemaining) == pVault->m_arraypaEvents.PvGetElementFirst_YZ());
 	Assert(cEventsRemaining == 0 || cEventsRemaining == pVault->m_arraypaEvents.GetSize() - 1);
 	BOOL fEventsOutOfSync = FALSE;
-	TIMESTAMP_DELTA dtsSynchronization = 1;	// Make sure
+	TIMESTAMP_DELTA dtsOtherSynchronization = 1;	// By default, assume the events are NOT synchronized, therefore assign to the variable a non-zero value.
 	CHS chXCPe = d_chXCPe_zNA;			// Last known XCP element
 	IEvent * pEvent = NULL;
 	TGroup * pGroup = NULL;				// Pointer to the selected group
@@ -117,15 +114,15 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				cbXcpStanzaReplyEmpty = binXcpStanzaReply.CbGetData();
 				break;
 			case d_chXCPe_EventPrevious:	// We are receiving information regarding the previous message
-				dtsSynchronization = tsOther - *ptsOtherLastSynchronized;
-				fEventsOutOfSync = (dtsSynchronization != 0);
-				if (dtsSynchronization > 0)
+				dtsOtherSynchronization = tsOther - *ptsOtherLastSynchronized;
+				fEventsOutOfSync = (dtsOtherSynchronization != 0);
+				if (dtsOtherSynchronization > 0)
 					{
 					MessageLog_AppendTextFormatSev(eSeverityWarning, "\t\t m_tsOtherLastSynchronized = $t however its value should be $t\n"
 						"\t\t\t therefore requesting $s to resend its next event after $t\n", *ptsOtherLastSynchronized, tsOther, pszNameDisplay, *ptsOtherLastSynchronized);
 					binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventNextRequest_tsI "/>", *ptsOtherLastSynchronized);
 					}
-				else if (dtsSynchronization < 0)
+				else if (dtsOtherSynchronization < 0)
 					{
 					Assert(tsOther < *ptsOtherLastSynchronized);
 					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t tsOther $t < m_tsOtherLastSynchronized $t\n"
@@ -159,17 +156,17 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				if (pEvent != NULL)
 					{
 					binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventNextReply_tsO "/>", tsEventID);
-					pEvent->XmlSerializeForXCP(INOUT &binXcpStanzaReply);
+					binXcpStanzaReply.BinXmlSerializeEventForXcp(pEvent);
 					binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventsOutstandingReply_i_tsO "/>", cEventsRemaining, pEvent->m_tsEventID);
 					}
 				break;
 			case d_chXCPe_EventNextReply:	// Although d_chXCPe_EventNextReply may appear as useless, the variable chXCPe is set to d_chXCPe_EventNextReply which will be useful when unserializing events.
 				Assert(tsEventID == d_ts_zNA);
-				dtsSynchronization = tsOther - *ptsOtherLastSynchronized;
-				if (dtsSynchronization == 0)
+				dtsOtherSynchronization = tsOther - *ptsOtherLastSynchronized;
+				if (dtsOtherSynchronization == 0)
 					MessageLog_AppendTextFormatCo(d_coGrayDark, "\t\t chXCPe = d_chXCPe_EventNextReply;\n");
 				else
-					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t chXCPe = d_chXCPe_EventNextReply; (out of sync by $T)\n", dtsSynchronization);
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t chXCPe = d_chXCPe_EventNextReply; (out of sync by $T)\n", dtsOtherSynchronization);
 				break;
 			case d_chXCPe_EventsOutstandingReply:
 				Assert(tsEventID == d_ts_zNA);
@@ -190,7 +187,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				// There are no more outstanding events to download, so do cleanup and send the last known timestamps to give an opportunity to the remote client to download its missing messages (if any)
 				StatusBar_ClearText();
 //				AppendTimestampsOfLastKnownEvents:
-				binXcpStanzaReply.XcpAppendTimestampsToSynchronizeWithContact(this); // Need to fix this for group
+				binXcpStanzaReply.BinXmlAppendTimestampsToSynchronizeWithContact(this); // Need to fix this for group
 				break;
 			case d_chXCPe_EventConfirmation:
 			case d_chXCPe_EventError:
@@ -204,10 +201,11 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					pEvent->Event_SetCompleted(pwChatLog);	// This will typically display a green checkmark at the right of the screen where the event is located
 					}
 				else
-					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Invalid confirmation EventID $t\n", tsEventID);
+					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unrecognized confirmation for EventID $t\n", tsEventID);
 				break;
 			case d_chXCPe_EventExtraDataRequest:
-				Assert(tsEventID != d_ts_zNA);
+				Assert(tsEventID > d_tsOther_kmReserved);
+				Assert(tsOther == d_ts_zNA);
 				pEvent = pVault->PFindEventByID(tsEventID);
 				if (pEvent != NULL)
 					{
@@ -237,6 +235,39 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					}
 				else
 					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unable to find i=$t, o=$t for d_chXCPe_EventExtraDataReply\n", tsEventID, tsOther);
+				break;
+			case d_chXCPe_EventSplitDataRequest:
+				// Send a chunk of a large data
+				Assert(tsEventID > d_tsOther_kmReserved);
+				Assert(tsOther == d_ts_zNA);
+				{
+				int ibDataSource = pXmlNodeXcpEvent->LFindAttributeXcpOffset();
+				CDataXmlLargeEvent * pDataXmlLargeEvent = m_pAccount->PFindOrAllocateDataXmlLargeEvent_NZ(tsEventID, IN_MOD_TMP &binXcpStanzaReply);
+				int cbDataRemaining;
+				int cbData = pDataXmlLargeEvent->m_binXmlData.CbGetDataAfterOffset(ibDataSource, 1 /*CBinXcpStanzaType::c_cbStanzaMaxBinary*/, OUT &cbDataRemaining);	// At the moment, send only one byte at the time (rather than c_cbStanzaMaxBinary), so we can test the code if it is working
+				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventSplitDataReply_tsO_i_pvcb , tsEventID, ibDataSource, pDataXmlLargeEvent->m_binXmlData.PvGetDataAtOffset(ibDataSource), cbData);
+				if (cbDataRemaining <= 0)
+					{
+					// We reached the end of the XML data, therefore send the hash
+					//pDataXmlLargeEvent->m_hashXmlData.rgbData[0] = 0;	// Corrupt the data to see how the protocol handles it
+					binXcpStanzaReply.BinAppendTextSzv_VE(d_szXCPa_EventExtraData_shaData_h, IN &pDataXmlLargeEvent->m_hashXmlData);
+					}
+				binXcpStanzaReply.BinAppendXmlForSelfClosingElement();
+				#if 0
+				List_DetachNode(INOUT pDataXmlLargeEvent);
+				delete pDataXmlLargeEvent;	// Destroy the cache, so we can test how stable is the code
+				#endif
+				}
+				break;
+			case d_chXCPe_EventSplitDataReply:
+				// New data has arrived
+				Assert(tsOther > d_tsOther_kmReserved);
+				Assert(tsEventID == d_ts_zNA);
+				pEvent = pVault->PFindEventByTimestampOther(tsOther);
+				if (pEvent != NULL && pEvent->EGetEventClass() == CEventDownloader::c_eEventClass)
+					((CEventDownloader *)pEvent)->XcpDownloadedDataArrived(IN pXmlNodeXcpEvent, INOUT &binXcpStanzaReply, pwChatLog);
+				else
+					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unable to find CEventDownloader matching tsOther $t for d_chXCPe_EventSplitDataReply\n", tsOther);
 				break;
 			default:
 				MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unknown chXCPe = $i ($b)\n", chXCPe, chXCPe);
@@ -438,7 +469,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 			EventConfirmation:
 			binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventConfirmation_tsI "/>", tsOther);	// Acknowledge to the remote client we received (and processed) the event
 			EventSynchronize:
-			if (dtsSynchronization == 0)
+			if (dtsOtherSynchronization == 0)
 				{
 				//Assert(tsOther > *ptsOtherLastSynchronized);
 				if (tsOther > *ptsOtherLastSynchronized)
@@ -453,7 +484,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				}
 			else
 				{
-				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Out of sync by $T\n", dtsSynchronization);
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Out of sync by $T\n", dtsOtherSynchronization);
 				}
 			Assert(pEvent != NULL);
 			if (pEvent != NULL && pEvent->Event_FIsEventTypeSent())
@@ -477,81 +508,92 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 	Assert(pVault->m_arraypaEvents.FEventsSortedByIDs());
 	} // Xcp_ProcessStanzasAndUnserializeEvents()
 
-/*
-EEventClass
-IEvent::S_EGetEventClassFromXmlStanzaXCP(IN const CXmlNode * pXmlNodeEventsStanza, INOUT TContact * pContact, INOUT ITreeItemChatLogEvents * pChatLogEvents, IOUT CBinXcpStanzaType * pbinXmlStanzaReply)
+void
+CBinXcpStanzaType::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent)
 	{
-	Assert(pXmlNodeEventsStanza != NULL);
-	Assert(pContact != NULL);			// Contact where the event was received
-	Assert(pChatLogEvents != NULL);		// Contact (or group) where the event should be displayed
-	Assert(pChatLogEvents->EGetRuntimeClass() == RTI(TContact) || pChatLogEvents->EGetRuntimeClass() == RTI(TGroup));
-	Assert(pbinXmlStanzaReply != NULL);
-	EEventClass eEventClass = EEventClassFromPsz(pXmlNodeEventsStanza->m_pszuTagName);
-	switch (eEventClass)
+	AssertValidEvent(pEvent);
+	TContact * pContact = pEvent->m_pContactGroupSender_YZ;
+	if (pContact != NULL)
 		{
-	case eEventClass_eMessageTextComposing:	// The contact is typing something
-		pChatLogEvents->ChatLog_ChatStateIconUpdate((pXmlNodeEventsStanza->PFindAttribute(d_chXCPa_MessageTextComposing_State) == NULL) ? eChatState_zComposing : eChatState_fPaused, pContact);
-		return eEventClass_eNull;
-	case eEventClass_ePing:
-		// The XCP ping returns the timestamp (in UTC) of the contact.  This way, it is possible to calculate the clock difference between the two devices.  Ideally the clock difference should be less than one minute.
-		pbinXmlStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataReply _tsI "/>", pXmlNodeEventsStanza->TsGetAttributeValueTimestamp_ML()  m_tsEventID, iblDataSource, IN rgbBuffer, cbDataRead);
-		return eEventClass_eNull;
-	case eEventClass_eServiceDiscovery_Query:
-		pbinXmlStanzaReply->BinAppendStringWithoutNullTerminator("<sd/>");
-		return eEventClass_eNull;
-	case eEventClass_eServiceDiscovery_Response:
-		// We are receiving a response of what the remote client is capable
-		//pContact->m_uFlagsContactSerialized |= TContact::FCS_kfServiceDiscovery;
-		return eEventClass_eNull;
-	default:
-		return eEventClass;
-		} // switch
-	} // S_EGetEventClassFromXmlStanzaXCP()
-*/
+		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+		pContact->BinAppendXmlAttributeContactIdentifier(INOUT this, d_chXCPa_pContactGroupSender);
+		}
+	}
 
 void
-IEvent::XmlSerializeAttributeContactIdentifierOfGroupSender(IOUT CBin * pbinXml)
+CBin::BinAppendXmlForSelfClosingElement()
 	{
-	Assert(pbinXml != NULL);
-	if (m_pContactGroupSender_YZ != NULL)
-		{
-		Assert(m_pContactGroupSender_YZ->EGetRuntimeClass() == RTI(TContact));
-		m_pContactGroupSender_YZ->BinAppendXmlAttributeContactIdentifier(INOUT pbinXml, d_chXCPa_pContactGroupSender);
-		}
+	BinAppendBinaryData("/>\n", 3);	// Close the XML element
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Method to serialize the event to be saved on disk disk.
 void
-IEvent::XmlSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlDisk)
+CBinXcpStanzaType::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 	{
-	const EEventClass eEventClass = EGetEventClass();
+	const EEventClass eEventClass = pEvent->EGetEventClass();
 	if ((eEventClass & eEventClass_kfNeverSerializeToDisk) == 0)
 		{
-		pbinXmlDisk->BinAppendTextSzv_VE("<$U" _tsI _tsO, eEventClass, m_tsEventID, m_tsOther);
-		XmlSerializeAttributeContactIdentifierOfGroupSender(INOUT pbinXmlDisk);
-		XmlSerializeCore(INOUT pbinXmlDisk);
-		pbinXmlDisk->BinAppendBinaryData("/>\n", 3);	// Close the XML element
+		BinAppendTextSzv_VE("<$U" _tsI _tsO, eEventClass, pEvent->m_tsEventID, pEvent->m_tsOther);
+		BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
+		pEvent->XmlSerializeCore(IOUT this);
+		BinAppendXmlForSelfClosingElement();
 		}
 	}
-
-//	Method to serialize the event to be transmitted through the Cambrian Protocol.
-//	The difference between saving an event to disk and for XCP, is the eEventClass must be adjusted for the recipient as well as swapping m_tsEventID and m_tsOther, because any event 'sent' becomes an event 'received'.
-//	This is necessary for the remote client unserialize the events the same way as unserializing them from disk.
+/*
+//	Core method to serialize an event to be transmitted through the Cambrian Protocol.
+//
+//	This method is 'core' because it is shared with the 'serializer' as well the method re-creating the cache for the 'downloader'.
+//	The class CEventDownloader relies on the number of bytes serialized by this method to transmit the event.
 void
-IEvent::XmlSerializeForXCP(INOUT CBinXcpStanzaType * pbinXcpStanza)
+CBinXcpStanzaType::BinXmlSerializeEventForXcpCore(const IEvent * pEvent)
 	{
-	Assert(pbinXcpStanza != NULL);
-	Assert(pbinXcpStanza->m_pContact != NULL);
-	const EEventClass eEventClass = EGetEventClassForXCP(pbinXcpStanza->m_pContact);
+	Assert(pEvent != NULL);
+	Assert(m_pContact != NULL);
+	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
+	BinAppendTextSzv_VE((pEvent->m_tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, pEvent->EGetEventClassForXCP(m_pContact), pEvent->m_tsEventID, pEvent->m_tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
+	BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
+	pEvent->XmlSerializeCore(IOUT this);
+	BinAppendXmlForSelfClosingElement();
+	}
+*/
+
+//	Method to serialize an event to be transmitted through the Cambrian Protocol.
+//	The difference between saving an event to disk and for XCP, is the eEventClass must be adjusted for the recipient as well as swapping m_tsEventID and m_tsOther,
+//	because any event 'sent' becomes an event 'received' by the remote contact.  This design decision was made, so the remote client unserialize the received events the same way as unserializing events from disk.
+//
+//	Also, this method ensures a large event will be sent in smaller chunks, so it may be transmitted through the XMPP protocol.
+void
+CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
+	{
+	Assert(pEvent != NULL);
+	Assert(m_pContact != NULL);
+	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
+	Assert(m_paData	!= NULL);
+	const EEventClass eEventClass = pEvent->EGetEventClassForXCP(m_pContact);
 	if ((eEventClass & eEventClass_kfNeverSerializeToXCP) == 0)
 		{
-		pbinXcpStanza->BinAppendTextSzv_VE((m_tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, eEventClass, m_tsEventID, m_tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
-		XmlSerializeAttributeContactIdentifierOfGroupSender(INOUT pbinXcpStanza);
-		XmlSerializeCore(INOUT pbinXcpStanza);
-		pbinXcpStanza->BinAppendBinaryData("/>\n", 3);	// Close the XML element
+		const int ibDataElementStart = m_paData->cbData;
+		TIMESTAMP tsEventID = pEvent->m_tsEventID;
+		TIMESTAMP tsOther = pEvent->m_tsOther;
+		BinAppendTextSzv_VE((tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, eEventClass, tsEventID, tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
+		BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
+		pEvent->XmlSerializeCore(IOUT this);
+		if (m_paData->cbData > c_cbStanzaMaxPayload) //  / 250)
+			{
+			// The XML data is too large, therefore use a 'downloader event' which will take care of transferring the data in smaller chunks.
+			// At this point it is tempting to create a cache of the XML data, however this approach is unreliable because the XML main contain m_tsOther which may change and screw up the synchronization process.
+			// It is better to let the method PFindOrAllocateDataXmlLargeEvent_NZ() take care of it.
+			MessageLog_AppendTextFormatCo(d_coOrange, "BinXmlSerializeEventForXcp() - Large stanza of about $I bytes\n", m_paData->cbData);
+			m_paData->cbData = ibDataElementStart;	// Truncate the binary, so send the CEventDownloader instead of the event
+			CDataXmlLargeEvent * pDataXmlLargeEvent = m_pContact->m_pAccount->PFindOrAllocateDataXmlLargeEvent_NZ(tsEventID, IN_MOD_TMP this);	// Create the cache, so we can get its size
+			Assert(m_paData->cbData == ibDataElementStart);
+			BinAppendTextSzv_VE("<" d_szXCPe_CEventDownloader_tsO_i, pEvent->m_tsEventID, pDataXmlLargeEvent->m_binXmlData.CbGetData());	// Serialize on-the-fly the CEventDownloader
+			BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);				// Make sure the downloader goes to the right group
+			}
+		BinAppendXmlForSelfClosingElement();
 		}
-	}
+	} // BinXmlSerializeEventForXcp()
 
 //	Send the event through XMPP.  If the contact can understand the Cambrian Protocol, then the event will be serialized for XCP, ortherwise will be sent throught the standard XMPP.
 //
@@ -572,10 +614,10 @@ IEvent::Event_WriteToSocketIfNeverSent(CSocketXmpp * pSocket)
 	if (pContact->EGetRuntimeClass() == RTI(TContact))
 		{
 		// Send the message to a contact
-		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGrayDark), "\t Sending message to $S\n\t m_tsEventIdLastSentCached $t, m_tsOtherLastSynchronized $t\n", &pContact->m_strJidBare, pContact->m_tsEventIdLastSentCached, pContact->m_tsOtherLastSynchronized);
+		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGrayDark), "\t Sending message to $S\n\t\t m_tsEventIdLastSentCached $t, m_tsOtherLastSynchronized $t\n", &pContact->m_strJidBare, pContact->m_tsEventIdLastSentCached, pContact->m_tsOtherLastSynchronized);
 		binXcpStanza.m_pContact = pContact;
-		binXcpStanza.XcpAppendTimestampsToSynchronizeWithContact(pContact);
-		XmlSerializeForXCP(IOUT &binXcpStanza);
+		binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithContact(pContact);
+		binXcpStanza.BinXmlSerializeEventForXcp(IN this);
 		binXcpStanza.XcpSendStanza();
 		}
 	else
@@ -591,9 +633,9 @@ IEvent::Event_WriteToSocketIfNeverSent(CSocketXmpp * pSocket)
 			Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
 			binXcpStanza.m_pContact = pMember->m_pContact;
 			MessageLog_AppendTextFormatSev(eSeverityNoise, "Sending message to group member $S\n", &pMember->m_pContact->m_strJidBare);
-			binXcpStanza.BinInitStanzaWithGroupSelector(pGroup);	// This line could be removed out of the loop
-			binXcpStanza.XcpAppendTimestampsToSynchronizeWithGroupMember(pMember);
-			XmlSerializeForXCP(IOUT &binXcpStanza);
+			binXcpStanza.BinXmlInitStanzaWithGroupSelector(pGroup);	// This line could be removed out of the loop
+			binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithGroupMember(pMember);
+			binXcpStanza.BinXmlSerializeEventForXcp(IN this);
 			binXcpStanza.XcpSendStanza();	// Send the XCP stanza to the contact
 			} // while
 		} // if...else
@@ -614,7 +656,7 @@ CArrayPtrEvents::EventsSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlEvents)
 		{
 		IEvent * pEvent = *ppEvent++;
 		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		pEvent->XmlSerializeForDisk(IOUT pbinXmlEvents);
+		pbinXmlEvents->BinXmlSerializeEventForDisk(IN pEvent);
 		} // while
 	} // EventsSerializeForDisk()
 
@@ -722,7 +764,7 @@ void
 TContact::Xcp_Synchronize()
 	{
 	CBinXcpStanzaTypeInfo binXcpStanza;
-	binXcpStanza.XcpAppendTimestampsToSynchronizeWithContact(this);
+	binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithContact(this);
 	binXcpStanza.XcpSendStanzaToContact(IN this);
 	}
 /*
@@ -756,6 +798,7 @@ CBinXcpStanzaType::CBinXcpStanzaType(EStanzaType eStanzaType)
 	{
 	m_eStanzaType = eStanzaType;
 	m_pContact = NULL;
+	PvSizeAlloc(300);	// Pre-allocate 300 bytes, which should be enough for a small stanza
 	}
 
 CBinXcpStanzaTypeInfo::CBinXcpStanzaTypeInfo() : CBinXcpStanzaType(eStanzaType_zInformation)
@@ -775,12 +818,12 @@ CBinXcpStanzaTypeInfo::CBinXcpStanzaTypeInfo(IEvent * pEvent) : CBinXcpStanzaTyp
 		m_pContact = pEvent->m_pContactGroupSender_YZ;
 		Report(m_pContact != NULL && "Invalid contact group sender");	// This pointer may actually be NULL if the event is the group sender
 		// We have a group, therefore add the group selector to the XCP stanza
-		BinInitStanzaWithGroupSelector(pContactOrGroup);
+		BinXmlInitStanzaWithGroupSelector(pContactOrGroup);
 		}
 	}
 
 void
-CBinXcpStanzaType::BinInitStanzaWithGroupSelector(TGroup * pGroup)
+CBinXcpStanzaType::BinXmlInitStanzaWithGroupSelector(TGroup * pGroup)
 	{
 	Assert(pGroup != NULL);
 	Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
@@ -818,23 +861,307 @@ CBinXcpStanzaType::XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaX
 		}
 	}
 
-void
-CBinXcpStanzaType::XcpSendStanzaToContact(TContact * pContact) const
+//	Before allocating a CDataXmlLargeEvent, check if it is not already there.
+//	This is important because if we are sending a message to a group, then the same CDataXmlLargeEvent is reused, otherwise
+//	there will be a copy of CDataXmlLargeEvent for each group member.  Just imagine sending a large stanza of 100 KiB to a group of 1000 people.
+CDataXmlLargeEvent *
+TAccountXmpp::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanzaType * pbinXcpStanza)
 	{
-	if (pContact == NULL)
-		return;	// This is not a bug, but a feature allowing an event to write to the socket directly because the contact is unable to understand XCP.
-	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+	Assert(tsEventID > d_ts_zNULL);
+	Assert(pbinXcpStanza != NULL);
+	Assert(pbinXcpStanza->m_pContact != NULL);
+	Assert(pbinXcpStanza->m_pContact->EGetRuntimeClass() == RTI(TContact));
+	IEvent * pEvent;
+
+	// First, search the list of large stanza
+	CDataXmlLargeEvent * pDataXmlLargeEvent = (CDataXmlLargeEvent *)m_listaDataXmlLargeEvents.pHead;
+	while (pDataXmlLargeEvent != NULL)
+		{
+		if (pDataXmlLargeEvent->m_tsEventID == tsEventID)
+			{
+			MessageLog_AppendTextFormatSev(eSeverityComment, "PFindOrAllocateDataXmlLargeEvent_NZ() - Found existing CDataXmlLargeEvent $t  ($I bytes)\n", tsEventID, pDataXmlLargeEvent->m_binXmlData.CbGetData());
+			m_listaDataXmlLargeEvents.MoveNodeToHead(INOUT pDataXmlLargeEvent);	// Move the node at the beginning of the list so next time its access is faster (this is a form of caching, in case there are many pending CDataXmlLargeEvent)
+			goto Done;
+			}
+		pDataXmlLargeEvent = (CDataXmlLargeEvent *)pDataXmlLargeEvent->pNext;
+		} // while
+	// We have been unable to find a CDataXmlLargeEvent matching tsEventID, therefore we need to allocate a new one
+	pDataXmlLargeEvent = new CDataXmlLargeEvent;
+	pDataXmlLargeEvent->m_tsEventID = tsEventID;
+
+	// We need to serialize the event, and then save the blob
+	pEvent = pbinXcpStanza->m_pContact->Vault_PGet_NZ()->PFindEventByID(tsEventID);
+	if (pEvent != NULL)
+		{
+		const int ibXmlDataStart = pbinXcpStanza->CbGetData();
+		//pbinXcpStanza->BinAppendTextSzv_VE("<$U" _tsO, pEvent->EGetEventClassForXCP(pbinXcpStanza->m_pContact), pEvent->m_tsEventID);	// Do not serialize m_tsOther, as the CDownloader will have it.  Same for the group identifier as well as m_pContactGroupSender_YZ
+		pbinXcpStanza->BinAppendTextSzv_VE("<$U", pEvent->EGetEventClassForXCP(pbinXcpStanza->m_pContact));	// No need to serialize the timestamps, group identifier, or m_pContactGroupSender_YZ, because the CEventDownloader has this information
+		pEvent->XmlSerializeCore(IOUT pbinXcpStanza);
+		pbinXcpStanza->BinAppendXmlForSelfClosingElement();
+		Assert(pbinXcpStanza->m_pContact != NULL);	// Sometimes XmlSerializeCore() may modify m_pContact, however it should be only for contacts not supporting XCP (which should not be the case here!)
+		int cbXmlData = pbinXcpStanza->CbGetData() - ibXmlDataStart;
+		pDataXmlLargeEvent->m_binXmlData.BinInitFromBinaryData(pbinXcpStanza->TruncateDataPv(ibXmlDataStart), cbXmlData);	// Make a copy of the serialized data, and restore CBinXcpStanzaType to its original state
+		MessageLog_AppendTextFormatSev(eSeverityComment, "PFindOrAllocateDataXmlLargeEvent_NZ() - Initializing cache by serializing tsEventID $t (tsOther $t) -> $I bytes of data\n", tsEventID, pEvent->m_tsOther, cbXmlData);
+		}
+	else
+		{
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "PFindOrAllocateDataXmlLargeEvent_NZ() - Unable to find tsEventID $t, therefore initializing an empty cache entry!\n", tsEventID);
+		}
+	HashSha1_CalculateFromCBin(OUT &pDataXmlLargeEvent->m_hashXmlData, IN pDataXmlLargeEvent->m_binXmlData);	// Calculate the checksum for the data
+	m_listaDataXmlLargeEvents.InsertNodeAtHead(PA_CHILD pDataXmlLargeEvent);	// Insert at the head, as the event is most likely to be accessed within the next minutes
+
+	Done:
+	pDataXmlLargeEvent->m_tsmLastAccessed = g_tsmMinutesSinceApplicationStarted;
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "PFindOrAllocateDataXmlLargeEvent_NZ() returning CDataXmlLargeEvent $t of $I bytes (m_tsmLastAccessed=$I)\n", tsEventID, pDataXmlLargeEvent->m_binXmlData.CbGetData(), pDataXmlLargeEvent->m_tsmLastAccessed);
+	return pDataXmlLargeEvent;
+	} // PFindOrAllocateDataXmlLargeEvent_NZ()
+
+
+CListaDataXmlLargeEvents::~CListaDataXmlLargeEvents()
+	{
+	// Destroy the list
+	CDataXmlLargeEvent * pDataXmlLargeEvent = (CDataXmlLargeEvent *)pHead;
+	while (pDataXmlLargeEvent != NULL)
+		{
+		CDataXmlLargeEvent * pDataXmlLargeEventNext = (CDataXmlLargeEvent *)pDataXmlLargeEvent->pNext;
+		delete pDataXmlLargeEventNext;
+		pDataXmlLargeEvent = pDataXmlLargeEventNext;
+		} // while
+	}
+
+void
+CListaDataXmlLargeEvents::DeleteIdleNodes()
+	{
+	// Flush any cache entry idle for more than a number of minutes
+	#define d_cMinutesIdleForCDataXmlLargeEvent		0		// For debugging, use zero, however for a real world situation, 10 minutes would be a good guess
+
+	CDataXmlLargeEvent * pDataXmlLargeEvent = (CDataXmlLargeEvent *)pHead;
+	while (pDataXmlLargeEvent != NULL)
+		{
+		CDataXmlLargeEvent * pDataXmlLargeEventNext = (CDataXmlLargeEvent *)pDataXmlLargeEvent->pNext;
+		if (pDataXmlLargeEvent->m_tsmLastAccessed + d_cMinutesIdleForCDataXmlLargeEvent < g_tsmMinutesSinceApplicationStarted)
+			{
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[$@] CListaDataXmlLargeEvents::DeleteIdleNodes() - Deleting cache entry for tsEventID $t\n", pDataXmlLargeEvent->m_tsEventID);	// This is not an error, however good to draw attention
+			DetachNode(INOUT pDataXmlLargeEvent);
+			delete pDataXmlLargeEvent;
+			}
+		pDataXmlLargeEvent = pDataXmlLargeEventNext;
+		} // while
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+CEventDownloader::CEventDownloader(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
+	{
+	m_cbDataToDownload = 0;
+	m_paEvent = NULL;
+	}
+
+CEventDownloader::~CEventDownloader()
+	{
+	delete m_paEvent;
+	}
+
+//	Return the class of the event when the download is complete.
+//	This is where the morphing occurs, because the downloaded event will be serialized as a native object and next time Cambrian will load, the downloader will no longer exist.
+EEventClass
+CEventDownloader::EGetEventClass() const
+	{
+	if (m_paEvent != NULL)
+		return m_paEvent->EGetEventClass();
+	return c_eEventClass;
+	}
+
+EEventClass
+CEventDownloader::EGetEventClassForXCP(const TContact * pContactToSerializeFor) const
+	{
+	if (m_paEvent != NULL)
+		return m_paEvent->EGetEventClassForXCP(pContactToSerializeFor);
+	return c_eEventClass;
+	}
+
+//	CEventDownloader::IEvent::XmlSerializeCore()
+void
+CEventDownloader::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+	{
+	if (m_paEvent != NULL)
+		{
+		m_paEvent->XmlSerializeCore(IOUT pbinXmlAttributes);
+		return;
+		}
+	pbinXmlAttributes->BinAppendXmlAttributeInt(d_chXCPa_CEventDownloader_cblDataToDownload, m_cbDataToDownload);
+	pbinXmlAttributes->BinAppendXmlAttributeCBin(d_chXCPa_CEventDownloader_bin85DataReceived, m_binDataDownloaded);
+	}
+
+//	CEventDownloader::IEvent::XmlUnserializeCore()
+void
+CEventDownloader::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
+	{
+	if (m_paEvent != NULL)
+		{
+		m_paEvent->XmlUnserializeCore(IN pXmlNodeElement);	// This happens when synchronizing
+		return;
+		}
+	pXmlNodeElement->UpdateAttributeValueInt(d_chXCPa_CEventDownloader_cblDataToDownload, OUT_F_UNCH &m_cbDataToDownload);
+	pXmlNodeElement->UpdateAttributeValueCBin(d_chXCPa_CEventDownloader_bin85DataReceived, OUT_F_UNCH &m_binDataDownloaded);
+	}
+
+void
+CEventDownloader::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
+	{
+	if (m_paEvent != NULL)
+		m_paEvent->XcpExtraDataRequest(pXmlNodeExtraData, pbinXcpStanzaReply);
+	}
+
+void
+CEventDownloader::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply)
+	{
+	if (m_paEvent != NULL)
+		m_paEvent->XcpExtraDataArrived(pXmlNodeExtraData, pbinXcpStanzaReply);
+	}
+
+void
+CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
+	{
+	if (m_paEvent == NULL)
+		{
+		// Show progress of the download
+		int cbDataDownloaded = m_binDataDownloaded.CbGetData();
+		if (cbDataDownloaded != m_cbDataToDownload)
+			{
+			_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
+			g_strScratchBufferStatusBar.BinAppendTextSzv_VE("receiving large data... {kT}", cbDataDownloaded, m_cbDataToDownload);
+			//g_strScratchBufferStatusBar.BinAppendTextBytesKiBPercentProgress(cbDataDownloaded, m_cbDataToDownload);
+			poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(d_coSilver));
+
+			// Request the next block of data
+			MessageLog_AppendTextFormatSev(eSeverityComment, "CEventDownloader::ChatLogUpdateTextBlock() - Event tsOther $t is requesting data at offset $I (until $I)\n", m_tsOther, cbDataDownloaded, m_cbDataToDownload);
+			CBinXcpStanzaTypeInfo binXcpStanza(this);
+			binXcpStanza.BinAppendTextSzv_VE("<" d_szXCPe_EventSplitDataRequest_tsI_i "/>", m_tsOther, cbDataDownloaded);
+			binXcpStanza.XcpSendStanza();
+			return;
+			}
+		// We are done downloading, therefore allocate the event by unserializing the downloaded XML data
+		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventDownloader::ChatLogUpdateTextBlock() - Event tsOther $t completed: $B\n", m_tsOther, &m_binDataDownloaded);
+
+		CXmlTree oXmlTree;
+		if (oXmlTree.EParseFileDataToXmlNodesCopy_ML(IN m_binDataDownloaded) == errSuccess)
+			{
+			m_paEvent = IEvent::S_PaAllocateEvent_YZ(EEventClassFromPsz(oXmlTree.m_pszuTagName), IN &m_tsEventID);
+			Report(m_paEvent != NULL && "Unable to allocate event from data of CEventDownloader");
+			if (m_paEvent != NULL)
+				{
+				Assert(m_paEvent->m_pContactGroupSender_YZ == NULL);
+				m_paEvent->m_pContactGroupSender_YZ = m_pContactGroupSender_YZ;
+				m_paEvent->m_pVaultParent_NZ = m_pVaultParent_NZ;
+				m_paEvent->m_tsOther = m_tsOther;
+				m_paEvent->XmlUnserializeCore(IN &oXmlTree);
+				goto EventUpdateToGUI;
+				}
+			}
+		// The data is not good (probably corrupted), so display a notification and flush the data
+		_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
+		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("<span style='color:red'>Error allocating event $s of {kK}", oXmlTree.m_pszuTagName, cbDataDownloaded);
+		poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(d_coSilver));
+		m_binDataDownloaded.Empty();
+		m_cbDataToDownload = -1;
+		m_pVaultParent_NZ->SetModified();	// Make sure the flushing of the data is 'saved' to disk
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventDownloader::ChatLogUpdateTextBlock() - Data corrupted for event tsOther $t, therefore flushing data.\n", m_tsOther);
+		}
+	else
+		{
+		EventUpdateToGUI:
+		m_paEvent->ChatLogUpdateTextBlock(INOUT poCursorTextBlock);
+		} // if...else
+	} // ChatLogUpdateTextBlock()
+
+void
+CEventDownloader::XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, CBinXcpStanzaType * pbinXcpStanzaReply, QTextEdit * pwEditChatLog)
+	{
+	const int ibDataNew = pXmlNodeData->LFindAttributeXcpOffset();
+	const int ibDataRequested = m_binDataDownloaded.CbGetData();
+	if (ibDataNew == ibDataRequested)
+		{
+		m_binDataDownloaded.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeData->PszuFindAttributeValue(d_chXCPa_EventExtraData_bin85Payload));	// Append new binary data
+		int cbDataNew = m_binDataDownloaded.CbGetData();
+		SHashSha1 hashDataChecksum;
+		if (pXmlNodeData->UpdateAttributeValueHashSha1(d_chXCPa_EventExtraData_shaData, OUT_F_UNCH &hashDataChecksum))
+			{
+			// If the hash is present, it means we have received everyting.  All we need is to compare if the value is good
+			if (m_binDataDownloaded.FCompareFingerprint(IN hashDataChecksum))
+				{
+				// We have the correct fingerprint, meaning the data is valid
+				if (cbDataNew != m_cbDataToDownload)
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventDownloader tsEventID $t: Adjusting m_cbDataToDownload from $I to $I.\n", m_tsEventID, m_cbDataToDownload, cbDataNew);
+				m_cbDataToDownload = cbDataNew;
+				}
+			else
+				{
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventDownloader tsEventID $t: Fingerprint mismatch for $I bytes of data\n", m_tsEventID, cbDataNew);
+				if ((m_uFlagsEvent & FE_kfEventProtocolWarning) == 0)
+					{
+					m_uFlagsEvent |= FE_kfEventProtocolWarning;
+					m_binDataDownloaded.Empty();	// Flush what we downloaded, and try again
+					cbDataNew = 0;
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Retrying to download tsEventID $t again...\n", m_tsEventID);
+					}
+				} // if...else
+			goto UpdateGUI;	// Always update the GUI when the hash is present
+			} // if
+		if (cbDataNew > ibDataRequested)
+			{
+			// The content m_binDataDownloaded grew (which means received new data), therefore update the GUI if available, otherwise request another chunk
+			UpdateGUI:
+			if (pwEditChatLog != NULL)
+				ChatLog_UpdateEventWithinWidget(pwEditChatLog);	// Update the UI (which will requests another chunk)
+			else
+				pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_EventSplitDataRequest_tsI_i "/>", m_tsOther, cbDataNew);
+			m_pVaultParent_NZ->SetModified();	// Make sure the new data gets saved to disk
+			}
+		else
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventDownloader tsEventID $t: Ignoring empty stanza (cbDataDownloaded=$I, m_cbDataToDownload=$I)\n", m_tsEventID, ibDataRequested, m_cbDataToDownload);
+		}
+	else
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventDownloader tsEventID $t: Ignoring data because its offset $I does not match the requested at $I\n", m_tsEventID, ibDataNew, ibDataRequested);
+	} // XcpDownloadedDataArrived()
+
+void
+CEventDownloader::HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText)
+	{
+	if (m_paEvent != NULL)
+		m_paEvent->HyperlinkGetTooltipText(pszActionOfHyperlink, IOUT pstrTooltipText);
+	}
+
+void
+CEventDownloader::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock)
+	{
+	if (m_paEvent != NULL)
+		m_paEvent->HyperlinkClicked(pszActionOfHyperlink, INOUT poCursorTextBlock);
+	}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Core routine sending a stanza to a contact.
+//	This routine takes care of encrypting the data and digitally signing the message.
+void
+CBinXcpStanzaType::XcpSendStanzaToContact(TContact * pContact) CONST_MCC
+	{
 	Assert(m_eStanzaType != eStanzaType_eBroadcast && "Not yet supported");
+	Assert(m_paData != NULL && m_paData->cbData > 0);	// There should be some data into the stanza to send
+	if (pContact == NULL)
+		return;	// This is not a bug, but a feature allowing an event to directly write to the socket when a contact is unable to understand XCP.
+	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 	if (pContact->m_cVersionXCP <= 0)
 		{
 		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlue), "Contact not supporting XCP - Therefore ignoring XcpSendStanzaToContact($s):\n$B\n", pContact->ChatLog_PszGetNickname(), this);
 		return;
 		}
 	MessageLog_AppendTextFormatCo(d_coBlue, "XcpSendStanzaToContact($s):\n$B\n", pContact->ChatLog_PszGetNickname(), this);
+	PSZUC pszDataStanza = m_paData->rgbData;
+	int cbDataStanza = m_paData->cbData;
 
-	// TODO: Encrypt pbinXmlEvents and sign it.
+	// TODO: Encrypt the data and sign it.
 	SHashSha1 hashSignature;
-	HashSha1_CalculateFromCBin(OUT &hashSignature, IN *this);	// At the moment, use SHA-1 as the 'signature'
+	HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);	// At the moment, use SHA-1 as the 'signature'
 
 	PSZAC pszStanzaType = c_sza_message;
 	PSZAC pszStanzaAttributesExtra = NULL;
@@ -845,7 +1172,7 @@ CBinXcpStanzaType::XcpSendStanzaToContact(TContact * pContact) const
 		}
 	// Format the XML envelope for the XMPP protocol.
 	g_strScratchBufferSocket.BinInitFromTextSzv_VE("<$s$s to='^J'><" d_szCambrianProtocol_xcp " " d_szCambrianProtocol_Attribute_hSignature "='{h|}'>", pszStanzaType, pszStanzaAttributesExtra, pContact, &hashSignature);
-	g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN this);
+	g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanza, cbDataStanza);
 	g_strScratchBufferSocket.BinAppendTextSzv_VE("</" d_szCambrianProtocol_xcp "></$s>", pszStanzaType);
 	CSocketXmpp * pSocket = pContact->Xmpp_PGetSocketOnlyIfReady();
 	if (pSocket != NULL)
@@ -853,19 +1180,19 @@ CBinXcpStanzaType::XcpSendStanzaToContact(TContact * pContact) const
 	} // XcpSendStanzaToContact()
 
 void
-CBinXcpStanzaType::XcpSendStanza() const
+CBinXcpStanzaType::XcpSendStanza() CONST_MCC
 	{
 	XcpSendStanzaToContact(m_pContact);
 	}
 
 void
-CBinXcpStanzaType::XcpAppendTimestampsToSynchronizeWithContact(TContact * pContact)
+CBinXcpStanzaType::BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact)
 	{
 	BinAppendTextSzv_VE("<" d_szXCPe_EventPrevious_tsO_tsI "/>", pContact->m_tsEventIdLastSentCached, pContact->m_tsOtherLastSynchronized);
 	}
 
 void
-CBinXcpStanzaType::XcpAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember)
+CBinXcpStanzaType::BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember)
 	{
 	BinAppendTextSzv_VE("<" d_szXCPe_EventPrevious_tsO_tsI "/>", pMember->m_pGroup->m_tsEventIdLastSentCached, pMember->m_tsOtherLastSynchronized);
 	}
@@ -879,14 +1206,6 @@ IEvent::XcpRequesExtraData()
 	}
 
 /*
-https://tools.ietf.org/html/draft-saintandre-rfc3920bis-09
-XMPP is optimized for the exchange of relatively large numbers of
-relatively small stanzas.  A client or server MAY enforce a maximum
-stanza size.  The maximum stanza size MUST NOT be smaller than 10000
-bytes, from the opening "<" character to the closing ">" character.
-If an entity receives a stanza that exceeds its maximum stanza size,
-it MUST return a <not-acceptable/> stanza error or a <policy-
-violation/> stream error.
 */
 
 void
@@ -899,7 +1218,7 @@ TContact::Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC
 		if (m_uFlagsContact & FC_kfXcpComposingSendTimestampsOfLastKnownEvents)
 			{
 			m_uFlagsContact &= ~FC_kfXcpComposingSendTimestampsOfLastKnownEvents;
-			binXcpStanza.XcpAppendTimestampsToSynchronizeWithContact(this);
+			binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithContact(this);
 			}
 		binXcpStanza.BinAppendStringWithoutNullTerminator((eChatState == eChatState_zComposing) ? d_szXCPe_MessageTextComposingStarted : d_szXCPe_MessageTextComposingPaused);
 		binXcpStanza.XcpSendStanzaToContact(IN this);
@@ -956,15 +1275,22 @@ CEventGroupMessageReceived::SystemTray_FDisplayEvent() const
 	return TRUE;
 	}
 */
+
+L64
+CXmlNode::LFindAttributeXcpOffset() const
+	{
+	return LFindAttributeValueDecimal_ZZR(d_chXCPa_EventExtraData_iblOffset);
+	}
+
 void
 CEventFileSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply)
 	{
 	Assert(pXmlNodeExtraData != NULL);
-	BYTE rgbBuffer[4096];	// 4 KiB is the recommended payload under XMPP
-	L64 iblDataSource = pXmlNodeExtraData->LFindAttributeValueDecimal_ZZR(d_chXCPa_EventExtraData_iblOffset);
+	BYTE rgbBuffer[CBinXcpStanzaType::c_cbStanzaMaxBinary];
+	L64 iblDataSource = pXmlNodeExtraData->LFindAttributeXcpOffset();
 	int cbDataRead = _PFileOpenReadOnly_NZ()->CbDataReadAtOffset(iblDataSource, sizeof(rgbBuffer), OUT rgbBuffer);
 	m_cblDataTransferred = iblDataSource + cbDataRead;
-	pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataReply_tsO d_szXCPa_EventExtraData_iblOffset_l " " d_szXCPa_EventExtraData_binPayloadBase85 "='{p|}'/>", m_tsEventID, iblDataSource, IN rgbBuffer, cbDataRead);
+	pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataReply_tsO d_szXCPa_EventExtraData_iblOffset_l d_szXCPa_EventExtraData_bin85Payload_pvcb "/>", m_tsEventID, iblDataSource, IN rgbBuffer, cbDataRead);
 	if (cbDataRead <= 0)
 		_FileClose();	// There is nothing to send, therefore we close the file.  Of course, if the contact wishes more data (or request to resend the last block, then the file will be re-opened)
 	}
@@ -973,8 +1299,8 @@ void
 CEventFileReceived::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
 	{
 	CFile * pFile = _PFileOpenWriteOnly_NZ();
-	pFile->seek(pXmlNodeExtraData->LFindAttributeValueDecimal_ZZR(d_chXCPa_EventExtraData_iblOffset));
-	int cbDataWritten = pFile->CbDataWriteBinaryFromBase85(pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_EventExtraData_binPayloadBase85));
+	pFile->seek(pXmlNodeExtraData->LFindAttributeXcpOffset());
+	int cbDataWritten = pFile->CbDataWriteBinaryFromBase85(pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_EventExtraData_bin85Payload));
 	if (cbDataWritten > 0)
 		{
 		// Request the next piece of data

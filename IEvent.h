@@ -14,11 +14,29 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+#define d_chEvent_Attribute_tsEventID					'i'	// Identifier of the event
+#define d_szEvent_Attribute_tsEventID_t					" i='$t'"
+#define d_chEvent_Attribute_tsOther						'o'	// Other timestamp for the event
+#define d_szEvent_Attribute_tsOther_t					" o='$t'"
+
+//	Shorter for the timestamps
+#define _tsI		d_szEvent_Attribute_tsEventID_t
+#define _tsO		d_szEvent_Attribute_tsOther_t
+
 //	XCP is an abbreviation for "eXtensible Cambrian Protocol".
 //	In a nutshell, this protocol is a layer taking care of end-to-end encryption between clients, as well as automatically
 //	splitting large pieces of data into smaller xmpp-stanzas when the data does not fit in the recommended xmpp-stanza size of 4 KiB.
 #define d_chXCP_					'_'
 #define d_szXCP_					"_"
+
+//	Essentially, there are 3 reserved attributes by the Cambrian Protocol ('i', 'o' and 'g')
+//	The following attributes 'make sense' for the receiver of the XCP data.
+#define d_chXCPa_tsEventID				d_chEvent_Attribute_tsEventID
+#define d_szXCPa_tsEventID_t			d_szEvent_Attribute_tsEventID_t
+#define d_chXCPa_tsOther				d_chEvent_Attribute_tsOther
+#define d_szXCPa_tsOther_t				d_szEvent_Attribute_tsOther_t
+#define d_chXCPa_pContactGroupSender	'g'		// Pointer of the contact who sent the event/message to the group.  Of course, this attribute is present only when receiving a group message
+
 
 //	The enumeration EEventClass is used to serialize and unserialize events.
 //	This enumeration is somewhat as RTI_ENUM, however since the events are serialized, letters of the alphabet are used to identify different classes of events.
@@ -29,8 +47,8 @@ enum EEventClass
 	eEventClass_kzSerializeDataAsXmlAttributes	= 0,			// This is the default as all the data of the event are serialized as XML attributes
 	eEventClass_kfSerializeDataAsXmlElement		= _USZUF(0x01),	// NYI: The event has a lot of data and must be serialized as an XML element containing elements and attributes.  This flag is useful during the serialization to determine if there is a need for a closing XML tag.
 
-	eEventClass_kfNeverSerializeToDisk			= _USZUF(0x02),	// This event is never serialized to disk (example: pinging the remote client)
-	eEventClass_kfNeverSerializeToXCP			= _USZUF(0x04),	// This event is never serialized (sent) via the XCP protocol (example: )
+	eEventClass_kfNeverSerializeToDisk			= _USZUF(0x02),	// This event is never serialized to disk (example: pinging a remote client, or sending raw XML to the socket)
+	eEventClass_kfNeverSerializeToXCP			= _USZUF(0x04),	// This event is never serialized (sent) via the XCP protocol (example: downloading a large stanza from a contact)
 	eEventClass_mfNeverSerialize				= eEventClass_kfNeverSerializeToDisk | eEventClass_kfNeverSerializeToXCP,
 
 	eEventClass_kfReceivedByRemoteClient		= _USZUF(0x08),	// This event was received by the remote client.  This bit is useful to quickly determine what was sent, and what was received, as the GUI often displays different colors.  Roughly half of the eEventClass_* will have this bit set.
@@ -71,6 +89,12 @@ enum EEventClass
 	eEventClass_eGroupMessageTextReceived_class		= eEventClass_eGroupMessageTextReceived | eEventClass_kfReceivedByRemoteClient,
 	*/
 
+	eEventClass_eDownloader							= _USZU2('d', 'l'),
+	eEventClass_eDownloader_class					= _USZU2('d', 'l') | eEventClass_kfNeverSerializeToXCP | eEventClass_kfReceivedByRemoteClient,	// The downloader is saved to disk and its class never serialized for XCP.
+		#define d_szXCPe_CEventDownloader_tsO_i		"dl" _tsO " s='$i'"		// At the moment, the downloader class will only send 32 bit of data, hence $i
+		#define d_chXCPa_CEventDownloader_cblDataToDownload		's'	// Size of the data to download
+		#define d_chXCPa_CEventDownloader_bin85DataReceived		'd'	// Data was received so far
+
 	eEventClass_eWalletTransactionSent				= _USZU1('W'),
 
 	eEventClass_eServiceDiscovery_Query				= _USZU2('S', 'D'),		// There is no 'event' for service discovery, however the "SD"
@@ -109,15 +133,36 @@ protected:
 	CBinXcpStanzaType(EStanzaType eStanzaType);
 public:
 	inline BOOL FSerializingEventToDisk() const { return (m_pContact == NULL); }
-	void BinInitStanzaWithGroupSelector(TGroup * pGroup);
-	void BinInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml);
+	void BinXmlInitStanzaWithGroupSelector(TGroup * pGroup);
+	void BinXmlInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml);
+	void BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact);
+	void BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember);
+	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
+	void BinXmlSerializeEventForDisk(const IEvent * pEvent);
+	void BinXmlSerializeEventForXcp(const IEvent * pEvent);
+	void BinXmlSerializeEventForXcpCore(const IEvent * pEvent);
+	void XcpSendStanzaToContact(TContact * pContact) CONST_MCC;
+	void XcpSendStanza() CONST_MCC;
+
 	void XmppWriteStanzaToSocket();
 	void XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE(PSZAC pszFmtTemplate, ...);
-	void XcpAppendTimestampsToSynchronizeWithContact(TContact * pContact);
-	void XcpAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember);
-	void XcpSendStanzaToContact(TContact * pContact) const;
-	void XcpSendStanza() const;
-};
+public:
+	/*
+	https://tools.ietf.org/html/draft-saintandre-rfc3920bis-09
+
+	XMPP is optimized for the exchange of relatively large numbers of relatively small stanzas. A client or server MAY enforce a maximum stanza size.
+	The maximum stanza size MUST NOT be smaller than 10000 bytes, from the opening "<" character to the closing ">" character.
+	If an entity receives a stanza that exceeds its maximum stanza size, it MUST return a <not-acceptable/> stanza error or a <policy-violation/> stream error.
+
+	http://tools.ietf.org/html/rfc6122
+	Each allowable portion of a JID (localpart, domainpart, and resourcepart) MUST NOT be more than 1023 bytes in length,
+	resulting in a maximum total size (including the '@' and '/' separators) of 3071 bytes.
+	*/
+	static const int c_cbStanzaMaxSize		= 10000;	// Hard limit on the stanza size
+	static const int c_cbStanzaMaxPayload	= 8000;		// Split any stanza having a payload larger than 8000 bytes, as Cambrian reserved 2000 bytes for the XMPP header. Sure some XMPP clients may have JIDs of 3071 bytes, however those clients won't be able to use the Cambrian Protocol.
+	static const int c_cbStanzaMaxBinary	= 6400;		// Since binary is transmitted in Base85, the encoding of 6400 bytes requires 25% more space (6400 * 1.25 = 8000)
+}; // CBinXcpStanzaType
+
 
 class CBinXcpStanzaTypeInfo : public CBinXcpStanzaType
 {
@@ -150,19 +195,13 @@ CHS ChGetCambrianActionFromUrl(PSZUC pszUrl);
 #define d_chCambrianAction_DisplayAllHistory	'*'
 #define d_szCambrianAction_DisplayAllHistory	"*"
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define d_szClassForChatLog_HyperlinkDisabled		"Hd"	// Display an hyperlink in gray, giving the visual effect is is disabled
 #define d_szClassForChatLog_ButtonHtml				"Hb"	// Use HTML CSS to create an hyperlink looking like a push button.
 
-#define d_chEvent_Attribute_tsEventID					'i'	// Identifier of the event
-#define d_szEvent_Attribute_tsEventID_t					" i='$t'"
-#define d_chEvent_Attribute_tsOther						'o'	// Other timestamp for the event
-#define d_szEvent_Attribute_tsOther_t					" o='$t'"
-
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Special values for IEvent::m_tsOther
-#define	d_tsOther_ezEventNeverSent		0			// The event has never been sent. As soon as there is a valid socket connection with the server, the method XmlSerializeForXCP() will attempt to send the event.
+#define	d_tsOther_ezEventNeverSent		0			// The event has never been sent. As soon as there is a valid socket connection with the server, the method BinXmlSerializeEventForXcp() will attempt to send the event.
 #define	d_tsOther_eEventSentOnce		1			// The event was sent to the server, however was not delivered.  The proof of delivery is the timestamp of the confirmation which must be larger than d_tsOther_kmReserved.
 #define d_tsOther_kmReserved			0xFFFFFFFF	// Reserving the first 32 bits for the timestamp.  This leaves plenty of room to have various flags while making little difference in the 64-bit value. (btw: 0xFFFFFFFF milliseconds is 1970-02-19@11:02:47, and serialized as "3TSmc9t")
 #define d_tsOther_tsEventDeliveryMin   0x100000000	// Minimum value of a timestamp to be considered delivered.  This value is not used in the code, as it is there to document a successful delivery is larger than d_tsOther_kmReserved.
@@ -196,7 +235,8 @@ public:
 		FE_kzDefault				= 0x0000,
 		FE_kfEventOutOfSync			= 0x0001,	// The event is out of sync, and therefore display a little icon to show to the user
 		FE_kfEventDeliveryConfirmed	= 0x0002,	// The event was delivered and its checkmark was displayed.  This flag should be eventually removed, however it is a workaround a Qt bug in the QTextEdit
-		FE_kfEventErrorProtocol		= 0x0004,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
+		FE_kfEventProtocolWarning	= 0x0004,	// Therew was a minor error while transmitting the event.  This bit is set to give a second chance to retry, however to prevent an infinite loop to retry over and over
+		FE_kfEventProtocolError		= 0x0008,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
 		};
 	mutable UINT m_uFlagsEvent;				// Flags related to the event (not serialized)
 
@@ -208,11 +248,8 @@ public:
 
 	virtual EEventClass EGetEventClass() const  = 0;
 	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
-	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
-	void XmlSerializeAttributeContactIdentifierOfGroupSender(IOUT CBin * pbinXml);
-	void XmlSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlDisk);
-	void XmlSerializeForXCP(INOUT CBinXcpStanzaType * pbinXcpStanza);
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	void XcpRequesExtraData();
@@ -231,7 +268,7 @@ public:
 	void Event_SetCompletedAndUpdateWidgetWithinChatLog();
 	BOOL Event_FHasCompleted() const;
 	inline void Event_SetFlagOutOfSync() { m_uFlagsEvent |= FE_kfEventOutOfSync; }
-	inline void Event_SetFlagErrorProtocol() { m_uFlagsEvent |= FE_kfEventErrorProtocol; }
+	inline void Event_SetFlagErrorProtocol() { m_uFlagsEvent |= FE_kfEventProtocolError; }
 
 	QTextBlock ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const;
 	QTextBlock ChatLog_GetTextBlockRelatedToWidget(QTextEdit * pwEditChatLog) const;
@@ -291,7 +328,7 @@ public:
 	UINT m_uFlagsMessage;		// Flags related to the message, such as HTML and formatting.
 public:
 	IEventMessageText(const TIMESTAMP * ptsEventID);
-	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	void _BinHtmlInitWithTimeAndMessage(OUT CBin * pbinTextHtml) CONST_VIRTUAL;
 }; // IEventMessageText
@@ -301,7 +338,7 @@ class CEventMessageXmlRawSent : public IEventMessageText	// This class is mostly
 public:
 	CEventMessageXmlRawSent(const CStr & strMessage);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eMessageXmlRaw_class; }
-	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
 
@@ -353,7 +390,7 @@ private:
 public:
 	IEventFile(const TIMESTAMP * ptsEventID);
 	virtual ~IEventFile();
-	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -409,7 +446,7 @@ public:
 	CEventFileReceived(TContact * pContactSendingFile, const CXmlNode * pXmlNodeStreamInitiation);
 	virtual ~CEventFileReceived();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -439,7 +476,6 @@ public:
 	inline IEvent ** PrgpGetEventsStop(OUT IEvent *** pppEventStop) const { return (IEvent **)PrgpvGetElementsStop(OUT (void ***)pppEventStop); }
 	inline IEvent * PGetEventLast_YZ() const { return (IEvent *)PvGetElementLast_YZ(); }
 	IEvent * PFindEventLastSent() const;
-	IEvent * PFindEventLastReceived() const;
 	IEvent * PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const;
 	TIMESTAMP TsEventIdLastEventSent() const;
 	TIMESTAMP TsEventOtherLastEventReceived() const;
@@ -469,7 +505,7 @@ public:
 public:
 	CEventWalletTransaction(TContact * pContactParent,  const TIMESTAMP * ptsEventID);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eWalletTransactionSent; }
-	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	BOOL FuIsTransactionMatchingViewFlags(EWalletViewFlags eWalletViewFlags) const;
@@ -493,11 +529,46 @@ public:
 public:
 	CEventPing();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual void XmlSerializeCore(INOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 }; // CEventPing
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Class to download a large event.
+//	This class is a hybrid between an event and the core of the XCP protocol.
+//	The CEventDownloader is never allocated by the sender, however it is always unserialized and allocated by the receiver.
+//	Until the large event has been fully downloaded, the downloader will have its own class, and later will morph into the class of the downloaded event.
+class CEventDownloader : public IEvent
+{
+protected:
+	int m_cbDataToDownload;			// How much data needs to be downloaded (this variable is good for a progress bar).  Since the 'event downloader' is not to transfer files, but large text messages, a 32-bit integer is sufficient for storing such a message.
+	CBin m_binDataDownloaded;		// Data downloaded (so far)
+	IEvent * m_paEvent;				// Allocated event (when the download is complete)
+public:
+	CEventDownloader(const TIMESTAMP * ptsEventID);
+	~CEventDownloader();
+	virtual EEventClass EGetEventClass() const;
+	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
+	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
+	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
+
+	void XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, CBinXcpStanzaType * pbinXcpStanzaReply, QTextEdit * pwEditChatLog);
+	static const EEventClass c_eEventClass = eEventClass_eDownloader_class;
+}; // CEventDownloader
+
+class CDataXmlLargeEvent;	// Object holding the data to send to CEventDownloader
+class CListaDataXmlLargeEvents : public CList
+{
+public:
+	~CListaDataXmlLargeEvents();
+	void DeleteIdleNodes();
+};
 
 #ifdef DEBUG_WANT_ASSERT
 	void AssertValidEvent(const IEvent * pEvent);

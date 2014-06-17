@@ -45,6 +45,7 @@ WLabel::WLabel(PA_PARENT QBoxLayout * poParentLayout)
 void
 WLabel::_Init()
 	{
+	setTextFormat(Qt::RichText);	// By default, a label displays HTML text
 	setFocusPolicy(Qt::ClickFocus);	// By default, labels do not capture the focus by tabbing; only if the user explicitly clicks on the control
 	}
 

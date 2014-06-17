@@ -145,29 +145,17 @@ List_InsertNodeBetweenNodes(
 
 /////////////////////////////////////////////////////////////////////
 void
-List_InsertNodeAtHead(
-	INOUT SList * pList,
-	OUT SListNode * pNodeInsert)
+List_InsertNodeAtHead(INOUT SList * pList, OUT SListNode * pNodeInsert)
 	{
 	InitToGarbage(OUT pNodeInsert, sizeof(*pNodeInsert));
-	List_InsertNodeAfter(
-		pList,
-		(SListNode *)pList,
-		pNodeInsert);
-	} // List_InsertNodeAtHead()
+	List_InsertNodeAfter(pList,	(SListNode *)pList,	pNodeInsert);
+	}
 
-
-/////////////////////////////////////////////////////////////////////
 void
-List_InsertNodeAtTail(
-	INOUT SList * pList,
-	OUT SListNode * pNodeInsert)
+List_InsertNodeAtTail(INOUT SList * pList, OUT SListNode * pNodeInsert)
 	{
-	List_InsertNodeAfter(
-		pList,
-		(pList->pTail != NULL) ? pList->pTail : (SListNode *)pList,
-		pNodeInsert);
-	} // List_InsertNodeAtTail()
+	List_InsertNodeAfter(pList, (pList->pTail != NULL) ? pList->pTail : (SListNode *)pList,	pNodeInsert);
+	}
 
 
 /////////////////////////////////////////////////////////////////////
@@ -209,6 +197,17 @@ List_InsertNodeSortClbk(
 	List_InsertNodeAfter(pList, pNodePrev, pNodeInsert);
 	} // List_InsertNodeSortClbk()
 
+//	Make sure pNode is at the head of the list
+void
+List_MoveNodeToHead(INOUT SList * pList, OUT SListNode * pNode)
+	{
+	Assert(pList != NULL);
+	Assert(pNode != NULL);
+	if (pList->pHead == pNode)
+		return;	// The node is already the head of the list
+	List_DetachNode(INOUT pList, INOUT pNode);
+	List_InsertNodeAtHead(INOUT pList, INOUT pNode);
+	}
 
 /////////////////////////////////////////////////////////////////////
 //	Detach a node from a linked list
@@ -342,10 +341,7 @@ List_PDetachNodeFromHead(
 	{
 	Assert(pList != NULL);
 	if (pList->pHead == NULL)
-		{
-		// List was empty
-		return NULL;
-		}
+		return NULL;	// List was empty
 	// Detach the first node in the linked list
 	SListNode * pNode = pList->pHead;
 	List_DetachNode(INOUT pList, INOUT pNode);
