@@ -18,7 +18,7 @@ public:
 	CStr m_strJidBare;							// Bare Jabber Identifier of the contact (this is similar as an email address).  The case is preserve, so the comparison must be case insensitive.  By keeping the Bare JID separate from its resource, we may use a hash table to quickly find a contact from its JID.
 	mutable CStr m_strRessource;				// Resource of the JID.  This field is either empty or begins with "/".  This value is not serialized as it is specific to an XMPP session.  This value may be updated each time the method PFindChatContactByJID() is called.
 	CStr m_strComment;							// Comment regarding the contact.  This comment is also used to store the original invitation for the handshake
-
+	/*
 	enum
 		{
 		FCS_kfServiceDiscovery					= 0x00000001,
@@ -27,6 +27,7 @@ public:
 		FCS_kmServiceDiscovery					= 0x0000000F,
 		};
 	UINT m_uFlagsContactSerialized;
+	*/
 	int m_cVersionXCP;								// Which version of the Cambrian Protocol is supported by the contact.  This field is a temporary 'hack' to determine if an XMPP stanza should be sent through XCP or regular XMPP.
 	TIMESTAMP m_tsOtherLastSynchronized;			// Timestamp of last synchronization
 
@@ -36,7 +37,7 @@ protected:
 		FC_kfContactUnsolicited								= 0x00000001,	// The contact was created from an unsolicited message.  Such contact is displayed with the gray color
 		FC_kfContactNeedsInvitation							= 0x00000002,	// The contact was added, however there was never been any communication between the two paties, suggesting an invitation is recommended
 //		FC_kfCommentContainsInvitation						= 0x00000004,
-		FC_kfNoCambrianProtocol								= 0x00000008,	// The contact does NOT understand the Cambrian Protocol, and therefore the application should NOT send stanzas with the element <xcp>.
+		//FC_kfNoCambrianProtocol								= 0x00000008,	// The contact does NOT understand the Cambrian Protocol, and therefore the application should NOT send stanzas with the element <xcp>.
 		FC_kmFlagsSerializeMask								= 0x000000FF,	// Mask of the flags to serialize
 		FC_kmPresenceMask									= 0x00000F00,	// Mask of the flags representing the presence
 		FC_kzPresenceOffline								= 0x00000000,
@@ -51,7 +52,7 @@ protected:
 		FC_kfSubscribeAsk									= 0x00010000,
 		FC_kfSubscribe										= 0x00020000,
 		FC_kfSubscribed										= 0x00040000,
-		FC_kfXcpNotSupported								= 0x00100000,	// The contact does NOT understand the Cambrian Protocol, and therefore the application should NOT send stanzas with the element <xcp>.
+		//FC_kfXcpNotSupported								= 0x00100000,	// The contact does NOT understand the Cambrian Protocol, and therefore the application should NOT send stanzas with the element <xcp>.
 		FC_kfXcpComposingSendTimestampsOfLastKnownEvents	= 0x00200000,
 		FC_kfXcpRequestingDataForSynchronization			= 0x00400000
 		};
@@ -71,7 +72,7 @@ public:
 	inline void SetFlagContactAsUnsolicited() { m_uFlagsContact |= FC_kfContactUnsolicited; }
 	inline void SetFlagContactAsInvited() { m_uFlagsContact &= ~FC_kfContactNeedsInvitation; }
 	inline void SetFlagXcpComposingSendTimestampsOfLastKnownEvents() { m_uFlagsContact |= FC_kfXcpComposingSendTimestampsOfLastKnownEvents; }
-	inline BOOL Contact_FuIsInsecure() const { return (m_uFlagsContact & FC_kfNoCambrianProtocol); }
+	//inline BOOL Contact_FuIsInsecure() const { return (m_uFlagsContact & FC_kfNoCambrianProtocol); }
 	BOOL Contact_FuCommunicateViaXcp() const;
 
 	void Invitation_InitFromXml(const CStr & strInvitationXml);

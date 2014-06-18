@@ -158,7 +158,7 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 	Assert(m_pAccount != NULL);
 	Assert(m_paTreeWidgetItem != NULL);
 	m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;
-	m_uFlagsContact &= ~FC_kfNoCambrianProtocol;		// Any stanza received containing <xcp> is assumed the client software of the contact understands the Cambrian Protocol
+//	m_uFlagsContact &= ~FC_kfNoCambrianProtocol;		// Any stanza received containing <xcp> is assumed the client software of the contact understands the Cambrian Protocol
 
 	// Attempt to decrypt the data and verify the signature
 	PSZU pszDataEncrypted = pXmlNodeXmppXcp->m_pszuTagValue;

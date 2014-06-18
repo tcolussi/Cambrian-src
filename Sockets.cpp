@@ -755,12 +755,22 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingEventID()
 		TContact * pContact = PFindContactFromStanza();
 		if (pContact != NULL)
 			{
-			IEvent * pEvent = pContact->Vault_PGet_NZ()->PFindEventByID(tsEventID);
+			IEvent * pEvent = pContact->Vault_PFindEventByID(tsEventID);
 			if (pEvent != NULL)
 				{
-				if (pEvent->EGetEventClass() == CEventPing::c_eEventClass)
-					pEvent->Event_SetCompletedAndUpdateWidgetWithinChatLog();
-
+				// Since we are processing XMPP stanzas, the handling is done on a case-by-case basis.
+				const EEventClass eEventClass = pEvent->EGetEventClass();
+				switch (eEventClass)
+					{
+				case CEventPing::c_eEventClass:
+					pEvent->Event_SetCompletedAndUpdateWidgetWithinChatLog();	// A ping is very simple, as the event completes as soon as we get a reply
+					return TRUE;
+				case CEventFileSent::c_eEventClass:
+					((CEventFileSent *)pEvent)->XmppProcessStanzaFromContact(m_pXmlNodeStanzaCurrent_YZ, pContact);
+					return TRUE;
+				default:
+					MessageLog_AppendTextFormatSev(eSeverityWarning, "FStanzaProcessedByTaskMatchingEventID() - Ignoring tsEventID $t\n", pEvent->m_tsEventID);
+					} // switch
 				}
 			}
 		}
@@ -773,20 +783,27 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingDownloadSID(PSZAC pszaVerbContext)
 	Assert(pszaVerbContext != NULL);
 	Assert(m_pXmlNodeStanzaCurrent_YZ != NULL);
 	const CXmlNode * pXmlNodeVerb = m_pXmlNodeStanzaCurrent_YZ->PFindElement(pszaVerbContext);
-	/*
 	if (pXmlNodeVerb != NULL)
 		{
-		CTaskFileDownload * pTaskDownload = m_pAccount->m_arraypTasksDownloading.PFindTaskMatchingSessionIdentifier(pXmlNodeVerb->PszFindAttributeValueSid_NZ());
-		if (pTaskDownload != NULL)
+		PSZUC pszSessionIdentifier = pXmlNodeVerb->PszFindAttributeValueSid_NZ();
+		TIMESTAMP tsEventID = Timestamp_FromString_ML(pszSessionIdentifier);
+		if (tsEventID > d_ts_zNULL)
 			{
-			pTaskDownload->ProcessStanza(m_pXmlNodeStanzaCurrent_YZ, pszaVerbContext, pXmlNodeVerb);
-			return TRUE;
+			TContact * pContact = PFindContactFromStanza();
+			if (pContact != NULL)
+				{
+				IEvent * pEvent = pContact->Vault_PFindEventByID(tsEventID);
+				if (pEvent != NULL && pEvent->EGetEventClass() == CEventFileSent::c_eEventClass)
+					{
+					((CEventFileSent *)pEvent)->XmppProcessStanzaVerb(m_pXmlNodeStanzaCurrent_YZ, pszaVerbContext, pXmlNodeVerb);
+					return TRUE;
+					}
+				}
 			}
-		MessageLog_AppendTextFormatSev(eSeverityWarning, "Ignoring element <$s> from stanza because of missing/invalid Session Identifier '$s'.\n", pszaVerbContext, pXmlNodeVerb->PszFindAttributeValueSid_NZ());
+		MessageLog_AppendTextFormatSev(eSeverityWarning, "Ignoring element <$s> from stanza because of missing/invalid Session Identifier '$s'.\n", pszaVerbContext, pszSessionIdentifier);
 		}
-	*/
 	return FALSE;
-	}
+	} // FStanzaProcessedByTaskMatchingDownloadSID()
 
 //	Process the <iq> stanza.
 void

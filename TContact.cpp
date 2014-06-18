@@ -19,8 +19,8 @@ TContact::S_PaAllocateContact(POBJECT pAccountParent)
 
 TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	{
-	m_uFlagsContact = FC_kfContactNeedsInvitation | FC_kfNoCambrianProtocol;	// Until proven otherwise, any new contact needs an invitation and is assumed to not understand the Cambrian Protocol <xcp>
-	m_uFlagsContactSerialized = 0;
+	m_uFlagsContact = FC_kfContactNeedsInvitation; // | FC_kfNoCambrianProtocol;	// Until proven otherwise, any new contact needs an invitation and is assumed to not understand the Cambrian Protocol <xcp>
+//	m_uFlagsContactSerialized = 0;
 	m_plistAliases = NULL;
 	m_tsOtherLastSynchronized = d_ts_zNA;
 	m_cVersionXCP = 0;
@@ -176,7 +176,7 @@ TContact::Contact_EGetMenuActionPresence() const
 	{
 	if (g_fIsConnectedToInternet)
 		{
-		const BOOL fuInsecure = (m_uFlagsContact & FC_kfNoCambrianProtocol);
+		const BOOL fuInsecure = FALSE; // (m_uFlagsContact & FC_kfNoCambrianProtocol);
 		const UINT uFlagsPresence = (m_uFlagsContact & FC_kmPresenceMask);
 		if (uFlagsPresence)
 			{
@@ -208,7 +208,7 @@ TContact::TreeItem_IconUpdate()
 		eMenuIconDisplay = eMenuAction_PresenceAccountOffline;	// If there is a form of subscription, display the icon offline
 	if (g_fIsConnectedToInternet)
 		{
-		const BOOL fuInsecure = (m_uFlagsContact & FC_kfNoCambrianProtocol);
+		const BOOL fuInsecure = FALSE; // (m_uFlagsContact & FC_kfNoCambrianProtocol);
 		const UINT uFlagsPresence = (m_uFlagsContact & FC_kmPresenceMask);
 		if (uFlagsPresence)
 			{
@@ -581,7 +581,8 @@ TContact::XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence)
 		Assert((m_uFlagsContact & FC_kfContactNeedsInvitation) == 0);
 		NoticeListAuxiliary_DeleteAllNoticesRelatedToTreeItem(this);
 		}
-	m_uFlagsContact = (m_uFlagsContact & ~(FC_kmPresenceMask | FC_kfNoCambrianProtocol)) | uFlagsPresence;
+	//m_uFlagsContact = (m_uFlagsContact & ~(FC_kmPresenceMask | FC_kfNoCambrianProtocol)) | uFlagsPresence;
+	m_uFlagsContact = (m_uFlagsContact & ~(FC_kmPresenceMask)) | uFlagsPresence;
 	// Check if the contact uses Cambrian
 	const CXmlNode * pXmlNodeXCP = pXmlNodeStanzaPresence->PFindElement(c_sza_xcp);
 	if (pXmlNodeXCP == NULL)

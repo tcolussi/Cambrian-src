@@ -263,7 +263,7 @@ ITreeItemChatLogEvents::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		ChatLog_ResetNickname();
 		if (m_pawLayoutChatLog != NULL)
 			m_pawLayoutChatLog->ChatLog_EventsRepopulateUpdateUI();
-		return ezMenuActionNone;
+		// Fall Through //
 	default:
 		return ITreeItemChatLog::TreeItem_EDoMenuAction(eMenuAction);
 		} // switch

@@ -255,33 +255,6 @@ IEvent::PGetContactSender()
 	return NULL;
 	}
 */
-/*
-//	Return the parent vault of the event.
-//	Ideally, the vault should be a member pointer, however the current implementation requires to get the vault from pTreeItem
-CVaultEvents *
-IEvent::PGetVault_NZ() const
-	{
-	Assert(mu_parentowner.pTreeItem->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == mu_parentowner.pTreeItem);
-	return mu_parentowner.pTreeItem->Vault_PGet_NZ();
-	}
-*/
-/*
-//	Assing m_tsOther to the current timestamp (now)
-void
-IEvent::TimestampOther_UpdateAsEventCompletedNow()
-	{
-	Assert(mu_parentowner.pTreeItem->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == mu_parentowner.pTreeItem);
-	mu_parentowner.pTreeItem->Vault_SetModified();		// This line is important so the modified event is always saved to disk (otherwise an event may be updated, however not serialized because ITreeItemChatLogEvents will never know the event was updated)
-	if (m_tsOther > d_tsOther_kmReserved)
-		{
-		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t\t\t TimestampOther_UpdateAsEventCompletedNow() - m_tsOther $t remains unchanged for EventID $t.\n", m_tsOther, m_tsEventID);
-		Assert(Event_FHasCompleted());
-		return;	// The task already completed, so keep the first timestamp.  This is likely to be a duplicate message.
-		}
-	m_tsOther = Timestamp_GetCurrentDateTime();
-	Assert(Event_FHasCompleted());
-	}
-*/
 
 //	Return TRUE if the event belong to a group, otherwise to a contact.
 BOOL
@@ -371,6 +344,12 @@ IEvent::ChatLog_UpdateEventWithinWidget(QTextEdit * pwEditChatLog)
 		}
 	}
 
+void
+IEvent::Event_UpdateWidgetWithinParentChatLog()
+	{
+	ChatLog_UpdateEventWithinWidget(m_pVaultParent_NZ->m_pParent->ChatLog_PwGet_YZ());
+	}
+
 const QBrush &
 IEvent::ChatLog_OGetBrushForEvent() const
 	{
@@ -409,6 +388,32 @@ CSocketXmpp *
 IEvent::PGetSocket_YZ() const
 	{
 	return PGetAccount_NZ()->PGetSocket_YZ();
+	}
+
+void
+IEvent::Socket_WriteXmlIqSet_VE_Gso(TContact * pContact, PSZAC pszFmtTemplate, ...)
+	{
+	Assert(pContact != NULL);
+	Assert(pszFmtTemplate != NULL);
+	CSocketXmpp * pSocket = pContact->Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp();
+	Report(pSocket != NULL);
+	if (pSocket != NULL)
+		{
+		g_strScratchBufferSocket.BinInitFromTextSzv_VE("<iq type='set' to='^J' id='$t'>", pContact, m_tsEventID);
+		va_list vlArgs;
+		va_start(OUT vlArgs, pszFmtTemplate);
+		g_strScratchBufferSocket.BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
+		g_strScratchBufferSocket.BinAppendBinaryData("</iq>", 5);
+		pSocket->Socket_WriteBin(g_strScratchBufferSocket);
+		}
+	}
+
+void
+IEvent::Socket_WriteXmlIqReplyAcknowledge()
+	{
+	CSocketXmpp * pSocket = PGetSocket_YZ();
+	if (pSocket != NULL)
+		pSocket->Socket_WriteXmlIqReplyAcknowledge();
 	}
 
 /*
@@ -603,33 +608,6 @@ IEvent::_BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfH
 	pbinTextHtml->BinAppendTextSzv_VE(" " _nbsp " <a class="d_szClassForChatLog_ButtonHtml" href='"d_szSchemeCambrian":{t_},$b'>[" _nbsp2 "$s" _nbsp2 "]</a>", m_tsEventID, chActionOfHyperlink, pszButtonName);
 	} // _BinHtmlAppendHyperlinkAction()
 
-/*
-void
-IEvent::_TaskSet(PA_TASK ITask * paTask)
-	{
-	Assert(paTask != NULL);
-	Assert(mu_task.paTask == NULL && "Memory leak!");
-	mu_task.paTask = paTask;
-	Assert(mu_parentowner.pTreeItem->m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
-	mu_parentowner.pTreeItem->m_pAccount->SocketTask_AddToQueue(INOUT_LATER paTask);
-	}
-
-void
-IEvent::_Socket_QueueTask(INOUT_LATER ITask * pTask)
-	{
-	Assert(pTask != NULL);
-	Assert(mu_parentowner.pTreeItem->m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
-	mu_parentowner.pTreeItem->m_pAccount->SocketTask_AddToQueue(INOUT_LATER pTask);
-	}
-void
-IEvent::_TaskDestroy()
-	{
-	delete mu_task.paTask;
-	mu_task.paTask = NULL;
-	}
-*/
-
-
 void
 ITreeItemChatLogEvents::ChatLog_EventEditMessageSent(CEventMessageTextSent * pEventMessageSent)
 	{
@@ -647,10 +625,10 @@ IEventMessageText::IEventMessageText(const TIMESTAMP * ptsEventID) : IEvent(ptsE
 //	IEventMessageText::IEvent::XmlSerializeCore()
 void
 IEventMessageText::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
-	{
-	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<message to='^J' id='$t'><body>^S</body><request xmlns='urn:xmpp:receipts'/></message>", pbinXmlAttributes->m_pContact, m_tsEventID, &m_strMessageText);
+	{	
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strText, m_strMessageText);
 	pbinXmlAttributes->BinAppendXmlAttributeUInt(d_chAttribute_uFlags, m_uFlagsMessage);
+	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<message to='^J' id='$t'><body>^S</body><request xmlns='urn:xmpp:receipts'/></message>", pbinXmlAttributes->m_pContact, m_tsEventID, &m_strMessageText);
 	}
 
 //	IEventMessageText::IEvent::XmlUnserializeCore()
@@ -728,18 +706,7 @@ CEventMessageTextSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock)
 	{
 	_BinHtmlInitWithTimeAndMessage(OUT &g_strScratchBufferStatusBar);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(d_coWhite));
-	/*
-	if (m_tsOther == d_tsOther_ezEventNeverSent)
-		{
-		// No confirmation yet, therefore create a task to deliver the message
-		if (mu_task.paTask == NULL)
-			{
-			_TaskSet(PA_TASK new CTaskSendText(this, poCursorTextBlock));
-			Assert(mu_task.paTask != NULL);
-			}
-		}
-	*/
-	} // ChatLogUpdateTextBlock()
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CEventMessageTextReceived::CEventMessageTextReceived(const TIMESTAMP * ptsEventID) : IEventMessageText(ptsEventID)
@@ -825,10 +792,12 @@ IEventFile::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	if (fSerializingEventToDisk)
 		pbinXmlAttributes->BinAppendXmlAttributeL64(d_chIEventFile_Attribute_cblDataTransferred, m_cblDataTransferred);	// The number of bytes transferred is serialized only to disk, never through XCP
 
+	// Create a file offer for the contact unable to cummunicate via XCP
 	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE(
+			"<iq id='$t' type='get' to='^J'>"
 			"<si id='$t' profile='^*ft' ^:si><file ^:ft name='^s' size='$l'/>"
 				"<feature ^:fn><x ^:xd type='form'><field var='stream-method' type='list-single'><option><value>^*ib</value></option></field></x></feature>"
-			"</si>", m_tsEventID, pszFileNameOnly, m_cblFileSize);
+			"</si></iq>", m_tsEventID, pbinXmlAttributes->m_pContact, m_tsEventID, pszFileNameOnly, m_cblFileSize);
 	}
 
 //	IEventFile::IEvent::XmlUnserializeCore()

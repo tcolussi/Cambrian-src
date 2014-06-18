@@ -259,13 +259,13 @@ public:
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 
-	void TimestampOther_UpdateAsEventCompletedNow();
 	void Event_WriteToSocketIfNeverSent(CSocketXmpp * pSocket);
 	BOOL Event_FIsEventBelongsToGroup() const;
 	BOOL Event_FIsEventTypeSent() const;
 	BOOL Event_FIsEventTypeReceived() const;
 	void Event_SetCompleted(QTextEdit * pwEditChatLog);
 	void Event_SetCompletedAndUpdateWidgetWithinChatLog();
+	void Event_UpdateWidgetWithinParentChatLog();
 	BOOL Event_FHasCompleted() const;
 	inline void Event_SetFlagOutOfSync() { m_uFlagsEvent |= FE_kfEventOutOfSync; }
 	inline void Event_SetFlagErrorProtocol() { m_uFlagsEvent |= FE_kfEventProtocolError; }
@@ -279,7 +279,9 @@ public:
 	TAccountXmpp * PGetAccount_NZ() const;
 	CSocketXmpp * PGetSocket_YZ() const;
 	void Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...);
+	void Socket_WriteXmlIqSet_VE_Gso(TContact * pContact, PSZAC pszFmtTemplate, ...);
 	void Socket_WriteXmlIqError_VE_Gso(PSZAC pszErrorType, PSZUC pszErrorID, PSZAC pszFmtTemplate, ...);
+	void Socket_WriteXmlIqReplyAcknowledge();
 
 protected:
 	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const;
@@ -289,8 +291,6 @@ protected:
 	void _BinHtmlInitWithTimeAsReceiver(OUT CBin * pbinTextHtml) const;
 	void _BinHtmlAppendHyperlinkToLocalFile(INOUT CBin * pbinTextHtml, PSZUC pszFilename, BOOL fDisabled = FALSE) const;
 	void _BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfHyperlink) const;
-	void _TaskSet(PA_TASK ITask * paTask);
-	void _TaskDestroy();
 
 public:
 	static EEventClass S_EGetEventClassFromXmlStanzaXCP(IN const CXmlNode * pXmlNodeEventsStanza, INOUT TContact * pContact, INOUT ITreeItemChatLogEvents * pChatLogEvents, INOUT CBinXcpStanzaType * pbinXmlStanzaReply);
@@ -384,7 +384,7 @@ public:
 	CStr m_strFileName;
 	L64 m_cblFileSize;			// Size of the file (in bytes)
 	L64 m_cblDataTransferred;	// Number of bytes transferred.  This value is useful to show progress to the user, and perhaps in the future, a resume transfer operation.  Of course, for a file sent to a group, this value is the largest amount of data transferred to a single recipient.
-private:
+protected:
 	CFile * m_paFile;			// Pointer to the file object to read (or write) the data.  If this pointer is non-NULL, it means the event is transmitting data.
 
 public:
@@ -413,7 +413,10 @@ public:
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 
+	void XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact);
+	void XmppProcessStanzaVerb(const CXmlNode * pXmlNodeStanza, PSZAC pszaVerbContext, const CXmlNode * pXmlNodeVerb);
 	static const EEventClass c_eEventClass = eEventClass_eFileSent;
+	static const int c_cbBufferSizeMaxXmppBase64 = 4096;	// 4 KiB us the default block size to transfer files via XMPP when encoding in Base64
 }; // CEventFileSent
 
 //	The user received a file offer from the contact
@@ -542,6 +545,7 @@ public:
 class CEventDownloader : public IEvent
 {
 protected:
+	enum { c_cbDataToDownload_Error1 = -1, c_cbDataToDownload_Error2 = -2 }; // Use variable m_cbDataToDownload to store errors
 	int m_cbDataToDownload;			// How much data needs to be downloaded (this variable is good for a progress bar).  Since the 'event downloader' is not to transfer files, but large text messages, a 32-bit integer is sufficient for storing such a message.
 	CBin m_binDataDownloaded;		// Data downloaded (so far)
 	IEvent * m_paEvent;				// Allocated event (when the download is complete)

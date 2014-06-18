@@ -146,7 +146,7 @@ WChatLog::ChatLog_EventsRepopulate()
 void
 TContact::ChatLogContact_AppendExtraTextToChatState(INOUT OCursor & oTextCursor)
 	{
-	if ((m_uFlagsContact & (FC_kfContactNeedsInvitation | FC_kfNoCambrianProtocol)) == 0)
+	if ((m_uFlagsContact & FC_kfContactNeedsInvitation) == 0)
 		return;
 	CStr strInvitationLink;
 	PSZUC pszInvitationLink = m_pAccount->ChatLog_PszGetInvitationLink(OUT_IGNORED &strInvitationLink);

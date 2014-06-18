@@ -479,6 +479,9 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 		BinAppendTextSzv_VE((tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, eEventClass, tsEventID, tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
 		BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
 		pEvent->XmlSerializeCore(IOUT this);
+		if (m_pContact == NULL)
+			return;		// The virtual method XmlSerializeCore() may set m_pContact if the contact does not support XCP.
+		Assert(m_paData != NULL);
 		#ifdef DEBUG
 		if (m_paData->cbData > 100)		// For debugging conider 100 characters as a 'large stanza' to force this code to be executed frequently
 		#else
@@ -872,6 +875,8 @@ CEventDownloader::EGetEventClass() const
 	{
 	if (m_paEvent != NULL)
 		return m_paEvent->EGetEventClass();
+	if (m_uFlagsEvent & FE_kfEventProtocolError)
+		return eEventClass_mfNeverSerialize;	// Don't save the downloader if there is a protocol error.  This is to prevent the downloader to attempt to download something that no longer exist
 	return c_eEventClass;
 	}
 
@@ -945,13 +950,13 @@ CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONS
 			return;
 			}
 		// We are done downloading, therefore allocate the event by unserializing the downloaded XML data
-		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventDownloader::ChatLogUpdateTextBlock() - Event tsOther $t completed: $B\n", m_tsOther, &m_binDataDownloaded);
+		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventDownloader::ChatLogUpdateTextBlock() - Event tsOther $t completed with $I bytes: $B\n", m_tsOther, cbDataDownloaded, &m_binDataDownloaded);
+		m_pVaultParent_NZ->SetModified();	// Make sure whatever we do next will be saved to disk
 
 		CXmlTree oXmlTree;
 		if (oXmlTree.EParseFileDataToXmlNodesCopy_ML(IN m_binDataDownloaded) == errSuccess)
 			{
 			m_paEvent = IEvent::S_PaAllocateEvent_YZ(EEventClassFromPsz(oXmlTree.m_pszuTagName), IN &m_tsEventID);
-			Report(m_paEvent != NULL && "Unable to allocate event from data of CEventDownloader");
 			if (m_paEvent != NULL)
 				{
 				Assert(m_paEvent->m_pContactGroupSender_YZ == NULL);
@@ -961,15 +966,24 @@ CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONS
 				m_paEvent->XmlUnserializeCore(IN &oXmlTree);
 				goto EventUpdateToGUI;
 				}
+			else
+				{
+				if (m_uFlagsEvent & FE_kfEventProtocolWarning)
+					m_uFlagsEvent |= FE_kfEventProtocolError;	// Upgrade the 'warning' to an 'error'
+				m_uFlagsEvent |= FE_kfEventProtocolWarning;
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[$s] Unable to allocate event '$s' $t (tsOther = $t) from XML data of CEventDownloader (m_cbDataToDownload = $I): ^N",
+					(m_uFlagsEvent & FE_kfEventProtocolError) ? "Error" : "Warnign", oXmlTree.m_pszuTagName, m_tsEventID, m_tsOther, m_cbDataToDownload, &oXmlTree);
+				goto EventDisplayError;
+				}
 			}
 		// The data is not good (probably corrupted), so display a notification and flush the data
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventDownloader::ChatLogUpdateTextBlock() - Data corrupted for event tsOther $t, therefore flushing data.\n", m_tsOther);
+		EventDisplayError:
 		_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
 		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("<span style='color:red'>Error allocating event $s of {kK}", oXmlTree.m_pszuTagName, cbDataDownloaded);
 		poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(d_coSilver));
 		m_binDataDownloaded.Empty();
-		m_cbDataToDownload = -1;
-		m_pVaultParent_NZ->SetModified();	// Make sure the flushing of the data is 'saved' to disk
-		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventDownloader::ChatLogUpdateTextBlock() - Data corrupted for event tsOther $t, therefore flushing data.\n", m_tsOther);
+		m_cbDataToDownload = c_cbDataToDownload_Error1;
 		}
 	else
 		{
@@ -995,8 +1009,14 @@ CEventDownloader::XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, CBinXc
 				{
 				// We have the correct fingerprint, meaning the data is valid
 				if (cbDataNew != m_cbDataToDownload)
-					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventDownloader tsEventID $t: Adjusting m_cbDataToDownload from $I to $I.\n", m_tsEventID, m_cbDataToDownload, cbDataNew);
-				m_cbDataToDownload = cbDataNew;
+					{
+					if ((m_uFlagsEvent & FE_kfEventProtocolWarning) == 0)
+						{
+						m_uFlagsEvent |= FE_kfEventProtocolWarning;
+						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[Warning] CEventDownloader tsEventID $t: Adjusting m_cbDataToDownload from $I to $I.\n", m_tsEventID, m_cbDataToDownload, cbDataNew);
+						m_cbDataToDownload = cbDataNew;
+						}
+					}
 				}
 			else
 				{
@@ -1006,7 +1026,7 @@ CEventDownloader::XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, CBinXc
 					m_uFlagsEvent |= FE_kfEventProtocolWarning;
 					m_binDataDownloaded.Empty();	// Flush what we downloaded, and try again
 					cbDataNew = 0;
-					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Retrying to download tsEventID $t again...\n", m_tsEventID);
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t [Warning]: CEventDownloader tsEventID $t: Retrying to download again...\n", m_tsEventID);
 					}
 				} // if...else
 			goto UpdateGUI;	// Always update the GUI when the hash is present
@@ -1109,14 +1129,11 @@ IEvent::XcpRequesExtraData()
 	binXcpStanza.XcpSendStanza();
 	}
 
-/*
-*/
-
 void
 TContact::Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC
 	{
 	Assert(eChatState == eChatState_zComposing || eChatState == eChatState_fPaused);
-	if ((m_uFlagsContact & FC_kfNoCambrianProtocol) == 0)
+	if (m_cVersionXCP > 0)
 		{
 		CBinXcpStanzaTypeInfo binXcpStanza;
 		if (m_uFlagsContact & FC_kfXcpComposingSendTimestampsOfLastKnownEvents)
@@ -1175,6 +1192,76 @@ CXmlNode::LFindAttributeXcpOffset() const
 	return LFindAttributeValueDecimal_ZZR(d_chXCPa_EventExtraData_iblOffset);
 	}
 
+//	Code specific for XMPP clients unable to communicate via XCP
+void
+CEventFileSent::XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact)
+	{
+	Assert(pXmlNodeStanza != NULL);
+	Assert(pContact != NULL);
+	CXmlNode * pXmlNodeStreamInitiation = pXmlNodeStanza->PFindElementSi();
+	if (pXmlNodeStreamInitiation != NULL)
+		{
+		// The contact accepted the file offer, therefore open a connection to start sending the data
+		(void)_PFileOpenReadOnly_NZ();	// Open the file
+		Assert(m_paFile != NULL);
+		Socket_WriteXmlIqSet_VE_Gso(pContact, "<open sid='$t' block-size='$u' ^:ib/>", m_tsEventID, c_cbBufferSizeMaxXmppBase64);
+		return;
+		}
+	#if 1
+	if (m_paFile == NULL)
+		return;		// The file is not opened, therefore there is nothing to do
+	#endif
+	if (FCompareStrings(pXmlNodeStanza->PszFindAttributeValueType_NZ(), c_sza_result) && pXmlNodeStanza->PFindElementErrorStanza() == NULL)
+		{
+		// We have a generic 'result' without any 'error', therefore send the data
+		BYTE rgbBuffer[c_cbBufferSizeMaxXmppBase64];
+
+		int ibDataSource = m_paFile->pos();	// Get the position of the file (this is used to calculate the sequence number)
+		int cbDataRead = m_paFile->read(OUT (char *)rgbBuffer, sizeof(rgbBuffer));
+		if (cbDataRead > 0)
+			{
+			Socket_WriteXmlIqSet_VE_Gso(pContact, "<data sid='$t' seq='$u' ^:ib>{p/}</data>", m_tsEventID, ibDataSource / sizeof(rgbBuffer), IN rgbBuffer, cbDataRead);
+			m_cblDataTransferred = ibDataSource + cbDataRead;
+			}
+		else
+			{
+			// We are done sending the file, so send a <close> command to the remote contact
+			Socket_WriteXmlIqSet_VE_Gso(pContact, "<close sid='$t' ^:ib/>", m_tsEventID);
+			_FileClose();
+			}
+		}
+	Event_UpdateWidgetWithinParentChatLog();
+	} // XmppProcessStanzaFromContact()
+
+void
+CEventFileSent::XmppProcessStanzaVerb(const CXmlNode * pXmlNodeStanza, PSZAC pszaVerbContext, const CXmlNode * pXmlNodeVerb)
+	{
+	Assert(pXmlNodeStanza != NULL);
+	if (pszaVerbContext == c_sza_data)
+		{
+		Assert(pXmlNodeVerb->FCompareTagName("data"));
+		// Get the data from the stanza
+		//int nSequence = pXmlNodeStanza->NFindElementOrAttributeValueNumeric("seq");
+		int cbDataWritten = _PFileOpenWriteOnly_NZ()->CbDataWriteBinaryFromBase85(pXmlNodeVerb->m_pszuTagValue);
+		m_cblDataTransferred += cbDataWritten;
+		if (cbDataWritten <= 0)
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Failure writing to file #S\n", &m_strFileName);
+		}
+	else if (pszaVerbContext == c_sza_close)
+		{
+		Assert(pXmlNodeVerb->FCompareTagName("close"));
+		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventFileSent::XmppProcessStanzaVerb() - Closing file $S\n", &m_strFileName);
+		_FileClose();
+		}
+	else
+		{
+		Assert(pszaVerbContext == c_sza_open);
+		Assert(pXmlNodeVerb->FCompareTagName("open"));
+		}
+	Socket_WriteXmlIqReplyAcknowledge();	// Reply to acknowledge we received the stanza and/or receive the next data sequence
+	Event_UpdateWidgetWithinParentChatLog();
+	} // XmppProcessStanzaVerb()
+
 void
 CEventFileSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply)
 	{
@@ -1185,7 +1272,7 @@ CEventFileSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, CBinXcpS
 	m_cblDataTransferred = iblDataSource + cbDataRead;
 	pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataReply_tsO d_szXCPa_EventExtraData_iblOffset_l d_szXCPa_EventExtraData_bin85Payload_pvcb "/>", m_tsEventID, iblDataSource, IN rgbBuffer, cbDataRead);
 	if (cbDataRead <= 0)
-		_FileClose();	// There is nothing to send, therefore we close the file.  Of course, if the contact wishes more data (or request to resend the last block, then the file will be re-opened)
+		_FileClose();	// There is nothing to send, therefore assume we reached the end of the file, and consequently close the file.  Of course, if the contact wishes more data (or request to resend the last block, then the file will be re-opened)
 	}
 
 void

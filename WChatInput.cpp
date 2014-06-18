@@ -32,7 +32,7 @@ WChatInput::ChatInput_UpdateWatermarkText()
 	{
 	TContact * pContact = m_pwLayoutChatLog->m_pContactParent_YZ;
 	if (pContact != NULL)
-		m_strWatermark.Format(pContact->Contact_FuIsInsecure() ? "Send an insecure message to $s" : "Send a message to $s", pContact->ChatLog_PszGetNickname());
+		m_strWatermark.Format("Send a message to $s", pContact->ChatLog_PszGetNickname());
 	else
 		m_strWatermark.Format("Send a message to group $s", m_pwLayoutChatLog->m_pGroupParent_YZ->ChatLog_PszGetNickname());
 	}
