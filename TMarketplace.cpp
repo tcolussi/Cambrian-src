@@ -167,11 +167,11 @@ WLayoutWallet::WLayoutWallet(ITreeItem * pTreeItemFilterBy, EWalletViewFlags eWa
 
 	CArrayPtrEventsWalletTransactions arraypaTransactions;
 	arraypaTransactions.Wallets_AppendEventsTransactionsFor(pTreeItemFilterBy, eWalletViewFlags);
-	CEventWalletTransaction ** ppTransactionStop;
-	CEventWalletTransaction ** ppTransaction = arraypaTransactions.PrgpGetTransactionsStop(OUT &ppTransactionStop);
+	IEventWalletTransaction ** ppTransactionStop;
+	IEventWalletTransaction ** ppTransaction = arraypaTransactions.PrgpGetTransactionsStop(OUT &ppTransactionStop);
 	while (ppTransaction != ppTransactionStop)
 		{
-		CEventWalletTransaction * pTransaction = *ppTransaction++;
+		IEventWalletTransaction * pTransaction = *ppTransaction++;
 //		Assert(pTransaction->EGetEventType() == eEventType_SendBitcoins);
 		OTableRow oRow;
 		oRow.AddDateTime(pTransaction->m_tsEventID);

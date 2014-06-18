@@ -111,7 +111,7 @@ TWallet::S_ContactAdded(TContact * pContact)
 	} // S_ContactAdded()
 
 //	Determine which is the best wallet to allocate a transaction.
-CEventWalletTransaction *
+IEventWalletTransaction *
 TWallet::S_PAllocateEventTransaction(TContact * pContact)
 	{
 	// At the moment, use the first wallet in the list, or allocate a new one
@@ -172,11 +172,8 @@ TWallet::S_FileOpen_MB(PSZUC pszPassword)
 	} // S_FileOpen_MB()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventWalletTransaction::CEventWalletTransaction(TContact * pContactParent,  const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
+IEventWalletTransaction::IEventWalletTransaction(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 	{
-	Assert(pContactParent->EGetRuntimeClass() == RTI(TContact));
-	Assert(FALSE && "This code needs to be re-implemented and will crash!");
-	pContactParent->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEventsRepopulateAll | TContact::FTI_kfChatLogEventsIncludeFromWallet;
 	m_amtQuantity = 0;
 	}
 
@@ -184,18 +181,18 @@ CEventWalletTransaction::CEventWalletTransaction(TContact * pContactParent,  con
 #define d_chAttribute_strValue		'v'
 #define d_chAttribute_strComment	'c'
 
-//	CEventWalletTransaction::IEvent::XmlSerializeCore()
+//	IEventWalletTransaction::IEvent::XmlSerializeCore()
 void
-CEventWalletTransaction::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+IEventWalletTransaction::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeL64(d_chAttribute_nAmount, m_amtQuantity);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strValue, m_strValue);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strComment, m_strComment);
 	}
 
-//	CEventWalletTransaction::IEvent::XmlUnserializeCore()
+//	IEventWalletTransaction::IEvent::XmlUnserializeCore()
 void
-CEventWalletTransaction::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
+IEventWalletTransaction::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	{
 	pXmlNodeElement->UpdateAttributeValueL64(d_chAttribute_nAmount, OUT_F_UNCH &m_amtQuantity);
 	pXmlNodeElement->UpdateAttributeValueCStr(d_chAttribute_strValue, OUT_F_UNCH &m_strValue);
@@ -203,10 +200,13 @@ CEventWalletTransaction::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	}
 
 void
-CEventWalletTransaction::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
+IEventWalletTransaction::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
-	g_strScratchBufferStatusBar.BinAppendTextSzv_VE("<img src=':/ico/Bitcoin' valign='bottom' style='valign:bottom'/> You sent <b>{Am}</b> to <b>$s</b>",
+	g_strScratchBufferStatusBar.BinAppendTextSzv_VE(
+		Event_FIsEventTypeSent() ?
+		"<img src=':/ico/Bitcoin' valign='bottom' style='valign:bottom'/> You sent <b>{Am}</b> to <b>$s</b>" :
+		"<img src=':/ico/Bitcoin' valign='bottom' style='valign:bottom'/> You received <b>{Am}</b> from <b>$s</b>",
 		-m_amtQuantity, ChatLog_PszGetNickNameOfContact());
 	if (!m_strComment.FIsEmptyString())
 		g_strScratchBufferStatusBar.BinAppendTextSzv_VE(": <i>$S</i>", &m_strComment);
@@ -223,7 +223,7 @@ CEventWalletTransaction::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBloc
 	}
 
 BOOL
-CEventWalletTransaction::FuIsTransactionMatchingViewFlags(EWalletViewFlags eWalletViewFlags) const
+IEventWalletTransaction::FuIsTransactionMatchingViewFlags(EWalletViewFlags eWalletViewFlags) const
 	{
 	if (eWalletViewFlags == eWalletViewFlag_kmDisplayTransactionsAll)
 		return TRUE;
@@ -232,6 +232,12 @@ CEventWalletTransaction::FuIsTransactionMatchingViewFlags(EWalletViewFlags eWall
 	if (eWalletViewFlags & eWalletViewFlag_kfDisplayTransactionsReceived)
 		return (m_amtQuantity >= 0);
 	return FALSE;
+	}
+
+EEventClass
+CEventWalletTransactionSent::EGetEventClassForXCP(const TContact *) const
+	{
+	return CEventWalletTransactionReceived::c_eEventClass;
 	}
 
 void
@@ -330,16 +336,22 @@ CVaultEventsForContact::ContactUnbindIfAboutBeingDeleted()
 		}
 	}
 
-CEventWalletTransaction *
+/*
+IEventWalletTransaction *
 CVaultEventsForContact::PAllocateEventTransaction()
 	{
 	Assert(m_pContactParent_YZ != NULL);
 	Assert(m_pContactParent_YZ->EGetRuntimeClass() == RTI(TContact));
 	m_binEventsEncrypted.Empty();	// We need to re-encrypt the events
-	CEventWalletTransaction * pTransaction = new CEventWalletTransaction(m_pContactParent_YZ, NULL);
+	IEventWalletTransaction * pTransaction = new IEventWalletTransaction(m_pContactParent_YZ, NULL);
 	m_arraypaEvents.Add(PA_CHILD pTransaction);
+	Assert(pContactParent->EGetRuntimeClass() == RTI(TContact));
+	Assert(FALSE && "This code needs to be re-implemented and will crash!");
+	pContactParent->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEventsRepopulateAll | TContact::FTI_kfChatLogEventsIncludeFromWallet;
+
 	return pTransaction;
 	}
+*/
 
 void
 CVaultEventsForContact::AppendAllEventsTransactionsMatchingViewFlags(IOUT CArrayPtrEvents * parraypEventsTransactions, EWalletViewFlags eWalletViewFlags) CONST_MAY_CREATE_CACHE
@@ -351,7 +363,7 @@ CVaultEventsForContact::AppendAllEventsTransactionsMatchingViewFlags(IOUT CArray
 	IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
 		{
-		CEventWalletTransaction * pEvent = (CEventWalletTransaction *)*ppEvent++;
+		IEventWalletTransaction * pEvent = (IEventWalletTransaction *)*ppEvent++;
 		Assert(pEvent->m_tsEventID != d_ts_zNULL);
 		if (pEvent->EGetEventClass() != eEventClass_eWalletTransactionSent)
 			continue;
@@ -622,7 +634,7 @@ TWallet::GenerateDummyTransactions()
 		TIMESTAMP tsTransactionBegin = pContact->m_tsCreated;
 		if (tsTransactionBegin < tsLastWeek)
 			tsTransactionBegin = tsLastWeek;
-		CEventWalletTransaction * pTransaction = PAllocateEventTransaction(pContact);
+		IEventWalletTransaction * pTransaction = PAllocateEventTransaction(pContact);
 		pTransaction->m_tsEventID = LGenerateRandomValueBetween(tsTransactionBegin, tsTransactionEnd);
 		const SBitcoinTransaction * pDescription = &c_rgBitcoinTransactions[qrand() % LENGTH(c_rgBitcoinTransactions)];
 		pTransaction->m_amtQuantity = (L64)pDescription->m_nAmountUSD * d_cSatoshisPerBitcoin / g_uBitcoinValueUSD;
@@ -658,7 +670,7 @@ TWallet::PFindVault(TContact * pContact)
 	return NULL;
 	}
 
-CEventWalletTransaction *
+IEventWalletTransaction *
 TWallet::PAllocateEventTransaction(TContact * pContact)
 	{
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
@@ -675,7 +687,8 @@ TWallet::PAllocateEventTransaction(TContact * pContact)
 	pVault = new CVaultEventsForContact(this, pContact);
 	m_arraypaVaults.Add(PA_CHILD pVault);
 	AddEventToVault:
-	return pVault->PAllocateEventTransaction();
+	Assert(FALSE && "NYI");
+	return NULL; //pVault->PAllocateEventTransaction();
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

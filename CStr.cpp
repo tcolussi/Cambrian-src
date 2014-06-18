@@ -46,6 +46,7 @@ CStr::PszuGetStringNullIfEmpty() const
 BOOL
 CStr::FIsEmptyString() const
 	{
+	AssertValidStr(*this);
 	return (m_paData == NULL || m_paData->cbData <= (int)sizeof(CHU));
 	}
 

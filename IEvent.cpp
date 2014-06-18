@@ -6,7 +6,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#define DEBUG_DISPLAY_TIMESTAMPS
+//#define DEBUG_DISPLAY_TIMESTAMPS
 
 CHS
 ChGetCambrianActionFromUrl(PSZUC pszUrl)
@@ -99,9 +99,12 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 		return new CEventGroupMessageSent((TGroup *)pTreeItemParentOwner, ptsEventID);
 	case eEventClass_eGroupMessageTextReceived:
 		return new CEventGroupMessageReceived((TGroup *)pTreeItemParentOwner, ptsEventID);
-	case eEventType_SendBitcoins:
-		return new CEventWalletTransaction((TContact *)pTreeItemParentOwner, ptsEventID);
 	*/
+	case eEventClass_eWalletTransactionSent:
+		return new CEventWalletTransactionSent(ptsEventID);
+	case eEventClass_eWalletTransactionReceived:
+		return new CEventWalletTransactionReceived(ptsEventID);
+
 	case eEventClass_eDownloader:
 		return new CEventDownloader(ptsEventID);
 
@@ -474,7 +477,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	pbinTextHtml->BinAppendTextSzv_VE("<span title='^Q'>[^Q] </span>", &sDateTime, &sTime);
 	if (m_uFlagsEvent & FE_kfEventProtocolError)
 		{
-		pbinTextHtml->BinAppendStringWithoutNullTerminator(" <img src=':/ico/Error' title='XCP Protocol Error: One of the contact has an old version of Cambrian and cannot process this event because it is unknown'/> ");
+		pbinTextHtml->BinAppendStringWithoutNullTerminator(" <img src=':/ico/Error' title='XCP Protocol Error: One of the contact has an old version of Cambrian and cannot process this event because its type is unknown'/> ");
 		}
 	if ((eEventClass & eEventClass_kfReceivedByRemoteClient) == 0)
 		{

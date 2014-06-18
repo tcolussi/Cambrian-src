@@ -316,17 +316,6 @@ CSocketXmpp::Socket_ProcessAllPendingTasks()
 		IEvent * pEvent = *ppEvent++;
 		pEvent->Event_WriteToSocketIfNeverSent(IN this);
 		}
-	/*
-	m_pAccount->m_arraypEventsUnsent.PrgpGetEventsStop()
-	while (TRUE)
-		{
-		ITask * pTask = m_pAccount->SocketTask_PGetNextFromQueue();
-		if (pTask == NULL)
-			break;
-		if (pTask->EWriteDataToSocket() == eTaskCompletionNeedsMoreProcessing)
-			m_listTasksWaitingForCompletion.InsertNodeAtTail(pTask);
-		}
-	*/
 	}
 
 /*

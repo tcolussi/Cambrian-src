@@ -890,9 +890,11 @@ DDialogSendBitcoin::SL_ButtonSendBitcoins()
 	TContact * pContact = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact();
 	if (pContact == NULL)
 		return;
-	CEventWalletTransaction * pEvent = TWallet::S_PAllocateEventTransaction(pContact);
+	//IEventWalletTransaction * pEvent = TWallet::S_PAllocateEventTransaction(pContact);
+	IEventWalletTransaction * pEvent = new CEventWalletTransactionSent(NULL);
 	pEvent->m_amtQuantity = m_pwEditQuantity->text().toDouble() * -d_cSatoshisPerBitcoin;	// Use a negative value to indicate a withdraw
 	pEvent->m_strComment = *m_pwEditComment;
+	pContact->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEvent);
 	TWallet::S_SaveAll();		// Save all wallets (in case of a crash)
 	pContact->TreeItem_GotFocus();	// Refresh the layout
 	close();

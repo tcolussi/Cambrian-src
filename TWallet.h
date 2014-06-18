@@ -15,7 +15,7 @@ class CVaultEventsForContact	// (vault)
 {
 protected:
 	TWallet * m_pWalletParent;
-	TContact * m_pContactParent_YZ;	// Pointer of the contact within the Navigation Tree.  This pointer may be NULL when constructing a vault from a serialized wallet.
+	TContact * m_pContactParent_YZ;		// Pointer of the contact within the Navigation Tree.  This pointer may be NULL when constructing a vault from a serialized wallet.
 	SHashSha1 m_hashContact;			// Hash to link the data to a contact in the Navigation Tree
 	CBin m_binEventsEncrypted;			// Encrypted events until the decryption key is found (to be implemented)
 	CArrayPtrEvents m_arraypaEvents;	// All the (decrypted) events related to a contact
@@ -31,7 +31,7 @@ public:
 	UINT EventsEncryptCb();
 	void EventsDecrypt();
 
-	CEventWalletTransaction * PAllocateEventTransaction();
+	IEventWalletTransaction * PAllocateEventTransaction();
 	void AppendAllEvents(IOUT CArrayPtrEvents * parraypEvents) CONST_MAY_CREATE_CACHE;
 	void AppendAllEventsTransactionsMatchingViewFlags(IOUT CArrayPtrEvents * parraypEventsTransactions, EWalletViewFlags eWalletViewFlags) CONST_MAY_CREATE_CACHE;
 
@@ -72,7 +72,7 @@ public:
 	inline TWallet * PGetNextWallet() const { return m_pNext; }
 	void GetHashOfContact(OUT SHashSha1 * pHashSha1, const TContact * pContact) const;
 	CVaultEventsForContact * PFindVault(TContact * pContact);
-	CEventWalletTransaction * PAllocateEventTransaction(TContact * pContact);
+	IEventWalletTransaction * PAllocateEventTransaction(TContact * pContact);
 	void GenerateDummyTransactions();
 
 	EError EUnserializeFromXml(INOUT CBin * pbinWalletXml);
@@ -93,7 +93,7 @@ public:
 	static void S_AccountsAboutBeingDeleted();
 	static void S_DetachFromContactsAboutBeingDeleted();
 	static void S_ContactAdded(TContact * pContact);
-	static CEventWalletTransaction * S_PAllocateEventTransaction(TContact * pContact);
+	static IEventWalletTransaction * S_PAllocateEventTransaction(TContact * pContact);
 	static TWallet * s_palistWallet;	// Linked list of all the wallets opened (at the moment there is only one)
 }; // TWallet
 

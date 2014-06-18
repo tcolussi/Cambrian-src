@@ -126,7 +126,7 @@ enum
 
 //	Must have the same interface as PFn_GridCellGetText()
 CString
-GridCellGetTextTransaction(CEventWalletTransaction * pTransaction, const CGridColumn * pColumn, EGridCellText)
+GridCellGetTextTransaction(IEventWalletTransaction * pTransaction, const CGridColumn * pColumn, EGridCellText)
 	{
 //	Assert(pTransaction->EGetEventType() == eEventType_SendBitcoins);
 	switch (pColumn->m_iColumn)

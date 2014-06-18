@@ -56,13 +56,13 @@ public:
 //	CArrayPtrTasksDownloading m_arraypTasksDownloading;
 	CArrayPtrContacts m_arraypContactsComposing;		// All contacts currently composing (this list is important for optimization)
 	CArrayPtrEvents m_arraypEventsUnsent;				// All events which have never been sent.  As soon as the socket is ready, those events will be dispatched.
+	CListaDataXmlLargeEvents m_listaDataXmlLargeEvents;	// Cache of large events waiting to be transmitted
 protected:
 	TAccountAlias * m_paAlias;	// Each account has a corresponding alias under the "Profile" node
 	CArrayPtrContacts m_arraypContactsMessagesUnread;	// List of contacts with unread messages.  When this list is empty, then the icon 'new message' is removed from the Navigation Tree.
 	CSocketXmpp * m_paSocket;							// Socket to send and receive XMPP messages.
 	CBin m_binFingerprintCertificate;					// The fingerprint (typically SHA-1) of the pinned certificate encrypting the connection with the server.  Any change to this value will cutoff the socket communication until manually approved by the user.
 	TCertificateServerName * m_pCertificateServerName;	// Pinned certificate for the account.  Any change of certificate automatically notifies the user, and often require manual approval by the user.
-	CListaDataXmlLargeEvents m_listaDataXmlLargeEvents;	// Cache of large events waiting to be transmitted
 	TContactNew * m_pTreeItemContactNew;				// Pointer to the node <New Contact...>   (this pointer is necessary so we may insert new contact(s) and group(s) before it)
 
 public:
@@ -107,7 +107,6 @@ public:
 	void OnTimerNetworkIdle();
 	CSocketXmpp * Socket_PGetOnlyIfReadyToSendMessages() const;
 	CSocketXmpp * PGetSocket_YZ() const { return m_paSocket; }
-	CDataXmlLargeEvent * PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanzaType * pbinXcpStanza);
 
 	void Certificate_RegisterCertificateChainFromSocket();
 	BOOL Certificate_FRegisterCertificateChainFromSocketAndAcceptAllErrors(const QList<QSslError> & listErrorsSsl);

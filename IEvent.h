@@ -96,6 +96,8 @@ enum EEventClass
 		#define d_chXCPa_CEventDownloader_bin85DataReceived		'd'	// Data was received so far
 
 	eEventClass_eWalletTransactionSent				= _USZU1('W'),
+	eEventClass_eWalletTransactionReceived			= _USZU1('w'),
+	eEventClass_eWalletTransactionReceived_class	= eEventClass_eWalletTransactionReceived | eEventClass_kfReceivedByRemoteClient,
 
 	eEventClass_eServiceDiscovery_Query				= _USZU2('S', 'D'),		// There is no 'event' for service discovery, however the "SD"
 	eEventClass_eServiceDiscovery_Response			= _USZU2('s', 'd'),
@@ -405,17 +407,19 @@ public:
 class CEventFileSent : public IEventFile
 {
 public:
+	static const EEventClass c_eEventClass = eEventClass_eFileSent;
+public:
 	CEventFileSent(const TIMESTAMP * ptsEventID);
 	CEventFileSent(PSZUC pszFileToSend);
 	virtual ~CEventFileSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact *) const;
+	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 
 	void XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact);
 	void XmppProcessStanzaVerb(const CXmlNode * pXmlNodeStanza, PSZAC pszaVerbContext, const CXmlNode * pXmlNodeVerb);
-	static const EEventClass c_eEventClass = eEventClass_eFileSent;
+
 	static const int c_cbBufferSizeMaxXmppBase64 = 4096;	// 4 KiB us the default block size to transfer files via XMPP when encoding in Base64
 }; // CEventFileSent
 
@@ -428,7 +432,7 @@ public:
 	CEventFileReceived(const TIMESTAMP * ptsEventID);
 	virtual ~CEventFileReceived();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return eEventClass_eFileSent; }
+	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return CEventFileSent::c_eEventClass; }
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -498,7 +502,7 @@ public:
 }; // CArrayPtrEvents
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class CEventWalletTransaction : public IEvent
+class IEventWalletTransaction : public IEvent
 {
 public:
 	AMOUNT m_amtQuantity;			// Quantity of Satoshis involved in the transaction
@@ -506,8 +510,7 @@ public:
 	CStr m_strComment;				// Transaction description/note
 
 public:
-	CEventWalletTransaction(TContact * pContactParent,  const TIMESTAMP * ptsEventID);
-	virtual EEventClass EGetEventClass() const { return eEventClass_eWalletTransactionSent; }
+	IEventWalletTransaction(const TIMESTAMP * ptsEventID);
 	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
@@ -517,7 +520,27 @@ public:
 class CArrayPtrEventsWalletTransactions : public CArrayPtrEvents
 {
 public:
-	inline CEventWalletTransaction ** PrgpGetTransactionsStop(OUT CEventWalletTransaction *** pppTransactionStop) const { return (CEventWalletTransaction **)PrgpvGetElementsStop(OUT (void ***)pppTransactionStop); }
+	inline IEventWalletTransaction ** PrgpGetTransactionsStop(OUT IEventWalletTransaction *** pppTransactionStop) const { return (IEventWalletTransaction **)PrgpvGetElementsStop(OUT (void ***)pppTransactionStop); }
+};
+
+class CEventWalletTransactionSent : public IEventWalletTransaction
+{
+public:
+	static const EEventClass c_eEventClass = eEventClass_eWalletTransactionSent;
+public:
+	CEventWalletTransactionSent(const TIMESTAMP * ptsEventID = NULL) : IEventWalletTransaction(ptsEventID) { }
+	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
+	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
+};
+
+class CEventWalletTransactionReceived : public IEventWalletTransaction
+{
+public:
+	static const EEventClass c_eEventClass = eEventClass_eWalletTransactionReceived_class;
+public:
+	CEventWalletTransactionReceived(const TIMESTAMP * ptsEventID) : IEventWalletTransaction(ptsEventID) { }
+	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
+	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return CEventWalletTransactionSent::c_eEventClass; }
 };
 
 

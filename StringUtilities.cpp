@@ -2258,8 +2258,9 @@ CStr::TransformContentToLowercaseSort()
 	}
 
 
-void
-TrimTailingWhiteSpacesNZ(INOUT PSZU pszuString)
+//	Return the number of bytes (including the null-terminator) of the truncated string
+int
+CbTrimTailingWhiteSpaces(INOUT PSZU pszuString)
 	{
 	Assert(pszuString != NULL);
 
@@ -2279,10 +2280,12 @@ TrimTailingWhiteSpacesNZ(INOUT PSZU pszuString)
 			*pch-- = '\0';
 			continue;
 		default:
-			return;
+			goto Done;
 			}
 		} // while
-	} // TrimTailingWhiteSpacesNZ()
+	Done:
+	return (pch - pszuString + 2);
+	} // CbTrimTailingWhiteSpaces()
 
 //	Replace all instances of a character by another character.
 //	This method may be useful to remove unsafe characters from the unicode string.
@@ -2306,7 +2309,8 @@ CStr::TrimTailingWhiteSpacesNZ()
 	{
 	if (m_paData != NULL && m_paData->cbData > 0)
 		{
-		::TrimTailingWhiteSpacesNZ(INOUT m_paData->rgbData);
+		m_paData->cbData = CbTrimTailingWhiteSpaces(INOUT m_paData->rgbData);
+		AssertValidStr(*this);
 		return m_paData->rgbData;
 		}
 	return c_szuEmpty;
@@ -2317,6 +2321,7 @@ CStr::TrimLeadingAndTailingWhiteSpaces()
 	{
 	// Need to implement trimming the leading white spaces
 	TrimTailingWhiteSpacesNZ();
+	AssertValidStr(*this);
 	}
 
 void
@@ -3243,6 +3248,18 @@ TEST_StringRoutines()
 	uszu = UszuFromPsz((PSZUC)"abc");
 	Assert(uszu == _USZU3('a', 'b', 'c'));
 	Assert(FCompareStrings(PszFromUSZU(uszu), "abc"));
+
+	int cchBuffer;
+	CHU szuBuffer[10];
+
+	strcpy(OUT (char *)szuBuffer, "abc");
+	cchBuffer = CbTrimTailingWhiteSpaces(INOUT szuBuffer);
+	Assert(cchBuffer == 4);
+
+	strcpy(OUT (char *)szuBuffer, "abc ");
+	cchBuffer = CbTrimTailingWhiteSpaces(INOUT szuBuffer);
+	Assert(cchBuffer == 4);
+
 	} // TEST_StringRoutines()
 
 #endif // DEBUG

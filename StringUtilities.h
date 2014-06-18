@@ -47,7 +47,7 @@ VOID strcpynUsafe(PSZU pszuDst, PSZUC pszuSrc, int cbMax);
 BOOL FCompareStrings_YZ(PSZUC pszuString1, PSZUC pszuString2);
 BOOL FCompareStringsW(PSZWC pszw1, PSZWC pszw2);
 
-void TrimTailingWhiteSpacesNZ(INOUT PSZU pszuString);
+int CbTrimTailingWhiteSpaces(INOUT PSZU pszuString);
 void StringReplaceAnyCharacterByCharacter(INOUT PSZU pszuString, CHS chFind, CHS chReplace);
 
 int CbAllocUtoU(PSZUC pszuString);

@@ -138,7 +138,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				else if (tsEventID > pChatLogEvents->m_tsEventIdLastSentCached)
 					{
 					// I have no idea what this situation means, so I am reporting it on the Message Log
-					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t tsEventID $t > m_tsEventIdLastSentCached $t\n", tsEventID, pChatLogEvents->m_tsEventIdLastSentCached);
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t tsEventID $t > m_tsEventIdLastSentCached $t\n\t\t Apparently $s has messages from ME that I don't have.", tsEventID, pChatLogEvents->m_tsEventIdLastSentCached, pszNameDisplay);
 					}
 				break;
 			case d_chXCPe_EventsMissing:
@@ -242,7 +242,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				Assert(tsOther == d_ts_zNA);
 				{
 				int ibDataSource = pXmlNodeXcpEvent->LFindAttributeXcpOffset();
-				CDataXmlLargeEvent * pDataXmlLargeEvent = m_pAccount->PFindOrAllocateDataXmlLargeEvent_NZ(tsEventID, IN_MOD_TMP &binXcpStanzaReply);
+				CDataXmlLargeEvent * pDataXmlLargeEvent = pVault->PFindOrAllocateDataXmlLargeEvent_NZ(tsEventID, IN_MOD_TMP &binXcpStanzaReply);
 				int cbDataRemaining;
 				int cbData = pDataXmlLargeEvent->m_binXmlData.CbGetDataAfterOffset(ibDataSource, 1 /*CBinXcpStanzaType::c_cbStanzaMaxBinary*/, OUT &cbDataRemaining);	// At the moment, send only one byte at the time (rather than c_cbStanzaMaxBinary), so we can test the code if it is working
 				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventSplitDataReply_tsO_i_pvcb , tsEventID, ibDataSource, pDataXmlLargeEvent->m_binXmlData.PvGetDataAtOffset(ibDataSource), cbData);
@@ -386,7 +386,8 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				{
 				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Out of sync by $T\n", dtsOtherSynchronization);
 				}
-			Assert(pEvent != NULL);
+			Endorse(pEvent == NULL);	// This happens when an event cannot becreated, typically because its class is unknown
+			//Assert(pEvent != NULL);
 			if (pEvent != NULL && pEvent->Event_FIsEventTypeSent())
 				{
 				// Adjust the timestamp if the event we processed 'was' our own event.  This happens when synchronizing where the remote client re-send all the events, including our own
@@ -467,6 +468,7 @@ void
 CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 	{
 	Assert(pEvent != NULL);
+	Assert(pEvent->m_pVaultParent_NZ != NULL);
 	Assert(m_pContact != NULL);
 	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
 	Assert(m_paData	!= NULL);
@@ -480,7 +482,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 		BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
 		pEvent->XmlSerializeCore(IOUT this);
 		if (m_pContact == NULL)
-			return;		// The virtual method XmlSerializeCore() may set m_pContact if the contact does not support XCP.
+			return;		// The virtual method XmlSerializeCore() may set m_pContact to NULL if the contact does not support XCP.
 		Assert(m_paData != NULL);
 		#ifdef DEBUG
 		if (m_paData->cbData > 100)		// For debugging conider 100 characters as a 'large stanza' to force this code to be executed frequently
@@ -493,7 +495,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 			// It is better to let the method PFindOrAllocateDataXmlLargeEvent_NZ() take care of it.
 			MessageLog_AppendTextFormatCo(d_coOrange, "BinXmlSerializeEventForXcp() - Large stanza of about $I bytes\n", m_paData->cbData);
 			m_paData->cbData = ibDataElementStart;	// Truncate the binary, so send the CEventDownloader instead of the event
-			CDataXmlLargeEvent * pDataXmlLargeEvent = m_pContact->m_pAccount->PFindOrAllocateDataXmlLargeEvent_NZ(tsEventID, IN_MOD_TMP this);	// Create the cache, so we can get its size
+			CDataXmlLargeEvent * pDataXmlLargeEvent = pEvent->m_pVaultParent_NZ->PFindOrAllocateDataXmlLargeEvent_NZ(tsEventID, IN_MOD_TMP this);	// Create the cache, so we can get its size
 			Assert(m_paData->cbData == ibDataElementStart);
 			BinAppendTextSzv_VE("<" d_szXCPe_CEventDownloader_tsO_i, pEvent->m_tsEventID, pDataXmlLargeEvent->m_binXmlData.CbGetData());	// Serialize on-the-fly the CEventDownloader
 			BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);				// Make sure the downloader goes to the right group
@@ -539,6 +541,11 @@ IEvent::Event_WriteToSocketIfNeverSent(CSocketXmpp * pSocket)
 			Assert(pMember != NULL);
 			Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
 			binXcpStanza.m_pContact = pMember->m_pContact;
+			if (binXcpStanza.m_pContact->m_cVersionXCP <= 0)
+				{
+				MessageLog_AppendTextFormatSev(eSeverityNoise, "Skipping group contact $S because its client does not support XCP (probably because it is offline)\n", &pMember->m_pContact->m_strJidBare);
+				continue;
+				}
 			MessageLog_AppendTextFormatSev(eSeverityNoise, "Sending message to group member $S\n", &pMember->m_pContact->m_strJidBare);
 			binXcpStanza.BinXmlInitStanzaWithGroupSelector(pGroup);	// This line could be removed out of the loop
 			binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithGroupMember(pMember);
@@ -772,22 +779,25 @@ CBinXcpStanzaType::XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaX
 //	This is important because if we are sending a message to a group, then the same CDataXmlLargeEvent is reused, otherwise
 //	there will be a copy of CDataXmlLargeEvent for each group member.  Just imagine sending a large stanza of 100 KiB to a group of 1000 people.
 CDataXmlLargeEvent *
-TAccountXmpp::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanzaType * pbinXcpStanza)
+CVaultEvents::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanzaType * pbinXcpStanza)
 	{
 	Assert(tsEventID > d_ts_zNULL);
 	Assert(pbinXcpStanza != NULL);
 	Assert(pbinXcpStanza->m_pContact != NULL);
 	Assert(pbinXcpStanza->m_pContact->EGetRuntimeClass() == RTI(TContact));
+	Assert(m_pParent != NULL);
+	Assert(m_pParent->EGetRuntimeClass() == RTI(TContact) || m_pParent->EGetRuntimeClass() == RTI(TGroup));
 	IEvent * pEvent;
 
 	// First, search the list of large stanza
-	CDataXmlLargeEvent * pDataXmlLargeEvent = (CDataXmlLargeEvent *)m_listaDataXmlLargeEvents.pHead;
+	CListaDataXmlLargeEvents * plistaDataXmlLargeEvents = &m_pParent->m_pAccount->m_listaDataXmlLargeEvents;
+	CDataXmlLargeEvent * pDataXmlLargeEvent = (CDataXmlLargeEvent *)plistaDataXmlLargeEvents->pHead;
 	while (pDataXmlLargeEvent != NULL)
 		{
 		if (pDataXmlLargeEvent->m_tsEventID == tsEventID)
 			{
 			MessageLog_AppendTextFormatSev(eSeverityComment, "PFindOrAllocateDataXmlLargeEvent_NZ() - Found existing CDataXmlLargeEvent $t  ($I bytes)\n", tsEventID, pDataXmlLargeEvent->m_binXmlData.CbGetData());
-			m_listaDataXmlLargeEvents.MoveNodeToHead(INOUT pDataXmlLargeEvent);	// Move the node at the beginning of the list so next time its access is faster (this is a form of caching, in case there are many pending CDataXmlLargeEvent)
+			plistaDataXmlLargeEvents->MoveNodeToHead(INOUT pDataXmlLargeEvent);	// Move the node at the beginning of the list so next time its access is faster (this is a form of caching, in case there are many pending CDataXmlLargeEvent)
 			goto Done;
 			}
 		pDataXmlLargeEvent = (CDataXmlLargeEvent *)pDataXmlLargeEvent->pNext;
@@ -797,7 +807,7 @@ TAccountXmpp::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TM
 	pDataXmlLargeEvent->m_tsEventID = tsEventID;
 
 	// We need to serialize the event, and then save the blob
-	pEvent = pbinXcpStanza->m_pContact->Vault_PGet_NZ()->PFindEventByID(tsEventID);
+	pEvent = PFindEventByID(tsEventID);
 	if (pEvent != NULL)
 		{
 		const int ibXmlDataStart = pbinXcpStanza->CbGetData();
@@ -815,7 +825,7 @@ TAccountXmpp::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TM
 		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "PFindOrAllocateDataXmlLargeEvent_NZ() - Unable to find tsEventID $t, therefore initializing an empty cache entry!\n", tsEventID);
 		}
 	HashSha1_CalculateFromCBin(OUT &pDataXmlLargeEvent->m_hashXmlData, IN pDataXmlLargeEvent->m_binXmlData);	// Calculate the checksum for the data
-	m_listaDataXmlLargeEvents.InsertNodeAtHead(PA_CHILD pDataXmlLargeEvent);	// Insert at the head, as the event is most likely to be accessed within the next minutes
+	plistaDataXmlLargeEvents->InsertNodeAtHead(PA_CHILD pDataXmlLargeEvent);	// Insert at the head, as the event is most likely to be accessed within the next minutes
 
 	Done:
 	pDataXmlLargeEvent->m_tsmLastAccessed = g_tsmMinutesSinceApplicationStarted;
