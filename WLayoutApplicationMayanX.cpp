@@ -391,7 +391,7 @@ WLayoutApplicationMayanX::SL_ExchangeLogin()
 		CInternetRequestWebMethodXmlMayanX oRequest("UserRegister");
 		oRequest.BinAppendXmlElementBinaryBase64("bIdentity", pProfile->m_binKeyPublic);
 		oRequest.BinAppendXmlElementText("sName", pProfile->m_strNameProfile);
-		oRequest.BinAppendXmlElementText("sJID", (PSZUC)"danx@chat.cambrian.org");
+		oRequest.BinAppendXmlElementText("sJID", (PSZUC)"jon@chat.cambrian.org");
 		m_oInternetServer.RequestSend(&oRequest);
 		return;
 		}

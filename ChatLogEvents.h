@@ -54,6 +54,7 @@ public:
 	inline IEvent * PGetEventLast_YZ() const { return m_arraypaEvents.PGetEventLast_YZ(); }
 	inline IEvent * PFindEventByID(TIMESTAMP tsEventID) const { return m_arraypaEvents.PFindEventByID(tsEventID); }
 	IEvent * PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TGroupMember * pMember) CONST_MCC;
+	IEvent * PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * pContactGroupSender) CONST_MCC;
 	IEvent * PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) CONST_MCC;
 
 	CDataXmlLargeEvent * PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanzaType * pbinXcpStanza);

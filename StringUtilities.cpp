@@ -3210,7 +3210,8 @@ TEST_StringRoutines()
 	Assert(TEST_FIsValidTLD("info"));
 	Assert(TEST_FIsValidTLD("coop"));
 
-	#if 1
+	TEST_AutoHyperlink(".org", ".org");	// Do not encode a domain extension without a domain name
+
 	TEST_AutoHyperlink("cambrian.org", "<a href='http://cambrian.org'>cambrian.org</a>");
 	TEST_AutoHyperlink("http:||cambrian.org", "<a href='http:||cambrian.org'>http:||cambrian.org</a>");
 	TEST_AutoHyperlink("https://cambrian.org", "<a href='https://cambrian.org'>https://cambrian.org</a>");
@@ -3219,10 +3220,15 @@ TEST_StringRoutines()
 	TEST_AutoHyperlink("cambrian.org/test", "<a href='http://cambrian.org/test'>cambrian.org/test</a>");
 	TEST_AutoHyperlink("cambrian.org/test/", "<a href='http://cambrian.org/test/'>cambrian.org/test/</a>");
 	TEST_AutoHyperlink("cambrian.org.", "<a href='http://cambrian.org'>cambrian.org</a>.");
+	TEST_AutoHyperlink(".cambrian.org", ".<a href='http://cambrian.org'>cambrian.org</a>");
+
+	TEST_AutoHyperlink(".cambrian.org.", ".<a href='http://cambrian.org'>cambrian.org</a>.");
+	TEST_AutoHyperlink("cambrian..org", "cambrian..org");		// A domain name cannot end with a dot, therefore cannot have consecutive dots
+	TEST_AutoHyperlink("cambrian...org", "cambrian...org");		// Or triple dots
 
 	TEST_AutoHyperlink("(cambrian.org)", "(<a href='http://cambrian.org'>cambrian.org</a>)");
 	TEST_AutoHyperlink("<cambrian.org>", "&lt;<a href='http://cambrian.org'>cambrian.org</a>&gt;");
-	#endif
+
 	TEST_AutoHyperlink("(cambrian.gt)", "(<a href='http://cambrian.gt'>cambrian.gt</a>)");
 
 	TEST_AutoHyperlink("try cambrian.org.", "try <a href='http://cambrian.org'>cambrian.org</a>.");
@@ -3237,6 +3243,7 @@ TEST_StringRoutines()
 
 	TEST_AutoHyperlink("xmlns='http://jabber.org/features/iq-register'/>", "xmlns=&#39;<a href='http://jabber.org/features/iq-register'>http://jabber.org/features/iq-register</a>&#39;/&gt;");
 	TEST_AutoHyperlink("xmlns=\"http://jabber.org/features/iq-register\"/>", "xmlns=&quot;<a href='http://jabber.org/features/iq-register'>http://jabber.org/features/iq-register</a>&quot;/&gt;");
+
 
 	USZU uszu = UszuFromPsz((PSZUC)"");
 	Assert(uszu == 0);

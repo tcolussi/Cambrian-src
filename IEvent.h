@@ -142,7 +142,6 @@ public:
 	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
 	void BinXmlSerializeEventForDisk(const IEvent * pEvent);
 	void BinXmlSerializeEventForXcp(const IEvent * pEvent);
-	void BinXmlSerializeEventForXcpCore(const IEvent * pEvent);
 	void XcpSendStanzaToContact(TContact * pContact) CONST_MCC;
 	void XcpSendStanza() CONST_MCC;
 
@@ -161,8 +160,8 @@ public:
 	resulting in a maximum total size (including the '@' and '/' separators) of 3071 bytes.
 	*/
 	static const int c_cbStanzaMaxSize		= 10000;	// Hard limit on the stanza size
-	static const int c_cbStanzaMaxPayload	= 8000;		// Split any stanza having a payload larger than 8000 bytes, as Cambrian reserved 2000 bytes for the XMPP header. Sure some XMPP clients may have JIDs of 3071 bytes, however those clients won't be able to use the Cambrian Protocol.
-	static const int c_cbStanzaMaxBinary	= 6400;		// Since binary is transmitted in Base85, the encoding of 6400 bytes requires 25% more space (6400 * 1.25 = 8000)
+	static const int c_cbStanzaMaxPayload	= 8000;		// Split any stanza having a payload larger than 8000 bytes, as Cambrian reserved 2000 bytes for the XMPP header. Sure some XMPP clients may have JIDs of 3071 bytes, however those clients won't be able to communicate with the Cambrian Protocol.
+	static const int c_cbStanzaMaxBinary	= 6400;		// Since binary data is transmitted in Base85, the encoding of 6400 bytes requires 25% more space (6400 * 1.25 = 8000)
 }; // CBinXcpStanzaType
 
 

@@ -129,7 +129,7 @@ BOOL FIsZeroInit(const void * pv, int cb);
 /////////////////////////////////////////////////////////////////////
 //	Assert(), macro
 //
-//	Represent a bug in the code.
+//	An assertion failure sepresents a bug in the code.
 //
 #define Assert(f)		_Assert(f)
 
@@ -158,7 +158,7 @@ BOOL FIsZeroInit(const void * pv, int cb);
 //	This macro is the opposite of Assert().
 //
 //	EXAMPLE
-//	Endorse(p == NULL);	// Code acknowledge p == NULL to not be (or not cause) an error
+//	Endorse(p == NULL);	// Code acknowledge p == NULL, which means it is not an error to have p == NULL.
 //
 #define Endorse(f)	ENDORSE(f)
 #define EndorseFast(f)		// Macro to prevent the code to run inside the macro (sometimes the content of the Endorse() macro may be too slow)

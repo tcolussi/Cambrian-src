@@ -1216,23 +1216,40 @@ CBin::BinAppendHtmlTextWithAutomaticHyperlinks(PSZUC pszText)
 		else if (ch == '.')
 			{
 			// The dot is the core delimiter to determine if there is an hyperlink.  What we need to check if there is a domain extension after the dot such as (.com, .org, .uk, .tv and so on)
-			PSZR pszAfterExtension = PszrFindDomainExtension(pszText + 1);
+			PSZUC pszTextExtension = pszText + 1;
+			PSZR pszAfterExtension = PszrFindDomainExtension(pszTextExtension);
 			if (pszAfterExtension != NULL)
 				{
 				// Search for the beginning of the domain name
 				while (pszText > pchBegin)
 					{
 					ch = Ch_GetCharLowercase(*--pszText);
-					if (Ch_FIsAlphaNumeric(ch) || ch == '-' || ch == '.')
+					if (Ch_FIsAlphaNumeric(ch) || ch == '-')
 						continue;
+					if (ch == '.')
+						{
+						if (pszText[1] == '.')
+							{
+							// A domain name cannot have consecutive dots
+							pszText += 2;				// Skip the dots
+							goto FetchNextCharacter;	// And continue
+							}
+						continue;
+						}
 					if (ch == '@')
 						{
 						pszText = pszAfterExtension;
-						goto FetchNextCharacter;	// Do not create hyperlink for email addresses.  This is because Cambrian uses JIDs which look like emails.  Besides, emails are insecure and there is no need to use emails if already using Cambrian.
+						goto FetchNextCharacter;	// Do not create hyperlink for email addresses.  This is because Cambrian uses JIDs which look like emails.  Besides, communicating by email is insecure and there is no need to use emails if already using Cambrian.
 						}
 					pszText++;
 					break;
 					} // while
+				if (*pszText == '.')
+					{
+					pszText++;	// Skip the leading dot because a domain name cannot being with a dot
+					if (pszText == pszTextExtension)
+						continue;
+					}
 				pchBegin = pszText = BinAppendHtmlHyperlinkPchro(pchBegin, pszText, eSchemeHttpImplicit);
 				continue;
 				}

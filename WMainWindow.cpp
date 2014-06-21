@@ -16,7 +16,7 @@
 #include <QSound>
 
 #ifdef DEBUG
-//	#define DEBUG_DISABLE_TIMER		// Useful for debugging the code booting the application without displaying the connection notifications in the Message Log
+	//#define DEBUG_DISABLE_TIMER		// Useful for debugging the code booting the application without displaying the connection notifications in the Message Log
 #endif
 
 //	The QNetworkConfigurationManager works on some computers, so more testing needs to be done.
@@ -239,7 +239,6 @@ WMainWindow::WMainWindow() : QMainWindow()
 	#if 0
 	CBin bin;
 	bin.BinFileReadE("C:\\CambrianSetup\\Release\\CambrianSetup.exe");
-	//bin.BinFileReadE("C:\\Users\\Daniel\\Downloads\\CambrianSetup (10).exe");
 	SHashSha1 hash;
 	HashSha1_CalculateFromCBin(OUT &hash, bin);
 	MessageLog_AppendTextFormatCo(d_coBlack, "Hash of $I bytes: {hf}\n", bin.CbGetData(), &hash);
@@ -542,56 +541,64 @@ WMainWindow::timerEvent(QTimerEvent * pTimerEvent)
 	const int tidEvent = pTimerEvent->timerId();
 	if (tidEvent ==  m_tidReconnect)
 		{
-		if (m_ttiReconnect == d_ttiReconnectFirst)
+		if (g_oMutex.tryLock())
 			{
-			m_ttiReconnect = d_ttiReconnectMinute;
-			killTimer(m_tidReconnect);
-			m_tidReconnect = startTimer(d_ttiReconnectMinute, Qt::VeryCoarseTimer);	// Set a longer timer to not consume too much CPU resources
+			if (m_ttiReconnect == d_ttiReconnectFirst)
+				{
+				m_ttiReconnect = d_ttiReconnectMinute;
+				killTimer(m_tidReconnect);
+				m_tidReconnect = startTimer(d_ttiReconnectMinute, Qt::VeryCoarseTimer);	// Set a longer timer to not consume too much CPU resources
+				}
+			else
+				{
+				#ifdef Q_OS_WIN
+				DWORD dwTickPrevious = g_dwTickLast;
+				g_dwTickLast = ::GetTickCount();
+				int nInterval = g_dwTickLast - dwTickPrevious;
+				if (nInterval <= 30000)
+					{
+					// We received a tick count within 30 seconds or less
+					g_cTimerFailures++;
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[$@] Timer failure #$I!  (interval of $I miliseconds)\n", g_cTimerFailures, nInterval);
+					}
+				#endif
+				}
+
+			// Periodically attempt to reconnect
+			Configuration_NetworkReconnectIfDisconnected();
+
+			if ((++g_tsmMinutesSinceApplicationStarted & 0x0F) == 0)
+				{
+				// Every 15 minutes, do some processing
+				//TRACE1("Autosave begins at timestamp $i", g_tsmMinutesSinceApplicationStarted);
+				Configuration_Save();	// Save the configuration(s) /w chat history.  This function will not write anything to the disk if nothing was changed since the last save.
+				//TRACE0("Autosave ends");
+
+				// Free the buffers in case they have allocated large blocks of memory which are no longer needed
+				g_strScratchBufferStatusBar.FreeBuffer();
+				g_strScratchBufferSocket.FreeBuffer();
+				}
+			//if ((++g_cMinutesIdleNetworkDataReceived & 0x03) == 0)
+			if (++g_cMinutesIdleNetworkDataReceived > 0)		// This line is for debugging by forcing an 'idle' every timer tick.  This helps to test the code paths which may rarely be taken
+				{
+				// Every 4 minutes, ping each socket to make sure the connection is alive.
+				Configuration_OnTimerNetworkIdle();	// Send a 'ping' to the server.  This is workaround because the socket(s) get disconnected without any notification.  I have the feeling this 'temporary' workaround will stay there for many decades.
+				}
+			if (++g_cMinutesIdleKeyboardOrMouse > 20 || g_eIdleState != eIdleState_zActive)
+				{
+				// The user has been more than 20 minutes idle or the user is already idle
+				EIdleState eIdleState = eIdleState_zActive;
+				g_cMinutesIdleKeyboardOrMouse = g_pfnUGetIdleTimeInMinutes();	// Calculate how long the user has really been idle
+				if (g_cMinutesIdleKeyboardOrMouse > 20)
+					eIdleState = (g_cMinutesIdleKeyboardOrMouse < 4*60) ? eIdleState_Away : eIdleState_AwayExtended;	// Extended away is after 4 hours of inactivity
+				if (eIdleState != g_eIdleState)
+					MainWindow_SetIdleState(eIdleState);
+				}
+			g_oMutex.unlock();
 			}
 		else
 			{
-			#ifdef Q_OS_WIN
-			DWORD dwTickPrevious = g_dwTickLast;
-			g_dwTickLast = ::GetTickCount();
-			int nInterval = g_dwTickLast - dwTickPrevious;
-			if (nInterval <= 30000)
-				{
-				// We received a tick count within 30 seconds or less
-				g_cTimerFailures++;
-				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[$@] Timer failure #$I!  (interval of $I miliseconds)\n", g_cTimerFailures, nInterval);
-				}
-			#endif
-			}
-
-		// Periodically attempt to reconnect
-		Configuration_NetworkReconnectIfDisconnected();
-
-		if ((++g_tsmMinutesSinceApplicationStarted & 0x0F) == 0)
-			{
-			// Every 15 minutes, do some processing
-			//TRACE1("Autosave begins at timestamp $i", g_tsmMinutesSinceApplicationStarted);
-			Configuration_Save();	// Save the configuration(s) /w chat history.  This function will not write anything to the disk if nothing was changed since the last save.
-			//TRACE0("Autosave ends");
-
-			// Free the buffers in case they have allocated large blocks of memory which are no longer needed
-			g_strScratchBufferStatusBar.FreeBuffer();
-			g_strScratchBufferSocket.FreeBuffer();
-			}
-		//if ((++g_cMinutesIdleNetworkDataReceived & 0x03) == 0)
-		if (++g_cMinutesIdleNetworkDataReceived > 0)		// This line is for debugging by forcing an 'idle' every timer tick.  This helps to test the code paths which may rarely be taken
-			{
-			// Every 4 minutes, ping each socket to make sure the connection is alive.
-			Configuration_OnTimerNetworkIdle();	// Send a 'ping' to the server.  This is workaround because the socket(s) get disconnected without any notification.  I have the feeling this 'temporary' workaround will stay there for many decades.
-			}
-		if (++g_cMinutesIdleKeyboardOrMouse > 20 || g_eIdleState != eIdleState_zActive)
-			{
-			// The user has been more than 20 minutes idle or the user is already idle
-			EIdleState eIdleState = eIdleState_zActive;
-			g_cMinutesIdleKeyboardOrMouse = g_pfnUGetIdleTimeInMinutes();	// Calculate how long the user has really been idle
-			if (g_cMinutesIdleKeyboardOrMouse > 20)
-				eIdleState = (g_cMinutesIdleKeyboardOrMouse < 4*60) ? eIdleState_Away : eIdleState_AwayExtended;	// Extended away is after 4 hours of inactivity
-			if (eIdleState != g_eIdleState)
-				MainWindow_SetIdleState(eIdleState);
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "WMainWindow::timerEvent() - g_oMutex is locked!\n");
 			}
 		}
 	else if (tidEvent == m_tidFlashIconNewMessage)

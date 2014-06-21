@@ -6,7 +6,11 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-//#define DEBUG_DISPLAY_TIMESTAMPS
+#ifdef DEBUG
+	#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
+#else
+	//#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the retail build
+#endif
 
 CHS
 ChGetCambrianActionFromUrl(PSZUC pszUrl)
@@ -168,7 +172,7 @@ IEvent::EGetEventClassForXCP(const TContact * pContactToSerializeFor) const
 	{
 	Assert(pContactToSerializeFor != NULL);
 	Assert(pContactToSerializeFor->EGetRuntimeClass() == RTI(TContact));
-	return EGetEventClass();		// By default, return the same as the event class.  This is useful for objects which may not be serialized, however may send data such as a ping or raw XML stanzas.
+	return EGetEventClass();		// By default, return the same as the event class.  This is useful for objects which may not be serialized, however may send stanzas such as a ping or raw XML.
 	}
 
 //	XmlSerializeCore(), virtual
@@ -1438,18 +1442,23 @@ CArrayPtrEvents::PFindEventMessageReceivedByTimestamp(TIMESTAMP tsOther) const
 	return NULL;
 	}
 
-//	Find the event received matching the timestamp and the group member.
-//	If there is no group member, then the event is for a one-to-one chat, rather than group chat.
 IEvent *
 CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TGroupMember * pMember) CONST_MCC
 	{
 	Endorse(pMember == NULL);		// In a single chat, the pContactGroupSender alway NULL. The member variable IEvent::m_pContactGroupSender_YZ is valid only for group chat
 	Assert(pMember == NULL || pMember->EGetRuntimeClass() == RTI(TGroupMember));
+	return PFindEventReceivedByTimestampOther(tsOther, (pMember != NULL) ? pMember->m_pContact : NULL);
+	}
+
+//	Find the event received matching the timestamp and the group member.
+//	If there is no group member, then the event is for a one-to-one chat, rather than group chat.
+IEvent *
+CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * pContactGroupSender) CONST_MCC
+	{
+	Assert(pContactGroupSender == NULL || pContactGroupSender->EGetRuntimeClass() == RTI(TContact));
 	if (tsOther > d_tsOther_kmReserved)
 		{
 		const TIMESTAMP tsOtherStop = tsOther - (25 * d_ts_cHours);	// In a chat, the m_tsOther are semi-sorted for message received, as they represent the timestamps from the remote computers.  Therefore any timestamp older than one day (25 hours) is considered out of range, and there is no need to search the entire list of event.
-		TContact * pContactGroupSender = (pMember != NULL) ? pMember->m_pContact : NULL;
-		Assert(pContactGroupSender == NULL || pContactGroupSender->EGetRuntimeClass() == RTI(TContact));
 		IEvent ** ppEventStop;
 		IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 		while (ppEvent != ppEventStop)

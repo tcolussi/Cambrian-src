@@ -71,7 +71,7 @@ CEventGroupMemberJoin::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock)
 //	Append an XML attribute representing the Contact Identifier to the binary object.
 //	At the moment the Contact Identifier is the JID, however in the future it may be a hash of the public key.
 //
-//	SEE ALSO: Contact_PFindByIdentifier()
+//	SEE ALSO: Contact_PFindByIdentifier_YZ()
 void
 TContact::BinAppendXmlAttributeContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const
 	{
@@ -79,13 +79,20 @@ TContact::BinAppendXmlAttributeContactIdentifier(IOUT CBin * pbin, CHS chAttribu
 	}
 
 //	Method complement to BinAppendXmlAttributeContactIdentifier().
-//	There could be many identifiers.
+//	A single contact may have multiple identifier, such as having multiple JIDs.
 //	TODO: Use a hash table to cache identifiers
 TContact *
-TAccountXmpp::Contact_PFindByIdentifier(PSZUC pszContactIdentifier) CONST_MCC
+TAccountXmpp::Contact_PFindByIdentifier_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC
 	{
-	if (pszContactIdentifier != NULL)
-		return Contacts_PFindContactByJID(pszContactIdentifier);
+	Assert(pXmlNodeEvent != NULL);
+	PSZUC pszContactGroupSender = pXmlNodeEvent->PszuFindAttributeValue(d_chXCPa_pContactGroupSender);
+	if (pszContactGroupSender != NULL)
+		{
+		TContact * pContact = Contacts_PFindContactByJID(pszContactGroupSender);
+		if (pContact != NULL)
+			return pContact;
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find contact '$s' who for XML node: ^N\n", pszContactGroupSender, pXmlNodeEvent);
+		}
 	return NULL;
 	}
 

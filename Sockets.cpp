@@ -903,7 +903,7 @@ CSocketXmpp::OnEventXmppStanzaIq()
 		if (FCompareStrings(pszuQueryXmlns, "http://jabber.org/protocol/disco#info"))
 			{
 			/*
-			<iq id="purple8ab4072e" type="result" to="danx@chat.cambrian.org/abc" from="dan@jabber.example.com/worker">
+			<iq id="purple8ab4072e" type="result" to="jon@chat.cambrian.org/abc" from="peter@jabber.example.com/worker">
 			<query xmlns="http://jabber.org/protocol/disco#info">
 				<identity type="pc" name="Pidgin" category="client"/>
 				<feature var="jabber:iq:last"/>
