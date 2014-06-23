@@ -9,7 +9,7 @@
 #ifdef DEBUG
 	#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
-	#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
+	//#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
 #endif
 
 CHS
