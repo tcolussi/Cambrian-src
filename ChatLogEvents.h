@@ -127,7 +127,7 @@ public:
 
 	void TreeItemChatLog_UpdateTextToDisplayMessagesUnread();
 	void TreeItemChatLog_UpdateTextAndIcon();
-	void TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(PSZUC pszMessage, TContact * pContact);
+	void TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(PSZUC pszMessage, TContact * pContact, TGroupMember * pMember = NULL);
 	void TreeItemChatLog_IconUpdateOnMessagesReadForContact(TContact * pContact);
 
 	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;			// From IRuntimeObject

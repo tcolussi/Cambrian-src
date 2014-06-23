@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////
 //	CArray.h
 //
-//	Storage efficient high-perforformance dynamic array with wrappers for commonly used array operations.
+//	Storage for efficient high-perforformance dynamic array with wrappers for commonly used array operations.
 /////////////////////////////////////////////////////////////////////
 
 #ifndef CARRAY_H

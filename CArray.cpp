@@ -3,7 +3,7 @@
 //
 //	Storage efficient high-perforformance dynamic array.
 //
-//	Also contains array extensions for commonly used array operations.
+//	Also contains methods for commonly used array operations.
 //
 //	IMPLEMENTATION NOTES
 //	The code has been written to enhance execution speed at the expense

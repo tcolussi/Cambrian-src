@@ -121,7 +121,6 @@ public:
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);					// From ITreeItem
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);			// From ITreeItem
 
-	void TreeItemContact_IconUpdateOnNewMessageArrived(PSZUC pszMessage);
 	void TreeItemContact_DisplayWithinNavigationTree();
 	void TreeItemContact_DeleteFromNavigationTree_MB(PA_DELETING);
 	void TreeItemContact_UpdateIconComposingStarted(ITreeItemChatLogEvents * pContactOrGroup);

@@ -113,27 +113,27 @@ ITreeItemChatLogEvents::ChatLog_ChatStateIconUpdate(EChatState eChatState, INOUT
 			pContact->TreeItemContact_UpdateIconComposingStopped(this);
 		}
 	}
-/*
-void
-ITreeItemChatLogEvents::TreeItemChatLog_UpdateIconComposing()
-	{
-	m_pAccount->m_arraypContactsComposing.AddUniqueF(this);
-	TreeItem_SetIcon(eMenuIconPencil);
-	}
-*/
 
 void
 TContact::TreeItemContact_UpdateIconComposingStarted(ITreeItemChatLogEvents * pContactOrGroup)
 	{
 	Assert(pContactOrGroup != NULL);
 	m_pAccount->m_arraypContactsComposing.AddUniqueF(this);
-	pContactOrGroup->TreeItem_SetIcon(eMenuIconPencil);
+
 	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
 		{
-		// Find the member
+		pContactOrGroup->TreeItem_SetIcon(eMenuIconPencil_16x16);
+		// Find the member to set its icon
 		TGroupMember * pMember = ((TGroup *)pContactOrGroup)->Member_PFindOrAddContact_NZ(this);
-		pMember->TreeItem_SetIcon(eMenuIconPencil);
+		pMember->TreeItem_SetIcon(eMenuIconPencil_10x10);
 		}
+	else
+		{
+		Assert(pContactOrGroup->EGetRuntimeClass() == RTI(TContact));
+		Assert(pContactOrGroup == this);
+		TreeItem_SetIcon(eMenuIconPencil_10x10);	// Use a smaller icon for a contact
+		}
+
 	/*
 	// Update the icon for every alias
 	IContactAlias * pAlias = m_plistAliases;
@@ -279,7 +279,7 @@ TContact::ChatLogContact_DisplayStanzaToUI(const CXmlNode * pXmlNodeMessageStanz
 
 
 void
-ITreeItemChatLogEvents::TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(PSZUC pszMessage, TContact * pContact)
+ITreeItemChatLogEvents::TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(PSZUC pszMessage, TContact * pContact, TGroupMember * pMember)
 	{
 	Assert(pContact != NULL);
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
@@ -287,7 +287,15 @@ ITreeItemChatLogEvents::TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact
 		return;
 	Assert(pszMessage[0] != '\0');
 	if (m_pawLayoutChatLog == NULL || !m_pawLayoutChatLog->FGotFocus())
+		{
 		m_cMessagesUnread++;				// The layout does not have the focus (or does not exist), so display a special icon to indicate a new message arrived from the contact
+		if (pMember != NULL)
+			{
+			Assert(pMember->m_pGroup == this);
+			Assert(pMember->m_pContact == pContact);
+			pMember->TreeItem_SetTextToDisplayMessagesUnread(++pMember->m_cMessagesUnread);	// The group member has unread messages as well as its parent group
+			}
+		}
 	TreeItemChatLog_UpdateTextAndIcon();	// Always update the text and icon when a new message arrives.  This is important because before a message arrive, there is usually the 'composing' icon, and after the message arrives, this icon must be changed by either the online presence, or an icon indicating there is a new unread message.
 	if (!m_pAccount->TreeItemWidget_FIsExpanded())
 		{
@@ -297,48 +305,6 @@ ITreeItemChatLogEvents::TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact
 		}
 	MainWindow_SystemTrayNewMessageArrived(pContact, pszMessage);
 	}
-/*
-void
-TContact::TreeItemContact_IconUpdateOnNewMessageArrived(PSZUC pszMessage)
-	{
-	TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(pszMessage, this);
-	}
-*/
-#if 0
-void
-TGroup::TreeItemGroup_NewMessageArrived(PSZUC pszMessage, TContact * pContact)
-	{
-	Assert(pszMessage != NULL);
-	Assert(pContact != NULL);
-	TGroupMember * pMember = Member_PFindOrAddContact_NZ(pContact);
-	pMember->TreeItem_SetTextToDisplayMessagesUnread(++pMember->m_cMessagesUnread);	// The group member has unread messages as well as the group
-	TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(pszMessage, pContact);
-	pContact->TreeItem_IconUpdate();		// Update the icon of the contact, which will in turn update the icon(s) of all its aliases, including the member contact of the group.  It is important to update the icon of the contact because it is likely to be displaying the pencil icon indicating the user was composing/typing text.
-	/*
-	if (m_pawLayoutChatLog == NULL || !m_pawLayoutChatLog->FGotFocus())
-		{
-		// The layout does not have the focus (or does not exist), so display a special icon to indicate a new message arrived in the group
-		m_cMessagesUnread++;	// The group has unread messages
-		TreeItemChatLog_UpdateTextToDisplayMessagesUnread();
-		TreeItem_IconUpdate();
-		// Find the group member of the contact
-		if (pContact != NULL)
-			{
-			TGroupMember * pMember = Member_PFindOrAddContact_NZ(pContact);
-			pMember->TreeItem_UpdateTextToDisplayMessagesUnread(++pMember->m_cMessagesUnread);	// The group member also has unread messages
-			pContact->TreeItemContact_UpdateIcon();		// Update the icon of the contact, which will in turn update the icon(s) of all its aliases, including the member contact of the group.  It is important to update the icon of the contact because it is likely to be displaying the pencil icon indicating the user was composing/typing text.
-			}
-		}
-	if (!m_pAccount->TreeItemWidget_FIsExpanded())
-		{
-		// The account node is collapsed, therefore the contact is not visible in the GUI.
-		// To let know the user there is a new message, the GUI displays the 'chat icon' to Tree Item of the account.
-		m_pAccount->IconUpdate_MessageArrivedFromContact(pContact);
-		}
-	MainWindow_SystemTrayNewMessageArrived(pContact, pszMessage);
-	*/
-	}
-#endif
 
 void
 ITreeItemChatLogEvents::TreeItemChatLog_IconUpdateOnMessagesReadForContact(TContact * pContact)

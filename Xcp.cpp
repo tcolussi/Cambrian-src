@@ -250,6 +250,8 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					}
 				break;
 			case d_chXCPe_EventForwardReply:
+				// There is nothing to do  here, except set chXCPe = d_chXCPe_EventForwardReply
+				MessageLog_AppendTextFormatCo(d_coGrayDark, "\t\t chXCPe = d_chXCPe_EventForwardReply;\n");
 				break;
 			case d_chXCPe_EventsForwardRemaining:
 				cEventsRemaining = pXmlNodeXcpEvent->UFindAttributeValueDecimal_ZZR(d_chXCPa_EventsForwardRemaining_cEvents);
@@ -319,13 +321,14 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				CDataXmlLargeEvent * pDataXmlLargeEvent = pVault->PFindOrAllocateDataXmlLargeEvent_NZ(tsEventID, IN_MOD_TMP &binXcpStanzaReply);
 				int cbDataRemaining;
 				#if 1
-					int cbStanzaMaxBinary = 10 + pDataXmlLargeEvent->m_binXmlData.CbGetData();	// At the moment, send only 10 bytes + 10% at the time (rather than c_cbStanzaMaxBinary), so we can test the code if it is working
+					int cbStanzaMaxBinary = 1 + pDataXmlLargeEvent->m_binXmlData.CbGetData() / 4;	// At the moment, send only 1 byte + 25% at the time (rather than c_cbStanzaMaxBinary), so we can test the code transmitting large events
 					if (cbStanzaMaxBinary > CBinXcpStanzaType::c_cbStanzaMaxBinary)
 						cbStanzaMaxBinary = CBinXcpStanzaType::c_cbStanzaMaxBinary;
 				#else
 					#define cbStanzaMaxBinary	CBinXcpStanzaType::c_cbStanzaMaxBinary
 				#endif
 				int cbData = pDataXmlLargeEvent->m_binXmlData.CbGetDataAfterOffset(ibDataSource, cbStanzaMaxBinary, OUT &cbDataRemaining);
+				MessageLog_AppendTextFormatCo(d_coOrange, "Sending $i/$i bytes data from offset $i for tsEventID $t, cbDataRemaining = $i\n", cbData, cbStanzaMaxBinary, ibDataSource, tsEventID, cbDataRemaining);
 				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventSplitDataReply_tsO_i_pvcb , tsEventID, ibDataSource, pDataXmlLargeEvent->m_binXmlData.PvGetDataAtOffset(ibDataSource), cbData);
 				if (cbDataRemaining <= 0)
 					{
@@ -357,7 +360,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 		else
 			{
 			// The XML node contains an event of type EEventClass
-			const BOOL fEventClassReceived = (chEventName0 >= 'a');	// All received events begin with a lowercase
+			const BOOL fEventClassReceived = FEventClassReceived(chEventName0);
 			EEventClass eEventClass = EEventClassFromPsz(pszEventName);
 			switch (eEventClass)
 				{
@@ -368,6 +371,15 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				// The XCP ping returns the timestamp (in UTC) of the contact.  This way, it is possible to calculate the clock difference between the two devices.  Ideally the clock difference should be less than one minute.
 				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataReply _tsI d_szXCPa_PingTime_t "/>", tsOther, Timestamp_GetCurrentDateTime());
 				goto EventNext;
+			case eEventClass_eDownloader:	// The downloader is a hybrid event, part of the Cambrian Protocol, and another part a regular event.
+				/*
+				if (pwChatLog == NULL)
+					{
+					MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t No Chat Log present for CEventDownloader tsOther $t, therefore initiating download without GUI...\n", tsOther);
+					binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventSplitDataRequest_tsI_i "/>", tsOther, 0);	// If there is no Chat Log present, then request the data to start a download.
+					}
+				*/
+				break;
 			default:
 				;		// Keep the compiler happy to prevent a warning the switch() statement does not handle all cases
 				} // switch
@@ -385,7 +397,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				Assert(fEventClassReceived);
 				Assert(tsEventID > d_tsOther_kmReserved);
 				fSwapTimestamps = TRUE;
-				pEvent = pVault->PFindEventReceivedByTimestampOther(tsEventID, pContactGroupSender);	// Search the event using swapped values
+				pEvent = pVault->PFindEventReceivedByTimestampOther(tsEventID, pContactGroupSender);	// Search the event using swapped timestamps
 				Assert(pGroup != NULL);
 				if (pGroup != NULL)
 					(void)pGroup->Member_PFindOrAddContact_NZ(pContactGroupSender);		// Make sure the contact is part of the group
@@ -496,9 +508,11 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				pwChatLog->ChatLog_EventDisplay(IN pEvent);
 
 			// Update the GUI about the new event
+			/*
 			if (pMember != NULL)
 				pMember->TreeItem_SetTextToDisplayMessagesUnread(++pMember->m_cMessagesUnread);	// The group member has unread messages as well as its group
-			pChatLogEvents->TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(IN pEvent->PszGetTextOfEventForSystemTray(OUT_IGNORED &g_strScratchBufferStatusBar), this);
+			*/
+			pChatLogEvents->TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(IN pEvent->PszGetTextOfEventForSystemTray(OUT_IGNORED &g_strScratchBufferStatusBar), this, pMember);
 			TreeItem_IconUpdate();		// Update the icon of the contact, which will in turn update the icon(s) of all its aliases, including the member contact of the group.  It is important to update the icon of the contact because it is likely to be displaying the pencil icon indicating the user was composing/typing text.
 
 			if (chXCPe == d_chXCPe_EventForwardReply)
@@ -582,23 +596,39 @@ CBinXcpStanzaType::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 		}
 	}
 
-/*
+
 //	Core method to serialize an event to be transmitted through the Cambrian Protocol.
 //
 //	This method is 'core' because it is shared with the 'serializer' as well the method re-creating the cache for the 'downloader'.
 //	The class CEventDownloader relies on the number of bytes serialized by this method to transmit the event.
+//	The parameter tsOther is either zero or the value of pEvent->m_tsOther.  The reason tsOther is a parameter is because
+//	the downloader does not serialize this value, so the cached data is always the same.
 void
-CBinXcpStanzaType::BinXmlSerializeEventForXcpCore(const IEvent * pEvent)
+CBinXcpStanzaType::BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTAMP tsOther)
 	{
 	Assert(pEvent != NULL);
+	Assert(tsOther == d_ts_zNULL || tsOther == pEvent->m_tsOther);
 	Assert(m_pContact != NULL);
 	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
-	BinAppendTextSzv_VE((pEvent->m_tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, pEvent->EGetEventClassForXCP(m_pContact), pEvent->m_tsEventID, pEvent->m_tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
+	EEventClass eEventClassXcp = pEvent->EGetEventClassForXCP(m_pContact);
+	TIMESTAMP tsEventID = pEvent->m_tsEventID;
+	if (pEvent->m_pContactGroupSender_YZ != NULL)
+		{
+		// The event was received by a contact for a group chat, therefore we need to adjust the class
+		Assert(pEvent->Event_FIsEventTypeReceived());
+		if (pEvent->m_pContactGroupSender_YZ != m_pContact)
+			{
+			eEventClassXcp = pEvent->EGetEventClass();	// Keep the same class.  Idetally the timestamps should be kept the same, however this will screw up the synchronization, so it is better to keep them as is and swap them by the receiver
+			MessageLog_AppendTextFormatCo(d_coRed, "\t\t BinXmlSerializeEventForXcp() - tsEventID $t, tsOther $t written by ^j is forwarded to ^j, therefore keeping event class '$U'\n", tsEventID, tsOther, pEvent->m_pContactGroupSender_YZ, m_pContact, eEventClassXcp);
+			}
+		Assert(pEvent->m_tsOther > d_tsOther_kmReserved && "A received event should always have a valid tsOther");
+		}
+	BinAppendTextSzv_VE((tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, eEventClassXcp, tsEventID, tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
 	BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
 	pEvent->XmlSerializeCore(IOUT this);
 	BinAppendXmlForSelfClosingElement();
-	}
-*/
+	} // BinXmlSerializeEventForXcpCore()
+
 
 //	Method to serialize an event to be transmitted through the Cambrian Protocol.
 //	The difference between saving an event to disk and for XCP, is the eEventClass must be adjusted for the recipient as well as swapping m_tsEventID and m_tsOther,
@@ -617,49 +647,34 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 	if ((eEventClassXcp & eEventClass_kfNeverSerializeToXCP) == 0)
 		{
 		const int ibDataElementStart = m_paData->cbData;
+		Assert(ibDataElementStart > 0);
+		/*
 		TIMESTAMP tsEventID = pEvent->m_tsEventID;
 		TIMESTAMP tsOther = pEvent->m_tsOther;
-		/*
 		if (pEvent->m_pContactGroupSender_YZ != NULL)
 			{
 			// The event was received by a contact for a group chat, therefore we need to adjust the class
-			Assert(tsOther > d_tsOther_kmReserved && "A received event should always have a valid tsOther");
-			if (pEvent->m_pContactGroupSender_YZ != m_pContact)
-				{
-				eEventClassXcp = pEvent->EGetEventClass();
-				MessageLog_AppendTextFormatCo(d_coRed, "BinXmlSerializeEventForXcp() - tsEventID $t, tsOther $t is forwarded to ^j (therefore keeping event class $U)\n", tsEventID, tsOther, m_pContact, eEventClassXcp);
-				BinAppendTextSzv_VE("<$U" _tsO _tsI, eEventClassXcp, tsOther, tsEventID);	// Since we are forwarding the event, do not swap the timestamps
-				BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
-				}
-			else
-				{
-				MessageLog_AppendTextFormatCo(d_coRed, "BinXmlSerializeEventForXcp() - tsEventID $t is a resend to ^j\n", tsEventID, m_pContact);
-				BinAppendTextSzv_VE("<$U" _tsO _tsI, eEventClassXcp, tsEventID, tsOther);
-				}
-			}
-		else
-			BinAppendTextSzv_VE((tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, eEventClassXcp, tsEventID, tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
-		*/
-		if (pEvent->m_pContactGroupSender_YZ != NULL)
-			{
-			// The event was received by a contact for a group chat, therefore we need to adjust the class
-			Assert(tsOther > d_tsOther_kmReserved && "A received event should always have a valid tsOther");
 			if (pEvent->m_pContactGroupSender_YZ != m_pContact)
 				{
 				eEventClassXcp = pEvent->EGetEventClass();	// Keep the same class.  Idetally the timestamps should be kept the same, however this will screw up the synchronization, so it is better to keep them as is and swap them by the receiver
 				MessageLog_AppendTextFormatCo(d_coRed, "\t\t BinXmlSerializeEventForXcp() - tsEventID $t, tsOther $t written by ^j is forwarded to ^j, therefore keeping event class '$U'\n", tsEventID, tsOther, pEvent->m_pContactGroupSender_YZ, m_pContact, eEventClassXcp);
 				}
+			Assert(tsOther > d_tsOther_kmReserved && "A received event should always have a valid tsOther");
 			}
 		BinAppendTextSzv_VE((tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, eEventClassXcp, tsEventID, tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
 		BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
 		pEvent->XmlSerializeCore(IOUT this);
+		*/
+		TIMESTAMP tsOther = pEvent->m_tsOther;
+		BinXmlSerializeEventForXcpCore(pEvent, tsOther);
 		if (m_pContact == NULL)
 			return;		// The virtual method XmlSerializeCore() may set m_pContact to NULL if the contact does not support XCP.
 		Assert(m_paData != NULL);
 		#ifdef DEBUG
-		if (m_paData->cbData > 200)		// For debugging conider 200 characters as a 'large stanza' to force this code to be executed frequently
+		if (m_paData->cbData > 100)		// For debugging conider 200 characters as a 'large stanza' to force this code to be executed frequently
 		#else
-		if (m_paData->cbData > c_cbStanzaMaxPayload)
+		if (m_paData->cbData > 200)		// Also test this code in the release build, however with a higher threshold
+		//if (m_paData->cbData > c_cbStanzaMaxPayload)
 		#endif
 			{
 			// The XML data is too large, therefore use a 'downloader event' which will take care of transferring the data in smaller chunks.
@@ -667,12 +682,14 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 			// It is better to let the method PFindOrAllocateDataXmlLargeEvent_NZ() take care of it.
 			MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "BinXmlSerializeEventForXcp() - Large stanza of about $I bytes\n", m_paData->cbData);
 			m_paData->cbData = ibDataElementStart;	// Truncate the binary, so send the CEventDownloader instead of the event
-			CDataXmlLargeEvent * pDataXmlLargeEvent = pEvent->m_pVaultParent_NZ->PFindOrAllocateDataXmlLargeEvent_NZ(tsEventID, IN_MOD_TMP this);	// Create the cache, so we can get its size
+			CDataXmlLargeEvent * pDataXmlLargeEvent = pEvent->m_pVaultParent_NZ->PFindOrAllocateDataXmlLargeEvent_NZ(pEvent->m_tsEventID, IN_MOD_TMP this);	// Create the cache, so we can get its size
 			Assert(m_paData->cbData == ibDataElementStart);
-			BinAppendTextSzv_VE("<" d_szXCPe_CEventDownloader_tsO_i, pEvent->m_tsEventID, pDataXmlLargeEvent->m_binXmlData.CbGetData());	// Serialize on-the-fly the CEventDownloader
-			BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);				// Make sure the downloader goes to the right group
+			// Serialize the CEventDownloader on-the-fly
+			BinAppendTextSzv_VE("<" d_szXCPe_CEventDownloader_i_tsO, pDataXmlLargeEvent->m_binXmlData.CbGetData(), pEvent->m_tsEventID);
+			if (tsOther > d_tsOther_kmReserved)
+				BinAppendTextSzv_VE(d_szXCPa_CEventDownloader_tsForwarded_t, tsOther);
+			BinAppendXmlForSelfClosingElement();
 			}
-		BinAppendXmlForSelfClosingElement();
 		}
 	} // BinXmlSerializeEventForXcp()
 
@@ -977,14 +994,18 @@ CVaultEvents::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TM
 	if (pEvent != NULL)
 		{
 		const int ibXmlDataStart = pbinXcpStanza->CbGetData();
+		//Assert(ibXmlDataStart > 0);
+		/*
 		//pbinXcpStanza->BinAppendTextSzv_VE("<$U" _tsO, pEvent->EGetEventClassForXCP(pbinXcpStanza->m_pContact), pEvent->m_tsEventID);	// Do not serialize m_tsOther, as the CDownloader will have it.  Same for the group identifier as well as m_pContactGroupSender_YZ
 		pbinXcpStanza->BinAppendTextSzv_VE("<$U", pEvent->EGetEventClassForXCP(pbinXcpStanza->m_pContact));	// No need to serialize the timestamps, group identifier, or m_pContactGroupSender_YZ, because the CEventDownloader has this information
 		pEvent->XmlSerializeCore(IOUT pbinXcpStanza);
 		pbinXcpStanza->BinAppendXmlForSelfClosingElement();
+		*/
+		pbinXcpStanza->BinXmlSerializeEventForXcpCore(pEvent, d_ts_zNULL);
 		Assert(pbinXcpStanza->m_pContact != NULL);	// Sometimes XmlSerializeCore() may modify m_pContact, however it should be only for contacts not supporting XCP (which should not be the case here!)
 		int cbXmlData = pbinXcpStanza->CbGetData() - ibXmlDataStart;
 		pDataXmlLargeEvent->m_binXmlData.BinInitFromBinaryData(pbinXcpStanza->TruncateDataPv(ibXmlDataStart), cbXmlData);	// Make a copy of the serialized data, and restore CBinXcpStanzaType to its original state
-		MessageLog_AppendTextFormatSev(eSeverityComment, "PFindOrAllocateDataXmlLargeEvent_NZ() - Initializing cache by serializing tsEventID $t (tsOther $t) -> $I bytes of data\n", tsEventID, pEvent->m_tsOther, cbXmlData);
+		MessageLog_AppendTextFormatSev(eSeverityComment, "PFindOrAllocateDataXmlLargeEvent_NZ() - Initializing cache by serializing tsEventID $t (tsOther $t) -> $I bytes of data:\n$B\n", tsEventID, pEvent->m_tsOther, cbXmlData, &pDataXmlLargeEvent->m_binXmlData);
 		}
 	else
 		{
@@ -1035,6 +1056,7 @@ CListaDataXmlLargeEvents::DeleteIdleNodes()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CEventDownloader::CEventDownloader(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 	{
+	m_tsForwarded = d_ts_zNA;
 	m_cbDataToDownload = 0;
 	m_paEvent = NULL;
 	}
@@ -1073,6 +1095,7 @@ CEventDownloader::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) c
 		m_paEvent->XmlSerializeCore(IOUT pbinXmlAttributes);
 		return;
 		}
+	pbinXmlAttributes->BinAppendXmlAttributeTimestamp(d_chXCPa_CEventDownloader_tsForwarded, m_tsForwarded);
 	pbinXmlAttributes->BinAppendXmlAttributeInt(d_chXCPa_CEventDownloader_cblDataToDownload, m_cbDataToDownload);
 	pbinXmlAttributes->BinAppendXmlAttributeCBin(d_chXCPa_CEventDownloader_bin85DataReceived, m_binDataDownloaded);
 	}
@@ -1086,6 +1109,7 @@ CEventDownloader::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 		m_paEvent->XmlUnserializeCore(IN pXmlNodeElement);	// This happens when synchronizing
 		return;
 		}
+	pXmlNodeElement->UpdateAttributeValueTimestamp(d_chXCPa_CEventDownloader_tsForwarded, OUT_F_UNCH &m_tsForwarded);
 	pXmlNodeElement->UpdateAttributeValueInt(d_chXCPa_CEventDownloader_cblDataToDownload, OUT_F_UNCH &m_cbDataToDownload);
 	pXmlNodeElement->UpdateAttributeValueCBin(d_chXCPa_CEventDownloader_bin85DataReceived, OUT_F_UNCH &m_binDataDownloaded);
 	}
@@ -1107,6 +1131,7 @@ CEventDownloader::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXc
 void
 CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
+	Assert(m_tsEventID > d_tsOther_kmReserved);
 	if (m_paEvent == NULL)
 		{
 		// Show progress of the download
@@ -1126,7 +1151,7 @@ CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONS
 			return;
 			}
 		// We are done downloading, therefore allocate the event by unserializing the downloaded XML data
-		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventDownloader::ChatLogUpdateTextBlock() - Event tsOther $t completed with $I bytes: $B\n", m_tsOther, cbDataDownloaded, &m_binDataDownloaded);
+		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventDownloader::ChatLogUpdateTextBlock() - Event tsOther $t completed with $I bytes:\n$B\n", m_tsOther, cbDataDownloaded, &m_binDataDownloaded);
 		m_pVaultParent_NZ->SetModified();	// Make sure whatever we do next will be saved to disk
 
 		CXmlTree oXmlTree;
@@ -1135,11 +1160,25 @@ CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONS
 			m_paEvent = IEvent::S_PaAllocateEvent_YZ(EEventClassFromPsz(oXmlTree.m_pszuTagName), IN &m_tsEventID);
 			if (m_paEvent != NULL)
 				{
-				Assert(m_paEvent->m_pContactGroupSender_YZ == NULL);
-				m_paEvent->m_pContactGroupSender_YZ = m_pContactGroupSender_YZ;
-				m_paEvent->m_pVaultParent_NZ = m_pVaultParent_NZ;
-				m_paEvent->m_tsOther = m_tsOther;
-				m_paEvent->XmlUnserializeCore(IN &oXmlTree);
+				// We have successfully re-created a blank event class matching the blueprint of the downloader.  Now, we need to initialize the event variables.
+				m_paEvent->m_pVaultParent_NZ = m_pVaultParent_NZ;		// The new event uses the same vault as the downloader
+				Assert(m_paEvent->m_pContactGroupSender_YZ == NULL);	// New allocated events do not have any contact group sender yet
+				m_paEvent->m_pContactGroupSender_YZ = PGetAccount_NZ()->Contact_PFindByIdentifier_YZ(IN &oXmlTree);	// The contact who created the event may be different than the contact who transmitted the event, as the [large] event may be have been forwarded
+				if (m_paEvent->m_pContactGroupSender_YZ == NULL)
+					m_paEvent->m_pContactGroupSender_YZ = m_pContactGroupSender_YZ;	// If the contact sender was not present in the downloaded XML, use the contact of the downloader (if any)
+				Assert(m_paEvent->m_tsOther == d_ts_zNULL);
+				//oXmlTree.UpdateAttributeValueTimestamp(d_chEvent_Attribute_tsOther, OUT_F_UNCH &m_paEvent->m_tsOther);	// Make sure m_tsOther is always unserialized.  This line is somewhat similar as EventsUnserializeFromDisk()
+				//Assert(oXmlTree.TsGetAttributeValueTimestamp_ML(d_chXCPa_tsOther) == d_ts_zNA);
+				/*
+				m_paEvent->m_tsOther = m_tsOther;	// Since tsOther is never serialized in the cache, just initialize its value from the downloader
+				Assert(m_paEvent->m_tsOther > d_tsOther_kmReserved);
+				*/
+				MessageLog_AppendTextFormatCo(d_coOrange, "CEventDownloader::m_tsOther $t, m_tsForwarded $t\n", m_tsOther, m_tsForwarded);
+				m_paEvent->m_tsOther = m_tsForwarded;
+				if (m_paEvent->m_tsOther == d_ts_zNULL)
+					m_paEvent->m_tsOther = m_tsOther;
+				Assert(m_paEvent->m_tsOther > d_tsOther_kmReserved);
+				m_paEvent->XmlUnserializeCore(IN &oXmlTree);	// Finally, unserialize the data specific to the event
 				goto EventUpdateToGUI;
 				}
 			else
@@ -1159,7 +1198,7 @@ CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONS
 		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("<span style='color:red'>Error allocating event $s of {kK}", oXmlTree.m_pszuTagName, cbDataDownloaded);
 		poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(d_coSilver));
 		m_binDataDownloaded.Empty();
-		m_cbDataToDownload = c_cbDataToDownload_Error1;
+		m_cbDataToDownload = c_cbDataToDownload_Error;
 		}
 	else
 		{

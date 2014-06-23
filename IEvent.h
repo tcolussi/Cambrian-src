@@ -41,7 +41,8 @@
 //	The enumeration EEventClass is used to serialize and unserialize events.
 //	This enumeration is somewhat as RTI_ENUM, however since the events are serialized, letters of the alphabet are used to identify different classes of events.
 //	This way, this enum may be serialized directly into an XML file.
-
+//	Also, all events sent begin with an uppercase, and all events received begin with a lowercase.  This way, looking at the event class (or the first character in the XML element)
+//	gives us useful information about what type of event we are dealing.
 enum EEventClass
 	{
 	eEventClass_kzSerializeDataAsXmlAttributes	= 0,			// This is the default as all the data of the event are serialized as XML attributes
@@ -91,9 +92,11 @@ enum EEventClass
 
 	eEventClass_eDownloader							= _USZU2('d', 'l'),
 	eEventClass_eDownloader_class					= _USZU2('d', 'l') | eEventClass_kfNeverSerializeToXCP | eEventClass_kfReceivedByRemoteClient,	// The downloader is saved to disk and its class never serialized for XCP.
-		#define d_szXCPe_CEventDownloader_tsO_i		"dl" _tsO " s='$i'"		// At the moment, the downloader class will only send 32 bit of data, hence $i
+		#define d_szXCPe_CEventDownloader_i_tsO		"dl s='$i'" _tsO		// At the moment, the downloader class will only send 32 bit of data, hence $i
 		#define d_chXCPa_CEventDownloader_cblDataToDownload		's'	// Size of the data to download
-		#define d_chXCPa_CEventDownloader_bin85DataReceived		'd'	// Data was received so far
+		#define d_chXCPa_CEventDownloader_bin85DataReceived		'd'	// Data was received so far.  This value is used when saving the downloader to disk to resume the download later.
+		#define d_chXCPa_CEventDownloader_tsForwarded			'f'	// Timestamt for a forwarded event
+		#define d_szXCPa_CEventDownloader_tsForwarded_t			" f='$t'"
 
 	eEventClass_eWalletTransactionSent				= _USZU1('W'),
 	eEventClass_eWalletTransactionReceived			= _USZU1('w'),
@@ -111,6 +114,7 @@ enum EEventClass
 	}; // EEventClass
 
 inline EEventClass EEventClassFromPsz(PSZUC pszEventClass) { return (EEventClass)UszuFromPsz(pszEventClass); }
+#define FEventClassReceived(chEventClass)		((chEventClass) >= 'a')	// All received events begin with a lowercase
 
 #define d_szServiceDiscovery_GroupChat			"gc"
 #define d_szServiceDiscovery_FileTransfers		"ft"
@@ -142,6 +146,7 @@ public:
 	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
 	void BinXmlSerializeEventForDisk(const IEvent * pEvent);
 	void BinXmlSerializeEventForXcp(const IEvent * pEvent);
+	void BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTAMP tsOther);
 	void XcpSendStanzaToContact(TContact * pContact) CONST_MCC;
 	void XcpSendStanza() CONST_MCC;
 
@@ -567,7 +572,8 @@ public:
 class CEventDownloader : public IEvent
 {
 protected:
-	enum { c_cbDataToDownload_Error1 = -1, c_cbDataToDownload_Error2 = -2 }; // Use variable m_cbDataToDownload to store errors
+	TIMESTAMP m_tsForwarded;				// Forwarded timestamp (this happens when a group event is forwarded by another group member)
+	enum { c_cbDataToDownload_Error = -1 }; // Use variable m_cbDataToDownload to store an arror code
 	int m_cbDataToDownload;			// How much data needs to be downloaded (this variable is good for a progress bar).  Since the 'event downloader' is not to transfer files, but large text messages, a 32-bit integer is sufficient for storing such a message.
 	CBin m_binDataDownloaded;		// Data downloaded (so far)
 	IEvent * m_paEvent;				// Allocated event (when the download is complete)

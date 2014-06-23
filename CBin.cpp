@@ -426,17 +426,18 @@ CBin::CbGetDataAfterOffset(int ibData, int cbDataMax, OUT int * pcbDataRemaining
 	if (m_paData != NULL)
 		{
 		Assert(ibData <= m_paData->cbData);
-		int cbRemain = m_paData->cbData - ibData;
-		if (cbRemain >= 0)
+		int cbAvailable = m_paData->cbData - ibData;
+		if (cbAvailable > 0)
 			{
-			if (cbRemain <= cbDataMax)
+			int cbRemain = cbAvailable - cbDataMax;
+			if (cbRemain > 0)
 				{
-				*pcbDataRemaining = 0;
-				return cbRemain;
+				// The amount of data is larger than the maximum buffer size
+				*pcbDataRemaining = cbRemain;
+				return cbDataMax;
 				}
-			*pcbDataRemaining = cbRemain - cbDataMax;
-			Assert(*pcbDataRemaining > 0);
-			return cbDataMax;
+			*pcbDataRemaining = 0;	// There is no more data remaining
+			return cbAvailable;
 			}
 		}
 	*pcbDataRemaining = 0;
