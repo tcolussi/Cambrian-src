@@ -449,20 +449,6 @@ ITreeItemChatLogEvents::TreeItemChatLog_UpdateTextAndIcon()
 	}
 
 void
-TContact::TreeItemContact_UpdateIconComposing()
-	{
-	m_pAccount->m_arraypContactsComposing.AddUniqueF(this);
-	TreeItem_SetIcon(eMenuIconPencil);
-	// Update the icon for every alias
-	IContactAlias * pAlias = m_plistAliases;
-	while (pAlias != NULL)
-		{
-		pAlias->TreeItem_SetIcon(eMenuIconPencil);	// This line needs to be fixed to handle special cases
-		pAlias = pAlias->m_pNextAlias;
-		}
-	}
-
-void
 TContact::TreeItemContact_UpdateIconOffline()
 	{
 	m_uFlagsContact = (m_uFlagsContact & ~FC_kmPresenceMask);

@@ -124,7 +124,8 @@ public:
 	void TreeItemContact_IconUpdateOnNewMessageArrived(PSZUC pszMessage);
 	void TreeItemContact_DisplayWithinNavigationTree();
 	void TreeItemContact_DeleteFromNavigationTree_MB(PA_DELETING);
-	void TreeItemContact_UpdateIconComposing();
+	void TreeItemContact_UpdateIconComposingStarted(ITreeItemChatLogEvents * pContactOrGroup);
+	void TreeItemContact_UpdateIconComposingStopped(ITreeItemChatLogEvents * pContactOrGroup);
 	void TreeItemContact_UpdateIconOffline();
 	void TreeItemContact_UpdateIcon();
 	void TreeItemContact_GenerateDisplayNameFromJid();

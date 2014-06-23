@@ -71,7 +71,7 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 			}
 		}
 	m_pParent->m_tsEventIdLastSentCached = m_arraypaEvents.TsEventIdLastEventSent();	// Update the timestamp so it is what is from the vault, rather than what was loaded from the configuration, as the Chat Log may have been deleted.
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "CVaultEvents::ReadEventsFromDisk(\"{h!}.dat\") - m_tsEventIdLastSentCached=$t\n", pHashFileName, m_pParent->m_tsEventIdLastSentCached);
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "CVaultEvents::ReadEventsFromDisk(\"{h!}.dat\") for '$s': $I events, m_tsEventIdLastSentCached=$t\n", pHashFileName, m_pParent->TreeItem_PszGetNameDisplay(), m_arraypaEvents.GetSize(), m_pParent->m_tsEventIdLastSentCached);
 	if (m_pParent->EGetRuntimeClass() == RTI(TContact))
 		{
 		TContact * pContact = (TContact *)m_pParent;
@@ -83,6 +83,27 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 			pContact->m_tsOtherLastSynchronized = tsOtherLastReceived;
 			}
 		}
+	else
+		{
+		Assert(m_pParent->EGetRuntimeClass() == RTI(TGroup));
+		if (m_arraypaEvents.FIsEmpty())
+			{
+			// If there are no events, this means the Chat Log is new or was deleted.  In any regards, make sure the timestamps are initialized to zero to make sure the Chat Log is properly reconstructed.
+			TGroupMember ** ppMemberStop;
+			TGroupMember ** ppMember = ((TGroup *)m_pParent)->m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);
+			while (ppMember != ppMemberStop)
+				{
+				TGroupMember * pMember = *ppMember++;
+				Assert(pMember != NULL);
+				Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
+				if (pMember->m_tsOtherLastSynchronized != d_ts_zNULL)
+					{
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Clearing m_tsOtherLastSynchronized $t for group member ^j\n", pMember->m_tsOtherLastSynchronized, pMember->m_pContact);
+					pMember->m_tsOtherLastSynchronized = d_ts_zNULL;
+					}
+				} // while
+			}
+		} // if...else
 	} // ReadEventsFromDisk()
 
 void
@@ -116,6 +137,73 @@ CVaultEvents::UEventsRemaining(IEvent * pEvent) const
 	{
 	Assert(pEvent != NULL);
 	return m_arraypaEvents.UFindRemainingElements(pEvent);
+	}
+
+//	Return the number of events received since (after) tsEventID
+int
+CVaultEvents::UCountEventsReceivedByOtherGroupMembersSinceTimestampEventID(TIMESTAMP tsEventID, TContact * pContactExclude) CONST_MCC
+	{
+	Assert(pContactExclude != NULL);
+	int cEventsReceived = 0;
+
+	if (tsEventID > d_tsOther_kmReserved)
+		{
+		IEvent ** ppEventStop;
+		IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+		IEvent ** ppEventSince = ppEventStop;	// Search the array from the end, as the event to search is likely to be a recent one
+		while (ppEvent != ppEventSince)
+			{
+			IEvent * pEvent = *--ppEventSince;
+			AssertValidEvent(pEvent);
+			Assert(pEvent->m_tsEventID > d_tsOther_kmReserved);
+			if (pEvent->m_tsEventID == tsEventID)
+				{
+				ppEventSince++;	// Skip the event we just found
+				break;
+				}
+			} // while
+		// Now, count how many events have been received
+		while (ppEventSince != ppEventStop)
+			{
+			IEvent * pEvent = *ppEventSince++;
+			AssertValidEvent(pEvent);
+			if (pEvent->m_pContactGroupSender_YZ != pContactExclude && pEvent->Event_FIsEventTypeReceived())
+				cEventsReceived++;
+			}
+		} // if
+	return cEventsReceived;
+	} // UCountEventsReceivedByOtherGroupMembersSinceTimestampEventID()
+
+int
+CVaultEvents::UCountEventsReceivedByOtherGroupMembersSinceTimestampOther(TIMESTAMP tsOther) CONST_MCC
+	{
+	int cEventsReceived = 0;
+
+	if (tsOther > d_tsOther_kmReserved)
+		{
+		IEvent ** ppEventStop;
+		IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+		IEvent ** ppEventSince = ppEventStop;	// Search the array from the end, as the event to search is likely to be a recent one
+		while (ppEvent != ppEventSince)
+			{
+			IEvent * pEvent = *--ppEventSince;
+			AssertValidEvent(pEvent);
+			if (pEvent->m_tsOther == tsOther)
+				{
+				ppEventSince++;	// Skip the event we just found
+				break;
+				}
+			} // while
+		// Now, count how many events have been received
+		while (ppEventSince != ppEventStop)
+			{
+			IEvent * pEvent = *ppEventSince++;
+			AssertValidEvent(pEvent);
+			if (pEvent->Event_FIsEventTypeReceived())
+				cEventsReceived++;
+			}
+		}
+	return cEventsReceived;
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

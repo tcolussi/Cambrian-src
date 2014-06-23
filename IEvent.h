@@ -63,8 +63,8 @@ enum EEventClass
 		#define d_szXCPe_MessageTextComposingStarted			"<Y/>"
 		#define d_szXCPe_MessageTextComposingPaused				"<Y s='p'/>"
 
-	eEventClass_eMessageTextSent					= _USZU1('I'),
-	eEventClass_eMessageTextReceived				= _USZU1('i'),
+	eEventClass_eMessageTextSent					= _USZU1('T'),
+	eEventClass_eMessageTextReceived				= _USZU1('t'),
 	eEventClass_eMessageTextReceived_class			= eEventClass_eMessageTextReceived | eEventClass_kfReceivedByRemoteClient,
 	eEventClass_eMessageXmlRaw						= _USZU1('~'),	// Send raw XML directly to the server (this message is never serialized in any way
 	eEventClass_eMessageXmlRaw_class				= eEventClass_eMessageXmlRaw | eEventClass_kfNeverSerializeToDisk,	// The raw XML is never 'serialized' as part of the Cambrian Protocol because it is sent directly to the server unencrypted.
@@ -103,8 +103,8 @@ enum EEventClass
 	eEventClass_eServiceDiscovery_Response			= _USZU2('s', 'd'),
 
 	// To be deleted in 2015.  These were old event types used in previous file formats
-	eEventClassLegacy_chMessageSent					= 'T',	// Instant text message
-	eEventClassLegacy_chMessageReceived				= 't',
+	eEventClassLegacy_chMessageSent					= 'I',	// Instant text message
+	eEventClassLegacy_chMessageReceived				= 'i',
 	eEventClassLegacy_chMessageOldFormat			= 'm',	// Very very early serialization of messages, before using events.
 
 	eEventClass_eNull = 0	// Unknown event class

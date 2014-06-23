@@ -25,7 +25,6 @@ public:
 	void ChatLog_ChatStateTextUpdate(INOUT OCursor & oTextCursor);
 	void ChatLog_ChatStateTextUpdate();
 	void ChatLog_ChatStateIconUpdate(INOUT TContact * pContact, EChatState eChatState);
-	void ChatLog_ChatStateIconUpdateComposingStopped(INOUT TContact * pContact);
 	inline void ChatLog_ChatStateComposerRemove(TContact * pContact) { m_arraypContactsComposing.RemoveElementI(pContact); }
 
 	virtual bool event(QEvent * pEvent);	// From QObject	

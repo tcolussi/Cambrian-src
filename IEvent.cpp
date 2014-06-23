@@ -9,7 +9,7 @@
 #ifdef DEBUG
 	#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
-	//#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the retail build
+	#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
 #endif
 
 CHS
@@ -1533,6 +1533,36 @@ CVaultEvents::PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) C
 	return m_arraypaEvents.PFindEventNextForXcp(tsEventID, OUT pcEventsRemaining);
 	}
 
+//	Very similar as PFindEventNext()
+IEvent *
+CVaultEvents::PFindEventNextReceivedByOtherGroupMembers(TIMESTAMP tsEventID, TContact * pContactExclude, OUT int * pcEventsRemaining) CONST_MCC
+	{
+	Assert(pContactExclude != NULL);
+	int cEventsRemaining = -1;
+	IEvent * pEventNext = NULL;
+	IEvent ** ppEventStop;
+	IEvent ** ppEventFirst = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	IEvent ** ppEventCompare = ppEventStop;
+	// Search from the end until we find an event smaller or equal than tsEventID.  This means the next event (if any) in the array is the one to return;
+	while (--ppEventCompare >= ppEventFirst)
+		{
+		IEvent * pEvent = *ppEventCompare;
+		AssertValidEvent(pEvent);
+		Assert(pEvent->m_tsEventID != d_ts_zNULL);
+		if (pEvent->m_tsEventID <= tsEventID)
+			break;
+		if (pEvent->m_pContactGroupSender_YZ == pContactExclude)
+			continue;
+		if ((pEvent->EGetEventClass() & (eEventClass_kfReceivedByRemoteClient | eEventClass_kfNeverSerializeToXCP)) == eEventClass_kfReceivedByRemoteClient)
+			{
+			pEventNext = pEvent;
+			cEventsRemaining++;
+			}
+		} // while
+	*pcEventsRemaining = cEventsRemaining;
+	return pEventNext;
+	} // PFindEventNextReceivedByOtherGroupMembers()
+
 IEvent *
 CArrayPtrEvents::PFindEventByID(TIMESTAMP tsEventID) const
 	{
@@ -1548,6 +1578,8 @@ CArrayPtrEvents::PFindEventByID(TIMESTAMP tsEventID) const
 			Assert(pEvent->m_tsEventID > d_tsOther_kmReserved);
 			if (pEvent->m_tsEventID == tsEventID)
 				return pEvent;
+			if (pEvent->m_tsEventID < tsEventID)
+				break;	// Since all events are sorted, then there is no need to search further
 			}
 		}
 	return NULL;

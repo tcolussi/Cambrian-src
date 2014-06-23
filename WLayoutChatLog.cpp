@@ -108,9 +108,53 @@ ITreeItemChatLogEvents::ChatLog_ChatStateIconUpdate(EChatState eChatState, INOUT
 		{
 		// Make sure even though there is no Layout, the icons are displayed nevertheless in the Navigation Tree
 		if (eChatState == eChatState_zComposing)
-			pContact->TreeItemContact_UpdateIconComposing();
+			pContact->TreeItemContact_UpdateIconComposingStarted(this);
 		else
-			pContact->TreeItem_IconUpdate();
+			pContact->TreeItemContact_UpdateIconComposingStopped(this);
+		}
+	}
+/*
+void
+ITreeItemChatLogEvents::TreeItemChatLog_UpdateIconComposing()
+	{
+	m_pAccount->m_arraypContactsComposing.AddUniqueF(this);
+	TreeItem_SetIcon(eMenuIconPencil);
+	}
+*/
+
+void
+TContact::TreeItemContact_UpdateIconComposingStarted(ITreeItemChatLogEvents * pContactOrGroup)
+	{
+	Assert(pContactOrGroup != NULL);
+	m_pAccount->m_arraypContactsComposing.AddUniqueF(this);
+	pContactOrGroup->TreeItem_SetIcon(eMenuIconPencil);
+	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
+		{
+		// Find the member
+		TGroupMember * pMember = ((TGroup *)pContactOrGroup)->Member_PFindOrAddContact_NZ(this);
+		pMember->TreeItem_SetIcon(eMenuIconPencil);
+		}
+	/*
+	// Update the icon for every alias
+	IContactAlias * pAlias = m_plistAliases;
+	while (pAlias != NULL)
+		{
+		pAlias->TreeItem_SetIcon(eMenuIconPencil);	// This line needs to be fixed to handle special cases
+		pAlias = pAlias->m_pNextAlias;
+		}
+	*/
+	}
+
+void
+TContact::TreeItemContact_UpdateIconComposingStopped(ITreeItemChatLogEvents * pContactOrGroup)
+	{
+	// Do not remove the contact from m_pAccount->m_arraypContactsComposing
+	pContactOrGroup->TreeItem_IconUpdate();
+	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
+		{
+		// Find the member
+		TGroupMember * pMember = ((TGroup *)pContactOrGroup)->Member_PFindOrAddContact_NZ(this);
+		pMember->TreeItem_IconUpdate();
 		}
 	}
 

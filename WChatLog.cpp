@@ -215,13 +215,13 @@ WChatLog::ChatLog_ChatStateIconUpdate(INOUT TContact * pContact, EChatState eCha
 		{
 		if (!m_arraypContactsComposing.AddUniqueF(pContact))
 			return;
-		pContact->TreeItemContact_UpdateIconComposing();
+		pContact->TreeItemContact_UpdateIconComposingStarted(m_pContactOrGroup);
 		}
 	else
 		{
 		if (m_arraypContactsComposing.RemoveElementI(pContact) < 0)
 			return;
-		pContact->TreeItemContact_UpdateIcon();
+		pContact->TreeItemContact_UpdateIconComposingStopped(m_pContactOrGroup);
 		}
 	ChatLog_ChatStateTextUpdate();
 	}

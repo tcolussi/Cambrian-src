@@ -18,6 +18,8 @@
 
 #define d_chXCPe_EventPrevious								'p'	// Send the timestamp of the previous event, as well as the synchronization
 #define d_szXCPe_EventPrevious_tsO_tsI				d_szXCP_"p"	_tsO _tsI
+	#define d_szXCPa_EventPrevious_cEventsMissing				" c='$i'"
+	#define d_chXCPa_EventPrevious_cEventsMissing				'c'
 #define d_chXCPe_EventsMissing								'M'	// Notification to the remote client some events are missing, and therefore should synchronize
 #define d_szXCPe_EventsMissing						d_szXCP_"M"
 
@@ -26,12 +28,21 @@
 #define d_chXCPe_EventNextReply								'N'	// Reply to the sender regarding the request of tsEventID and tsOther (the following xcp-stanzas contains serialized IEvents)
 #define d_szXCPe_EventNextReply_tsO					d_szXCP_"N" _tsO
 #define d_chXCPe_EventsOutstandingReply						'O'	// Any message reply 'N' must end with 'O' to indicate hoe many outstanding IEvents remain.
-#define d_szXCPe_EventsOutstandingReply_i_tsO		d_szXCP_"O c='$i'" _tsO // ('R' = Remaining)
+#define d_szXCPe_EventsOutstandingReply_i_tsO		d_szXCP_"O c='$i'" _tsO
 	#define d_chXCPa_EventsOutstandingReply_cEvents				'c'
+
 #define d_chXCPe_EventConfirmation							'C'	// Confirmation an event was processed successfully (the confirmation only includes tsEventID of the sender)
 #define d_szXCPe_EventConfirmation_tsI				d_szXCP_"C" _tsI
 #define d_chXCPe_EventError									'E'	// The event was received, however could not be processed because its class/type is unknown. 'C' and 'E' are mutually exclusive.
 #define d_szXCPe_EventError_tsI_s					d_szXCP_"E" _tsI " e='^s'"	// e=event, c=code of the error (if any), t=friendly text to display to the user (if any)
+
+#define d_chXCPe_EventForwardRequest						'f'	// Ask the remote client to forward a group event sent by someone else.  This is somewhat similar to d_chXCPe_EventNextRequest, however since forwarded events are not synchronized, Cambrian cannot use d_chXCPe_EventNextRequest.
+#define d_szXCPe_EventForwardRequest_tsI			d_szXCP_"f"	_tsI
+#define d_chXCPe_EventForwardReply							'F'
+#define d_szXCPe_EventForwardReply_tsO				d_szXCP_"F" _tsO
+#define d_chXCPe_EventsForwardRemaining						'R'
+#define d_szXCPe_EventsForwardRemaining_i_tsO		d_szXCP_"R c='$i'" _tsO
+	#define d_chXCPa_EventsForwardRemaining_cEvents				'c'
 
 #define d_chXCPe_EventExtraDataRequest						'x'	// Request an event to send extra data (for instance, downloading the content of a file)
 #define d_szXCPe_EventExtraDataRequest_tsI			d_szXCP_"x" _tsI
@@ -81,7 +92,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 
 	Assert(pVault->PFindEventNext(d_ts_zNULL, OUT &cEventsRemaining) == pVault->m_arraypaEvents.PvGetElementFirst_YZ());
 	Assert(cEventsRemaining == 0 || cEventsRemaining == pVault->m_arraypaEvents.GetSize() - 1);
-	BOOL fEventsOutOfSync = FALSE;
+	BOOL fEventsOutOfSyncInChatLog = FALSE;			// The events in the Chat Log are out of sync and therefore display a special icon
 	TIMESTAMP_DELTA dtsOtherSynchronization = 1;	// By default, assume the events are NOT synchronized, therefore assign to the variable a non-zero value.
 	CHS chXCPe = d_chXCPe_zNA;			// Last known XCP element
 	IEvent * pEvent = NULL;
@@ -90,12 +101,13 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 	while (pXmlNodeXcpEvent != NULL)
 		{
 		Report(pXmlNodeXcpEvent->m_pszuTagName != NULL);
-		MessageLog_AppendTextFormatCo((pXmlNodeXcpEvent->m_pszuTagName[0] == d_chXCP_ && pXmlNodeXcpEvent->m_pszuTagName[1] == d_chXCPe_EventError) ? COX_MakeBold(d_coRed) : d_coBlack, "\t Processing $s ^N", fEventsOutOfSync ? "(out of sync)" : NULL, pXmlNodeXcpEvent);
+		MessageLog_AppendTextFormatCo((pXmlNodeXcpEvent->m_pszuTagName[0] == d_chXCP_ && pXmlNodeXcpEvent->m_pszuTagName[1] == d_chXCPe_EventError) ? COX_MakeBold(d_coRed) : d_coBlack, "\t Processing $s ^N", fEventsOutOfSyncInChatLog ? "(out of sync)" : NULL, pXmlNodeXcpEvent);
 		// Get both timestamps, as most xcp-stanzas have both
 		TIMESTAMP tsEventID = pXmlNodeXcpEvent->TsGetAttributeValueTimestamp_ML(d_chXCPa_tsEventID);
 		TIMESTAMP tsOther = pXmlNodeXcpEvent->TsGetAttributeValueTimestamp_ML(d_chXCPa_tsOther);
 		PSZUC pszEventName = pXmlNodeXcpEvent->m_pszuTagName;
-		if (pszEventName[0] == d_chXCP_)
+		CHS chEventName0 = pszEventName[0];
+		if (chEventName0 == d_chXCP_)
 			{
 			// We have a XCP control node which contains directives how to interpret the remaining xcp-stanzas/event(s). Some xcp-stanzas (control nodes) are at the beginning of the xmpp-stanza, while others are at the end.
 			chXCPe = pszEventName[1];
@@ -106,6 +118,8 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				pszEventValue = pXmlNodeXcpEvent->m_pszuTagValue;
 				pChatLogEvents = pGroup = m_pAccount->Group_PFindByIdentifier_NZ(IN pszEventValue);
 				pMember = pGroup->Member_PFindOrAddContact_NZ(this);
+				Assert(pMember != NULL);
+				Assert(pMember->m_pContact == this);
 				ptsOtherLastSynchronized = &pMember->m_tsOtherLastSynchronized;
 				pVault = pChatLogEvents->Vault_PGet_NZ();
 				pwChatLog = pChatLogEvents->ChatLog_PwGet_YZ();
@@ -115,7 +129,6 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				break;
 			case d_chXCPe_EventPrevious:	// We are receiving information regarding the previous message
 				dtsOtherSynchronization = tsOther - *ptsOtherLastSynchronized;
-				//fEventsOutOfSync = (dtsOtherSynchronization != 0);
 				if (dtsOtherSynchronization > 0)
 					{
 					MessageLog_AppendTextFormatSev(eSeverityWarning, "\t\t m_tsOtherLastSynchronized = $t however its value should be $t\n"
@@ -142,17 +155,36 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 						dtsOtherSynchronization = 0;	// We are now synchronized!
 						}
 					}
-				else if (tsEventID < pChatLogEvents->m_tsEventIdLastSentCached)
+				else
 					{
-					MessageLog_AppendTextFormatSev(eSeverityWarning, "\t\t tsEventID $t < m_tsEventIdLastSentCached $t\n"
-						"\t\t\t therefore $s is missing my messages!\n", tsEventID, pChatLogEvents->m_tsEventIdLastSentCached, pszNameDisplay);
-					binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventsMissing "/>");
-					}
-				else if (tsEventID > pChatLogEvents->m_tsEventIdLastSentCached)
-					{
-					// I have no idea what this situation means, so I am reporting it on the Message Log
-					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t tsEventID $t > m_tsEventIdLastSentCached $t\n\t\t Apparently $s has messages from ME that I don't have.\n", tsEventID, pChatLogEvents->m_tsEventIdLastSentCached, pszNameDisplay);
-					}
+					Assert(dtsOtherSynchronization == 0);	// The timestamps do synchronize
+					// For group chat, check if we are not missing messages from other group members
+					int cEventsReceivedByOthers = pXmlNodeXcpEvent->UFindAttributeValueDecimal_ZZR(d_chXCPa_EventPrevious_cEventsMissing);
+					if (cEventsReceivedByOthers > 0)
+						{
+						Assert(tsOther > d_tsOther_kmReserved);
+						int cEventsReceivedInChatLog = pVault->UCountEventsReceivedByOtherGroupMembersSinceTimestampOther(tsOther);
+						if (cEventsReceivedInChatLog < cEventsReceivedByOthers)
+							{
+							MessageLog_AppendTextFormatSev(eSeverityWarning, "\t\t Apparently I am missing $I events written by other group members\n"
+								"\t\t\t therefore asking $s to forward other's messages since tsOther $t\n", cEventsReceivedByOthers - cEventsReceivedInChatLog, pszNameDisplay, tsOther);
+							binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventForwardRequest_tsI "/>", tsOther);
+							break;
+							}
+						}
+
+					if (tsEventID < pChatLogEvents->m_tsEventIdLastSentCached)
+						{
+						MessageLog_AppendTextFormatSev(eSeverityWarning, "\t\t tsEventID $t < m_tsEventIdLastSentCached $t\n"
+							"\t\t\t therefore $s is missing my messages!\n", tsEventID, pChatLogEvents->m_tsEventIdLastSentCached, pszNameDisplay);
+						binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventsMissing "/>");
+						}
+					else if (tsEventID > pChatLogEvents->m_tsEventIdLastSentCached)
+						{
+						// I have no idea what this situation means, so I am reporting it on the Message Log
+						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t tsEventID $t > m_tsEventIdLastSentCached $t\n\t\t Apparently $s has messages from ME that I don't have.\n", tsEventID, pChatLogEvents->m_tsEventIdLastSentCached, pszNameDisplay);
+						}
+					} // if...else
 				break;
 			case d_chXCPe_EventsMissing:
 				Assert(tsOther == d_ts_zNA);
@@ -181,7 +213,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					MessageLog_AppendTextFormatCo(d_coGrayDark, "\t\t chXCPe = d_chXCPe_EventNextReply;\n");
 					break;
 					}
-				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t chXCPe = d_chXCPe_EventNextReply; (out of sync by $T)\n", dtsOtherSynchronization);
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t chXCPe = d_chXCPe_EventNextReply; (out of sync by $T)\n\t\t therefore ignoring remaining stanza(s): ^N\n", dtsOtherSynchronization, pXmlNodeXcpEvent->m_pNextSibling);
 				goto Exit;	// If we are out of sync, it is pointless to continue the synchronization
 			case d_chXCPe_EventsOutstandingReply:
 				Report(tsEventID == d_ts_zNA);
@@ -201,8 +233,35 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					}
 				// There are no more outstanding events to download, so do cleanup and send the last known timestamps to give an opportunity to the remote client to download its missing messages (if any)
 				StatusBar_ClearText();
-//				AppendTimestampsOfLastKnownEvents:
-				binXcpStanzaReply.BinXmlAppendTimestampsToSynchronizeWithContact(this); // Need to fix this for group
+				if (pMember != NULL)
+					binXcpStanzaReply.BinXmlAppendTimestampsToSynchronizeWithGroupMember(pMember);
+				else
+					binXcpStanzaReply.BinXmlAppendTimestampsToSynchronizeWithContact(this);
+				break;
+			case d_chXCPe_EventForwardRequest:
+				// We are receiving a request to forward an event written by another contact
+				pEvent = pVault->PFindEventNextReceivedByOtherGroupMembers(tsEventID, this, OUT &cEventsRemaining);
+				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t\t Forwarding the next event following tsEventID $t (cEventsRemaining = $i)\n", tsEventID, cEventsRemaining);
+				if (pEvent != NULL)
+					{
+					binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventForwardReply_tsO "/>", tsEventID);
+					binXcpStanzaReply.BinXmlSerializeEventForXcp(pEvent);
+					binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventsForwardRemaining_i_tsO "/>", cEventsRemaining, pEvent->m_tsEventID);
+					}
+				break;
+			case d_chXCPe_EventForwardReply:
+				break;
+			case d_chXCPe_EventsForwardRemaining:
+				cEventsRemaining = pXmlNodeXcpEvent->UFindAttributeValueDecimal_ZZR(d_chXCPa_EventsForwardRemaining_cEvents);
+				if (cEventsRemaining > 0)
+					{
+					StatusBar_SetTextFormat("Downloading messages from $s... $I remaining...", pszNameDisplay, cEventsRemaining);
+					MessageLog_AppendTextFormatSev(eSeverityWarning, "\t\t Requesting $s to resend the next $I events after $t\n", pszNameDisplay, cEventsRemaining, tsOther);
+					binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventForwardRequest_tsI "/>", tsOther);
+					break;
+					}
+				// There are no more outstanding events to download, so do cleanup and send the last known timestamps to give an opportunity to the remote client to download its missing messages (if any)
+				StatusBar_ClearText();
 				break;
 			case d_chXCPe_EventConfirmation:
 			case d_chXCPe_EventError:
@@ -292,12 +351,13 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unable to find CEventDownloader matching tsOther $t for d_chXCPe_EventSplitDataReply\n", tsOther);
 				break;
 			default:
-				MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unknown chXCPe = $i ($b)\n", chXCPe, chXCPe);
+				MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unknown XCP directive $s: chXCPe = $i ($b)\n", pszEventName, chXCPe, chXCPe);
 				} // switch (chXCPe)
 			}
 		else
 			{
 			// The XML node contains an event of type EEventClass
+			const BOOL fEventClassReceived = (chEventName0 >= 'a');	// All received events begin with a lowercase
 			EEventClass eEventClass = EEventClassFromPsz(pszEventName);
 			switch (eEventClass)
 				{
@@ -311,18 +371,31 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 			default:
 				;		// Keep the compiler happy to prevent a warning the switch() statement does not handle all cases
 				} // switch
-			Assert(tsOther > d_tsOther_kmReserved);
+			Assert(tsOther > d_tsOther_kmReserved);		// Any received event should have a valid tsOther
+			BOOL fSwapTimestamps = FALSE;				// Swap tsEventID and tsOther.  This happens when a group event is forwarded by another contact
 			TContact * pContactGroupSender = m_pAccount->Contact_PFindByIdentifier_YZ(pXmlNodeXcpEvent);
 			Endorse(pContactGroupSender == NULL);	// The message is for a 1-to-1 conversation
 			if (pContactGroupSender == NULL)
 				{
-				if (pMember != NULL)
-					pContactGroupSender = pMember->m_pContact;
+				if (fEventClassReceived && pGroup != NULL)
+					pContactGroupSender = this;
 				}
-			MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t pContactGroupSender = ^j\n", pContactGroupSender);
+			else if (pContactGroupSender != this)
+				{
+				Assert(fEventClassReceived);
+				Assert(tsEventID > d_tsOther_kmReserved);
+				fSwapTimestamps = TRUE;
+				pEvent = pVault->PFindEventReceivedByTimestampOther(tsEventID, pContactGroupSender);	// Search the event using swapped values
+				Assert(pGroup != NULL);
+				if (pGroup != NULL)
+					(void)pGroup->Member_PFindOrAddContact_NZ(pContactGroupSender);		// Make sure the contact is part of the group
+				goto EventBegin;
+				}
 			pEvent = pVault->PFindEventReceivedByTimestampOther(tsOther, pContactGroupSender);	// Regardless of what type of event we received, always attempt to find it the current vault (which may be the vault of the contact or the vault of the group) and matching the contact of the group sender (if any)
-			const BOOL fSynchronizingEvents = (chXCPe == d_chXCPe_EventNextReply);
-			if (!fSynchronizingEvents)
+			Endorse(pEvent == NULL);
+			EventBegin:
+			MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t pContactGroupSender = ^j, fSwapTimestamps = $s\n", pContactGroupSender, fSwapTimestamps ? "TRUE" : "FALSE");
+			if (chXCPe != d_chXCPe_EventNextReply && chXCPe != d_chXCPe_EventForwardReply)
 				{
 				// We are receiving new events from the remote client
 				Assert(tsEventID == d_ts_zNULL);						// New events should not have a tsEventID
@@ -332,7 +405,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				if (pEvent != NULL)
 					{
 					// The new event is already in the Chag Log.  This is the case when the event is a re-send.
-					MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t Updating existing tsEventID $t matching tsOther $t...\n", pEvent->m_tsEventID, tsOther);
+					MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t Updating existing tsEventID $t matching tsOther $t written by ^j\n", pEvent->m_tsEventID, tsOther, pContactGroupSender);
 					goto EventUnserialize;
 					}
 				}
@@ -352,19 +425,22 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t [Sync] Updating existing tsEventID $t written by ^j\n", tsEventID, pContactGroupSender);
 					EventUnserialize:
 					Assert(pEvent->m_tsEventID > d_tsOther_kmReserved);
-					if (pEvent->Event_FIsEventTypeReceived())
+					if (fEventClassReceived)
 						{
 						// Only unserialize existing 'received' events.  This is a security feature, so someone does not attempt to hijack our history log by pretending to resend our own events.
+						Assert(pEvent->Event_FIsEventTypeReceived());
 						pEvent->XmlUnserializeCore(IN pXmlNodeXcpEvent);	// TODO: Need to provide a mechanism if an event has been updated
 						pEvent->ChatLog_UpdateEventWithinWidget(pwChatLog);
+						/*
 						if (pContactGroupSender != NULL && pContactGroupSender != this)
 							{
 							// We are receiving an event relayed
-							MessageLog_AppendTextFormatCo(d_coOrange, "\t\t [Sync] Confirming with tsEventID $t...\n", tsEventID);
+							MessageLog_AppendTextFormatCo(d_coOrange, "\t\t [Sync] Confirming with tsEventID $t for message written by ^j\n", tsEventID, pContactGroupSender);
 							binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventConfirmation_tsI "/>", tsEventID);
 							goto EventSynchronize;
 							}
 						goto EventConfirmation;
+						*/
 						}
 					/*
 					else
@@ -375,11 +451,13 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 						goto EventSynchronize;
 						}
 					*/
+					goto EventConfirmation;
 					}
 				} // if...else
 
 			// We have a new event to allocate and to display into the Chat Log.
 			Assert(pEvent == NULL);
+			MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t Allocating event '$U' tsEventID $t written by ^j\n", eEventClass, tsEventID, pContactGroupSender);
 			pEvent = IEvent::S_PaAllocateEvent_YZ(eEventClass, (tsEventID == d_ts_zNULL) ? NULL : &tsEventID);
 			if (pEvent == NULL)
 				{
@@ -393,19 +471,26 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 			if (pEvent->Event_FIsEventTypeSent() && pContactGroupSender != NULL)
 				MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t\t tsEventID $t, tsOther $t should NOT have a pContactGroupSender ^j\n", pEvent->m_tsEventID, tsOther, pContactGroupSender);
 			#endif
-			pEvent->m_tsOther = tsOther;
+			if (!fSwapTimestamps)
+				pEvent->m_tsOther = tsOther;
+			else
+				{
+				pEvent->m_tsOther = pEvent->m_tsEventID;
+				pEvent->m_tsEventID = tsOther;
+				}
 			pEvent->XmlUnserializeCore(IN pXmlNodeXcpEvent);
 			Assert(pEvent->m_pContactGroupSender_YZ == NULL);
-			if (pEvent->Event_FIsEventTypeReceived())
+			if (fEventClassReceived)
 				{
+				Assert(pEvent->Event_FIsEventTypeReceived());
 				if (pContactGroupSender != NULL)
-					MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t\t Assigning m_pContactGroupSender_YZ ^j to tsEventID $t, tsOther $t\n", pContactGroupSender, pEvent->m_tsEventID, tsOther);
+					MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t\t Assigning m_pContactGroupSender_YZ ^j to tsEventID $t, tsOther $t\n", pContactGroupSender, pEvent->m_tsEventID, pEvent->m_tsOther);
 				pEvent->m_pContactGroupSender_YZ = pContactGroupSender;
 				}
 			Assert(pEvent->m_pVaultParent_NZ == NULL);
 			pEvent->m_pVaultParent_NZ = pVault;
-			fEventsOutOfSync |= pVault->m_arraypaEvents.Event_FoosAddSorted(PA_CHILD pEvent);
-			if (fEventsOutOfSync)
+			fEventsOutOfSyncInChatLog |= pVault->m_arraypaEvents.Event_FoosAddSorted(PA_CHILD pEvent);
+			if (fEventsOutOfSyncInChatLog)
 				pEvent->Event_SetFlagOutOfSync();
 			if (pwChatLog != NULL)
 				pwChatLog->ChatLog_EventDisplay(IN pEvent);
@@ -415,6 +500,9 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				pMember->TreeItem_SetTextToDisplayMessagesUnread(++pMember->m_cMessagesUnread);	// The group member has unread messages as well as its group
 			pChatLogEvents->TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(IN pEvent->PszGetTextOfEventForSystemTray(OUT_IGNORED &g_strScratchBufferStatusBar), this);
 			TreeItem_IconUpdate();		// Update the icon of the contact, which will in turn update the icon(s) of all its aliases, including the member contact of the group.  It is important to update the icon of the contact because it is likely to be displaying the pencil icon indicating the user was composing/typing text.
+
+			if (chXCPe == d_chXCPe_EventForwardReply)
+				goto EventNext;		// Don't attempt to synchronize a forwarded event
 
 			EventConfirmation:
 			binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventConfirmation_tsI "/>", tsOther);	// Acknowledge to the remote client we received (and processed) the event
@@ -531,6 +619,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 		const int ibDataElementStart = m_paData->cbData;
 		TIMESTAMP tsEventID = pEvent->m_tsEventID;
 		TIMESTAMP tsOther = pEvent->m_tsOther;
+		/*
 		if (pEvent->m_pContactGroupSender_YZ != NULL)
 			{
 			// The event was received by a contact for a group chat, therefore we need to adjust the class
@@ -550,6 +639,19 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 			}
 		else
 			BinAppendTextSzv_VE((tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, eEventClassXcp, tsEventID, tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
+		*/
+		if (pEvent->m_pContactGroupSender_YZ != NULL)
+			{
+			// The event was received by a contact for a group chat, therefore we need to adjust the class
+			Assert(tsOther > d_tsOther_kmReserved && "A received event should always have a valid tsOther");
+			if (pEvent->m_pContactGroupSender_YZ != m_pContact)
+				{
+				eEventClassXcp = pEvent->EGetEventClass();	// Keep the same class.  Idetally the timestamps should be kept the same, however this will screw up the synchronization, so it is better to keep them as is and swap them by the receiver
+				MessageLog_AppendTextFormatCo(d_coRed, "\t\t BinXmlSerializeEventForXcp() - tsEventID $t, tsOther $t written by ^j is forwarded to ^j, therefore keeping event class '$U'\n", tsEventID, tsOther, pEvent->m_pContactGroupSender_YZ, m_pContact, eEventClassXcp);
+				}
+			}
+		BinAppendTextSzv_VE((tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, eEventClassXcp, tsEventID, tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
+		BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
 		pEvent->XmlSerializeCore(IOUT this);
 		if (m_pContact == NULL)
 			return;		// The virtual method XmlSerializeCore() may set m_pContact to NULL if the contact does not support XCP.
@@ -752,14 +854,7 @@ TContact::Xcp_Synchronize()
 	binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithContact(this);
 	binXcpStanza.XcpSendStanzaToContact(IN this);
 	}
-/*
-void
-ITreeItemChatLogEvents::XcpStanza_AppendTimestampsOfLastKnownEvents(IOUT CBinXcpStanzaType * pbinXcpStanza) const
-	{
-	Assert(pbinXcpStanza != NULL);
-	pbinXcpStanza->BinAppendTextSzv_VE("<" d_szXCPe_EventsLastKnown_tsO_tsI "/>", m_tsEventIdLastSent, m_tsOtherLastReceived);
-	}
-*/
+
 /*
 void
 ITreeItemChatLogEvents::XcpStanza_AppendServiceDiscovery(IOUT CBinXcpStanza * pbinXcpStanza) const
@@ -1199,7 +1294,24 @@ CBinXcpStanzaType::BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pCo
 void
 CBinXcpStanzaType::BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember)
 	{
-	BinAppendTextSzv_VE("<" d_szXCPe_EventPrevious_tsO_tsI "/>", pMember->m_pGroup->m_tsEventIdLastSentCached, pMember->m_tsOtherLastSynchronized);
+	Assert(pMember != NULL);
+	Assert(pMember->m_pContact == m_pContact || m_pContact == NULL);
+
+	// When sending the timestamps for a group, also include the number of messages received since the last timestamp
+	TGroup * pGroup = pMember->m_pGroup;
+	BinAppendTextSzv_VE("<" d_szXCPe_EventPrevious_tsO_tsI, pGroup->m_tsEventIdLastSentCached, pMember->m_tsOtherLastSynchronized);
+	// Since we are sending the timestamps to synchronize with a group, include the number of received messages since the last synchronization.
+	// This way, the contact will be able to know if it is missing group messages
+	CVaultEvents * pVault = pGroup->Vault_PGet_NZ();
+	IEvent * pEventLast = pVault->PGetEventLast_YZ();
+	if (pEventLast != NULL && pEventLast->Event_FIsEventTypeSent())
+		{
+		// Send the counter only if the last event was sent. This will avoid every group member to send the count of missing messages and having redundant synchronization
+		int cEventsReceived = pVault->UCountEventsReceivedByOtherGroupMembersSinceTimestampEventID(pGroup->m_tsEventIdLastSentCached, pMember->m_pContact);
+		if (cEventsReceived > 0)
+			BinAppendTextSzv_VE(d_szXCPa_EventPrevious_cEventsMissing, cEventsReceived);
+		}
+	BinAppendXmlForSelfClosingElement();
 	}
 
 void

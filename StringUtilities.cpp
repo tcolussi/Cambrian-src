@@ -3178,9 +3178,9 @@ TEST_StringRoutines()
 	TEST_PchNumberToStringFormat_mBTC(1234567, "12.34567 mBTC");
 	TEST_PchNumberToStringFormat_mBTC(1200000, "12.0 mBTC");
 	TEST_PchNumberToStringFormat_mBTC(1000000, "10.0 mBTC");
-	TEST_PchNumberToStringFormat_mBTC(d_cSatoshisPerBitcoin, "1,000.0 mBTC");
-	TEST_PchNumberToStringFormat_BTC(d_cSatoshisPerBitcoin, "1.0000 BTC");	// Minimum of 3 digits
-	TEST_PchNumberToStringFormat_BTC(1, "0.00000001 BTC");
+	TEST_PchNumberToStringFormat_mBTC(d_cSatoshisPerBitcoin, "1,000.0 mBTC");	// mBTC amounts are always displayed with a minimum of 1 digit after the decimal point
+	TEST_PchNumberToStringFormat_BTC(d_cSatoshisPerBitcoin, "1.0000 BTC");		// BTC amounts are always displayed with a minimum of 4 digits after the decimal point
+	TEST_PchNumberToStringFormat_BTC(1, "0.00000001 BTC");						// 1 Satoshi is 0.00000001 BTC
 	TEST_PchNumberToStringFormat_BTC( 29999999,  "0.29999999 BTC");
 	TEST_PchNumberToStringFormat_BTC(-29999999, "-0.29999999 BTC");
 	TEST_PchNumberToStringFormat_mBTC( 29999999,  "299.99999 mBTC");

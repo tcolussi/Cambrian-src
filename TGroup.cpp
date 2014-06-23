@@ -148,6 +148,7 @@ TGroup::GroupInitNewIdentifier()
 TGroupMember *
 TGroup::Member_PFindOrAddContact_NZ(TContact * pContact)
 	{
+	Assert(pContact != NULL);
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 	TGroupMember * pMember = (TGroupMember *)m_arraypaMembers.PFindAliasMatchingContact(pContact);
 	if (pMember == NULL)
