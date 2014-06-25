@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Sort.h
+//	Sort.cpp
 //
-//	General-purpose super efficient sort routine.
+//	General-purpose super efficient stable sort routine.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -152,7 +152,7 @@ inline void _MergeSortedArraysFast(
 	{
 	while (TRUE)
 		{
-		if (cElementsSrc1 <=0)
+		if (cElementsSrc1 <= 0)
 			{
 			// Copy the remaining array 2 to destination
 			memcpy(OUT prgpvDst, IN prgpvSrc2, cElementsSrc2 * sizeof(PCVOID));
@@ -305,3 +305,23 @@ Sort_DoSorting(
 	delete pargpvElementsTemp;
 	} // Sort_DoSorting()
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Compare two Ascii strings for sorting purpose.  The comparison is NOT case sensitive.
+int
+NCompareSortStringAsciiNoCase(PSZAC pszStringA, PSZAC pszStringB)
+	{
+	if (pszStringA == NULL)
+		pszStringA = c_szaEmpty;
+	if (pszStringB == NULL)
+		pszStringB = c_szaEmpty;
+	while (TRUE)
+		{
+		CHS chA = Ch_GetCharLowercase(*pszStringA++);
+		int nResult = (chA - Ch_GetCharLowercase(*pszStringB++));
+		if (nResult != 0)
+			return nResult;
+		if (chA == '\0')
+			return 0;
+		}
+//	QCollatorSortKey
+	}

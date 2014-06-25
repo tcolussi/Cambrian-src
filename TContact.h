@@ -107,7 +107,7 @@ public:
 	void Xcp_ServiceDiscovery();
 	void Xcp_Synchronize();
 
-	void BinAppendXmlAttributeContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const;
+	//void BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const;
 	void Contact_SendMessage(const CStr & strMessage);
 	void Contact_AddToGroup(int iGroup);
 	EMenuAction Contact_EGetMenuActionPresence() const;
@@ -135,9 +135,9 @@ public:
 
 public:
 	static IXmlExchange * S_PaAllocateContact(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
+	static int S_NCompareSortContactsByNameDisplay(TContact * pContactA, TContact * pContactB, LPARAM lParamCompareSort = d_zNA);
 	friend class WLayoutChatLog;	// Access m_uFlagsContact
 	friend class IContactAlias;
-	//friend class ITreeItemChatLogEvents;
 	friend class CArrayPtrContacts;
 	friend class IEvent;
 	RTI_IMPLEMENTATION(TContact)
@@ -181,6 +181,8 @@ public:
 	void RemoveAllContactsComposingWhoAreIdle();
 
 	void ForEach_ChatLogResetNickNameAndRepopulateAllEvents();
+
+	void SortByNameDisplay();
 }; // CArrayPtrContacts
 
 #define d_szInvitation				"Invitation"

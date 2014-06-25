@@ -176,8 +176,8 @@ TGroup::Member_Add_UI(TContact * pContact)
 		TreeItem_SetTextToDisplayNameIfGenerated();
 		//pMember->TreeItemWidget_EnsureVisible();	// The contact was added to the array, therefore display it on the GUI as well
 		// Create an event in the Chat Log
-		//CEventGroupMemberJoin * pEvent = new CEventGroupMemberJoin(pMember);
-		//Vault_AddEventToVault(PA_CHILD pEvent);
+		CEventGroupMemberJoin * pEvent = new CEventGroupMemberJoin(pContact);
+		Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEvent);
 		}
 	TreeItem_SelectWithinNavigationTreeExpanded();
 	}
@@ -206,7 +206,7 @@ TGroup::Member_PFindOrAllocate_NZ(PSZUC pszMemberJID)
 			return pMember;
 		}
 	// We have not found the member in the contact
-	TContact * pContact = m_pAccount->Contacts_PFindContactByJID(pszMemberJID, TAccountXmpp::eFindContactCreate);
+	TContact * pContact = m_pAccount->Contact_PFindByJID(pszMemberJID, TAccountXmpp::eFindContactCreate);
 	Assert(pContact != NULL);
 	TGroupMember * pMember = new TGroupMember(this, pContact);
 	m_arraypaMembers.Add(pMember);

@@ -1673,7 +1673,7 @@ CArray::MergeAppend(const CArray * pArrayAppend, PFn_NCompareSortElements pfnSor
 	PCVOID * prgpvDst = paArrayHdrMerged->rgpvData;
 	while (TRUE)
 		{
-		if (cElements <=0)
+		if (cElements <= 0)
 			{
 			// Copy the remaining array 2 to destination
 			memcpy(OUT prgpvDst, IN prgpvSrc2, cElementsAppend * sizeof(PCVOID));

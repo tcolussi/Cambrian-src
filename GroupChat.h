@@ -7,44 +7,31 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-/*
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class CEventGroupMemberJoin : public IEvent
 {
-	TGroupMember * m_pMember;
+	TContact * m_pMember;				// Which member joined
+	TContact * m_pContactInvitedBy;		// Who invited the member to join the group
 public:
-	CEventGroupMemberJoin(TGroup * pGroupParentOwner, const TIMESTAMP * ptsEventID);
-	CEventGroupMemberJoin(TGroupMember * pMember);
+	CEventGroupMemberJoin(const TIMESTAMP * ptsEventID);
+	CEventGroupMemberJoin(TContact * pMember);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eGroupMemberJoins; }
 	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
-*/
-/*
-class CEventGroupMessageReceived : public IEventMessageText
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Event containing group chat information.
+//	This includes the name of the group, as well as the contacts who are members of the group.
+class CEventGroupInfo : public IEvent
 {
-protected:
-	TContact * m_pContactGroupSender;		// Contact who sent the message to the group
 public:
-	CEventGroupMessageReceived(TGroup * pGroupParentOwner, const TIMESTAMP * ptsEventID);
-	virtual ~CEventGroupMessageReceived();
-	virtual EEventClass EGetEventClass() const { return eEventClass_eGroupMessageTextReceived_class; }
-	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
+	CEventGroupInfo();
+	virtual EEventClass EGetEventClass() const { return eEventClass_eGroupInfo; }
 	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
-	virtual BOOL SystemTray_FDisplayEvent() const;
-	virtual TContact ** PpGetContactGroupSender() { return &m_pContactGroupSender; }
 };
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class CTaskGroupSendText : public ITask
-{
-public:
-	CTaskGroupSendText(CEventGroupMessageSent * pEventParent, const OCursor * poCursorTextBlock);
-	virtual ETaskCompletion EWriteDataToSocket();
-};
-*/
 
 #endif // GROUPCHAT_H

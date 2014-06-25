@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Sort.h
 //
-//	General-purpose super efficient sort routine.
+//	General-purpose super efficient stable sort routine.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef PRECOMPILEDHEADERS_H
@@ -21,8 +21,11 @@
 //	The lParamCompareSort is an additional parameter to perform a comparison between two elements.
 //
 typedef int (* PFn_NCompareSortElements)(PCVOID pvElementA, PCVOID pvElementB, LPARAM lParamCompareSort);
-	int NCompareSortElementsByBytesZ(const BYTE * prgbzSortKey1, const BYTE * prgbzSortKey2, LPARAM lParamCompare);
-	int NCompareSortElementsByStringIntegerAscii(PSZAC pszString1, PSZAC pszString2, LPARAM lParamCompareSort);
+
+	// Helpers for functions implementing interface PFn_NCompareSortElements()
+	int NCompareSortBytesZ(const BYTE * prgbzSortKeyA, const BYTE * prgbzSortKeyB);
+	int NCompareSortStringAsciiNoCase(PSZAC pszStringA, PSZAC pszStringB);
+	int NCompareSortStringIntegerAscii(PSZUC pszStringA, PSZUC pszStringB);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Returned values for GetSortOrder()

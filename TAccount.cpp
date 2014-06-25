@@ -91,7 +91,7 @@ TAccountXmpp::PGetSaltOfConfiguration() const
 //	IMPLEMENTATION NOTES
 //	This method should use a hash table to quickly find a contact from its JID and/or use a pointer to cache the last contact found.
 TContact *
-TAccountXmpp::Contacts_PFindContactByJID(PSZUC pszContactJID, EFindContact eFindContact)
+TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 	{
 	Assert(pszContactJID != NULL);
 	if (pszContactJID != NULL)
@@ -141,7 +141,7 @@ TAccountXmpp::Contacts_PFindContactByJID(PSZUC pszContactJID, EFindContact eFind
 				PcheValidateJID(pszContactJID) == NULL &&			// Make sure the JID is somewhat valid to create a new contact
 				!m_strJID.FCompareStringsJIDs(pszContactJID))		// Make sure the JID is not the same as the account.  It makes no sense to create a contact with the same JID as its parent account.  This situation occurs rarely when the server sends a stanza where the 'from' contains the JID of the account.
 				{
-				MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "Contacts_PFindContactByJID('$s') - Creating contact for account $S\n", pszContactJID, &m_strJID);
+				MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "Contact_PFindByJID('$s') - Creating contact for account $S\n", pszContactJID, &m_strJID);
 				pContact = TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszContactJID);
 				if (eFindContact == eFindContactCreateAsUnsolicited)
 					pContact->SetFlagContactAsUnsolicited();
@@ -150,14 +150,14 @@ TAccountXmpp::Contacts_PFindContactByJID(PSZUC pszContactJID, EFindContact eFind
 			} // if
 		} // if
 	return NULL;
-	} // Contacts_PFindContactByJID()
+	} // Contact_PFindByJID()
 
 TContact *
 TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(PSZUC pszContactJID, PSZUC pszContactNameDisplay)
 	{
 	Assert(pszContactJID != NULL);
 	Endorse(pszContactNameDisplay == NULL);	// Automatically generate a display name
-	Assert(Contacts_PFindContactByJID(pszContactJID) == NULL && "Contact already in the account");
+	Assert(Contact_PFindByJID(pszContactJID) == NULL && "Contact already in the account");
 	Assert(m_paTreeWidgetItem != NULL && "No Tree Item to attach to");
 	TContact * pContact = new TContact(this);
 	pContact->m_strRessource = pContact->m_strJidBare.AppendTextUntilCharacterPszr(pszContactJID, '/');
@@ -379,7 +379,7 @@ void
 TAccountXmpp::ChatLog_DisplayStanza(const CXmlNode * pXmlNodeMessageStanza)
 	{
 	Assert(pXmlNodeMessageStanza != NULL);
-	TContact * pContact = Contacts_PFindContactByJID(IN pXmlNodeMessageStanza->PszFindAttributeValueFrom_NZ(), eFindContactCreateAsUnsolicited);	// Find the contact matching the the stanza
+	TContact * pContact = Contact_PFindByJID(IN pXmlNodeMessageStanza->PszFindAttributeValueFrom_NZ(), eFindContactCreateAsUnsolicited);	// Find the contact matching the the stanza
 	if (pContact != NULL)
 		pContact->ChatLogContact_DisplayStanzaToUI(pXmlNodeMessageStanza);
 	else
@@ -411,7 +411,7 @@ TAccountXmpp::Contact_RosterUpdateItem(const CXmlNode * pXmlNodeItemRoster)
 	PSZUC pszSubscription = pXmlNodeItemRoster->PszuFindAttributeValue_NZ("subscription");	/* // The attribute "subscription" is not present for a "<iq type='set'>" */
 	if (!FCompareStrings(pszSubscription, "remove"))
 		{
-		TContact * pContact = Contacts_PFindContactByJID(pszJid, eFindContactCreate);
+		TContact * pContact = Contact_PFindByJID(pszJid, eFindContactCreate);
 		Endorse(pContact == NULL);	// The attribute "jid" may not be valid (for example, missing the '@' character)
 		if (pContact != NULL)
 			pContact->XmppRosterSubscriptionUpdate(pszSubscription);
@@ -491,7 +491,7 @@ TAccountXmpp::Contact_PresenceUpdate(const CXmlNode * pXmlNodeStanzaPresence)
 	Assert(pXmlNodeStanzaPresence != NULL);
 	Assert(pXmlNodeStanzaPresence->FCompareTagName("presence"));
 	// Find the contact to update the presence
-	TContact * pContact = Contacts_PFindContactByJID(pXmlNodeStanzaPresence->PszFindAttributeValueFrom_NZ(), eFindContactCreate);
+	TContact * pContact = Contact_PFindByJID(pXmlNodeStanzaPresence->PszFindAttributeValueFrom_NZ(), eFindContactCreate);
 	Endorse(pContact == NULL);	// The <presence> stanza sometimes is just a reply from the server, which means the attribute "from" is not a contact.
 	if (pContact != NULL)
 		pContact->XmppPresenceUpdateIcon(pXmlNodeStanzaPresence);

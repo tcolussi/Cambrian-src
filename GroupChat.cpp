@@ -10,50 +10,37 @@
 #endif
 #include "GroupChat.h"
 
-/*
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventGroupMemberJoin::CEventGroupMemberJoin(TGroup * pGroupParentOwner, const TIMESTAMP * ptsEventID) : IEvent(pGroupParentOwner, ptsEventID)
+CEventGroupMemberJoin::CEventGroupMemberJoin(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 	{
-	Assert(pGroupParentOwner->EGetRuntimeClass() == RTI(TGroup));
 	m_pMember = NULL;
+	m_pContactInvitedBy = NULL;
 	}
 
-CEventGroupMemberJoin::CEventGroupMemberJoin(TGroupMember * pMember) : IEvent(pMember->m_pGroup, NULL)
+CEventGroupMemberJoin::CEventGroupMemberJoin(TContact * pMember) : IEvent(NULL)
 	{
-	Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
+	Assert(pMember->EGetRuntimeClass() == RTI(TContact));
 	m_pMember = pMember;
+	m_pContactInvitedBy = NULL;
 	}
-*/
 
-/*
-CEventGroupMessageSent *
-TGroup::Vault_PAllocateEventMessageToSendToGroup(const CStr & strMessage)
-	{
-	CEventGroupMessageSent * pEvent = new CEventGroupMessageSent(this, NULL);
-	Vault_AddEventToVault(PA_CHILD pEvent);
-	pEvent->m_strMessage = strMessage;
-	return pEvent;
-	}
-*/
 
-/*
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#define d_chAttribute_strMemberJID		'j'
+#define d_chAttribute_strMemberJID		'm'
 
 //	CEventGroupMemberJoin::IEvent::XmlSerializeCore()
 void
-CEventGroupMemberJoin::XmlSerializeCore(IOUT CBin * pbinXmlAttributes, const TContact *) const
+CEventGroupMemberJoin::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
-	if (m_pMember != NULL)
-		pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strMemberJID, m_pMember->m_pContact->m_strJidBare);
+	pbinXmlAttributes->BinAppendXmlAttributeOfContactIdentifier(d_chAttribute_strMemberJID, m_pMember);
 	}
 
 //	CEventGroupMemberJoin::IEvent::XmlUnserializeCore()
 void
 CEventGroupMemberJoin::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	{
-	Assert(mu_parentowner.pGroup->EGetRuntimeClass() == RTI(TGroup));
-	m_pMember = mu_parentowner.pGroup->Member_PFindOrAllocate_NZ(pXmlNodeElement->PszuFindAttributeValue(d_chAttribute_strMemberJID));
+	_XmlUnserializeAttributeOfContactIdentifier(d_chAttribute_strMemberJID, OUT &m_pMember, pXmlNodeElement);
 	}
 
 //	CEventGroupMemberJoin::IEvent::ChatLogUpdateTextBlock()
@@ -62,37 +49,91 @@ CEventGroupMemberJoin::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock)
 	{
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
 	if (m_pMember != NULL)
-		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("<b>$s</b> joined group", m_pMember->TreeItem_PszGetNameDisplay());
+		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("invited <b>$s</b> to join the group", m_pMember->TreeItem_PszGetNameDisplay());
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushSilver);
 	}
-*/
 
 
-//	Append an XML attribute representing the Contact Identifier to the binary object.
-//	At the moment the Contact Identifier is the JID, however in the future it may be a hash of the public key.
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	IMPLEMENTATION NOTES
+//	At the moment the Contact Identifier is the JID, however in the future it may be a hash of the contact's public key.
 //
-//	SEE ALSO: Contact_PFindByIdentifier_YZ()
-void
-TContact::BinAppendXmlAttributeContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const
-	{
-	pbin->BinAppendXmlAttributeCStr(chAttributeName, m_strJidBare);
-	}
-
-//	Method complement to BinAppendXmlAttributeContactIdentifier().
-//	A single contact may have multiple identifier, such as having multiple JIDs.
-//	TODO: Use a hash table to cache identifiers
+//	PERFORMANCE NOTES
+//	Considering a single contact may have multiple identifier, such as having multiple JIDs, it will be wise in the future to use a hash table to cache the identifiers.
 TContact *
-TAccountXmpp::Contact_PFindByIdentifier_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC
+TAccountXmpp::Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName) CONST_MCC
 	{
-	Assert(pXmlNodeEvent != NULL);
-	PSZUC pszContactGroupSender = pXmlNodeEvent->PszuFindAttributeValue(d_chXCPa_pContactGroupSender);
-	if (pszContactGroupSender != NULL)
+	PSZUC pszContactIdentifier = pXmlNodeEvent->PszuFindAttributeValue(chAttributeName);
+	if (pszContactIdentifier != NULL)
 		{
-		TContact * pContact = Contacts_PFindContactByJID(pszContactGroupSender);
+		Assert(pszContactIdentifier[0] != '\0');
+		TContact * pContact = Contact_PFindByJID(pszContactIdentifier);
 		if (pContact != NULL)
 			return pContact;
-		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find contact '$s' who for XML node: ^N\n", pszContactGroupSender, pXmlNodeEvent);
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find contact identifier '$s' from XML node: ^N\n", pszContactIdentifier, pXmlNodeEvent);
+		// Create the contact
+		return TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszContactIdentifier);
 		}
 	return NULL;
 	}
 
+//	Append to the blob an XML attribute representing the Contact Identifier.
+//	This method is used to serialize a pointer to a contact when saving to vault of event.
+//
+//	IMPLEMENTATION NOTES
+//	At the moment the Contact Identifier is the JID, however in the future it may be a hash of the contact's public key.
+//
+//	SEE ALSO: Contact_PFindByIdentifierOrCreate_YZ()
+void
+CBin::BinAppendXmlAttributeOfContactIdentifier(CHS chAttributeName, const TContact * pContact)
+	{
+	if (pContact != NULL)
+		{
+		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+		BinAppendXmlAttributeCStr(chAttributeName, pContact->m_strJidBare);
+		}
+	}
+
+TContact *
+TAccountXmpp::Contact_PFindByIdentifierGroupSender_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC
+	{
+	return Contact_PFindByIdentifierOrCreate_YZ(pXmlNodeEvent, d_chXCPa_pContactGroupSender);
+	}
+
+void
+IEvent::_XmlUnserializeAttributeOfContactIdentifier(CHS chAttributeName, OUT TContact ** ppContact, const CXmlNode * pXmlNodeElement) const
+	{
+	Assert(ppContact != NULL);
+	Assert(pXmlNodeElement != NULL);
+	Assert(m_pVaultParent_NZ != NULL);
+	Assert(m_pVaultParent_NZ->m_pParent->m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
+	*ppContact = m_pVaultParent_NZ->m_pParent->m_pAccount->Contact_PFindByIdentifierOrCreate_YZ(pXmlNodeElement, chAttributeName);
+	}
+
+/*
+void
+TContact::BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const
+	{
+	pbin->BinAppendXmlAttributeCStr(chAttributeName, m_strJidBare);
+	}
+*/
+
+void
+CBinXcpStanzaType::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent)
+	{
+	AssertValidEvent(pEvent);
+	Endorse(m_pContact == NULL);	// Saving to disk
+	/*
+	TContact * pContact = pEvent->m_pContactGroupSender_YZ;
+	if (pContact != NULL && pContact != m_pContact)
+		{
+		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+		pContact->BinAppendXmlAttributeOfContactIdentifier(INOUT this, d_chXCPa_pContactGroupSender);
+		}
+	*/
+	if (pEvent->m_pContactGroupSender_YZ != m_pContact)
+		{
+		Endorse(pEvent->m_pContactGroupSender_YZ == NULL);	// The event was sent, or was received on a 1-to-1 conversation.  If this pointer is NULL, then the method BinAppendXmlAttributeOfContactIdentifier() will ignore it
+		BinAppendXmlAttributeOfContactIdentifier(d_chXCPa_pContactGroupSender, pEvent->m_pContactGroupSender_YZ);
+		}
+	}

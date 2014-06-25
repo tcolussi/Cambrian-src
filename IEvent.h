@@ -55,7 +55,7 @@ enum EEventClass
 	eEventClass_kfReceivedByRemoteClient		= _USZUF(0x08),	// This event was received by the remote client.  This bit is useful to quickly determine what was sent, and what was received, as the GUI often displays different colors.  Roughly half of the eEventClass_* will have this bit set.
 
 	eEventClass_eXCP							= d_chXCP_,		// The underscore is reserved for the XCP protocol, however share the same namespace as the other events
-	_g_											= 'g',			// ALL EVENTS received for a group must begin with this letter.  This way, by
+	_g_											= 'g',			// ALL EVENTS received for a group must begin with this letter.  This way, it is possible to quickly determine of an event is for a group
 
 	eEventClass_eMessageTextComposing			= _USZU1('Y'),	// The user is tYping something...  (this is a notification to the remote client, as there is no instance of this 'event' nor it is saved to disk)
 		#define d_chXCPa_MessageTextComposing_State				's'	// Attribute to indicate the state of the 'composing' event.  If this attribute is not present, it means the user is just typing.
@@ -82,13 +82,9 @@ enum EEventClass
 		#define d_chXCPa_PingTime								't'
 		#define d_szXCPa_PingTime_t								" t='$t'"
 
-	/*
-	eEventClass_eGroupEventReceived					= _USZU1('g'),	// ALL EVENTS received for a group must begin with this letter.  This way, the method TContact::Xcp_ProcessStanzasAndUnserializeEvents() will know it is a group message and assign the sender
-	eEventClass_eGroupMemberJoins					= _USZU2('G', 'J'),
-	eEventClass_eGroupMessageTextSent				= _USZU2('G', 'T'),
-	eEventClass_eGroupMessageTextReceived			= _USZU2('g', 't'),
-	eEventClass_eGroupMessageTextReceived_class		= eEventClass_eGroupMessageTextReceived | eEventClass_kfReceivedByRemoteClient,
-	*/
+	eEventClass_eGroupInfo							= _USZU2(_g_, 'i'),
+	eEventClass_eGroupMemberJoins					= _USZU2(_g_, 'j'),
+	eEventClass_eGroupMemberInvited_class			= eEventClass_eGroupMemberJoins,
 
 	eEventClass_eDownloader							= _USZU2('d', 'l'),
 	eEventClass_eDownloader_class					= _USZU2('d', 'l') | eEventClass_kfNeverSerializeToXCP | eEventClass_kfReceivedByRemoteClient,	// The downloader is saved to disk and its class never serialized for XCP.
@@ -233,7 +229,7 @@ class IEvent	// (event)
 {
 public:
 	CVaultEvents * m_pVaultParent_NZ;		// Pointer of the vault holding the event
-	TContact * m_pContactGroupSender_YZ;	// Pointer to the contact who sent the group event.  If this pointer is NULL, it means the event is not part of group conversation.
+	TContact * m_pContactGroupSender_YZ;	// Pointer to the contact who sent the group event.  If this pointer is NULL, it means the event is not part of group conversation, or the event was sent by the user.
 	TIMESTAMP m_tsEventID;		// Timestamp to identify the event.  This field is initialized with Timestamp_GetCurrentDateTime()
 	TIMESTAMP m_tsOther;		// Other timestamp related to the event.  Typically this timestamp is the time when the event completed, however it may be interpreted as the time when the event started, such as the time the remote contact typed the message.  This timestame is useful to determine how long it took for the event/task to complete.
 	enum
@@ -297,6 +293,7 @@ protected:
 	void _BinHtmlInitWithTimeAsReceiver(OUT CBin * pbinTextHtml) const;
 	void _BinHtmlAppendHyperlinkToLocalFile(INOUT CBin * pbinTextHtml, PSZUC pszFilename, BOOL fDisabled = FALSE) const;
 	void _BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfHyperlink) const;
+	void _XmlUnserializeAttributeOfContactIdentifier(CHS chAttributeName, OUT TContact ** ppContact, const CXmlNode * pXmlNodeElement) const;
 
 public:
 	static EEventClass S_EGetEventClassFromXmlStanzaXCP(IN const CXmlNode * pXmlNodeEventsStanza, INOUT TContact * pContact, INOUT ITreeItemChatLogEvents * pChatLogEvents, INOUT CBinXcpStanzaType * pbinXmlStanzaReply);

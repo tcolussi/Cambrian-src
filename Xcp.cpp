@@ -385,7 +385,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				} // switch
 			Assert(tsOther > d_tsOther_kmReserved);		// Any received event should have a valid tsOther
 			BOOL fSwapTimestamps = FALSE;				// Swap tsEventID and tsOther.  This happens when a group event is forwarded by another contact
-			TContact * pContactGroupSender = m_pAccount->Contact_PFindByIdentifier_YZ(pXmlNodeXcpEvent);
+			TContact * pContactGroupSender = m_pAccount->Contact_PFindByIdentifierGroupSender_YZ(pXmlNodeXcpEvent);
 			Endorse(pContactGroupSender == NULL);	// The message is for a 1-to-1 conversation
 			if (pContactGroupSender == NULL)
 				{
@@ -561,19 +561,6 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 		binXcpStanzaReply.XcpSendStanzaToContact(IN this);
 	Assert(pVault->m_arraypaEvents.FEventsSortedByIDs());
 	} // Xcp_ProcessStanzasAndUnserializeEvents()
-
-void
-CBinXcpStanzaType::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent)
-	{
-	AssertValidEvent(pEvent);
-	Endorse(m_pContact == NULL);	// Saving to disk
-	TContact * pContact = pEvent->m_pContactGroupSender_YZ;
-	if (pContact != NULL && pContact != m_pContact)
-		{
-		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-		pContact->BinAppendXmlAttributeContactIdentifier(INOUT this, d_chXCPa_pContactGroupSender);
-		}
-	}
 
 void
 CBin::BinAppendXmlForSelfClosingElement()
@@ -809,10 +796,11 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 			pXmlNodeEvent->UpdateAttributeValueTimestamp(d_chEvent_Attribute_tsOther, OUT_F_UNCH &pEvent->m_tsOther);	// Make sure m_tsOther is always unserialized
 			Assert(pEvent->m_pContactGroupSender_YZ  == NULL);
 			if (pEvent->Event_FIsEventTypeReceived())
-				pEvent->m_pContactGroupSender_YZ = pParent->m_pAccount->Contact_PFindByIdentifier_YZ(IN pXmlNodeEvent);	// Assign the group sender to received events
+				pEvent->m_pContactGroupSender_YZ = pParent->m_pAccount->Contact_PFindByIdentifierGroupSender_YZ(IN pXmlNodeEvent);	// Assign the group sender to received events
 			else
 				{
-				TContact * pContactGroupSender = pParent->m_pAccount->Contact_PFindByIdentifier_YZ(IN pXmlNodeEvent);
+				// This code is only for debugging
+				TContact * pContactGroupSender = pParent->m_pAccount->Contact_PFindByIdentifierGroupSender_YZ(IN pXmlNodeEvent);
 				if (pContactGroupSender != NULL)
 					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "tsEventID $t of class '$U' should NOT have a pContactGroupSender ^j\n", tsEventID, pEvent->EGetEventClass(), pContactGroupSender);
 				}
@@ -1163,7 +1151,7 @@ CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONS
 				// We have successfully re-created a blank event class matching the blueprint of the downloader.  Now, we need to initialize the event variables.
 				m_paEvent->m_pVaultParent_NZ = m_pVaultParent_NZ;		// The new event uses the same vault as the downloader
 				Assert(m_paEvent->m_pContactGroupSender_YZ == NULL);	// New allocated events do not have any contact group sender yet
-				m_paEvent->m_pContactGroupSender_YZ = PGetAccount_NZ()->Contact_PFindByIdentifier_YZ(IN &oXmlTree);	// The contact who created the event may be different than the contact who transmitted the event, as the [large] event may be have been forwarded
+				m_paEvent->m_pContactGroupSender_YZ = PGetAccount_NZ()->Contact_PFindByIdentifierGroupSender_YZ(IN &oXmlTree);	// The contact who created the event may be different than the contact who transmitted the event, as the [large] event may be have been forwarded
 				if (m_paEvent->m_pContactGroupSender_YZ == NULL)
 					m_paEvent->m_pContactGroupSender_YZ = m_pContactGroupSender_YZ;	// If the contact sender was not present in the downloaded XML, use the contact of the downloader (if any)
 				Assert(m_paEvent->m_tsOther == d_ts_zNULL);

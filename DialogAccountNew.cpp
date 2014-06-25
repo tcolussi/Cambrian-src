@@ -106,7 +106,7 @@ DDialogInvitationCore::AddContactInvitationToNavigationTree_MB(TAccountXmpp * pA
 	if (pszContact != NULL)
 		{
 		// We have an invitation, so create the contact
-		TContact * pContactInvitation = pAccount->Contacts_PFindContactByJID(pszContact);
+		TContact * pContactInvitation = pAccount->Contact_PFindByJID(pszContact);
 		if (pContactInvitation == NULL)
 			{
 			pContactInvitation = pAccount->TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(pszContact);

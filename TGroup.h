@@ -70,8 +70,6 @@ public:
 	void TreeItemGroup_DisplayWithinNavigationTree();
 	void TreeItemGroup_NewMessageArrived(PSZUC pszMessage, TContact * pContact);
 
-	CEventGroupMessageSent * Vault_PAllocateEventMessageToSendToGroup(const CStr & strMessage);
-
 public:
 	static IXmlExchange * S_PaAllocateGroup(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
 	friend class CTaskGroupSendText;

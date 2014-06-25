@@ -727,7 +727,7 @@ CSocketXmpp::PFindContactFromStanza() const
 	{
 	if (m_pXmlNodeStanzaCurrent_YZ == NULL)
 		return NULL;		// Sometimes an error occurs (such as host not found) without any stanza
-	return m_pAccount->Contacts_PFindContactByJID(m_pXmlNodeStanzaCurrent_YZ->PszFindAttributeValueFrom_NZ());
+	return m_pAccount->Contact_PFindByJID(m_pXmlNodeStanzaCurrent_YZ->PszFindAttributeValueFrom_NZ());
 	}
 
 //	Return TRUE if the stanza was processed by a task, and therefore no more processing is necessary.
@@ -1254,7 +1254,7 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 	CXmlNode * pXmlNodeXCP = m_pXmlNodeStanzaCurrent_YZ->PFindElement(c_sza_xcp);
 	if (pXmlNodeXCP != NULL)
 		{
-		TContact * pContact = m_pAccount->Contacts_PFindContactByJID(IN m_pXmlNodeStanzaCurrent_YZ->PszFindAttributeValueFrom_NZ(), TAccountXmpp::eFindContactCreate);	// Find the contact matching the the stanza
+		TContact * pContact = m_pAccount->Contact_PFindByJID(IN m_pXmlNodeStanzaCurrent_YZ->PszFindAttributeValueFrom_NZ(), TAccountXmpp::eFindContactCreate);	// Find the contact matching the the stanza
 		if (pXmlNodeXCP->m_pszuTagValue != NULL)
 			{
 			if (pContact != NULL)

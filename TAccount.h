@@ -144,8 +144,9 @@ public:
 		eFindContactCreate,		// Create a new contact if there is no contact matchng the JID
 		eFindContactCreateAsUnsolicited	// Create an unsolicited contact if there is no contact matchng the JID
 		};
-	TContact * Contacts_PFindContactByJID(PSZUC pszContactJID, EFindContact eFindContact = eFindContactOnly);
-	TContact * Contact_PFindByIdentifier_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC;
+	TContact * Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact = eFindContactOnly);
+	TContact * Contact_PFindByIdentifierGroupSender_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC;
+	TContact * Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName) CONST_MCC;
 
 	static const int c_iGroupNew = -1;
 	void Group_AddNewMember_UI(TContact * pContact, int iGroup);

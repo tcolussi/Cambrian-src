@@ -131,6 +131,7 @@ public:
 	void BinAppendXmlAttributeCStr(CHS chAttributeName, const CStr & strAttributeValue);
 	void BinAppendXmlAttributeCStr2(CHS chAttributeName, const CStr & strAttributeValue, PSZUC pszAttributeValuePriority = NULL);
 	void BinAppendXmlAttributeCBin(CHS chAttributeName, const CBin & binAttributeValue);
+	void BinAppendXmlAttributeOfContactIdentifier(CHS chAttributeName, const TContact * pContact);
 	void BinAppendXmlElementText(PSZAC pszElementName, PSZUC pszElementValue);
 	void BinAppendXmlElementText(PSZAC pszElementName, WEdit * pwEdit);
 	void BinAppendXmlElementInt(PSZAC pszElementName, int nElementValue);

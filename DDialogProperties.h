@@ -105,7 +105,7 @@ public:
 public:
 	WListContacts();
 	void ContactAdd(TContact * pContact);
-	void ContactsAdd(const CArrayPtrContacts & arraypContacts);
+	void ContactsAdd(IN_MOD_SORT CArrayPtrContacts & arraypContacts);
 	void ContactAddTransfer(PA_DELETING QListWidgetItem * paItem);
 	void ContactRemove(TContact * pContact);
 	void ContactsGetAll(IOUT CArrayPtrContacts * parraypContacts) const;

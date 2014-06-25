@@ -84,26 +84,15 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 	case eEventClass_eMessageTextReceived:
 	case eEventClassLegacy_chMessageReceived:
 		return new CEventMessageTextReceived(ptsEventID);
-	/*
-	case eEventClass_eMessageTextReceivedToGroup:
-		return new CEventMessageTextReceivedToGroup(ptsEventID);
-	*/
+
 	case eEventClass_eFileSent:
 		return new CEventFileSent(ptsEventID);
 	case eEventClass_eFileReceived:
 		return new CEventFileReceived(ptsEventID);
-/*
-	case eEventClass_eFileReceivedToGroup:
-		return new CEventFileReceivedToGroup(ptsEventID);
-*/
-	/*
+
 	case eEventClass_eGroupMemberJoins:
-		return new CEventGroupMemberJoin((TGroup *)pTreeItemParentOwner, ptsEventID);
-	case eEventClass_eGroupMessageTextSent:
-		return new CEventGroupMessageSent((TGroup *)pTreeItemParentOwner, ptsEventID);
-	case eEventClass_eGroupMessageTextReceived:
-		return new CEventGroupMessageReceived((TGroup *)pTreeItemParentOwner, ptsEventID);
-	*/
+		return new CEventGroupMemberJoin(ptsEventID);
+
 	case eEventClass_eWalletTransactionSent:
 		return new CEventWalletTransactionSent(ptsEventID);
 	case eEventClass_eWalletTransactionReceived:
@@ -119,6 +108,9 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 
 //	Compare the timestamps of two events.
 //	Because timestamps are stored in a 64 bit integer, we have to do the 64-bit comparison, because truncating from 64 bit to 32 bit may lead to an incorrect result even for a negative value!
+//
+//	INTERFACE NOTES
+//	This static method must have an interface compatible with PFn_NCompareSortElements().
 int
 IEvent::S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort)
 	{

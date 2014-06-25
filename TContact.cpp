@@ -798,6 +798,24 @@ CArrayPtrContacts::PFindContactByNameDisplay(PSZUC pszContactNameDisplay, const 
 	return NULL;
 	}
 
+//	Compare the display names of two contacts.
+//
+//	INTERFACE NOTES
+//	This static method must have an interface compatible with PFn_NCompareSortElements().
+int
+TContact::S_NCompareSortContactsByNameDisplay(TContact * pContactA, TContact * pContactB, LPARAM lParamCompareSort)
+	{
+	Assert(lParamCompareSort == d_zNA);
+	return NCompareSortStringAsciiNoCase((PSZAC)pContactA->TreeItem_PszGetNameDisplay(), (PSZAC)pContactB->TreeItem_PszGetNameDisplay());	// At the moment sort by Ascii (it shoul be sorted by UTF-8)
+	}
+
+//	Sort the array of contacts by display name
+void
+CArrayPtrContacts::SortByNameDisplay()
+	{
+	Sort((PFn_NCompareSortElements)TContact::S_NCompareSortContactsByNameDisplay);
+	}
+
 void
 CArrayPtrContacts::ForEach_ChatLogResetNickNameAndRepopulateAllEvents()
 	{

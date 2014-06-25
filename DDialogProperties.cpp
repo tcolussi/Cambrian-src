@@ -201,8 +201,9 @@ WListContacts::ContactAdd(TContact * pContact)
 	}
 
 void
-WListContacts::ContactsAdd(const CArrayPtrContacts & arraypContacts)
+WListContacts::ContactsAdd(IN_MOD_SORT CArrayPtrContacts & arraypContacts)
 	{
+	arraypContacts.SortByNameDisplay();
 	TContact ** ppContactStop;
 	TContact ** ppContact = arraypContacts.PrgpGetContactsStop(OUT &ppContactStop);
 	while (ppContact != ppContactStop)
@@ -261,7 +262,8 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 		{
 		// We are creating a new group
 		Assert(pContactOrGroup->EGetRuntimeClass() == RTI(TContact));
-		m_pwListContactsInGroup->ContactAdd((TContact *)pContactOrGroup);
+		m_arraypContactsInGroup.Add((TContact *)pContactOrGroup);
+		//m_pwListContactsInGroup->ContactAdd((TContact *)pContactOrGroup);
 		m_paGroup = m_pGroup = new TGroup(pAccount);
 		}
 	Assert(m_pGroup->EGetRuntimeClass() == RTI(TGroup));
@@ -282,8 +284,8 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 
 	// Populate the lists of contacts
 	m_arraypContactsAvailable.RemoveTreeItems(IN m_arraypContactsInGroup);
-	m_pwListContactsAvailable->ContactsAdd(IN m_arraypContactsAvailable);
-	m_pwListContactsInGroup->ContactsAdd(IN m_arraypContactsInGroup);
+	m_pwListContactsAvailable->ContactsAdd(IN_MOD_SORT m_arraypContactsAvailable);
+	m_pwListContactsInGroup->ContactsAdd(IN_MOD_SORT m_arraypContactsInGroup);
 	connect(m_pwListContactsAvailable, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(SL_ContactAvailableDoubleClicked(QListWidgetItem*)));
 	connect(m_pwListContactsInGroup, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(SL_ContactInGroupDoubleClicked(QListWidgetItem*)));
 	connect(pwButtonOK, SIGNAL(clicked()), this, SLOT(SL_ButtonOK()));

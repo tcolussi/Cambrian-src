@@ -296,7 +296,7 @@ Configuration_PFindAccountOrContactByJID(PSZUC pszuContactJID)
 		TAccountXmpp * pAccount = *ppAccount++;
 		if (pAccount->m_strJID.FCompareStringsNoCase(pszuContactJID))
 			return pAccount;
-		TContact * pContact = pAccount->Contacts_PFindContactByJID(pszuContactJID);
+		TContact * pContact = pAccount->Contact_PFindByJID(pszuContactJID);
 		if (pContact != NULL)
 			return pContact;
 		}

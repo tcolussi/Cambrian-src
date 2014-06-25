@@ -64,7 +64,7 @@ DialogContactNew::SL_EditUsername_textChanged(const QString & sUsernames)
 						}
 					m_arraypaszContacts.AddStringAllocate(pszUsername);
 					QRGB coUsername = d_coBlack;
-					if (m_pAccount->Contacts_PFindContactByJID(pszUsername) != NULL)
+					if (m_pAccount->Contact_PFindByJID(pszUsername) != NULL)
 						{
 						// There is already a contact sharing the same username
 						coUsername = d_coGrayLight;
@@ -102,7 +102,7 @@ DialogContactNew::SL_ButtonOK_clicked()
 		Assert(pszContact[0] != '\0');
 		if (m_pAccount->m_strJID.FCompareStringsJIDs(pszContact))
 			continue;	// Skip the contact, since its JID is the same as its parent account JID
-		TContact * pContact = m_pAccount->Contacts_PFindContactByJID(pszContact);
+		TContact * pContact = m_pAccount->Contact_PFindByJID(pszContact);
 		if (pContact == NULL)
 			{
 			// This is a new JID which is not already in the contact list
@@ -162,7 +162,7 @@ TAccountXmpp::Contact_AllocateNewFromGlobalInvitation()
 	g_paInvitation->m_strJID.AppendServerNameToJidIfMissing(m_strServerName);
 	PSZUC pszJID = g_paInvitation->m_strJID;
 	MessageLog_AppendTextFormatSev(eSeverityComment, "Adding $s ($S) from invitation...\n", pszJID, &g_paInvitation->m_strNameDisplay);
-	if (Contacts_PFindContactByJID(pszJID) == NULL)
+	if (Contact_PFindByJID(pszJID) == NULL)
 		(void)TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszJID, g_paInvitation->m_strNameDisplay);
 	g_paInvitation = NULL;
 	Invitation_EraseFile();
@@ -256,7 +256,7 @@ WLayoutContactNew::SL_EditUsername_textChanged(const QString & sUsernames)
 						pszUsernameIntro = "Your Contact";
 						pszUsernameAllocate = NULL;
 						}
-					else if (m_pAccount->Contacts_PFindContactByJID(pszUsername) != NULL)
+					else if (m_pAccount->Contact_PFindByJID(pszUsername) != NULL)
 						{
 						// There is already an existing contact sharing this username
 						coUsername = d_coGrayLight;
@@ -308,7 +308,7 @@ WLayoutContactNew::SL_ButtonAddContacts()
 			pszContact = paInvitation->m_strJID;
 			pszContactName = paInvitation->m_strNameDisplay;
 			}
-		TContact * pContact = m_pAccount->Contacts_PFindContactByJID(pszContact);
+		TContact * pContact = m_pAccount->Contact_PFindByJID(pszContact);
 		if (pContact == NULL)
 			{
 			// This is a new JID which is not already in the contact list
