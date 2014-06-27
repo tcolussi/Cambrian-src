@@ -66,9 +66,16 @@ public:
 
 enum EChatState
 	{
-	eChatState_zComposing,
-	eChatState_fPaused
+	eChatState_zComposing,	// The user is currently typing
+	eChatState_fPaused		// The user stopped typing
 	};
+
+enum EUserCommand
+{
+	eUserCommand_zMessageTextSent,
+	eUserCommand_ComposingStopped,
+	eUserCommand_Error
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Tree item participating in the chat log: this is either an account, or a contact or a group
@@ -110,7 +117,7 @@ public:
 	void Vault_SetNotModified();
 	void Vault_SetModified();
 	IEvent * Vault_PFindEventByID(TIMESTAMP tsEventID) CONST_MCC;
-	CEventMessageTextSent * Vault_PGetEventLastMessageSent_YZ() const;
+	CEventMessageTextSent * Vault_PFindEventLastMessageTextSentMatchingText(const CStr & strMessageText) const;
 	void Vault_WriteEventsToDiskIfModified();
 	QString Vault_SGetPath() const;
 
@@ -140,8 +147,12 @@ public:
 	virtual void Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const = 0;
 	virtual void Vault_GetEventsForChatLog(OUT CArrayPtrEvents * parraypEventsChatLog) CONST_MCC;
 
-	void XmppUploadFile(PSZUC pszFileUpload);
-	void XmppUploadFiles(IN_MOD_INV PSZU pszmFilesUpload);
+	EUserCommand Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & strCommandLineOrMessage);
+	void Xmpp_SendEventMessageText(PSZUC pszMessage);
+	void Xmpp_SendEventFileUpload(PSZUC pszFileUpload);
+	void Xmpp_SendEventsFileUpload(IN_MOD_INV PSZU pszmFilesUpload);
+	void Xmpp_Ping();
+	void Xmpp_QueryVersion();
 	CSocketXmpp * Xmpp_PGetSocketOnlyIfReady() const;
 
 	void DisplayDialogSendFile();

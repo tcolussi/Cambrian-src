@@ -40,6 +40,7 @@ const char c_sza_result[] = "result";
 const char c_sza_file[] = "file";
 const char c_sza_size[] = "size";
 const char c_sza_state[] = "state";
+const char c_sza_ping[] = "ping";
 
 const char c_szaXmlStreamError[] = "stream:error";
 const char c_szaXmlStreamClose[] = "</stream:stream>";

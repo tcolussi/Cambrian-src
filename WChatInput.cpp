@@ -52,7 +52,7 @@ WChatInput::EditEventText(CEventMessageTextSent * pEventEdit)
 	}
 
 void
-WChatInput::ChatStateComposingCancelTimer(EChatState eChatState)
+WChatInput::ChatStateComposingCancelTimer(BOOL fWriteXmlChatStatePaused)
 	{
 	if (m_tidChatStateComposing != d_zNA)
 		{
@@ -60,14 +60,8 @@ WChatInput::ChatStateComposingCancelTimer(EChatState eChatState)
 		m_tidChatStateComposing = d_zNA;
 		}
 	m_ttcBeforeChatStatePaused = 0;
-	if (eChatState == eChatState_zComposing)
-		m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_fPaused);
-	}
-
-void
-WChatInput::ChatStateComposingPaused()
-	{
-	ChatStateComposingCancelTimer(eChatState_zComposing);
+	if (fWriteXmlChatStatePaused)
+		m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_fPaused);	// Notify the remote contact the user stopped typing
 	}
 
 //	WChatInput::QWidget::minimumSizeHint()
@@ -108,35 +102,31 @@ WChatInput::event(QEvent * pEvent)
 			}
 		if (pEventKey->modifiers() == Qt::NoModifier)
 			{
-			m_pwLayoutChatLog->TreeItem_UpdateIconMessageRead();	// Any key pressed in the message input assumes the user read the message history
+			ITreeItemChatLogEvents * pContactOrGroup = m_pwLayoutChatLog->PGetContactOrGroup_NZ();
+			pContactOrGroup->TreeItem_IconUpdateOnMessagesRead();	// Any key pressed in the message input assumes the user read the message history
+			//m_pwLayoutChatLog->TreeItem_UpdateIconMessageRead();	// Any key pressed in the message input assumes the user read the message history
 			if (eKey == Qt::Key_Enter || eKey == Qt::Key_Return)
 				{
-				EChatState eChatState = eChatState_zComposing;
+				EUserCommand eUserCommand = eUserCommand_ComposingStopped;	// Pretend the text message was sent
 				CStr strText = *this;
 				if (!strText.FIsEmptyString())
 					{
-//					m_strMessageLastTyped = strText;	// Make a copy first because MessageSendToServer() may destroy the value
+					m_strTextLastWritten = strText;
 					if (m_pEventEdit == NULL)
-						eChatState = m_pwLayoutChatLog->EMessageSendToServer(IN_MOD_INV strText);
+						eUserCommand = pContactOrGroup->Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV strText);
 					else
 						{
 						m_pEventEdit->MessageResendUpdate(strText, INOUT m_pwLayoutChatLog);
 						m_pEventEdit = NULL;
 						}
-					// After sending a message, cancel (reset) the timer to, so a new 'composing' notification will be sent when the user starts typing again
-					ChatStateComposingCancelTimer(eChatState);
-					/*
-					if (m_tidChatStateComposing != d_zNA)
-						{
-						// After sending a message, reset the timer to, so a new 'composing' notification will be sent if the user types something
-						killTimer(m_tidChatStateComposing);
-						m_tidChatStateComposing = d_zNA;
-						}
-					*/
+					ChatStateComposingCancelTimer((BOOL)eUserCommand);	// After sending a message, cancel (reset) the timer to, so a new 'composing' notification will be sent when the user starts typing again. BTW, there is no need to send a 'pause' command since receiving a text message automatically implies a pause.
 					} // if
 
-				clear();	// Clear the chat text
-				setCurrentCharFormat(QTextCharFormat());
+				if (eUserCommand != eUserCommand_Error)
+					{
+					clear();	// Clear the chat text
+					setCurrentCharFormat(QTextCharFormat());
+					}
 				return true;
 				} // if (enter)
 			if (eKey == Qt::Key_Up)
@@ -145,8 +135,10 @@ WChatInput::event(QEvent * pEvent)
 				CStr strText = *this;
 				if (strText.FIsEmptyString())
 					{
-					EditEventText(m_pwLayoutChatLog->PGetContactOrGroup_NZ()->Vault_PGetEventLastMessageSent_YZ());
-					//setPlainText(m_strMessageLastTyped);
+					//EditEventText(pContactOrGroup->Vault_PGetEventLastMessageSentEditable_YZ());
+					m_pEventEdit = pContactOrGroup->Vault_PFindEventLastMessageTextSentMatchingText(IN m_strTextLastWritten);
+					setPlainText(m_strTextLastWritten);
+					moveCursor(QTextCursor::End);
 					return true;
 					}
 				}
@@ -160,7 +152,8 @@ WChatInput::event(QEvent * pEvent)
 		}
 	else if (eEventType == QEvent::FocusIn)
 		{
-		m_pwLayoutChatLog->OnEventFocusIn();
+		//m_pwLayoutChatLog->OnEventFocusIn();
+		m_pwLayoutChatLog->PGetContactOrGroup_NZ()->TreeItem_IconUpdateOnMessagesRead();
 		}
 	return WEditTextArea::event(pEvent);
 	} // event()
@@ -175,7 +168,7 @@ WChatInput::timerEvent(QTimerEvent * pTimerEvent)
 		{
 		Assert(m_tidChatStateComposing != d_zNA);
 		if (--m_ttcBeforeChatStatePaused <= 0)
-			ChatStateComposingPaused();
+			ChatStateComposingCancelTimer(TRUE);	// If the user is idle for too long, then notify the remote contact he/she stopped typing
 		}
 	WEditTextArea::timerEvent(pTimerEvent);
 	} // timerEvent()

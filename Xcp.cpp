@@ -64,6 +64,13 @@
 #define d_chXCPe_EventSplitDataReply						'S'
 #define d_szXCPe_EventSplitDataReply_tsO_i_pvcb		d_szXCP_"S" _tsO d_szXCPa_EventExtraData_iblOffset_i d_szXCPa_EventExtraData_bin85Payload_pvcb
 
+#define d_chXCPe_ApiRequest									'a'
+#define d_szXCPe_ApiRequest_s						d_szXCP_"a n='$s'"
+#define d_szXCPe_ApiRequest_close					d_szXCP_"a"
+	#define d_chXCPa_ApiName									'n'
+#define d_chXCPe_ApiReply									'A'
+#define d_szXCPe_ApiReply_s							d_szXCP_"A n='$s'"
+#define d_szXCPe_ApiReply_close						d_szXCP_"A"
 
 #define d_chXCPe_zNA									'\0'	// Not applicable
 
@@ -353,6 +360,14 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				else
 					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unable to find CEventDownloader matching tsOther $t for d_chXCPe_EventSplitDataReply\n", tsOther);
 				break;
+			case d_chXCPe_ApiRequest:
+				{
+				PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_ApiName);
+				Xcp_ApiProcessReply(pszApiName, pXmlNodeXcpEvent, INOUT &binXcpStanzaReply);
+				}
+				break;
+			case d_chXCPe_ApiReply:
+				break;
 			default:
 				MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unknown XCP directive $s: chXCPe = $i ($b)\n", pszEventName, chXCPe, chXCPe);
 				} // switch (chXCPe)
@@ -370,6 +385,9 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 			case eEventClass_ePing:
 				// The XCP ping returns the timestamp (in UTC) of the contact.  This way, it is possible to calculate the clock difference between the two devices.  Ideally the clock difference should be less than one minute.
 				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataReply _tsI d_szXCPa_PingTime_t "/>", tsOther, Timestamp_GetCurrentDateTime());
+				goto EventNext;
+			case eEventClass_eVersion:
+				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataReply _tsI d_szXCPa_eVersion_Version d_szXCPa_eVersion_Platform d_szXCPa_eVersion_Client "/>", tsOther);
 				goto EventNext;
 			case eEventClass_eDownloader:	// The downloader is a hybrid event, part of the Cambrian Protocol, and another part a regular event.
 				/*
@@ -413,7 +431,8 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				Assert(tsEventID == d_ts_zNULL);						// New events should not have a tsEventID
 				binXcpStanzaReply.m_eStanzaType = eStanzaType_eMessage;	// Any event confirmation (or error) shall be cached as an 'XMPP message' so the remote client may know about it
 				if (pwChatLog != NULL)
-					pwChatLog->ChatLog_ChatStateComposerRemove(this);	// Make sure the text "<user> is typing..." will be no longer displayed
+					//pwChatLog->ChatLog_ChatStateComposerRemove(this);	// Make sure the text "<user> is typing..." will be no longer displayed
+					pwChatLog->ChatLog_ChatStateIconUpdate(this, eChatState_fPaused);	// Make sure the text "<user> is typing..." will be no longer displayed
 				if (pEvent != NULL)
 					{
 					// The new event is already in the Chag Log.  This is the case when the event is a re-send.
@@ -529,8 +548,9 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t\t Updating m_tsOtherLastSynchronized from $t to $t\n", *ptsOtherLastSynchronized, tsOther);
 					*ptsOtherLastSynchronized = tsOther;
 					}
-				else
+				else if (tsOther < *ptsOtherLastSynchronized)
 					{
+					// I am not sure what this situation means (perhaps editing an existing event)
 					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "tsOther $t  <  m_tsOtherLastSynchronized $t\n", tsOther, *ptsOtherLastSynchronized);
 					}
 				}
@@ -562,10 +582,29 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 	Assert(pVault->m_arraypaEvents.FEventsSortedByIDs());
 	} // Xcp_ProcessStanzasAndUnserializeEvents()
 
+//	Send an API request to the contact
 void
-CBin::BinAppendXmlForSelfClosingElement()
+TContact::Xcp_ApiRequest(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters)
 	{
-	BinAppendBinaryData("/>\n", 3);	// Close the XML element
+	CBinXcpStanzaTypeInfo binXcpStanza;
+	binXcpStanza.BinAppendTextSzv_VE("<" d_szXCPe_ApiRequest_s ">^N$s</" d_szXCPe_ApiRequest_close ">", pszApiName, pXmlNodeApiParameters, pszXmlApiParameters);
+	binXcpStanza.XcpSendStanzaToContact(IN this);
+	}
+
+//	All APIs are processed in the context of a contact
+void
+TContact::Xcp_ApiProcessReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, CBinXcpStanzaType * pbinXcpStanzaReply)
+	{
+	Assert(pszApiName != NULL);
+	Assert(pXmlNodeApiParameters != NULL);
+	Assert(pbinXcpStanzaReply != NULL);
+	MessageLog_AppendTextFormatSev(eSeverityComment, "Processing API '$s'\n", pszApiName);
+	if (FCompareStringsNoCase(pszApiName, (PSZUC)"ProfileGet"))
+		{
+		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_ApiReply_s ">^s</" d_szXCPe_ApiReply_close ">", pszApiName, TreeItem_PszGetNameDisplay());
+		return;
+		}
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unknown API '$s'\n", pszApiName);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -602,7 +641,10 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTA
 	if (pEvent->m_pContactGroupSender_YZ != NULL)
 		{
 		// The event was received by a contact for a group chat, therefore we need to adjust the class
-		Assert(pEvent->Event_FIsEventTypeReceived());
+		if (!pEvent->Event_FIsEventTypeReceived())
+			{
+			MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "BinXmlSerializeEventForXcp() - tsEventID $t, tsOther $t written by ^j class '$U' is NOT RECEIVED\n", tsEventID, tsOther, pEvent->m_pContactGroupSender_YZ, m_pContact, eEventClassXcp);
+			}
 		if (pEvent->m_pContactGroupSender_YZ != m_pContact)
 			{
 			eEventClassXcp = pEvent->EGetEventClass();	// Keep the same class.  Idetally the timestamps should be kept the same, however this will screw up the synchronization, so it is better to keep them as is and swap them by the receiver
@@ -683,11 +725,10 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 //	Send the event through XMPP.  If the contact can understand the Cambrian Protocol, then the event will be serialized for XCP, ortherwise will be sent throught the standard XMPP.
 //
 void
-IEvent::Event_WriteToSocketIfNeverSent(CSocketXmpp * pSocket)
+IEvent::Event_WriteToSocket()
 	{
-	Assert(pSocket != NULL);
-	Assert(pSocket->Socket_FuIsReadyToSendMessages());
 	Assert(m_pVaultParent_NZ != NULL);
+	Assert(m_tsOther == d_tsOther_ezEventNeverSent);
 	if (m_tsOther != d_tsOther_ezEventNeverSent)
 		return;
 	m_tsOther = d_tsOther_eEventSentOnce;
@@ -735,7 +776,15 @@ IEvent::Event_WriteToSocketIfNeverSent(CSocketXmpp * pSocket)
 		pContactOrGroup->m_tsEventIdLastSentCached = m_tsEventID;
 		}
 	m_pVaultParent_NZ->SetModified();	// This line is important so m_tsOther (as well as other timestamps) are saved to disk
-	} // Event_WriteToSocketIfNeverSent()
+	} // Event_WriteToSocket()
+
+//	Send the event if the socket is ready
+void
+IEvent::Event_WriteToSocketIfReady()
+	{
+	if (PGetSocketOnlyIfReady() != NULL)
+		Event_WriteToSocket();
+	}
 
 void
 CArrayPtrEvents::EventsSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlEvents) const
@@ -1196,7 +1245,7 @@ CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONS
 	} // ChatLogUpdateTextBlock()
 
 void
-CEventDownloader::XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, CBinXcpStanzaType * pbinXcpStanzaReply, QTextEdit * pwEditChatLog)
+CEventDownloader::XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply, QTextEdit * pwEditChatLog)
 	{
 	const int ibDataNew = pXmlNodeData->LFindAttributeXcpOffset();
 	const int ibDataRequested = m_binDataDownloaded.CbGetData();

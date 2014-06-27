@@ -336,6 +336,7 @@ protected:
 
 #define d_uVersionFileFormat0			0	// The very first file format where the filenames of the chat history was stored using a random GUID and binary data was stored in Base64.  This value is implicit, as there is no attribute "Version='0'"
 #define d_szVersionFileFormatCurrent	"1"	// Current file format: All binary data is stored in Base85 and the filenames are determined from a SHA-1 of the JIDs of the account and the contact.
+#define d_chXmlAttributeVersion			'v'
 
 /*
 /////////////////////////////////////////////////////////////////////

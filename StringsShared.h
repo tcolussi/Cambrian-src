@@ -62,6 +62,7 @@ extern const char c_sza_result[];
 extern const char c_sza_file[];
 extern const char c_sza_size[];
 extern const char c_sza_state[];
+extern const char c_sza_ping[];
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -149,7 +149,9 @@ HUNGARIAN PREFIX
 
 #endif
 
-#include "PreCompiledHeaders.h"
+#ifndef PRECOMPILEDHEADERS_H
+	#include "PreCompiledHeaders.h"
+#endif
 #include <QApplication>
 #include <QSharedMemory>
 

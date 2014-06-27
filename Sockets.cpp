@@ -108,7 +108,7 @@ CSocketXmpp::Socket_WriteData(PCVOID pvData, int cbData)
 		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to write data to socket! (number of bytes written does not match number of bytes to write)\n");
 	}
 
-//	Reformat a raw XML message (starting with "~<").
+//	Reformat a raw XML message
 //	Sending raw XML messages is useful for debugging.
 //
 //	FORMATS SUPPORTED
@@ -118,17 +118,20 @@ CSocketXmpp::Socket_WriteData(PCVOID pvData, int cbData)
 //		^C	- Append the full JID of the contact
 //		^s	- Append the name of the server of the socket
 void
-CBinXcpStanzaType::BinXmlInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml)
+CBinXcpStanzaType::BinXmlInitStanzaWithXmlRaw(PSZUC pszMessageXml)
 	{
-	Assert(pContactOrGroup->PGetRuntimeInterface(RTI(ITreeItemChatLogEvents)) == pContactOrGroup);
 	Assert(pszMessageXml != NULL);
-	Assert(pszMessageXml[0] == d_chXmlPrefixSocketRawData && pszMessageXml[1] == '<');
+	Assert(pszMessageXml[0] == '<');
+	Assert(m_pContact != NULL);
+	if (m_pContact == NULL)
+		return;	// Just in case
+	TAccountXmpp * pAccount = m_pContact->m_pAccount;
 	Empty();
 
-	// We have a "~<" for a raw message, so reformat it
+	// We have a "<" for a raw message, so reformat it
 	while (TRUE)
 		{
-		UINT ch = *++pszMessageXml;
+		UINT ch = *pszMessageXml++;
 		if (ch != '^')
 			{
 			BinAppendByte(ch);
@@ -136,24 +139,21 @@ CBinXcpStanzaType::BinXmlInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactO
 				break;
 			continue;
 			}
-		UINT chTemplate = *++pszMessageXml;
+		UINT chTemplate = *pszMessageXml++;
 		switch (chTemplate)
 			{
 		case 'a':
 		case 'A':
-			BinAppendXmlTextStr((chTemplate == 'a') ? pContactOrGroup->m_pAccount->m_strJID : pContactOrGroup->m_pAccount->m_strJIDwithResource);
+			BinAppendXmlTextStr((chTemplate == 'a') ? pAccount->m_strJID : pAccount->m_strJIDwithResource);
 			break;
 		case 'c':
 		case 'C':
-			if (pContactOrGroup->EGetRuntimeClass() == RTI(TContact))
-				{
-				BinAppendXmlTextStr(((TContact *)pContactOrGroup)->m_strJidBare);
-				if (chTemplate == 'C')
-					BinAppendXmlTextStr(((TContact *)pContactOrGroup)->m_strRessource);
-				}
+			BinAppendXmlTextStr(m_pContact->m_strJidBare);
+			if (chTemplate == 'C')
+				BinAppendXmlTextStr(m_pContact->m_strRessource);
 			break;
 		case 's':
-			BinAppendXmlTextStr(pContactOrGroup->m_pAccount->m_strServerName);
+			BinAppendXmlTextStr(pAccount->m_strServerName);
 			break;
 		default:
 			Assert(FALSE && "Invalid template");
@@ -308,13 +308,13 @@ CSocketXmpp::Socket_ProcessAllPendingTasks()
 		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Socket_ProcessAllPendingTasks() - socket is NOT connected (state=$i)\n", state());
 		return;	// We are not connected, so we have to wait
 		}
-
+	Assert(Socket_FuIsReadyToSendMessages());
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = m_pAccount->m_arraypEventsUnsent.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
 		{
 		IEvent * pEvent = *ppEvent++;
-		pEvent->Event_WriteToSocketIfNeverSent(IN this);
+		pEvent->Event_WriteToSocket();
 		}
 	}
 
@@ -430,6 +430,7 @@ CSocketXmpp::SL_SocketError(QAbstractSocket::SocketError eError)
 	case RemoteHostClosedError:
 		if (uFlagsSocketState & FSS_kfXmppStreamClosing)
 			{
+			//uFlagsSocketState &= ~FSS_kfXmppStreamClosing;		// Remove this flag, so we can get a different error next time
 			MessageLog_AppendTextFormatSev(eSeverityComment, "\t Ignoring error because the socket was closed programmatically\n");
 			return;
 			}
@@ -754,6 +755,9 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingEventID()
 				case CEventPing::c_eEventClass:
 					pEvent->Event_SetCompletedAndUpdateWidgetWithinChatLog();	// A ping is very simple, as the event completes as soon as we get a reply
 					return TRUE;
+				case CEventVersion::c_eEventClass:
+					((CEventVersion *)pEvent)->XmppProcessStanzaFromContact(m_pXmlNodeStanzaCurrent_YZ, pContact);
+					return TRUE;
 				case CEventFileSent::c_eEventClass:
 					((CEventFileSent *)pEvent)->XmppProcessStanzaFromContact(m_pXmlNodeStanzaCurrent_YZ, pContact);
 					return TRUE;
@@ -874,6 +878,17 @@ CSocketXmpp::OnEventXmppStanzaIq()
 			return;
 			}
 
+		if (FCompareStrings(pszuStanzaQueryXmlns, "jabber:iq:version"))
+			{
+			// Need to handle this for non-Cambrian clients
+			/*
+			TContact * pContact = PFindContactFromStanza();
+			if (pContact != NULL)
+				pContact->Vault_InitEventForVaultAndDisplayToChatLog(new CEventVersion(pXmlNodeQuery));
+			*/
+			return;
+			}
+
 		return;
 		} // if ("result")
 
@@ -883,19 +898,10 @@ CSocketXmpp::OnEventXmppStanzaIq()
 		{
 		if (FCompareStrings(pszuQueryXmlns, "jabber:iq:version"))
 			{
-			#if defined(Q_OS_WIN)
-				#define d_szOS		"Windows"
-			#elif defined (Q_OS_MAC)
-				#define d_szOS		"Mac"
-			#elif defined(Q_OS_LINUX)
-				#define d_szOS		"Linux"
-			#else
-				#define d_szOS		"Other"
-			#endif
 			Socket_WriteXmlIqResult_Gsb(d_szuXmlAlreadyEncoded "<query><name>" d_szApplicationName "</name><version>" d_szApplicationVersion "</version><os>" d_szOS "</os></query>");
 			return;
 			}
-		if (m_pXmlNodeStanzaCurrent_YZ->PFindElement("ping"))
+		if (m_pXmlNodeStanzaCurrent_YZ->PFindElement(c_sza_ping))
 			{
 			Socket_WriteXmlIqReplyAcknowledge();
 			return;

@@ -181,20 +181,6 @@ TContact::ChatLogContact_RemoveInvitationMessage()
 		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_ChatStateTextUpdate();	// The invitation message is appended with the 'Chat State'
 	}
 
-CSocketXmpp *
-ITreeItemChatLogEvents::Xmpp_PGetSocketOnlyIfReady() const
-	{
-	return m_pAccount->Socket_PGetOnlyIfReadyToSendMessages();
-	}
-
-CSocketXmpp *
-TContact::Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp() const
-	{
-	if (m_cVersionXCP <= 0)
-		return m_pAccount->Socket_PGetOnlyIfReadyToSendMessages();
-	return NULL;
-	}
-
 void
 TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 	{
@@ -470,11 +456,13 @@ WLayoutChatLog::Socket_WriteXmlChatState(EChatState eChatState) const
 		m_pGroupParent_YZ->Members_BroadcastChatState(eChatState);
 	}
 
+/*
 void
 WLayoutChatLog::TreeItem_UpdateIconMessageRead()
 	{
 	PGetContactOrGroup_NZ()->TreeItem_IconUpdateOnMessagesRead();
 	}
+*/
 
 /*
 class WWidgetMessageInputLayout : public QWidget
@@ -547,7 +535,7 @@ WLayoutChatLog::WLayoutChatLog(ITreeItemChatLogEvents * pParent)
 //	addWidget(PA_CHILD m_pwChatInput);
 	setAcceptDrops(true);
 	}
-
+/*
 void
 WLayoutChatLog::OnEventFocusIn()
 	{
@@ -555,6 +543,7 @@ WLayoutChatLog::OnEventFocusIn()
 	TreeItem_UpdateIconMessageRead();
 	//m_pContact->TreeItemChatLog_UpdateIconMessageRead();
 	}
+*/
 
 BOOL
 WLayoutChatLog::FGotFocus()
@@ -566,45 +555,6 @@ WLayoutChatLog::FGotFocus()
 		}
 	return m_pwChatInput->hasFocus() || m_pwChatLog_NZ->hasFocus();
 	}
-
-//	Send a message to the contact.
-//	TODO: Move this code to ITreeItemChatLogEvents
-void
-TContact::Contact_SendMessage(const CStr & strMessage)
-	{
-	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageTextSent(strMessage));
-	}
-
-//	Send an instant message to the chat contact.
-//	First, this method will append the message to the message history and then dispatch to the server.
-EChatState
-WLayoutChatLog::EMessageSendToServer(IN_MOD_INV CStr & strMessage)
-	{
-	Assert(m_pContactParent_YZ != NULL || m_pGroupParent_YZ != NULL);
-	ITreeItemChatLogEvents * pContactOrGroup = PGetContactOrGroup_NZ();
-	PSZU pszMessage = strMessage.PbGetData();
-	Assert(pszMessage != NULL);
-	if (PszrCompareStringBeginNoCase(pszMessage, "file://") == NULL)
-		{
-		if (pszMessage[0] != d_chXmlPrefixSocketRawData || pszMessage[1] != '<')
-			{
-			// Send a normal text message
-			pContactOrGroup->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageTextSent(strMessage));
-			return eChatState_fPaused;
-			}
-		else
-			{
-			// The message starts with "~<", therefore send raw XML data directly to the socket
-			pContactOrGroup->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageXmlRawSent(strMessage));
-			} // if...else
-		}
-	else
-		{
-		// We wish to send a file to the user or group
-		pContactOrGroup->XmppUploadFiles(IN_MOD_INV pszMessage);
-		}
-	return eChatState_zComposing;
-	} // EMessageSendToServer()
 
 #pragma GCC diagnostic ignored "-Wswitch"
 
@@ -635,17 +585,6 @@ TContact::Contact_FIsInvitationRecommended()
 		} // if
 	return TRUE;
 	}
-
-/*
-CEventMessageTextSent *
-TContact::Vault_PAllocateEventMessageToSend(const CStr & strMessage)
-	{
-	CEventMessageTextSent * pEvent = new CEventMessageTextSent(this, NULL);
-	Vault_AddEventToVault(PA_CHILD pEvent);
-	pEvent->m_strMessage = strMessage;
-	return pEvent;
-	}
-*/
 
 void
 TContact::Vault_AllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, WChatLog * pwChatLog)
@@ -783,12 +722,6 @@ WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStan
 	} // ChatLog_DisplayStanzaToUser()
 
 void
-WLayoutChatLog::ChatLog_EventEditText(CEventMessageTextSent * pEvent)
-	{
-	m_pwChatInput->EditEventText(pEvent);
-	}
-
-void
 WLayoutChatLog::ChatLog_EventAppend(IEvent * pEvent)
 	{
 	m_pwChatLog_NZ->ChatLog_EventDisplay(pEvent);
@@ -851,6 +784,7 @@ WLayoutChatLog::dragEnterEvent(QDragEnterEvent * pDragEnterEvent)
 void
 WLayoutChatLog::dropEvent(QDropEvent * pDropEvent)
 	{
+	ITreeItemChatLogEvents * pContactOrGroup = PGetContactOrGroup_NZ();
 	CStr strFile;
 	QList<QUrl> listUrls = pDropEvent->mimeData()->urls();
 	foreach (QUrl url, listUrls)
@@ -858,8 +792,7 @@ WLayoutChatLog::dropEvent(QDropEvent * pDropEvent)
 		if (!url.isLocalFile())
 			continue;
 		strFile = url.toLocalFile();
-		if (m_pContactParent_YZ != NULL)
-			m_pContactParent_YZ->XmppUploadFile(strFile);
+		pContactOrGroup->Xmpp_SendEventFileUpload(strFile);
 		strFile = url.toString();
 		MessageLog_AppendTextFormatCo(d_coBlack, "URL: $S\n", &strFile);
 		}

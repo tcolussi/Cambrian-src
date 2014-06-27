@@ -31,9 +31,7 @@ public:
 	void OnEventFocusIn();
 	BOOL FGotFocus();
 
-	EChatState EMessageSendToServer(IN_MOD_INV CStr & strMessage);
 	PSZUC ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStanza);
-	void ChatLog_EventEditText(CEventMessageTextSent * pEvent);
 	void ChatLog_EventAppend(IEvent * pEvent);
 	void ChatLog_EventsRepopulateUpdateUI();
 	void ChatLog_ScrollToDisplayLastMessage();

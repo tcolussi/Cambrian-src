@@ -1594,17 +1594,7 @@ CXmlNode::SortNodesByAttributeID()
 	xmlSortContext.m_pfnSortCompare = (PFn_NCompareSortElements)NCompareSortElementsByBytesZ;
 	_SortNodesR(INOUT &xmlSortContext);
 	}
-VOID
-CXmlNode::SortElements(PVOID * pvSortContext)
-	{
 
-	}
-
-VOID
-CXmlNode::SortAttributes(PVOID * pvSortContext)
-	{
-
-	}
 #endif
 /*
 VOID
@@ -3129,6 +3119,8 @@ CXmlExchanger::XmlExchangeNodeRootF(PSZAC pszuNameRootNode)
 			return FALSE;
 		StackPushNode(pNodeRoot);
 		m_uVersionFileFormat = UFindAttributeValueDecimal_ZZR(c_szaVersion);
+		if (m_uVersionFileFormat == 0)
+			m_uVersionFileFormat = UFindAttributeValueDecimal_ZZR(d_chXmlAttributeVersion);	// Prepare to eventually remove c_szaVersion
 		}
 	return TRUE;
 	} // XmlExchangeNodeRootF()

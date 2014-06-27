@@ -43,58 +43,6 @@ TContact::Contact_FuCommunicateViaXcp() const
 	return FALSE;
 	}
 
-//	Upload a file to the contact.
-//	The file name is expected to be a local path.
-void
-ITreeItemChatLogEvents::XmppUploadFile(PSZUC pszFileUpload)
-	{
-	Assert(m_pawLayoutChatLog != NULL);
-	if (pszFileUpload == NULL || pszFileUpload[0] == '\0')
-		return;
-	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventFileSent(pszFileUpload));
-	}
-
-//	Upload multiple files.
-//	This method expect files to be in the 'URL' with the prefix "file://"
-void
-ITreeItemChatLogEvents::XmppUploadFiles(IN_MOD_INV PSZU pszmFilesUpload)
-	{
-	Assert(pszmFilesUpload != NULL);
-	PSZUC pszFileUpload = pszmFilesUpload;
-	while (TRUE)
-		{
-		UINT ch = *pszmFilesUpload++;
-		if (ch == '\n' || ch == '\0')
-			{
-			pszmFilesUpload[-1] = '\0';	// Insert a null-terminator
-			CStr strFile = QUrl::fromUserInput(CString(pszFileUpload)).toLocalFile();	// This code is grossly inefficient, however necessary because Qt uses triple slashes (///) after the schema, such as: "file:///c:/folder/file.txt".  I could manually skip the extra slash, however it may break under other platrorms.
-			MessageLog_AppendTextFormatCo(d_coBlack, "XmppUploadFiles() - $S\n", &strFile);
-			XmppUploadFile(strFile);
-			if (ch == '\0')
-				return;	// We are done
-			pszFileUpload = pszmFilesUpload;
-			}
-		}
-	}
-
-/*
-PSZUC
-TContact::PszGetNicknameChatWindow()
-	{
-	if (m_strNicknameChatWindow.FIsEmptyString())
-		m_strNicknameChatWindow.AppendTextUsernameFromJidPszr(m_strJidBare);
-	return m_strNicknameChatWindow;
-	}
-*/
-
-QString
-ITreeItemChatLogEvents::Vault_SGetPath() const
-	{
-	SHashSha1 hashFileNameEvents;
-	Vault_GetHashFileName(OUT &hashFileNameEvents);
-	return PGetConfiguration()->SGetPathOfFileName(IN &hashFileNameEvents);
-	}
-
 //	TContact::IRuntimeObject::PGetRuntimeInterface()
 //
 //	Enable the TContact object to respond to the interface of its parent, the TAccountXmpp
@@ -419,15 +367,6 @@ TContact::TreeItemContact_DeleteFromNavigationTree_MB(PA_DELETING)
 	}
 
 void
-ITreeItemChatLogEvents::DisplayDialogSendFile()
-	{
-	CStr strCaption;
-	strCaption.Format("Send file to $s", TreeItem_PszGetNameDisplay());
-	strCaption = QFileDialog::getOpenFileName(g_pwMainWindow, IN strCaption);
-	XmppUploadFile(strCaption);	// An empty filename will be ignored by XmppUploadFile()
-	}
-
-void
 TContact::TreeItemContact_DisplayWithinNavigationTree()
 	{
 	Assert(m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
@@ -577,12 +516,6 @@ TContact::XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence)
 		}
 	TreeItemContact_UpdateIcon();
 	} // XmppPresenceUpdateIcon()
-
-void
-TContact::Xmpp_Ping()
-	{
-	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventPing);
-	}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

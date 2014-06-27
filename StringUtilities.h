@@ -45,6 +45,7 @@ VOID strcpynUsafe(PSZU pszuDst, PSZUC pszuSrc, int cbMax);
 
 #define FCompareStrings(pszuString1, pszuString2)	(strcmpA((PSZAC)(PSZUC)pszuString1, (PSZAC)(PSZUC)pszuString2) == 0)
 BOOL FCompareStrings_YZ(PSZUC pszuString1, PSZUC pszuString2);
+BOOL FCompareStringsNoCase(PSZUC pszString1, PSZUC pszString2);
 BOOL FCompareStringsW(PSZWC pszw1, PSZWC pszw2);
 
 int CbTrimTailingWhiteSpaces(INOUT PSZU pszuString);

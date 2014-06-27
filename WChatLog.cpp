@@ -124,8 +124,8 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 		oTextBlockEvent = oCursor.block();	// Get the current block under the cursor
 		Assert(oTextBlockEvent.userData() == NULL);
 		oTextBlockEvent.setUserData(PA_CHILD new OTextBlockUserDataEvent(pEvent));		// Assign an event for each text block
-		if (pSocket != NULL)
-			pEvent->Event_WriteToSocketIfNeverSent(pSocket);
+		if (pSocket != NULL && pEvent->m_tsOther == d_tsOther_ezEventNeverSent)
+			pEvent->Event_WriteToSocket();
 		pEvent->ChatLogUpdateTextBlock(INOUT &oCursor);
 		oCursor.AppendBlockBlank();
 		} // while
@@ -417,6 +417,20 @@ WChatLog::SL_HyperlinkClicked(const QUrl & url)
 	if (url.scheme() != QLatin1String("file") && !url.isRelative())
 		QDesktopServices::openUrl(url);
 	} // SL_HyperlinkClicked()
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+CEventHelp::CEventHelp(PSZUC pszHtmlHelp)
+	{
+	m_strHtmlHelp = pszHtmlHelp;
+	}
+
+void
+CEventHelp::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
+	{
+	poCursorTextBlock->InsertHtmlBin(m_strHtmlHelp, c_brushSilver);
+	}
+
 
 /*void WMainWindow::highlightErrors(int num) {
   QTextCursor tc = ui_.textEdit->textCursor();

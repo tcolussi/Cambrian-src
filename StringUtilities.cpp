@@ -485,6 +485,27 @@ FCompareStrings_YZ(PSZUC pszuString1, PSZUC pszuString2)
 		} // while
 	}
 
+BOOL
+FCompareStringsNoCase(PSZUC pszString1, PSZUC pszString2)
+	{
+	Assert(pszString1 != NULL);
+	Assert(pszString2 != NULL);
+
+	while (TRUE)
+		{
+		UINT ch1 = *pszString1++;
+		if (ch1 >= 'A' && ch1 <= 'Z')
+			ch1 += 32;	// Make lowercase
+		UINT ch2 = *pszString2++;
+		if (ch2 >= 'A' && ch2 <= 'Z')
+			ch2 += 32;	// Make lowercase
+		if (ch1 != ch2)
+			return FALSE;
+		if (ch1 == '\0')
+			return TRUE;
+		}
+	} // FCompareStringsNoCase()
+
 //	Return TRUE if two Unicode strings are equal.
 //	The comparison is case sensitive.
 BOOL
@@ -514,7 +535,7 @@ FCompareStringsW(PSZWC pszw1, PSZWC pszw2)
 //	PSZUC psz = "/data=foo";
 //	PszrCompareStringBeginNoCase(psz, "/data=");	// Return "foo"
 //
-PSZUC
+PSZR
 PszrCompareStringBeginNoCase(PSZUC pszStringCompare, PSZAC pszStringReference)
 	{
 	Assert(pszStringCompare != NULL);
@@ -544,7 +565,7 @@ PszrCompareStringBeginNoCase(PSZUC pszStringCompare, PSZAC pszStringReference)
 //	Return the pointer to the remaining of the string (what is after pszSubString).
 //	Return NULL if pszSubString is not found in pszString.
 //
-PSZUC
+PSZR
 PszrStringContainsSubString(PSZUC pszString, PSZAC pszSubString)
 	{
 	Assert(pszString != NULL);
@@ -587,7 +608,7 @@ PszrStringContainsSubString(PSZUC pszString, PSZAC pszSubString)
 		} // while
 	} // PszrStringContainsSubString()
 
-PSZUC
+PSZR
 PszrStringContainsSubStringLowerCase(PSZUC pszString, PSZAC pszSubString)
 	{
 	Assert(pszString != NULL);
@@ -1558,7 +1579,7 @@ Guid_FInitFromStringHex(OUT GUID * pGuid, IN PSZAC pszString)
 	}
 
 //	Return the number of bytes necessary to allocate for encoding binary data into Base85.
-//	This function includes for the null terminator and an extra byte.  To
+//	This function includes for the null-terminator plus an extra byte.
 UINT
 Base85_CbEncodeAlloc(int cbDataBinary)
 	{

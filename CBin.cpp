@@ -618,7 +618,7 @@ CBin::BinInitFromBinaryDataWithExtraVirtualZeroes(const void * pvData, int cbDat
 
 
 //	Copy a string into the bin.
-//	The method copies the null terminator.
+//	The method copies the null-terminator.
 void
 CBin::BinInitFromStringWithNullTerminator(PSZAC pszData)
 	{
@@ -1455,7 +1455,7 @@ CBin::BinAppendUrlPercentEncode(PSZUC pszUrl)
 			case '_':
 			case '.':
 			case '~':
-				// Those characters do not need to be encoded
+				// Those characters do not need to be encoded in a URL
 				break;
 			default:
 				BinAppendByte('%');
@@ -1928,18 +1928,12 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chSourceJidBare				'j'
 #define d_chSourceJidFull				'J'
 #define d_chSourcePQDateTime			'D'	// Could be removed, not really used
-#define d_chSourceTIMESTAMP				't'	// {t|}
+#define d_chSourceTIMESTAMP				't'	// {t_} {tL} {tU}
 #define d_chSourceTIMESTAMP_DELTA		'T'	// {T-} {T_}
 #define d_chSourceAmount				'A' // {AB} {Am} {A$} {A*}
 #define d_chSourceKiB_32				'k'
 #define d_chSourceKiB_64				'K'
 
-
-struct SEventList
-{
-	IEvent * pEvent;
-	SEventList * pNext;
-};
 
 // d = QDate
 // D = QDateTime
@@ -1965,6 +1959,9 @@ struct SEventList
 #define d_chEncodingKiB					'K'	// Show the value in Bytes or KiB
 #define d_chEncodingKiB_Percent			'%'	// Show the percentage (%) by dividing two values (this is useful to show the progress of a download)
 #define d_chEncodingKiB_PercentOfTotal	'T'	// Show the the percentage (%) as well as the total
+
+#define d_chEncodingQDateTimeLocal		'L'	// Display a TIMESTAMP in the local date and time
+#define d_chEncodingQDateTimeUTC		'U'	// Display a TIMESTAMP in the UTC date and time
 
 void
 CBin::BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding)
@@ -2195,9 +2192,18 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 					if (u.pdtuDateTime != NULL)
 						BinUtf8AppendStringQ(IN u.pdtuDateTime->toString(Qt::ISODate));
 					break;
-				case d_chSourceTIMESTAMP:	// {t_}
-					Assert(chEncoding == d_chEncodingBase64Url);
-					m_paData->cbData += Timestamp_CchEncodeToBase64Url(va_arg(vlArgs, TIMESTAMP), OUT PbAllocateExtraMemory(16));
+				case d_chSourceTIMESTAMP:
+					{
+					TIMESTAMP ts = va_arg(vlArgs, TIMESTAMP);
+					if (chEncoding == d_chEncodingBase64Url)			// {t_}
+						{
+						m_paData->cbData += Timestamp_CchEncodeToBase64Url(ts, OUT PbAllocateExtraMemory(16));
+						break;
+						}
+					Assert(chEncoding == d_chEncodingQDateTimeLocal);	// {tL}
+					QDateTime date = QDateTime::fromMSecsSinceEpoch(ts);
+					BinUtf8AppendStringQ(date.toString(Qt::DefaultLocaleShortDate));
+					}
 					break;
 				case d_chSourceAmount:
 					m_paData->cbData += Amount_CchFormat(OUT PbAllocateExtraMemory(64), va_arg(vlArgs, AMOUNT), chEncoding);
@@ -2611,6 +2617,12 @@ CBin::BinAppendXmlElementBinaryBase64(PSZAC pszElementName, const CBin & binElem
 	Assert(pszElementName[0] != '\0');
 	if (!binElementValue.FIsEmptyBinary())
 		BinAppendTextSzv_VE("<$s>{B/}</$s>\n", pszElementName, &binElementValue, pszElementName);
+	}
+
+void
+CBin::BinAppendXmlForSelfClosingElement()
+	{
+	BinAppendBinaryData("/>\n", 3);	// Close the XML element
 	}
 
 //	Create a string containing multiple XML attributes, ready to be inserted in the file.

@@ -7,7 +7,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #ifdef DEBUG
-	#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
+	//#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
 	//#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
 #endif
@@ -305,6 +305,15 @@ IEvent::Event_FHasCompleted() const
 	return (m_tsOther > d_tsOther_kmReserved);
 	}
 
+BOOL
+IEvent::Event_FIsEventRecentThanMinutes(int cMinutes) const
+	{
+	Assert(cMinutes > 0);
+	Assert(m_tsEventID > d_tsOther_kmReserved);
+	// Calculate the age of the event
+	return ((L64)(Timestamp_GetCurrentDateTime() - m_tsEventID) < (L64)cMinutes * d_ts_cMinutes);
+	}
+
 //	Return the text block matching the event.
 //	In the rare case where there is no text block matching the event, this method will return an invalid text block,
 //	however not a NULL text block which will crash the application if used by a QTextCursor.
@@ -387,6 +396,12 @@ CSocketXmpp *
 IEvent::PGetSocket_YZ() const
 	{
 	return PGetAccount_NZ()->PGetSocket_YZ();
+	}
+
+CSocketXmpp *
+IEvent::PGetSocketOnlyIfReady() const
+	{
+	return PGetAccount_NZ()->Socket_PGetOnlyIfReadyToSendMessages();
 	}
 
 void
@@ -653,15 +668,15 @@ IEventMessageText::_BinHtmlInitWithTimeAndMessage(OUT CBin * pbinTextHtml) CONST
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventMessageXmlRawSent::CEventMessageXmlRawSent(const CStr & strMessage) : IEventMessageText(NULL)
+CEventMessageXmlRawSent::CEventMessageXmlRawSent(PSZUC pszXmlStanza) : IEventMessageText(NULL)
 	{
-	m_strMessageText = strMessage;
+	m_strMessageText = pszXmlStanza;
 	}
 
 void
 CEventMessageXmlRawSent::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
-	pbinXmlAttributes->BinXmlInitStanzaWithXmlRaw(m_pVaultParent_NZ->m_pParent, m_strMessageText);
+	pbinXmlAttributes->BinXmlInitStanzaWithXmlRaw(m_strMessageText);
 	pbinXmlAttributes->XmppWriteStanzaToSocket();
 	}
 
@@ -678,9 +693,9 @@ CEventMessageTextSent::CEventMessageTextSent(const TIMESTAMP * ptsEventID) : IEv
 	{
 	}
 
-CEventMessageTextSent::CEventMessageTextSent(const CStr & strMessageText) : IEventMessageText(NULL)
+CEventMessageTextSent::CEventMessageTextSent(PSZUC pszMessageText) : IEventMessageText(NULL)
 	{
-	m_strMessageText = strMessageText;
+	m_strMessageText = pszMessageText;
 	}
 
 CEventMessageTextSent::~CEventMessageTextSent()
@@ -1112,19 +1127,14 @@ CEventFileReceived::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor *
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+/*
 void
 CEventMessageTextSent::MessageDeliveredConfirmed()
 	{
 	Event_SetCompleted(NULL);
 	//TimestampOther_UpdateAsEventCompletedNow();
-	/*
-	if (mu_task.paTask == NULL)
-		return;		// This happens when receiving twice a confirmation receipt for the same event/message
-	Assert(mu_task.paTaskSendText->m_oTextBlockMessageLog.isValid());
-	mu_task.paTaskSendText->ChatLog_UpdateEventWithinWidget();
-	_TaskDestroy();
-	*/
 	}
+*/
 
 void
 CEventMessageTextSent::MessageResendUpdate(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate)
@@ -1135,6 +1145,7 @@ CEventMessageTextSent::MessageResendUpdate(const CStr & strMessageUpdated, INOUT
 	Assert(!Event_FHasCompleted());
 	//ChatLog_UpdateEventWithinWidget(pwLayoutChatLogUpdate->m_pwChatLog);
 	pwLayoutChatLogUpdate->m_pwChatLog_NZ->ChatLog_EventUpdate(this);
+	Event_WriteToSocketIfReady();
 	}
 
 void
@@ -1450,7 +1461,9 @@ CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * p
 	Assert(pContactGroupSender == NULL || pContactGroupSender->EGetRuntimeClass() == RTI(TContact));
 	if (tsOther > d_tsOther_kmReserved)
 		{
+		BOOL fDebugContinueSearch = FALSE;
 		const TIMESTAMP tsOtherStop = tsOther - (25 * d_ts_cHours);	// In a chat, the m_tsOther are semi-sorted for message received, as they represent the timestamps from the remote computers.  Therefore any timestamp older than one day (25 hours) is considered out of range, and there is no need to search the entire list of event.
+		Assert(tsOtherStop > d_tsOther_kmReserved);
 		IEvent ** ppEventStop;
 		IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 		while (ppEvent != ppEventStop)
@@ -1463,11 +1476,18 @@ CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * p
 				Assert(pEvent->Event_FIsEventTypeReceived());
 				Assert(pEvent->m_tsOther > d_tsOther_kmReserved);
 				if (pEvent->m_tsOther == tsOther && pEvent->m_pContactGroupSender_YZ == pContactGroupSender)
+					{
+					if (fDebugContinueSearch)
+						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "PFindEventReceivedByTimestampOther() is returning tsEventID $t which would have been missing!\n", pEvent->m_tsEventID);
 					return pEvent;
+					}
 				if (pEvent->m_tsOther < tsOtherStop)
 					{
-					MessageLog_AppendTextFormatSev(eSeverityNoise, "PFindEventByTimestampOther_($t, 0x$p) - Stopping search at pEvent->m_tsOther $t\n", tsOther, pContactGroupSender, pEvent->m_tsOther);
-					break;	// We went far enough in the list to conclude the event does not match the timestamp
+					if (!fDebugContinueSearch)
+						MessageLog_AppendTextFormatSev(eSeverityNoise, "PFindEventReceivedByTimestampOther($t ({tL}) for contact ^j) - Stopping search at pEvent->m_tsOther $t ({tL})\n", tsOther, tsOther, pContactGroupSender, pEvent->m_tsOther, pEvent->m_tsOther);
+					// For the debug build, search further to see if the event could be there
+					fDebugContinueSearch = TRUE;
+					//break;	// We went far enough in the list to conclude the event does not match the timestamp
 					}
 				} // if
 			} // while
@@ -1669,7 +1689,7 @@ CEventPing::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	}
 
 void
-CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType *)
+CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType *)
 	{
 	if (m_tsContact == d_ts_zNULL)
 		m_tsContact = pXmlNodeExtraData->TsGetAttributeValueTimestamp_ML(d_chXCPa_PingTime);
@@ -1692,6 +1712,44 @@ CEventPing::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_
 		}
 	if (!m_strError.FIsEmptyString())
 		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("  <b>(error: ^S)</b>", &m_strError);
+	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(0xE8CFD8));
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+CEventVersion::CEventVersion()
+	{
+	}
+
+void
+CEventVersion::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+	{
+	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><query xmlns='jabber:iq:version'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
+	}
+
+void
+CEventVersion::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply)
+	{
+	Assert(pbinXcpStanzaReply != NULL);	// There is no reply to CEventVersion
+	m_strVersion = pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Version);
+	m_strClient	= pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Client);
+	m_strOperatingSystem = pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Platform);
+	Event_SetCompleted(NULL);
+	}
+
+void
+CEventVersion::XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact)
+	{
+	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Need to implement CEventVersion::XmppProcessStanzaFromContact(^j): ^N", pContact, pXmlNodeStanza);
+	m_strVersion.Format("$s $s, $s", pXmlNodeStanza->PszuFindElementValue("name"), pXmlNodeStanza->PszuFindElementValue("version"), pXmlNodeStanza->PszuFindElementValue("os"));
+	Event_SetCompleted(NULL);
+	}
+
+//	CEventVersion::IEvent::ChatLogUpdateTextBlock()
+void
+CEventVersion::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
+	{
+	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
+	g_strScratchBufferStatusBar.BinAppendTextSzv_VE(m_strVersion.FIsEmptyString() ? "Querying which version <b>^s</b> is using..." : "<b>^s</b> is running ^S version <b>^S</b> on ^S", ChatLog_PszGetNickNameOfContact(), &m_strClient, &m_strVersion, &m_strOperatingSystem);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(0xE8CFD8));
 	}
 

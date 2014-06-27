@@ -228,7 +228,7 @@ ITreeItemChatLog::ChatLog_PszGetNickname() CONST_MCC
 	while (TRUE)
 		{
 		CHS ch = *pchAt;
-		if (ch == ' ' || ch == '@')
+		if (ch == ' ' || ch == '@' || ch == ':')
 			{
 			BOOL fDigitsRemoved = FALSE;
 			PCHUC pchTemp = pchAt;
@@ -413,7 +413,28 @@ ITreeItemChatLogEvents::Vault_PFindEventByID(TIMESTAMP tsEventID) CONST_MCC
 	}
 
 CEventMessageTextSent *
-ITreeItemChatLogEvents::Vault_PGetEventLastMessageSent_YZ() const
+ITreeItemChatLogEvents::Vault_PFindEventLastMessageTextSentMatchingText(const CStr & strMessageText) const
+	{
+	if (m_paVaultEvents != NULL)
+		{
+		IEvent ** ppEventStop;
+		IEvent ** ppEvent = m_paVaultEvents->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+		while (ppEvent != ppEventStop)
+			{
+			CEventMessageTextSent * pEvent = (CEventMessageTextSent *)*--ppEventStop;
+			if (pEvent->EGetEventClass() == CEventMessageTextSent::c_eEventClass)
+				{
+				if (pEvent->m_strMessageText.FCompareBinary(strMessageText))
+					return pEvent;
+				break;
+				}
+			} // while
+		}
+	return NULL;
+	}
+/*
+CEventMessageTextSent *
+ITreeItemChatLogEvents::Vault_PGetEventLastMessageSentEditable_YZ() const
 	{
 	if (m_paVaultEvents != NULL)
 		{
@@ -423,17 +444,30 @@ ITreeItemChatLogEvents::Vault_PGetEventLastMessageSent_YZ() const
 			{
 			IEvent * pEvent = *--ppEventStop;
 			if (pEvent->EGetEventClass() == CEventMessageTextSent::c_eEventClass)
-				return (CEventMessageTextSent *)pEvent;
-			}
+				{
+				if (pEvent->Event_FIsEventRecentThanMinutes(10))
+					return (CEventMessageTextSent *)pEvent;	// Only edit the last message if it was written within 10 minutes.  This is to prevent to accidentally edit an old message by pressing the up arrow.
+				break;
+				}
+			} // while
 		}
 	return NULL;
 	}
+*/
 
 void
 ITreeItemChatLogEvents::Vault_WriteEventsToDiskIfModified()
 	{
 	if (m_paVaultEvents != NULL)
 		m_paVaultEvents->WriteEventsToDiskIfModified();
+	}
+
+QString
+ITreeItemChatLogEvents::Vault_SGetPath() const
+	{
+	SHashSha1 hashFileNameEvents;
+	Vault_GetHashFileName(OUT &hashFileNameEvents);
+	return PGetConfiguration()->SGetPathOfFileName(IN &hashFileNameEvents);
 	}
 
 /*
@@ -450,3 +484,206 @@ ITreeItemChatLogEvents::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...) cons
 	}
 
 */
+
+#if 0
+	// API call
+	<_a i='identifier' f='function'/>parameters</_a>
+	<_A i='identifier' e='error (if any)'>result</_A>
+
+#endif
+
+//	SUPPORTED COMMANDS
+//
+//	/ping					Ping the contact.  If it is a group, broadcast a ping and record the timestamp of the first group member responding.
+//	/sendxml	<xml>		Send XML data directly through the socket.  The user should know what he is doing, because any invalid XML may terminate the network connection.
+//	/sendfile
+//	/sendbtc
+//	/version				Query the version of the software on the contact
+//	/api		[fn] [params}	Query an API on the contact
+//	/info					Query the information of the contact or group.  This is essentially a PAPI call.
+//	/add [user]
+//	/find [text]
+
+#define d_chChatLogPrefix_CommandLine		'/'
+
+//	Return the remaining of the command, which are its parameters, or a pointer to an empty string.
+//	Return NULL if the command was not recognized
+PSZR
+PszrCompareStringBeginCommand(PSZUC pszStringCompare, PSZAC pszCommand)
+	{
+	PSZR pszr = PszrCompareStringBeginNoCase(pszStringCompare, pszCommand);
+	if (pszr != NULL)
+		{
+		if (!Ch_FIsWhiteSpaceOrNullTerminator(*pszr))
+			return NULL;	// If there is a character following the command, it means the user typed something else, such as "/pingpong"
+		while (Ch_FIsWhiteSpace(*pszr))
+			pszr++;	// Skip any white spaces after the command so we return its parameters
+		}
+	return pszr;
+	}
+
+
+//	Parse the text the user typed and act accordingly:
+//	- The most common case is creating an event to send an instant text message to the contact or group.
+//	- If the user typed a command, then execute the command.
+//	Return TRUE if a 'pause' should be sent to the remote client.
+EUserCommand
+ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & strCommandLineOrMessage)
+	{
+	PSZU pszMessage = strCommandLineOrMessage.PbGetData();
+	Assert(pszMessage != NULL);
+	// Check if there is a command line instead of a message
+	CHS chMessage0 = pszMessage[0];
+	if (chMessage0 == d_chChatLogPrefix_CommandLine)
+		{
+		// We have a command line
+		PSZUC pszCommand = pszMessage + 1;
+		if (PszrCompareStringBeginCommand(pszCommand, c_sza_ping))
+			{
+			Xmpp_Ping();
+			goto Done;
+			}
+		if (PszrCompareStringBeginCommand(pszCommand, "version"))
+			{
+			Xmpp_QueryVersion();
+			goto Done;
+			}
+		PSZUC pszParameters =  PszrCompareStringBeginCommand(pszCommand, "api");
+		if (pszParameters != NULL)
+			{
+			// Query an API on the remote contact
+			if (EGetRuntimeClass() == RTI(TContact))
+				{
+				PSZUC pszApiName = pszParameters;	// The first parameter after "/api" is the API name
+				if (*pszApiName != '\0')
+					{
+					// Find the parameters of the API
+					while (TRUE)
+						{
+						break;
+						}
+					((TContact *)this)->Xcp_ApiRequest(pszParameters, d_zNA, NULL);
+					goto Done;
+					}
+				}
+			}
+		pszParameters = PszrCompareStringBeginCommand(pszCommand, "sendxml");
+		if (pszParameters != NULL && pszParameters[0] == '<')
+			{
+			Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageXmlRawSent(pszParameters));
+			goto Done;
+			}
+		if (pszCommand[0] == d_chChatLogPrefix_CommandLine)
+			{
+			pszMessage = (PSZU)pszCommand;	// The message begins with "//", therefore the message is the command
+			goto SendMessageText;
+			}
+
+		// The command is invalid, therefore display something to the user so he/she may learn about the syntax of the command line interface
+		Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventHelp(
+			g_strScratchBufferStatusBar.Format(
+			"Invalid command: <b>^s</b><br/>"
+			"Valid commands are:<br/>"
+			"^_^_^_<b>/ping</b> to ping a contact<br/>"
+			"^_^_^_<b>/version</b> to query the version of the contact<br/>"
+			"^_^_^_<b>/sendxml</b> to send XML data directly through the socket<br/>"
+			"^_^_^_<b>/api</b> to invoke a remote API call on the contact<br/>"
+			"^_^_^_<b>//</b> to send a text message starting with a <b>/</b><br/>"
+			, pszMessage)));
+		return eUserCommand_Error;
+		} // if (command line)
+
+	// No command line, therefore attempt to send an event
+	if (PszrCompareStringBeginNoCase(pszMessage, "file://") == NULL)
+		{
+		SendMessageText:
+		Xmpp_SendEventMessageText(pszMessage);	// Send the text message to the contact (or group)
+		return eUserCommand_zMessageTextSent;
+		}
+	else
+		{
+		// We wish to send file(s) to the user or group
+		Xmpp_SendEventsFileUpload(IN_MOD_INV pszMessage);
+		}
+	Done:
+	return eUserCommand_ComposingStopped;
+	} // Xmpp_EParseUserCommandAndSendEvents()
+
+//	Send a text message to a contact or a group.
+void
+ITreeItemChatLogEvents::Xmpp_SendEventMessageText(PSZUC pszMessage)
+	{
+	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageTextSent(pszMessage));
+	}
+
+
+//	Upload a file to the contact.
+//	The file name is expected to be a local path.
+void
+ITreeItemChatLogEvents::Xmpp_SendEventFileUpload(PSZUC pszFileUpload)
+	{
+	Assert(m_pawLayoutChatLog != NULL);
+	if (pszFileUpload == NULL || pszFileUpload[0] == '\0')
+		return;
+	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventFileSent(pszFileUpload));
+	}
+
+//	Upload multiple files.
+//	This method expect files to be in the 'URL' with the prefix "file://"
+void
+ITreeItemChatLogEvents::Xmpp_SendEventsFileUpload(IN_MOD_INV PSZU pszmFilesUpload)
+	{
+	Assert(pszmFilesUpload != NULL);
+	PSZUC pszFileUpload = pszmFilesUpload;
+	while (TRUE)
+		{
+		UINT ch = *pszmFilesUpload++;
+		if (ch == '\n' || ch == '\0')
+			{
+			pszmFilesUpload[-1] = '\0';	// Insert a null-terminator
+			CStr strFile = QUrl::fromUserInput(CString(pszFileUpload)).toLocalFile();	// This code is grossly inefficient, however necessary because Qt uses triple slashes (///) after the schema, such as: "file:///c:/folder/file.txt".  I could manually skip the extra slash, however it may break under other platrorms.
+			MessageLog_AppendTextFormatCo(d_coBlack, "XmppUploadFiles() - $S\n", &strFile);
+			Xmpp_SendEventFileUpload(strFile);
+			if (ch == '\0')
+				return;	// We are done
+			pszFileUpload = pszmFilesUpload;
+			}
+		}
+	}
+
+void
+ITreeItemChatLogEvents::DisplayDialogSendFile()
+	{
+	CStr strCaption;
+	strCaption.Format("Send file to $s", TreeItem_PszGetNameDisplay());
+	strCaption = QFileDialog::getOpenFileName(g_pwMainWindow, IN strCaption);
+	Xmpp_SendEventFileUpload(strCaption);	// An empty filename will be ignored by Xmpp_SendEventFileUpload()
+	}
+
+
+CSocketXmpp *
+ITreeItemChatLogEvents::Xmpp_PGetSocketOnlyIfReady() const
+	{
+	return m_pAccount->Socket_PGetOnlyIfReadyToSendMessages();
+	}
+
+CSocketXmpp *
+TContact::Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp() const
+	{
+	if (m_cVersionXCP <= 0)
+		return m_pAccount->Socket_PGetOnlyIfReadyToSendMessages();
+	return NULL;
+	}
+
+void
+ITreeItemChatLogEvents::Xmpp_Ping()
+	{
+	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventPing);	// Pinging a group makes little sense, however there is no harm.  The first group member responding to the ping will set the timestamp.
+	}
+
+void
+ITreeItemChatLogEvents::Xmpp_QueryVersion()
+	{
+	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventVersion);
+	}
+

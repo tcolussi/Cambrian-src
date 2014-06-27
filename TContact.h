@@ -99,16 +99,16 @@ public:
 	PSZUC XmppRoster_PszGetSubscription() const;
 	void XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence);
 	void Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC;
-	void Xmpp_Ping();
 	CSocketXmpp * Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp() const;
 	void XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp);
 	void Xcp_WriteStanza_VE(PSZAC pszFmtTemplate, ...) CONST_MCC;
 	void Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEvent);
 	void Xcp_ServiceDiscovery();
 	void Xcp_Synchronize();
+	void Xcp_ApiRequest(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters);
+	void Xcp_ApiProcessReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 
 	//void BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const;
-	void Contact_SendMessage(const CStr & strMessage);
 	void Contact_AddToGroup(int iGroup);
 	EMenuAction Contact_EGetMenuActionPresence() const;
 

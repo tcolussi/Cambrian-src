@@ -75,7 +75,7 @@ typedef const CHU * PCHE;
 typedef const CHU * PCHERROR;	// pche (see Main.cpp for details on this type of pointer)
 typedef const CHW * PCHERRORW;	// pchew
 
-typedef PSZUC PSZREMAINING;		// pszr
+typedef PSZUC PSZREMAINING;		// pszr (return a pointer which points to the remaining of the string of one of the input parameter), or NULL.
 typedef PSZUC PSZR;
 typedef PSZUC PSZRU;
 typedef PSZAC PSZRA;

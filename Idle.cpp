@@ -2,7 +2,9 @@
 //
 //	These functions are heavily platform dependent, and as a result defined in this file.
 //
-#include "PreCompiledHeaders.h"
+#ifndef PRECOMPILEDHEADERS_H
+	#include "PreCompiledHeaders.h"
+#endif
 
 #ifdef Q_OS_WIN
 UINT

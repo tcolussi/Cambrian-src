@@ -272,27 +272,6 @@ CStr::FCompareStringsNoCaseUntilCharacter(PSZUC pszuStringCompare, UINT chCompar
 	return FALSE;
 	} // FCompareStringsNoCaseUntilCharacter()
 
-BOOL
-FCompareStringsNoCase(PSZUC pszString1, PSZUC pszString2)
-	{
-	Assert(pszString1 != NULL);
-	Assert(pszString2 != NULL);
-
-	while (TRUE)
-		{
-		UINT ch1 = *pszString1++;
-		if (ch1 >= 'A' && ch1 <= 'Z')
-			ch1 += 32;	// Make lowercase
-		UINT ch2 = *pszString2++;
-		if (ch2 >= 'A' && ch2 <= 'Z')
-			ch2 += 32;	// Make lowercase
-		if (ch1 != ch2)
-			return FALSE;
-		if (ch1 == '\0')
-			return TRUE;
-		}
-	} // FCompareStringsNoCase()
-
 //	Optimized method to compare CStr with with a portion of pszuStringCompare.
 //	The motivation for this optimization is two strings having different lengths cannot be identical.
 BOOL

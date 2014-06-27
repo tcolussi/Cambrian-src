@@ -82,6 +82,17 @@ enum EEventClass
 		#define d_chXCPa_PingTime								't'
 		#define d_szXCPa_PingTime_t								" t='$t'"
 
+	eEventClass_eVersion							= _USZU3('V', 'E', 'R'),	// The event version is somewhat similar as 'ping', as the remote client directly replies without allocating any event.
+	eEventClass_eVersion_class						= eEventClass_eVersion | eEventClass_kfNeverSerializeToDisk,
+		#define d_chXCPa_eVersion_Version						'v'
+		#define d_szXCPa_eVersion_Version						" v='" d_szApplicationVersion "'"
+		#define d_chXCPa_eVersion_Platform						'p'
+		#define d_szXCPa_eVersion_Platform						" p='" d_szOS "'"	// Platform / Operating System
+		#define d_chXCPa_eVersion_Client						'c'
+		#define d_szXCPa_eVersion_Client						" c='" d_szApplicationName "'"
+
+	eEventClass_eHelp_class							= _USZU3('H', 'L', 'P') | eEventClass_mfNeverSerialize,	// This event is never serialized to disk nor via XCP
+
 	eEventClass_eGroupInfo							= _USZU2(_g_, 'i'),
 	eEventClass_eGroupMemberJoins					= _USZU2(_g_, 'j'),
 	eEventClass_eGroupMemberInvited_class			= eEventClass_eGroupMemberJoins,
@@ -110,11 +121,8 @@ enum EEventClass
 	}; // EEventClass
 
 inline EEventClass EEventClassFromPsz(PSZUC pszEventClass) { return (EEventClass)UszuFromPsz(pszEventClass); }
-#define FEventClassReceived(chEventClass)		((chEventClass) >= 'a')	// All received events begin with a lowercase
+#define FEventClassReceived(chEventClass0)		((chEventClass0) >= 'a')	// All received events begin with a lowercase
 
-#define d_szServiceDiscovery_GroupChat			"gc"
-#define d_szServiceDiscovery_FileTransfers		"ft"
-#define d_szXmlServiceDiscovery					"<sd>" "</sd>"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 enum EStanzaType
@@ -136,7 +144,7 @@ protected:
 public:
 	inline BOOL FSerializingEventToDisk() const { return (m_pContact == NULL); }
 	void BinXmlInitStanzaWithGroupSelector(TGroup * pGroup);
-	void BinXmlInitStanzaWithXmlRaw(ITreeItemChatLogEvents * pContactOrGroup, PSZUC pszMessageXml);
+	void BinXmlInitStanzaWithXmlRaw(PSZUC pszMessageXml);
 	void BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact);
 	void BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember);
 	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
@@ -261,7 +269,6 @@ public:
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 
-	void Event_WriteToSocketIfNeverSent(CSocketXmpp * pSocket);
 	BOOL Event_FIsEventBelongsToGroup() const;
 	BOOL Event_FIsEventTypeSent() const;
 	BOOL Event_FIsEventTypeReceived() const;
@@ -269,6 +276,7 @@ public:
 	void Event_SetCompletedAndUpdateWidgetWithinChatLog();
 	void Event_UpdateWidgetWithinParentChatLog();
 	BOOL Event_FHasCompleted() const;
+	BOOL Event_FIsEventRecentThanMinutes(int cMinutes) const;
 	inline void Event_SetFlagOutOfSync() { m_uFlagsEvent |= FE_kfEventOutOfSync; }
 	inline void Event_SetFlagErrorProtocol() { m_uFlagsEvent |= FE_kfEventProtocolError; }
 
@@ -277,13 +285,18 @@ public:
 	void ChatLog_UpdateEventWithinWidget(QTextEdit * pwEditChatLog);
 	const QBrush & ChatLog_OGetBrushForEvent() const;
 	PSZUC ChatLog_PszGetNickNameOfContact() const;
+
 	ITreeItemChatLogEvents * PGetContactOrGroup_NZ() const;
 	TAccountXmpp * PGetAccount_NZ() const;
 	CSocketXmpp * PGetSocket_YZ() const;
+	CSocketXmpp * PGetSocketOnlyIfReady() const;
 	void Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...);
 	void Socket_WriteXmlIqSet_VE_Gso(TContact * pContact, PSZAC pszFmtTemplate, ...);
 	void Socket_WriteXmlIqError_VE_Gso(PSZAC pszErrorType, PSZUC pszErrorID, PSZAC pszFmtTemplate, ...);
 	void Socket_WriteXmlIqReplyAcknowledge();
+
+	void Event_WriteToSocket();
+	void Event_WriteToSocketIfReady();
 
 protected:
 	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const;
@@ -339,7 +352,7 @@ public:
 class CEventMessageXmlRawSent : public IEventMessageText	// This class is mostly for debugging by sending raw XML data directly to the socket
 {
 public:
-	CEventMessageXmlRawSent(const CStr & strMessage);
+	CEventMessageXmlRawSent(PSZUC pszXmlStanza);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eMessageXmlRaw_class; }
 	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
@@ -351,7 +364,7 @@ public:
 	static const EEventClass c_eEventClass = eEventClass_eMessageTextSent;
 public:
 	CEventMessageTextSent(const TIMESTAMP * ptsEventID);
-	CEventMessageTextSent(const CStr & strMessageText);
+	CEventMessageTextSent(PSZUC pszMessageText);
 	virtual ~CEventMessageTextSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
@@ -546,6 +559,7 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Ping the contact and wait for the response
 class CEventPing : public IEvent
 {
 public:
@@ -560,6 +574,36 @@ public:
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 }; // CEventPing
+
+//	Query the the version of the client and wait for the response
+class CEventVersion : public IEvent
+{
+public:
+	static const EEventClass c_eEventClass = eEventClass_eVersion_class;
+	CStr m_strClient;
+	CStr m_strVersion;
+	CStr m_strOperatingSystem;
+public:
+	CEventVersion();
+	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
+	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+
+	void XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact);
+};
+
+//	Display help in the Chat Log
+class CEventHelp : public IEvent
+{
+public:
+	CStr m_strHtmlHelp;
+
+public:
+	CEventHelp(PSZUC pszHtmlHelp);
+	virtual EEventClass EGetEventClass() const { return eEventClass_eHelp_class; }
+	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Class to download a large event.
@@ -587,7 +631,7 @@ public:
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 
-	void XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, CBinXcpStanzaType * pbinXcpStanzaReply, QTextEdit * pwEditChatLog);
+	void XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply, QTextEdit * pwEditChatLog);
 	static const EEventClass c_eEventClass = eEventClass_eDownloader_class;
 }; // CEventDownloader
 

@@ -170,6 +170,7 @@ OCambrian::MessageSendTo(const QString & sContactTo, const QString & sMessage)
 	{
 	MessageLog_AppendTextFormatSev(eSeverityComment, "Sending message to $Q: $Q\n", &sContactTo, &sMessage);
 	CStr strContactTo = sContactTo;	// Typecast
+	CStr strMessage = sMessage;		// Typecast
 	// Find the contact to send the message
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = g_arraypAccounts.PrgpGetAccountsStop(OUT &ppAccountStop);
@@ -185,7 +186,7 @@ OCambrian::MessageSendTo(const QString & sContactTo, const QString & sMessage)
 				strContactTo.FCompareStringsNoCaseUntilCharacter(pContact->m_strJidBare, '@') || // Compare the username
 				strContactTo.FCompareStringsNoCase(pContact->m_strJidBare))
 				{
-				pContact->Contact_SendMessage(sMessage);
+				pContact->Xmpp_SendEventMessageText(strMessage);
 				return;
 				}
 			} // while

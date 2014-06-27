@@ -52,6 +52,7 @@
         <file alias="Forward">Icons/Forward.png</file>
         <file alias="Copy">Icons/Copy.png</file>
         <file alias="Pencil">Icons/Pencil_10x10.PNG</file>
+		<file alias="Pencil_16x16">Icons/Pencil_16x16.PNG</file>
         <file alias="DeliveredAndRead">Icons/check2.png</file>
         <file alias="Delivered">Icons/check1.png</file>
         <file alias="Bitcoin">Icons/BitcoinIcon.png</file>
