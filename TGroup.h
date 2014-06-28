@@ -50,6 +50,8 @@ public:
 	void GroupInitNewIdentifier();
 	void DisplayDialogProperties();
 	void DisplayDialogAddContacts();
+	void XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const;
+	void XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest);
 
 	void Member_Add_UI(TContact * pContact);
 	void Member_Remove_UI(PA_DELETING TGroupMember * pMember);

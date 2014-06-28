@@ -485,13 +485,6 @@ ITreeItemChatLogEvents::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...) cons
 
 */
 
-#if 0
-	// API call
-	<_a i='identifier' f='function'/>parameters</_a>
-	<_A i='identifier' e='error (if any)'>result</_A>
-
-#endif
-
 //	SUPPORTED COMMANDS
 //
 //	/ping					Ping the contact.  If it is a group, broadcast a ping and record the timestamp of the first group member responding.
@@ -511,6 +504,7 @@ ITreeItemChatLogEvents::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...) cons
 PSZR
 PszrCompareStringBeginCommand(PSZUC pszStringCompare, PSZAC pszCommand)
 	{
+	Assert(pszStringCompare != NULL);
 	PSZR pszr = PszrCompareStringBeginNoCase(pszStringCompare, pszCommand);
 	if (pszr != NULL)
 		{
@@ -522,6 +516,25 @@ PszrCompareStringBeginCommand(PSZUC pszStringCompare, PSZAC pszCommand)
 	return pszr;
 	}
 
+//	Return the next parameter of the command line.
+//	If there is no more parameters, return a pointer to the null-terminator of pszCommandLine.
+//
+//	This method will insert null-terminator(s) between the parameters
+//
+//	Example:
+//	/api profileget Etg]z/!%wBcm*[}zmFKZ#UngL
+PSZRO
+PszroGetParameterNext(INOUT PSZU pszParameter)
+	{
+	Assert(pszParameter != NULL);
+	// Skip the content of the first parameter
+	while (!Ch_FIsWhiteSpaceOrNullTerminator(*pszParameter))
+		pszParameter++;
+	// Insert null-terminator(s) between the parameters
+	while (Ch_FIsWhiteSpace(*pszParameter))
+		*pszParameter++ = '\0';	// Insert null-terminators
+	return pszParameter;
+	}
 
 //	Parse the text the user typed and act accordingly:
 //	- The most common case is creating an event to send an instant text message to the contact or group.
@@ -549,28 +562,24 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			goto Done;
 			}
 		PSZUC pszParameters =  PszrCompareStringBeginCommand(pszCommand, "api");
-		if (pszParameters != NULL)
+		if (pszParameters != NULL && *pszParameters != '\0')
 			{
-			// Query an API on the remote contact
 			if (EGetRuntimeClass() == RTI(TContact))
 				{
-				PSZUC pszApiName = pszParameters;	// The first parameter after "/api" is the API name
-				if (*pszApiName != '\0')
-					{
-					// Find the parameters of the API
-					while (TRUE)
-						{
-						break;
-						}
-					((TContact *)this)->Xcp_ApiRequest(pszParameters, d_zNA, NULL);
-					goto Done;
-					}
+				// Invoke an XCP API on the remote contact
+				((TContact *)this)->XcpApi_Invoke(IN pszParameters, d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
+				goto Done;
 				}
 			}
 		pszParameters = PszrCompareStringBeginCommand(pszCommand, "sendxml");
 		if (pszParameters != NULL && pszParameters[0] == '<')
 			{
 			Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageXmlRawSent(pszParameters));
+			goto Done;
+			}
+		if (PszrCompareStringBeginCommand(pszCommand, "sendfile") != NULL)
+			{
+			DisplayDialogSendFile();
 			goto Done;
 			}
 		if (pszCommand[0] == d_chChatLogPrefix_CommandLine)
@@ -584,11 +593,11 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			g_strScratchBufferStatusBar.Format(
 			"Invalid command: <b>^s</b><br/>"
 			"Valid commands are:<br/>"
-			"^_^_^_<b>/ping</b> to ping a contact<br/>"
-			"^_^_^_<b>/version</b> to query the version of the contact<br/>"
-			"^_^_^_<b>/sendxml</b> to send XML data directly through the socket<br/>"
-			"^_^_^_<b>/api</b> to invoke a remote API call on the contact<br/>"
-			"^_^_^_<b>//</b> to send a text message starting with a <b>/</b><br/>"
+			"^_^_^_ <b>/ping</b> to ping a contact<br/>"
+			"^_^_^_ <b>/version</b> to query the version of the contact<br/>"
+			"^_^_^_ <b>/sendxml</b> to send XML data directly through the socket (this is used for debugging)<br/>"
+			"^_^_^_ <b>/api</b> to invoke a remote API call on the contact (this is used for debugging)<br/>"
+			"^_^_^_ <b>//</b> to send a text message starting with a <b>/</b><br/>"
 			, pszMessage)));
 		return eUserCommand_Error;
 		} // if (command line)

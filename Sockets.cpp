@@ -753,7 +753,7 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingEventID()
 				switch (eEventClass)
 					{
 				case CEventPing::c_eEventClass:
-					pEvent->Event_SetCompletedAndUpdateWidgetWithinChatLog();	// A ping is very simple, as the event completes as soon as we get a reply
+					pEvent->Event_SetCompletedAndUpdateWidgetWithinParentChatLog();	// A ping is very simple, as the event completes as soon as we get a reply
 					return TRUE;
 				case CEventVersion::c_eEventClass:
 					((CEventVersion *)pEvent)->XmppProcessStanzaFromContact(m_pXmlNodeStanzaCurrent_YZ, pContact);
@@ -1379,7 +1379,7 @@ CSocketXmpp::SL_SocketDataAvailableForReading()
 
 	const int cbDataAvailable = bytesAvailable();	// Get how many bytes are available from the socket
 	MessageLog_AppendTextFormatCo(d_coYellowDark, "[$@] 0x$p SL_SocketDataAvailableForReading($I bytes) for account $S\n", this, cbDataAvailable, &m_pAccount->m_strJID);
-	//m_binBufferIncomingData.BinAppendStringWithoutNullTerminator((PSZUC)"yyy");	// Inject some corrupted XML data (to test if our routines detect XML corruption and handle it properly)
+	//m_binBufferIncomingData.BinAppendText((PSZUC)"yyy");	// Inject some corrupted XML data (to test if our routines detect XML corruption and handle it properly)
 	if (m_pXmlNodeStanzaCurrent_YZ != NULL)
 		{
 		// Although the documentation says the signal readyRead() is NOT reentrant, there are cases where it is.  Better be safe than sorry!
@@ -1399,7 +1399,7 @@ CSocketXmpp::SL_SocketDataAvailableForReading()
 	const int cbDataRead = read(OUT pbData, cbDataAvailable);	// Read the data from the socket
 	Assert((cbDataRead == cbDataAvailable) && "All data should be read!");
 	Assert((int)strlen(pbData) == cbDataRead);
-	//m_binBufferIncomingData.BinAppendStringWithoutNullTerminator((PSZUC)"zzz");	// Inject some corrupted XML data (to test if our routines detect XML corruption and handle it properly)
+	//m_binBufferIncomingData.BinAppendText((PSZUC)"zzz");	// Inject some corrupted XML data (to test if our routines detect XML corruption and handle it properly)
 	//m_binBufferIncomingData.AppendVirtualNullTerminator();
 
 	// Scan the buffer for any valid XML content.

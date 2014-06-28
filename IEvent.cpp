@@ -276,9 +276,8 @@ IEvent::Event_FIsEventTypeReceived() const
 	}
 
 void
-IEvent::Event_SetCompleted(QTextEdit * pwEditChatLog)
+IEvent::Event_SetCompletedTimestamp()
 	{
-	Endorse(pwEditChatLog == NULL);		// Don't update the event in the Chat Log, typically because there is no Chat Log.  The events may be loaded in memory, however not displayed in any Chat Log.
 	if (m_tsOther > d_tsOther_kmReserved)
 		{
 		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t\t\t Event_SetCompleted() - m_tsOther $t remains unchanged for EventID $t.\n", m_tsOther, m_tsEventID);
@@ -287,14 +286,21 @@ IEvent::Event_SetCompleted(QTextEdit * pwEditChatLog)
 	m_tsOther = Timestamp_GetCurrentDateTime();
 	m_pVaultParent_NZ->SetModified();		// This line is important so the modified event is always saved to disk (otherwise an event may be updated, however not serialized because ITreeItemChatLogEvents will never know the event was updated)
 	Assert(Event_FHasCompleted());
+	}
+
+void
+IEvent::Event_SetCompletedAndUpdateChatLog(QTextEdit * pwEditChatLog)
+	{
+	Endorse(pwEditChatLog == NULL);		// Don't update the event in the Chat Log, typically because there is no Chat Log.  The events may be loaded in memory, however not displayed in any Chat Log.
+	Event_SetCompletedTimestamp();
 	ChatLog_UpdateEventWithinWidget(pwEditChatLog);
 	}
 
 void
-IEvent::Event_SetCompletedAndUpdateWidgetWithinChatLog()
+IEvent::Event_SetCompletedAndUpdateWidgetWithinParentChatLog()
 	{
 	Assert(m_pVaultParent_NZ != NULL);
-	Event_SetCompleted(m_pVaultParent_NZ->m_pParent->ChatLog_PwGet_YZ());
+	Event_SetCompletedAndUpdateChatLog(m_pVaultParent_NZ->m_pParent->ChatLog_PwGet_YZ());
 	}
 
 //	Return TRUE if the event completed.
@@ -488,7 +494,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	pbinTextHtml->BinAppendTextSzv_VE("<span title='^Q'>[^Q] </span>", &sDateTime, &sTime);
 	if (m_uFlagsEvent & FE_kfEventProtocolError)
 		{
-		pbinTextHtml->BinAppendStringWithoutNullTerminator(" <img src=':/ico/Error' title='XCP Protocol Error: One of the contact has an old version of Cambrian and cannot process this event because its type is unknown'/> ");
+		pbinTextHtml->BinAppendText(" <img src=':/ico/Error' title='XCP Protocol Error: One of the contact has an old version of Cambrian and cannot process this event because its type is unknown'/> ");
 		}
 	if ((eEventClass & eEventClass_kfReceivedByRemoteClient) == 0)
 		{
@@ -507,9 +513,21 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 		}
 	#ifdef DEBUG_DISPLAY_TIMESTAMPS
 	pbinTextHtml->BinAppendTextSzv_VE("<code>[i=<b>$t</b> o=<b>$t</b>] </code>", m_tsEventID, m_tsOther);
+	#ifdef d_szEvent_strContactSource
+	if (!m_strContactSource.FIsEmptyString())
+		{
+		if (m_pContactGroupSender_YZ != NULL)
+			{
+			if (m_pContactGroupSender_YZ->m_strJidBare.FCompareStringsNoCase(m_strContactSource))
+				goto SkipSource;
+			}
+		pbinTextHtml->BinAppendTextSzv_VE(" <img src=':/ico/Exchange' title='This event was forwarded by ^S, however originally written by ^j'/> ", &m_strContactSource, m_pContactGroupSender_YZ);
+		SkipSource:;
+		}
+	#endif
 	#endif
 	if (m_uFlagsEvent & FE_kfEventOutOfSync)
-		pbinTextHtml->BinAppendStringWithoutNullTerminator(" <img src=':/ico/OutOfSync' title='Out of Sync' /> ");
+		pbinTextHtml->BinAppendText(" <img src=':/ico/OutOfSync' title='Out of Sync' /> ");
 	pbinTextHtml->BinAppendTextSzv_VE(c_szHtmlTemplateNickname, pTreeItemNickname->ChatLog_PszGetNickname());
 	} // _BinHtmlInitWithTime()
 
@@ -660,7 +678,7 @@ IEventMessageText::_BinHtmlInitWithTimeAndMessage(OUT CBin * pbinTextHtml) CONST
 	Assert(pbinTextHtml != NULL);
 	_BinHtmlInitWithTime(OUT pbinTextHtml);
 	if (m_uFlagsMessage & FM_kfMessageUpdated)
-		pbinTextHtml->BinAppendStringWithoutNullTerminator(" <img src=':/ico/Pencil' title='Edited' /> ");
+		pbinTextHtml->BinAppendText(" <img src=':/ico/Pencil' title='Edited' /> ");
 	if ((m_uFlagsMessage & FM_kfMessageHtml) ==  0)
 		pbinTextHtml->BinAppendHtmlTextWithAutomaticHyperlinks(m_strMessageText);
 	else
@@ -1127,15 +1145,6 @@ CEventFileReceived::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor *
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-void
-CEventMessageTextSent::MessageDeliveredConfirmed()
-	{
-	Event_SetCompleted(NULL);
-	//TimestampOther_UpdateAsEventCompletedNow();
-	}
-*/
-
 void
 CEventMessageTextSent::MessageResendUpdate(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate)
 	{
@@ -1462,8 +1471,8 @@ CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * p
 	if (tsOther > d_tsOther_kmReserved)
 		{
 		BOOL fDebugContinueSearch = FALSE;
-		const TIMESTAMP tsOtherStop = tsOther - (25 * d_ts_cHours);	// In a chat, the m_tsOther are semi-sorted for message received, as they represent the timestamps from the remote computers.  Therefore any timestamp older than one day (25 hours) is considered out of range, and there is no need to search the entire list of event.
-		Assert(tsOtherStop > d_tsOther_kmReserved);
+		const TIMESTAMP tsEventStop = tsOther - (25 * d_ts_cHours);	// In a chat, the m_tsOther are semi-sorted for message received, as they represent the timestamps from the remote computers.  Therefore any timestamp older than one day (25 hours) is considered out of range, and there is no need to search the entire list of event.
+		Assert(tsEventStop > d_tsOther_kmReserved);
 		IEvent ** ppEventStop;
 		IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 		while (ppEvent != ppEventStop)
@@ -1474,14 +1483,17 @@ CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * p
 			if (pEvent->EGetEventClass() & eEventClass_kfReceivedByRemoteClient)
 				{
 				Assert(pEvent->Event_FIsEventTypeReceived());
-				Assert(pEvent->m_tsOther > d_tsOther_kmReserved);
+				if (pEvent->m_tsOther <= d_tsOther_kmReserved)
+					{
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Event class '$U' tsEventID $t {tL} has value tsOther $t\n", pEvent->EGetEventClass(), pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther);
+					}
 				if (pEvent->m_tsOther == tsOther && pEvent->m_pContactGroupSender_YZ == pContactGroupSender)
 					{
 					if (fDebugContinueSearch)
-						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "PFindEventReceivedByTimestampOther() is returning tsEventID $t which would have been missing!\n", pEvent->m_tsEventID);
+						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "PFindEventReceivedByTimestampOther() is returning tsEventID $t ({tL}) which would have been missing!\n", pEvent->m_tsEventID, pEvent->m_tsEventID);
 					return pEvent;
 					}
-				if (pEvent->m_tsOther < tsOtherStop)
+				if (pEvent->m_tsEventID < tsEventStop)
 					{
 					if (!fDebugContinueSearch)
 						MessageLog_AppendTextFormatSev(eSeverityNoise, "PFindEventReceivedByTimestampOther($t ({tL}) for contact ^j) - Stopping search at pEvent->m_tsOther $t ({tL})\n", tsOther, tsOther, pContactGroupSender, pEvent->m_tsOther, pEvent->m_tsOther);
@@ -1693,7 +1705,7 @@ CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanz
 	{
 	if (m_tsContact == d_ts_zNULL)
 		m_tsContact = pXmlNodeExtraData->TsGetAttributeValueTimestamp_ML(d_chXCPa_PingTime);
-	Event_SetCompleted(NULL);
+	Event_SetCompletedTimestamp();
 	}
 
 //	CEventPing::IEvent::ChatLogUpdateTextBlock()
@@ -1733,15 +1745,21 @@ CEventVersion::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpSt
 	m_strVersion = pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Version);
 	m_strClient	= pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Client);
 	m_strOperatingSystem = pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Platform);
-	Event_SetCompleted(NULL);
+	Event_SetCompletedTimestamp();
 	}
 
 void
 CEventVersion::XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact)
 	{
 	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Need to implement CEventVersion::XmppProcessStanzaFromContact(^j): ^N", pContact, pXmlNodeStanza);
-	m_strVersion.Format("$s $s, $s", pXmlNodeStanza->PszuFindElementValue("name"), pXmlNodeStanza->PszuFindElementValue("version"), pXmlNodeStanza->PszuFindElementValue("os"));
-	Event_SetCompleted(NULL);
+	CXmlNode * pXmlNodeQuery = pXmlNodeStanza->PFindElementQuery();
+	if (pXmlNodeQuery != NULL)
+		{
+		m_strVersion = pXmlNodeQuery->PszuFindElementValue("version");
+		m_strClient	= pXmlNodeQuery->PszuFindElementValue("name");
+		m_strOperatingSystem = pXmlNodeQuery->PszuFindElementValue("os");
+		Event_SetCompletedAndUpdateWidgetWithinParentChatLog();
+		}
 	}
 
 //	CEventVersion::IEvent::ChatLogUpdateTextBlock()
@@ -1749,7 +1767,7 @@ void
 CEventVersion::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
-	g_strScratchBufferStatusBar.BinAppendTextSzv_VE(m_strVersion.FIsEmptyString() ? "Querying which version <b>^s</b> is using..." : "<b>^s</b> is running ^S version <b>^S</b> on ^S", ChatLog_PszGetNickNameOfContact(), &m_strClient, &m_strVersion, &m_strOperatingSystem);
+	g_strScratchBufferStatusBar.BinAppendTextSzv_VE(m_strVersion.FIsEmptyString() ? "Querying which version <b>^s</b> is using..." : "<b>^s</b> is running <b>^S</b> version <b>^S</b> on ^S", ChatLog_PszGetNickNameOfContact(), &m_strClient, &m_strVersion, &m_strOperatingSystem);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(0xE8CFD8));
 	}
 

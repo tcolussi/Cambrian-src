@@ -67,11 +67,22 @@
 #define d_chXCPe_ApiRequest									'a'
 #define d_szXCPe_ApiRequest_s						d_szXCP_"a n='$s'"
 #define d_szXCPe_ApiRequest_close					d_szXCP_"a"
-	#define d_chXCPa_ApiName									'n'
+	#define d_chXCPa_Api_strName								'n'		// Name of the function (API) to call
 #define d_chXCPe_ApiReply									'A'
 #define d_szXCPe_ApiReply_s							d_szXCP_"A n='$s'"
 #define d_szXCPe_ApiReply_close						d_szXCP_"A"
+	#define d_chXCPa_Api_eErrorCode								'e'
+	#define d_chXCPv_Api_eErrorCode_Success						0
+	#define d_chXCPv_Api_eErrorCode_UnknownApi					1
+	#define d_chXCPv_Api_eErrorCode_InvalidParameter			2
+	#define d_chXCPa_Api_strxErrorData							'd'
 
+#if 0
+	// API call
+	<_a r='identifier' n='function'/>parameters</_a>
+	<_A r='identifier' e='error (if any)'>result</_A>
+
+#endif
 #define d_chXCPe_zNA									'\0'	// Not applicable
 
 
@@ -123,7 +134,10 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 			case d_chXCPe_GroupSelector:
 				// The events belong to a group, so attempt to find the group
 				pszEventValue = pXmlNodeXcpEvent->m_pszuTagValue;
-				pChatLogEvents = pGroup = m_pAccount->Group_PFindByIdentifier_NZ(IN pszEventValue);
+				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_GroupSelector ">^s</" d_szXCPe_GroupSelector ">", pszEventValue);
+				cbXcpStanzaReplyEmpty = binXcpStanzaReply.CbGetData();
+				pChatLogEvents = pGroup = m_pAccount->Group_PFindByIdentifier(IN pszEventValue, INOUT &binXcpStanzaReply);
+				Assert(pGroup != NULL);	// The group should be always created for pszEventValue, even if pszEventValue contains dummy data
 				pMember = pGroup->Member_PFindOrAddContact_NZ(this);
 				Assert(pMember != NULL);
 				Assert(pMember->m_pContact == this);
@@ -131,8 +145,6 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				pVault = pChatLogEvents->Vault_PGet_NZ();
 				pwChatLog = pChatLogEvents->ChatLog_PwGet_YZ();
 				MessageLog_AppendTextFormatCo(d_coGrayDark, "\t\t Selecting group '$s' (m_tsOtherLastSynchronized=$t, m_tsEventIdLastSentCached=$t)\n", pGroup->TreeItem_PszGetNameDisplay(), *ptsOtherLastSynchronized, pGroup->m_tsEventIdLastSentCached);
-				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_GroupSelector ">^s</" d_szXCPe_GroupSelector ">", pszEventValue);
-				cbXcpStanzaReplyEmpty = binXcpStanzaReply.CbGetData();
 				break;
 			case d_chXCPe_EventPrevious:	// We are receiving information regarding the previous message
 				dtsOtherSynchronization = tsOther - *ptsOtherLastSynchronized;
@@ -281,7 +293,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					{
 					if (chXCPe == d_chXCPe_EventError)
 						pEvent->Event_SetFlagErrorProtocol();
-					pEvent->Event_SetCompleted(pwChatLog);	// This will typically display a green checkmark at the right of the screen where the event is located
+					pEvent->Event_SetCompletedAndUpdateChatLog(pwChatLog);	// This will typically display a green checkmark at the right of the screen where the event is located
 					}
 				else
 					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unrecognized confirmation for EventID $t\n", tsEventID);
@@ -362,11 +374,26 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				break;
 			case d_chXCPe_ApiRequest:
 				{
-				PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_ApiName);
-				Xcp_ApiProcessReply(pszApiName, pXmlNodeXcpEvent, INOUT &binXcpStanzaReply);
+				// Respond to the request for a given API name
+				PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_Api_strName);
+				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_ApiReply_s ">", pszApiName);
+				int ibParameters = binXcpStanzaReply.CbGetData();
+				if (XcpApi_FReturnData(pszApiName, pXmlNodeXcpEvent, INOUT &binXcpStanzaReply))
+					{
+					// Close the XML tag
+					binXcpStanzaReply.BinAppendText("</" d_szXCPe_ApiReply_close ">");
+					break;
+					}
+				// We have an error invoking the API, therefore flush any data in binXcpStanzaReply and append an error code.
+				binXcpStanzaReply.TruncateData(ibParameters - 1);	// Remove the closing angle bracket '>'
+				binXcpStanzaReply.BinAppendTextSzv_VE(" e='$s'/>", pszApiName);	// Return an error code
 				}
 				break;
 			case d_chXCPe_ApiReply:
+				{
+				PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_Api_strName);
+				XcpApi_ProcessReturnedData(pszApiName, IN pXmlNodeXcpEvent, INOUT &binXcpStanzaReply);
+				}
 				break;
 			default:
 				MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unknown XCP directive $s: chXCPe = $i ($b)\n", pszEventName, chXCPe, chXCPe);
@@ -462,26 +489,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 						Assert(pEvent->Event_FIsEventTypeReceived());
 						pEvent->XmlUnserializeCore(IN pXmlNodeXcpEvent);	// TODO: Need to provide a mechanism if an event has been updated
 						pEvent->ChatLog_UpdateEventWithinWidget(pwChatLog);
-						/*
-						if (pContactGroupSender != NULL && pContactGroupSender != this)
-							{
-							// We are receiving an event relayed
-							MessageLog_AppendTextFormatCo(d_coOrange, "\t\t [Sync] Confirming with tsEventID $t for message written by ^j\n", tsEventID, pContactGroupSender);
-							binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventConfirmation_tsI "/>", tsEventID);
-							goto EventSynchronize;
-							}
-						goto EventConfirmation;
-						*/
 						}
-					/*
-					else
-						{
-						// Confirm we received our 'own' event by swapping the timestamps
-						MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t [Sync] Confirming with tsEventID $t...\n", tsEventID);
-						binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventConfirmation_tsI "/>", tsEventID);
-						goto EventSynchronize;
-						}
-					*/
 					goto EventConfirmation;
 					}
 				} // if...else
@@ -496,6 +504,12 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_EventError_tsI_s "/>", tsOther, pszEventName);	// Report the error to the remote client
 				goto EventSynchronize;
 				}
+			Assert(pEvent->m_pVaultParent_NZ == NULL);
+			pEvent->m_pVaultParent_NZ = pVault;	// Assign the parent vault right away
+			#ifdef d_szEvent_strContactSource
+			if (pGroup != NULL)
+				pEvent->m_strContactSource = m_strJidBare;
+			#endif
 			#ifdef DEBUG
 			if (USZU_from_USZUF(pEvent->EGetEventClass()) != eEventClass)
 				MessageLog_AppendTextFormatCo(d_coBlueDark, "\t\t\t Event tsOther $t was allocated as '$U' however its runtime class is '$U'\n", tsOther, eEventClass, pEvent->EGetEventClass());
@@ -513,13 +527,14 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 			Assert(pEvent->m_pContactGroupSender_YZ == NULL);
 			if (fEventClassReceived)
 				{
-				Assert(pEvent->Event_FIsEventTypeReceived());
+				if (!pEvent->Event_FIsEventTypeReceived())
+					{
+					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t\t Event tsEventID $t, tsOther $t of class '$U' should be RECEIVED\n", pEvent->m_tsEventID, pEvent->m_tsOther, eEventClass);
+					}
 				if (pContactGroupSender != NULL)
 					MessageLog_AppendTextFormatSev(eSeverityComment, "\t\t\t Assigning m_pContactGroupSender_YZ ^j to tsEventID $t, tsOther $t\n", pContactGroupSender, pEvent->m_tsEventID, pEvent->m_tsOther);
 				pEvent->m_pContactGroupSender_YZ = pContactGroupSender;
 				}
-			Assert(pEvent->m_pVaultParent_NZ == NULL);
-			pEvent->m_pVaultParent_NZ = pVault;
 			fEventsOutOfSyncInChatLog |= pVault->m_arraypaEvents.Event_FoosAddSorted(PA_CHILD pEvent);
 			if (fEventsOutOfSyncInChatLog)
 				pEvent->Event_SetFlagOutOfSync();
@@ -527,10 +542,6 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				pwChatLog->ChatLog_EventDisplay(IN pEvent);
 
 			// Update the GUI about the new event
-			/*
-			if (pMember != NULL)
-				pMember->TreeItem_SetTextToDisplayMessagesUnread(++pMember->m_cMessagesUnread);	// The group member has unread messages as well as its group
-			*/
 			pChatLogEvents->TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(IN pEvent->PszGetTextOfEventForSystemTray(OUT_IGNORED &g_strScratchBufferStatusBar), this, pMember);
 			TreeItem_IconUpdate();		// Update the icon of the contact, which will in turn update the icon(s) of all its aliases, including the member contact of the group.  It is important to update the icon of the contact because it is likely to be displaying the pencil icon indicating the user was composing/typing text.
 
@@ -582,30 +593,22 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 	Assert(pVault->m_arraypaEvents.FEventsSortedByIDs());
 	} // Xcp_ProcessStanzasAndUnserializeEvents()
 
-//	Send an API request to the contact
 void
-TContact::Xcp_ApiRequest(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters)
+CBinXcpStanzaType::BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters)
+	{
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "BinXmlAppendXcpApiRequest($s, $s)\n", pszApiName, pszXmlApiParameters);
+	BinAppendTextSzv_VE("<" d_szXCPe_ApiRequest_s ">$s</" d_szXCPe_ApiRequest_close ">", pszApiName, pszXmlApiParameters);
+	}
+
+//	Invoke a function by sending an API request to the contact.  This is essentially invoking a remote procedure call.
+void
+TContact::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters)
 	{
 	CBinXcpStanzaTypeInfo binXcpStanza;
-	binXcpStanza.BinAppendTextSzv_VE("<" d_szXCPe_ApiRequest_s ">^N$s</" d_szXCPe_ApiRequest_close ">", pszApiName, pXmlNodeApiParameters, pszXmlApiParameters);
+	binXcpStanza.BinXmlAppendXcpApiRequest((PSZAC)pszApiName, pszXmlApiParameters);
 	binXcpStanza.XcpSendStanzaToContact(IN this);
 	}
 
-//	All APIs are processed in the context of a contact
-void
-TContact::Xcp_ApiProcessReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, CBinXcpStanzaType * pbinXcpStanzaReply)
-	{
-	Assert(pszApiName != NULL);
-	Assert(pXmlNodeApiParameters != NULL);
-	Assert(pbinXcpStanzaReply != NULL);
-	MessageLog_AppendTextFormatSev(eSeverityComment, "Processing API '$s'\n", pszApiName);
-	if (FCompareStringsNoCase(pszApiName, (PSZUC)"ProfileGet"))
-		{
-		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_ApiReply_s ">^s</" d_szXCPe_ApiReply_close ">", pszApiName, TreeItem_PszGetNameDisplay());
-		return;
-		}
-	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unknown API '$s'\n", pszApiName);
-	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Method to serialize the event to be saved on disk disk.
@@ -617,6 +620,9 @@ CBinXcpStanzaType::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 		{
 		BinAppendTextSzv_VE("<$U" _tsI _tsO, eEventClass, pEvent->m_tsEventID, pEvent->m_tsOther);
 		BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
+		#ifdef d_szEvent_strContactSource
+		BinAppendXmlAttributeText(d_szEvent_strContactSource, pEvent->m_strContactSource);
+		#endif
 		pEvent->XmlSerializeCore(IOUT this);
 		BinAppendXmlForSelfClosingElement();
 		}
@@ -643,7 +649,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTA
 		// The event was received by a contact for a group chat, therefore we need to adjust the class
 		if (!pEvent->Event_FIsEventTypeReceived())
 			{
-			MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "BinXmlSerializeEventForXcp() - tsEventID $t, tsOther $t written by ^j class '$U' is NOT RECEIVED\n", tsEventID, tsOther, pEvent->m_pContactGroupSender_YZ, m_pContact, eEventClassXcp);
+			MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "BinXmlSerializeEventForXcp() - tsEventID $t, tsOther $t written by ^j class '$U' is NOT RECEIVED\n", tsEventID, tsOther, pEvent->m_pContactGroupSender_YZ, eEventClassXcp);
 			}
 		if (pEvent->m_pContactGroupSender_YZ != m_pContact)
 			{
@@ -830,6 +836,9 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 				pEvent->m_pVaultParent_NZ = pVault;
 				AssertValidEvent(pEvent);
 				Assert(pEvent->m_tsEventID == tsEventID);
+				#ifdef d_szEvent_strContactSource
+				pEvent->m_strContactSource = pXmlNodeEvent->PszuFindAttributeValue(d_szEvent_strContactSource);
+				#endif
 				fOutOfSync |= Event_FoosAddSorted(PA_CHILD pEvent);
 				}
 			else
@@ -1065,7 +1074,7 @@ CListaDataXmlLargeEvents::~CListaDataXmlLargeEvents()
 	while (pDataXmlLargeEvent != NULL)
 		{
 		CDataXmlLargeEvent * pDataXmlLargeEventNext = (CDataXmlLargeEvent *)pDataXmlLargeEvent->pNext;
-		delete pDataXmlLargeEventNext;
+		delete pDataXmlLargeEvent;
 		pDataXmlLargeEvent = pDataXmlLargeEventNext;
 		} // while
 	}
@@ -1082,7 +1091,7 @@ CListaDataXmlLargeEvents::DeleteIdleNodes()
 		CDataXmlLargeEvent * pDataXmlLargeEventNext = (CDataXmlLargeEvent *)pDataXmlLargeEvent->pNext;
 		if (pDataXmlLargeEvent->m_tsmLastAccessed + d_cMinutesIdleForCDataXmlLargeEvent < g_tsmMinutesSinceApplicationStarted)
 			{
-			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[$@] CListaDataXmlLargeEvents::DeleteIdleNodes() - Deleting cache entry for tsEventID $t\n", pDataXmlLargeEvent->m_tsEventID);	// This is not an error, however good to draw attention
+			MessageLog_AppendTextFormatSev(eSeverityNoise, "[$@] CListaDataXmlLargeEvents::DeleteIdleNodes() - Deleting cache entry for tsEventID $t\n", pDataXmlLargeEvent->m_tsEventID);	// This is not an error, however good to draw attention
 			DetachNode(INOUT pDataXmlLargeEvent);
 			delete pDataXmlLargeEvent;
 			}
@@ -1410,7 +1419,7 @@ TContact::Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC
 			m_uFlagsContact &= ~FC_kfXcpComposingSendTimestampsOfLastKnownEvents;
 			binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithContact(this);
 			}
-		binXcpStanza.BinAppendStringWithoutNullTerminator((eChatState == eChatState_zComposing) ? d_szXCPe_MessageTextComposingStarted : d_szXCPe_MessageTextComposingPaused);
+		binXcpStanza.BinAppendText((eChatState == eChatState_zComposing) ? d_szXCPe_MessageTextComposingStarted : d_szXCPe_MessageTextComposingPaused);
 		binXcpStanza.XcpSendStanzaToContact(IN this);
 		}
 	else
@@ -1427,7 +1436,7 @@ TGroup::Members_BroadcastChatState(EChatState eChatState) const
 	{
 	CBinXcpStanzaTypeInfo binXcpStanza;
 	binXcpStanza.BinInitFromTextSzv_VE("<" d_szXCPe_GroupSelector ">{h|}</" d_szXCPe_GroupSelector ">", &m_hashGroupIdentifier);
-	binXcpStanza.BinAppendStringWithoutNullTerminator((eChatState == eChatState_zComposing) ? d_szXCPe_MessageTextComposingStarted : d_szXCPe_MessageTextComposingPaused);
+	binXcpStanza.BinAppendText((eChatState == eChatState_zComposing) ? d_szXCPe_MessageTextComposingStarted : d_szXCPe_MessageTextComposingPaused);
 
 	TGroupMember ** ppMemberStop;
 	TGroupMember ** ppMember = m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);

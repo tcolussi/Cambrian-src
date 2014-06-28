@@ -606,7 +606,7 @@ CXmlNode::SerializeToBinUtf8(IOUT CBin * pbinUtf8, UINT uSerializeFlags) const
 		if (uSerializeFlags & STBF_kfIndentTags)
 			pbinUtf8->BinAppendBytes('\t', cIdentation);
 		pbinUtf8->BinAppendByte('<');
-		pbinUtf8->BinAppendStringWithoutNullTerminator((PSZAC)m_pszuTagName);
+		pbinUtf8->BinAppendText((PSZAC)m_pszuTagName);
 		CXmlNode * pAttribute = m_pAttributesList;
 		while (pAttribute != NULL)
 			{
@@ -615,7 +615,7 @@ CXmlNode::SerializeToBinUtf8(IOUT CBin * pbinUtf8, UINT uSerializeFlags) const
 			Assert(pAttribute->m_pParent == this);
 			//Assert(pAttribute->m_pszuTagValue != NULL);
 			pbinUtf8->BinAppendByte(' ');
-			pbinUtf8->BinAppendStringWithoutNullTerminator((PSZAC)pAttribute->m_pszuTagName);
+			pbinUtf8->BinAppendText((PSZAC)pAttribute->m_pszuTagName);
 			pbinUtf8->BinAppendUInt16(UINT16_FROM_CHARS('=', '\"'));	// Append two bytes "=\""
 			pbinUtf8->BinAppendXmlTextU(pAttribute->m_pszuTagValue);
 			pbinUtf8->BinAppendByte('\"');
@@ -655,7 +655,7 @@ CXmlNode::SerializeToBinUtf8(IOUT CBin * pbinUtf8, UINT uSerializeFlags) const
 				}
 			} // if...else
 		pbinUtf8->BinAppendUInt16(UINT16_FROM_CHARS('<', '/'));		// Append two bytes for "</"
-		pbinUtf8->BinAppendStringWithoutNullTerminator((PSZAC)m_pszuTagName);
+		pbinUtf8->BinAppendText((PSZAC)m_pszuTagName);
 		pbinUtf8->BinAppendByte('>');
 
 		#ifdef DEBUG
@@ -1067,6 +1067,7 @@ CXmlNode::PszuFindAttributeValue_NZ(PSZAC pszaAttributeName) const
 	return c_szuEmpty;
 	}
 
+//	Return NULL if the attribute value is empty.
 PSZUC
 CXmlNode::PszuFindAttributeValue_ZZ(PSZAC pszaAttributeName) const
 	{

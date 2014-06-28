@@ -146,12 +146,12 @@ public:
 		};
 	TContact * Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact = eFindContactOnly);
 	TContact * Contact_PFindByIdentifierGroupSender_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC;
-	TContact * Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName) CONST_MCC;
+	TContact * Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest) CONST_MCC;
 
 	static const int c_iGroupNew = -1;
 	void Group_AddNewMember_UI(TContact * pContact, int iGroup);
 	void Group_Delete(PA_DELETING TGroup * pGroup);
-	TGroup * Group_PFindByIdentifier_NZ(PSZUC pszGroupIdentifier);
+	TGroup * Group_PFindByIdentifier(PSZUC pszGroupIdentifier, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest);
 
 	void DisplayDialogProperties();
 public:

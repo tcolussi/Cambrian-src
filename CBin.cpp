@@ -171,85 +171,6 @@ CBin::FIsPointerAddressWithinBinaryObject(const void * pvData) const
 	return (pvData >= m_paData->rgbData && pvData <= m_paData->rgbData + m_paData->cbAlloc);
 	}
 
-//	Allocate a block of memory to hold a string buffer.  The length of the string
-//	does NOT include space for a null-terminator.
-//
-//	There is no error checking and the buffer is the entire responsibility
-//	of the caller.  The user may optionally call ReleaseBuffer() or ReleaseBufferW()
-//	to set the length of the buffer to length of the string.
-//
-//	INTERFACE NOTES
-//	This method is different than PvSizeAlloc() since
-//	the length of the bin is set to 1 character to allow methods
-//	such as PszuGetDataNZ() to return a pointer to the string buffer.
-//
-PSZU
-CBin::PszAllocStringBufferA(int cchBuffer)
-	{
-	Assert(cchBuffer > 0);
-	if (m_paData == NULL)
-		{
-		m_paData = S_PaAllocateBytes(cchBuffer);
-		}
-	else if (m_paData->cbAlloc < cchBuffer)
-		{
-		// We need to allocate a new block of memory
-		ValidateHeapPointer(m_paData);
-		delete m_paData;
-		m_paData = NULL;
-		m_paData = S_PaAllocateBytes(cchBuffer);
-		}
-	m_paData->cbData = 1;
-	return m_paData->rgbData;
-	}
-
-//	Allocate a buffer of 32 bytes.  The length of 32 bytes is enough
-//	to store a number, a date or something small
-PSZU
-CBin::PszAllocStringBuffer32Bytes()
-	{
-	return PszAllocStringBufferA(32);
-	}
-
-//	Calculate the length of the buffer by interpreting the content
-//	of the buffer as a null-terminated Ansi string.
-//	The value of cchLength is the expected length (in character) without the null-terminator.
-//	If this value is -1, then the length is automatically calculated.
-//
-void
-CBin::ReleaseBufferA(int cchLength)
-	{
-	Assert(cchLength >= -1);
-
-	char * pszBuffer = (char *)m_paData->rgbData;
-	if (cchLength < 0)
-		{
-		while (*pszBuffer++ != '\0')
-			;
-		m_paData->cbData = ((BYTE *)pszBuffer - m_paData->rgbData);
-		}
-	else
-		{
-		// Make sure there is a null-terminator at the end of the string.
-		// If there is a null-terminator before cchLength, then the length
-		// of the string is truncated to the first null-terminator found.
-		pszBuffer[cchLength] = '\0';
-		int i = cchLength;
-		while (i >= 0)
-			{
-			if (pszBuffer[i] == '\0')
-				{
-				cchLength = i;
-				}
-			--i;
-			}  // while
-		m_paData->cbData = cchLength + 1;
-		} // if...else
-	Assert(m_paData->cbData <= m_paData->cbAlloc);
-	ValidateHeapPointer(m_paData);
-	}  // ReleaseBufferA()
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	PvSizeAlloc()
 //
@@ -635,12 +556,12 @@ CBin::BinInitFromStringWithNullTerminator(PSZAC pszData)
 	}
 
 void
-CBin::BinInitFromStringWithoutNullTerminator(PSZAC pszData)
+CBin::BinInitFromText(PSZAC pszText)
 	{
-	Assert(!FIsPointerAddressWithinBinaryObject(pszData));
-	if (pszData != NULL && *pszData != '\0')
+	Assert(!FIsPointerAddressWithinBinaryObject(pszText));
+	if (pszText != NULL && *pszText != '\0')
 		{
-		BinInitFromBinaryData(IN pszData, strlen(pszData));
+		BinInitFromBinaryData(IN pszText, strlen(pszText));
 		}
 	else
 		{
@@ -1021,7 +942,7 @@ CBin::BinAppendTextInteger(int nInteger, UINT uFlagsITS)
 	{
 	CHU szValue[16];
 	IntegerToString(OUT szValue, nInteger, uFlagsITS);
-	BinAppendStringWithoutNullTerminator((PSZAC)szValue);
+	BinAppendText((PSZAC)szValue);
 	}
 
 void
@@ -1100,11 +1021,11 @@ CBin::BinAppendTextUntilCharacterPszr(PSZUC pszuSource, UINT chCopyUntil)
 
 //	No virtual null-terminator is appended
 void
-CBin::BinAppendStringWithoutNullTerminator(PSZAC pszString)
+CBin::BinAppendText(PSZAC pszText)
 	{
-	Assert(pszString != NULL);
-	Assert(!FIsPointerAddressWithinBinaryObject(pszString));
-	BinAppendBinaryData(IN pszString, strlenU(pszString));
+	Assert(pszText != NULL);
+	Assert(!FIsPointerAddressWithinBinaryObject(pszText));
+	BinAppendBinaryData(IN pszText, strlenU(pszText));
 	}
 
 //	Append a string, including its null-terminator to the array
@@ -1269,7 +1190,7 @@ CBin::BinAppendHtmlTextWithAutomaticHyperlinks(PSZUC pszText)
 	CString s = str;
 	s.replace(QRegularExpression("((?:https?|ftp)://\\S+)"), "<a href=\"\\1\">\\1</a>");
 	str = s;
-	BinAppendStringWithoutNullTerminator(str);
+	BinAppendText(str);
 	//BinAppendHtmlTextU(str);
 	#endif
 	}
@@ -1483,7 +1404,7 @@ CBin::BinAppendXmlTextU(PSZUC pszText)
 	if (pszText[0] == d_chuXmlAlreadyEncoded)
 		{
 		// The content of pszuString is already XML encoded, so just copy it to the bin
-		BinAppendStringWithoutNullTerminator((PSZAC)pszText + 1);
+		BinAppendText((PSZAC)pszText + 1);
 		return;
 		}
 	// First check if there is a necessity to encode in XML.
@@ -2031,8 +1952,10 @@ union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outs
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	BinAppendTextSzv_VL()
 //
+//	Append formatted text to the blob.
+//
 //	The binary object is ALWAYS appended with a null-terminator, but this null-terminator is not included in the length/size of the binary object.
-//	Return pointer to the BEGINNING of the string (binary object).
+//	Return pointer to the BEGINNING of the blob, which is a null-terminated string.
 //
 //	FORMATS SUPPORTED
 //	This method supports rudimentary formats
@@ -2044,8 +1967,8 @@ union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outs
 //		$Y - Append the content of QByteArray* to UTF-8
 //		$U - Append a USZU or USZUF (which is a string within a 32-bit value)
 //		$n - The current time, $N the current date and time
-//		$T - NYI: The current time from a QDateTime*, $U the UTC {d,t,D,T,n|t}	h,m,s,p
-//		$t - Append a TIMESTAMP
+//		$t - Append a TIMESTAMP in Base85.  Use {tL} append a date in local time, and {tU} to append a date in UTC.
+//		$T - Append a TIMESTAMP_DELTA in seconds, minutes, hours or days.
 //		$@ - Append the current time in hh:mm::ss (useful for debugging a log).  This format does not have any input parameter.
 //		$x - Append an unsigned integer in hexadecimal format (without any leading zeroes).  For an hexadecimal with leading zeroes, use $p.
 //		$u - Append an unsigned integer
@@ -2273,11 +2196,11 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				u.parraypsz = va_arg(vlArgs, CArrayPsz *);
 				if (u.parraypsz != NULL)
 					{
-					BinAppendStringWithoutNullTerminator("<div style='margin:-25px;'><ul>");	// By default Qt indents the list items by about 40 pixels.  By using a negative margin of 30 pixels, we can display the text indented about 5 pixels.
-					//BinAppendStringWithoutNullTerminator("<div style='margin-left:-25px;'><ul>");
-					//BinAppendStringWithoutNullTerminator("<div style='text-indent:-25px;'><ul>");	//This indents only the first list item
+					BinAppendText("<div style='margin:-25px;'><ul>");	// By default Qt indents the list items by about 40 pixels.  By using a negative margin of 30 pixels, we can display the text indented about 5 pixels.
+					//BinAppendText("<div style='margin-left:-25px;'><ul>");
+					//BinAppendText("<div style='text-indent:-25px;'><ul>");	//This indents only the first list item
 					BinAppendHtmlListItems(IN *u.parraypsz);
-					BinAppendStringWithoutNullTerminator("</ul></div>");
+					BinAppendText("</ul></div>");
 					}
 				break;
 
@@ -2346,7 +2269,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 			case d_chSourcePCSZU:	// $s
 				u.pszuString = va_arg(vlArgs, PSZUC);
 				if (u.pszuString != NULL)
-					BinAppendStringWithoutNullTerminator((PSZAC)u.pszuString);
+					BinAppendText((PSZAC)u.pszuString);
 				break;
 			case d_chSourcePCStr:	// $S
 				u.pstr = va_arg(vlArgs, CStr *);
@@ -2367,7 +2290,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 			case d_chSourcePQByteArray:
 				u.parrayb = va_arg(vlArgs, QByteArray *);
 				if (u.parrayb != NULL)
-					BinAppendStringWithoutNullTerminator((PSZAC)u.parrayb->constData());
+					BinAppendText((PSZAC)u.parrayb->constData());
 				break;
 			case d_chTemplateByte:
 				u.bValue = va_arg(vlArgs, UINT);	// A byte is pushed on the stack as 32 bits, so we have to extract it as a UINT
@@ -2385,7 +2308,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				L64 llValue = va_arg(vlArgs, L64);
 				CHU szValue[32];
 				Integer64ToString(OUT szValue, llValue, (chFormat == 'L') ? ITS_mskfThousandSeparator : d_zNA);
-				BinAppendStringWithoutNullTerminator((PSZAC)szValue);
+				BinAppendText((PSZAC)szValue);
 				}
 				break;
 			case 'x':	// $x - hexadecimal value without any leading zeroes
@@ -2394,7 +2317,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				break;
 			case 'U':	// $U
 				u.uValue = USZU_from_USZUF(va_arg(vlArgs, USZU));	// Just in case, remove the flags from the USZU
-				BinAppendStringWithoutNullTerminator((PSZAC)PszFromUSZU(u.uValue));
+				BinAppendText((PSZAC)PszFromUSZU(u.uValue));
 				break;
 			case d_chTemplateColor:	// $c
 				BinAppendByte('#');
@@ -2435,7 +2358,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				double flValue = va_arg(vlArgs, double);	// Floats are never pushed on the stack (the compiler always pushes doubles)
 				CHA szValue[32];
 				sprintf(OUT szValue, (chFormat == 'g') ? "%.05g" : "%.03g", flValue);
-				BinAppendStringWithoutNullTerminator(szValue);
+				BinAppendText(szValue);
 				}
 				break;
 

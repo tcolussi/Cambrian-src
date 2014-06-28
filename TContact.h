@@ -105,8 +105,12 @@ public:
 	void Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEvent);
 	void Xcp_ServiceDiscovery();
 	void Xcp_Synchronize();
-	void Xcp_ApiRequest(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters);
-	void Xcp_ApiProcessReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
+	void XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters);
+	BOOL XcpApi_FReturnData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiParameterData);
+	void XcpApi_ProcessReturnedData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest);
+
+	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const;
+	void XcpApiContact_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters);
 
 	//void BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const;
 	void Contact_AddToGroup(int iGroup);

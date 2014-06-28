@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	WChatInput.cpp
 //
-//	Thic class collects the text typed by the user and create an event for the Chat Log.
-//	The event will take care of creating the appropriate task to send the message to the user(s).
+//	Display a widget for the user to type text for a Chat Log.
+//	Depending on what the user typed, the text may be interpreted as a text message to the user or group, or a command line.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef PRECOMPILEDHEADERS_H

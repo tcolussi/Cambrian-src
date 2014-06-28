@@ -704,8 +704,7 @@ WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStan
 				Assert(pEvent->EGetEventClass() == CEventMessageTextSent::c_eEventClass);
 				if (pEvent->EGetEventClass() == eEventClass_eMessageTextSent)
 					{
-					//pEvent->MessageDeliveredConfirmed();
-					pEvent->Event_SetCompletedAndUpdateWidgetWithinChatLog();
+					pEvent->Event_SetCompletedAndUpdateWidgetWithinParentChatLog();
 					if (m_pContactParent_YZ->m_uFlagsContact & TContact::FC_kfContactNeedsInvitation)
 						m_pContactParent_YZ->ChatLogContact_RemoveInvitationMessage();
 					}

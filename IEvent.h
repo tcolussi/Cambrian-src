@@ -13,6 +13,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#define d_szEvent_strContactSource						"_CONTACTSOURCE"	// Add an extra field to the base class IEvent to include the contact who transmitted the event.  This field is useful to debug group chat.
 
 #define d_chEvent_Attribute_tsEventID					'i'	// Identifier of the event
 #define d_szEvent_Attribute_tsEventID_t					" i='$t'"
@@ -148,6 +149,9 @@ public:
 	void BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact);
 	void BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember);
 	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
+	void BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters);
+	void BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier);
+
 	void BinXmlSerializeEventForDisk(const IEvent * pEvent);
 	void BinXmlSerializeEventForXcp(const IEvent * pEvent);
 	void BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTAMP tsOther);
@@ -249,6 +253,9 @@ public:
 		FE_kfEventProtocolError		= 0x0008,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
 		};
 	mutable UINT m_uFlagsEvent;				// Flags related to the event (not serialized)
+	#ifdef d_szEvent_strContactSource
+	CStr m_strContactSource;				// Contact JID who transmitted the event
+	#endif
 
 public:
 	IEvent(const TIMESTAMP * ptsEventID = NULL);
@@ -272,8 +279,9 @@ public:
 	BOOL Event_FIsEventBelongsToGroup() const;
 	BOOL Event_FIsEventTypeSent() const;
 	BOOL Event_FIsEventTypeReceived() const;
-	void Event_SetCompleted(QTextEdit * pwEditChatLog);
-	void Event_SetCompletedAndUpdateWidgetWithinChatLog();
+	void Event_SetCompletedTimestamp();
+	void Event_SetCompletedAndUpdateChatLog(QTextEdit * pwEditChatLog);
+	void Event_SetCompletedAndUpdateWidgetWithinParentChatLog();
 	void Event_UpdateWidgetWithinParentChatLog();
 	BOOL Event_FHasCompleted() const;
 	BOOL Event_FIsEventRecentThanMinutes(int cMinutes) const;
@@ -369,7 +377,6 @@ public:
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
-	void MessageDeliveredConfirmed();
 	void MessageResendUpdate(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate);
 };
 

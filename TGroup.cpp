@@ -176,8 +176,10 @@ TGroup::Member_Add_UI(TContact * pContact)
 		TreeItem_SetTextToDisplayNameIfGenerated();
 		//pMember->TreeItemWidget_EnsureVisible();	// The contact was added to the array, therefore display it on the GUI as well
 		// Create an event in the Chat Log
+		/*
 		CEventGroupMemberJoin * pEvent = new CEventGroupMemberJoin(pContact);
 		Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEvent);
+		*/
 		}
 	TreeItem_SelectWithinNavigationTreeExpanded();
 	}
@@ -439,24 +441,13 @@ TAccountXmpp::Group_Delete(PA_DELETING TGroup * paGroup)
 	Assert(paGroup != NULL);
 	Assert(paGroup->EGetRuntimeClass() == RTI(TGroup));
 	Assert(paGroup->m_pAccount == this);
-	/*
-	TContact ** ppContactStop;
-	TContact ** ppContact = pGroup->m_arraypContacts.PrgpGetContactsStop(OUT &ppContactStop);
-	while (ppContact != ppContactStop)
-		{
-		TContact * pContact = *ppContact++;
-		Assert(pContact != NULL);
-		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-		Assert(pContact->m_pAccount == this);
-		pContact->Contact_RemoveAliasRelatedToGroup(pGroup);
-		}
-	*/
 	m_arraypaGroups.DeleteTreeItem(PA_DELETING paGroup);
 	} // Group_Delete()
 
 //	Find the group matching the identifier, or allocate a new one if not found.
+//	This method will never return NULL if pbinXcpApiExtraRequest is not NULL.
 TGroup *
-TAccountXmpp::Group_PFindByIdentifier_NZ(PSZUC pszGroupIdentifier)
+TAccountXmpp::Group_PFindByIdentifier(PSZUC pszGroupIdentifier, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest)
 	{
 	Report(pszGroupIdentifier != NULL);	// This is not a bug, however unsual
 	SHashSha1 shaGroupIdentifier;
@@ -475,9 +466,14 @@ TAccountXmpp::Group_PFindByIdentifier_NZ(PSZUC pszGroupIdentifier)
 			return pGroup;
 		}
 	// Unable to find the group, therefore allocate a new one
-	pGroup = new TGroup(this);
-	m_arraypaGroups.Add(PA_CHILD pGroup);
-	pGroup->m_hashGroupIdentifier = shaGroupIdentifier;
-	pGroup->TreeItem_DisplayWithinNavigationTree(this, eMenuAction_Group);
-	return pGroup;
+	if (pbinXcpApiExtraRequest != NULL)
+		{
+		pGroup = new TGroup(this);
+		m_arraypaGroups.Add(PA_CHILD pGroup);
+		pGroup->m_hashGroupIdentifier = shaGroupIdentifier;
+		pGroup->TreeItem_DisplayWithinNavigationTree(this, eMenuAction_Group);
+		pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_ProfileGet(pszGroupIdentifier);	// If the group does not exist, then query the contact who sent the stanza to get more information about the group
+		return pGroup;
+		}
+	return NULL;
 	} // Group_PFindByIdentifier_NZ()

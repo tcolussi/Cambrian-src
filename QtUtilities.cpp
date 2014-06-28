@@ -119,7 +119,7 @@ WLabel::Label_SetTextHtmlListItems_Gsb(const CArrayPsz & arraypszListItems)
 	{
 	/*
 	Label_SetStyleSheetForHtmlListItems();
-	g_strScratchBufferStatusBar.BinInitFromStringWithoutNullTerminator("<div style='margin:-30px;'><ul>");
+	g_strScratchBufferStatusBar.BinInitFromText("<div style='margin:-30px;'><ul>");
 	g_strScratchBufferStatusBar.BinAppendHtmlListItems(arraypszListItems);
 	g_strScratchBufferStatusBar.BinAppendStringWithNullTerminator("</ul></div>");
 	setText(g_strScratchBufferStatusBar);

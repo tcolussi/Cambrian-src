@@ -74,7 +74,8 @@ SOURCES += main.cpp\
     GroupChat.cpp \
     ChatLogEvents.cpp \
     Xcp.cpp \
-    WLayoutBrowser.cpp
+    WLayoutBrowser.cpp \
+    XcpApi.cpp
 
 
 HEADERS += PreCompiledHeaders.h \
@@ -136,7 +137,8 @@ HEADERS += PreCompiledHeaders.h \
     GroupChat.h \
     ChatLogEvents.h \
     Xcp.h \
-    WLayoutBrowser.h
+    WLayoutBrowser.h \
+    XcpApi.h
 
 
 FORMS +=

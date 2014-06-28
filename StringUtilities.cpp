@@ -2811,7 +2811,7 @@ TEST_Base64()
 	{
 	/*
 	CStr str;
-	str.BinInitFromStringWithoutNullTerminator("const BYTE c_mapbbBase64[256] =\n{");
+	str.BinInitFromText("const BYTE c_mapbbBase64[256] =\n{");
 	CHU szString[4] = { ' ', d_zNA, d_zNA, d_zNA };
 	int ch = 0;
 	while (ch <= 255)
@@ -2894,7 +2894,7 @@ TEST_Base85()
 	/*
 	// Generate the source code to decode a Base85 string.
 	CStr str;
-	str.BinInitFromStringWithoutNullTerminator("const BYTE c_mapbbBase85[256] =\n{");
+	str.BinInitFromText("const BYTE c_mapbbBase85[256] =\n{");
 	CHU szString[4] = { ' ', d_zNA, d_zNA, d_zNA };
 	int ch = 0;
 	while (ch <= 255)
@@ -2962,7 +2962,7 @@ TEST_GenerateTableAsciiFlags()
 	return;
 	// Generate the source code to decode a hexadecimal values / Base16 string.  This table also contains flags to detect white spaces and punctuation.
 	CStr strTable;
-	strTable.BinInitFromStringWithoutNullTerminator("const BYTE c_mapbbHexDigits[256] =\n{");
+	strTable.BinInitFromText("const BYTE c_mapbbHexDigits[256] =\n{");
 	int ch = 0;
 	while (ch <= 255)
 		{
@@ -3053,7 +3053,7 @@ TEST_GenerateTableLowersase()
 	{
 	// Generate the source code to have a macro to quickly convert from uppercase to lowercase
 	CStr strTable;
-	strTable.BinInitFromStringWithoutNullTerminator("const CHU c_mapbbLowercase[256] =\n{");
+	strTable.BinInitFromText("const CHU c_mapbbLowercase[256] =\n{");
 	int ch = 0;
 	while (ch <= 255)
 		{

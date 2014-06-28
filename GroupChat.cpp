@@ -61,7 +61,7 @@ CEventGroupMemberJoin::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock)
 //	PERFORMANCE NOTES
 //	Considering a single contact may have multiple identifier, such as having multiple JIDs, it will be wise in the future to use a hash table to cache the identifiers.
 TContact *
-TAccountXmpp::Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName) CONST_MCC
+TAccountXmpp::Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest) CONST_MCC
 	{
 	PSZUC pszContactIdentifier = pXmlNodeEvent->PszuFindAttributeValue(chAttributeName);
 	if (pszContactIdentifier != NULL)
@@ -71,7 +71,11 @@ TAccountXmpp::Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEven
 		if (pContact != NULL)
 			return pContact;
 		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find contact identifier '$s' from XML node: ^N\n", pszContactIdentifier, pXmlNodeEvent);
-		// Create the contact
+		// Create a new contact
+		if (pbinXcpApiExtraRequest != NULL)
+			{
+
+			}
 		return TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszContactIdentifier);
 		}
 	return NULL;
@@ -97,7 +101,7 @@ CBin::BinAppendXmlAttributeOfContactIdentifier(CHS chAttributeName, const TConta
 TContact *
 TAccountXmpp::Contact_PFindByIdentifierGroupSender_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC
 	{
-	return Contact_PFindByIdentifierOrCreate_YZ(pXmlNodeEvent, d_chXCPa_pContactGroupSender);
+	return Contact_PFindByIdentifierOrCreate_YZ(pXmlNodeEvent, d_chXCPa_pContactGroupSender, NULL);
 	}
 
 void
@@ -107,7 +111,7 @@ IEvent::_XmlUnserializeAttributeOfContactIdentifier(CHS chAttributeName, OUT TCo
 	Assert(pXmlNodeElement != NULL);
 	Assert(m_pVaultParent_NZ != NULL);
 	Assert(m_pVaultParent_NZ->m_pParent->m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
-	*ppContact = m_pVaultParent_NZ->m_pParent->m_pAccount->Contact_PFindByIdentifierOrCreate_YZ(pXmlNodeElement, chAttributeName);
+	*ppContact = m_pVaultParent_NZ->m_pParent->m_pAccount->Contact_PFindByIdentifierOrCreate_YZ(pXmlNodeElement, chAttributeName, NULL);
 	}
 
 /*

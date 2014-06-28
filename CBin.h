@@ -77,10 +77,10 @@ public:
 	void BinInitFromByte(BYTE bData);
 	PSZU BinInitFromTextSzv_VE(PSZAC pszFmtTemplate, ...);
 	PSZU BinInitFromTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs);
+	void BinInitFromText(PSZAC pszText);
 	void BinInitFromStringWithNullTerminator(PSZAC pszData);
-	void BinInitFromStringWithoutNullTerminator(PSZAC pszData);
 	void BinAppendStringWithNullTerminator(PSZAC pszString);
-	void BinAppendStringWithoutNullTerminator(PSZAC pszString);
+	void BinAppendText(PSZAC pszText);
 
 	void BinAppendBinaryData(const void * pvData, int cbData);
 	void BinAppendBinaryDataPvPv(const void * pvDataStart, const void * pvDataStop);
@@ -159,10 +159,6 @@ public:
 	PSZUC BinAppendTextVirtualSzv_VL(OUT int * pcbDataFormatted, IN PSZAC pszFmtTemplate, va_list vlArgs) CONST_TEMPORARY_MODIFIED;
 	PSZUC PszAppendVirtualXmlAttributes(PSZAC pszFmtTemplateAttributes, ...) CONST_TEMPORARY_MODIFIED;
 	void BinEnsureContentHasNoNullTerminatorAndIsTerminatedWithVirtualNullTerminator();
-
-	PSZU PszAllocStringBufferA(int cchBuffer);
-	PSZU PszAllocStringBuffer32Bytes();
-	void ReleaseBufferA(int cchLength = -1);
 
 	BOOL FIsPointerAddressWithinBinaryObject(const void * pvData) const;
 
