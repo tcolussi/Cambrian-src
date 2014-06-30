@@ -1593,6 +1593,7 @@ Base85_CchEncodeToText(OUT PSZU pszStringBase85, const BYTE prgbDataBinary[], in
 	{
 	Assert(pszStringBase85 != NULL);
 	Assert(prgbDataBinary != NULL || cbDataBinary == 0);
+	Assert(cbDataBinary >= 0);
 	PSZU pszStringBase85Begin = pszStringBase85;
 	const int cbDataBinaryAligned32 = (cbDataBinary & ~3);
 	const BYTE * pbDataStopAligned32 = prgbDataBinary + cbDataBinaryAligned32;
@@ -1607,32 +1608,43 @@ Base85_CchEncodeToText(OUT PSZU pszStringBase85, const BYTE prgbDataBinary[], in
 			uBinary /= 85;
 			}
 		}
-	if (cbDataBinary & 3)
+	// Encode the remaining of the binary
+	int cbRemain = cbDataBinary & 3;
+	if (cbRemain > 0)
 		{
-		UINT uBinary = 0;
-		while (pbDataStopAligned32 != prgbDataBinary + cbDataBinary)
-			uBinary = (uBinary << 8) | *pbDataStopAligned32++;
-		while (uBinary > 0)
+		if (cbRemain == 1 && *pbDataStopAligned32 < 85)
 			{
-			*pszStringBase85++ = c_rgchBase85[uBinary % 85];
-			uBinary /= 85;
+			*pszStringBase85++ = c_rgchBase85[*pbDataStopAligned32];	// There is one byte left and its value is less than 85, therefore we can encode it into a single character
 			}
-		}
+		else
+			{
+			UINT uBinary = 0;
+			while (pbDataStopAligned32 != prgbDataBinary + cbDataBinary)
+				uBinary = (uBinary << 8) | *pbDataStopAligned32++;
+			PSZU pszStringBase85Stop = pszStringBase85 + cbRemain;
+			while (pszStringBase85 <= pszStringBase85Stop)
+				{
+				*pszStringBase85++ = c_rgchBase85[uBinary % 85];
+				uBinary /= 85;
+				}
+			} // if...else
+		} // if
 	*pszStringBase85 = '\0';
 	Assert((pszStringBase85 - pszStringBase85Begin) < (int)Base85_CbEncodeAlloc(cbDataBinary));
+	Assert((pszStringBase85 - pszStringBase85Begin) == (int)strlenU(pszStringBase85Begin));
 	return (pszStringBase85 - pszStringBase85Begin);
 	} // Base85_CchEncodeToText()
 
 //	Return how many bytes are needed to be allocated to decode a Base85 string.
 //	The returned value is NOT the exact length of decoded string, however how much memory
-//	should be allocated for parameter prgbDataBinarySzv[] in function Base85_CbDecodeToBinary().
+//	should be allocated for parameter prgbDataBinary[] in function Base85_CbDecodeToBinary().
 //
 //	Optionally this function return the pointer where the decoding will stop.
-//	In a successful scenario, the pointer will be the null-terminator of pszStringBase85;
+//	In a successful scenario, the pointer will be the null-terminator of prgbDataBinary[];
 UINT
 Base85_CbDecodeAlloc(PSZUC pszStringBase85, OUT PCHRO * ppchroStop)
 	{
-	int cchMapValues = 2;	// Include for an extra character and the null-terminator
+	int cchMapValues = 2 + 1;	// Include for two extra characters and the null-terminator
 	while (TRUE)
 		{
 		const BYTE mvbMapValue = c_mapbbBase85[(BYTE)*pszStringBase85++];
@@ -1663,8 +1675,8 @@ Base85_FCanDecodeToBinary(PSZUC pszStringBase85, int cbDataBinary)
 	return (cchMapValues * 4 == cbDataBinary * 5);
 	}
 
-
-//	Return the number of bytes stored in prgbDataBinarySzv[].
+//	Routine complement to Base85_CchEncodeToText()
+//	Return the number of bytes stored in prgbDataBinary[].
 //	This function does NOT include any null-terminator, so it is the responsibility of the caller to add it if necessary.
 UINT
 Base85_CbDecodeToBinary(IN PSZUC pszStringBase85, OUT_F_INV BYTE prgbDataBinary[])
@@ -1699,27 +1711,31 @@ Base85_CbDecodeToBinary(IN PSZUC pszStringBase85, OUT_F_INV BYTE prgbDataBinary[
 			break;
 		} // while
 	BYTE * pbBinary = (BYTE *)pdwBinary;
-	if (uBinary > 0)
+	if (uMultiplicator > 1)
 		{
-		// Add the remaining binary data
-		const BYTE b0 = uBinary;
+		Assert(uMultiplicator == 85 || uMultiplicator == 85*85 || uMultiplicator == 85*85*85 || uMultiplicator == 85*85*85*85);
+		const BYTE b0 = uBinary;		// This code need to be fixed for big-endian processors
 		const BYTE b1 = uBinary >> 8;
 		UINT uBinaryHiWord = uBinary >> 16;
-		if (uBinaryHiWord == 0)
+		switch (uMultiplicator)
 			{
+		default:
 			if (b1 == 0)
 				{
 				*pbBinary++ = b0;
+				break;
 				}
-			else
+			// Fall Through //
+		case 85*85*85:
+			if (uBinaryHiWord == 0)
 				{
 				pbBinary[0] = b1;
 				pbBinary[1] = b0;
 				pbBinary += 2;
+				break;
 				}
-			}
-		else
-			{
+			// Fall Through //
+		case 85*85*85*85:
 			if (uBinaryHiWord <= 0xFF)
 				{
 				pbBinary[0] = uBinaryHiWord;
@@ -1729,10 +1745,11 @@ Base85_CbDecodeToBinary(IN PSZUC pszStringBase85, OUT_F_INV BYTE prgbDataBinary[
 				}
 			else
 				{
+				// The falue is so big, we need 4 bytes to store it
 				*pdwBinary = uBinary;
 				pbBinary += 4;
-				}
-			} // if...else
+				} // if...else
+			} // switch
 		} // if
 	Assert(pbBinary - prgbDataBinary < cbDecodeAllocDebug);
 	return pbBinary - prgbDataBinary;
@@ -2860,18 +2877,35 @@ TEST_Base64()
 	}
 
 void
+TEST_Base85EncodeBinary(const BYTE prgbData[], int cbData)
+	{
+	CHU szEncoded[100];
+	int cchEncoded = Base85_CchEncodeToText(OUT szEncoded, prgbData, cbData);
+	Assert((int)strlenU(szEncoded) == cchEncoded);
+	CHU szDecoded[100];
+	int cchDecoded = Base85_CbDecodeToBinary(IN szEncoded, OUT szDecoded);
+	if (cbData != cchDecoded || memcmp(prgbData, szDecoded, cbData) != 0)
+		MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Base85 Encoding/Decoding Error!\n"
+			"\t Input $i bytes: 0x{pf}\n"
+			"\t Encoded $i bytes: 0x{pf}\n"
+			"\t Output $i bytes: 0x{pf}\n",
+			cbData, prgbData, cbData,
+			cchEncoded, szEncoded, cchEncoded,
+			cchDecoded, szDecoded, cchDecoded);
+	}
+
+void
 TEST_Base85Encode(PSZAC pszText)
 	{
 	CHU szEncoded[100];
 	Base85_CchEncodeToText(OUT szEncoded, (const BYTE *)pszText, strlen(pszText));
-//	Base64_CchEncodeToText(szEncoded, (const BYTE *)pszText, strlen(pszText));
 
 	CHU szDecoded[100];
 	int cchDecoded = Base85_CbDecodeToBinary(IN szEncoded, OUT szDecoded);
 	szDecoded[cchDecoded] = '\0';
 //	MessageLog_AppendTextFormatCo(d_coBlack, "Base85_CchEncodeToText:\n\t$s \n\t$s \n\t$s\n", pszText, szEncoded, szDecoded);
 	if (!FCompareStrings(szDecoded, pszText))
-		MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Base85 Encoding/Decoding Error!\n");
+		MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Error Base85_CchEncodeToText():\n\t$s \n\t$s \n\t$s\n", pszText, szEncoded, szDecoded);
 	}
 
 void
@@ -2938,6 +2972,58 @@ TEST_Base85()
 	MessageLog_AppendTextFormatCo(d_coBlack, "$S\n", &str);
 	*/
 
+	// Test the encoding of binary data into Base85
+	int cchEncoded;
+	BYTE rgbInput[4] = { 0, 0, 0, 0 };
+	CHU szOutput[6];
+	cchEncoded = Base85_CchEncodeToText(OUT szOutput, IN rgbInput, 0);
+	Assert(FCompareStrings(szOutput, ""));
+	cchEncoded = Base85_CchEncodeToText(OUT szOutput, IN rgbInput, 4);
+	Assert(cchEncoded == 5);
+	Assert(FCompareStrings(szOutput, "00000"));
+	cchEncoded = Base85_CchEncodeToText(OUT szOutput, IN rgbInput, 3);
+	Assert(FCompareStrings(szOutput, "0000"));
+	cchEncoded = Base85_CchEncodeToText(OUT szOutput, IN rgbInput, 2);
+	Assert(FCompareStrings(szOutput, "000"));
+	cchEncoded = Base85_CchEncodeToText(OUT szOutput, IN rgbInput, 1);
+	Assert(FCompareStrings(szOutput, "0"));									// A single byte may be encoded with one or two characters
+	rgbInput[0] = 'A';	// 65
+	cchEncoded = Base85_CchEncodeToText(OUT szOutput, IN rgbInput, 1);
+	Assert(FCompareStrings(szOutput, "Y"));									// The character 'A' is encoded as 'Y' in Base85
+	rgbInput[0] = 'a';	// 97
+	cchEncoded = Base85_CchEncodeToText(OUT szOutput, IN rgbInput, 1);
+	Assert(FCompareStrings(szOutput, "c1"));								// The character 'a' is encoded with two bytes in Base85 because 97 > 85
+
+	int cbBinary;
+	BYTE rgbBinary[4];
+	InitToGarbage(OUT rgbBinary, sizeof(rgbBinary));
+
+	cbBinary = Base85_CbDecodeToBinary((PSZUC)"0", OUT rgbBinary);
+	Assert(cbBinary == 1);
+	Assert(rgbBinary[0] == '\0');
+
+	cbBinary = Base85_CbDecodeToBinary((PSZUC)"00", OUT rgbBinary);		// "00" is the same as "0"
+	Assert(cbBinary == 1);
+	Assert(rgbBinary[0] == '\0');
+
+	cbBinary = Base85_CbDecodeToBinary((PSZUC)"000", OUT rgbBinary);
+	Assert(cbBinary == 2);
+	Assert(rgbBinary[0] == '\0');
+	Assert(rgbBinary[1] == '\0');
+
+	cbBinary = Base85_CbDecodeToBinary((PSZUC)"0000", OUT rgbBinary);
+	Assert(cbBinary == 3);
+	Assert(rgbBinary[0] == '\0');
+	Assert(rgbBinary[1] == '\0');
+	Assert(rgbBinary[2] == '\0');
+
+	cbBinary = Base85_CbDecodeToBinary((PSZUC)"00000", OUT rgbBinary);
+	Assert(cbBinary == 4);
+	Assert(rgbBinary[0] == '\0');
+	Assert(rgbBinary[1] == '\0');
+	Assert(rgbBinary[2] == '\0');
+	Assert(rgbBinary[3] == '\0');
+
 	TEST_Base85Encode("");
 	TEST_Base85Encode("A");
 	TEST_Base85Encode("a");
@@ -2947,6 +3033,35 @@ TEST_Base85()
 	TEST_Base85Encode("abcde");
 	TEST_Base85Encode("abcdef");
 	TEST_Base85Encode("abcdefg");
+
+	TEST_Base85EncodeBinary(IN rgbBinary, 1);
+	TEST_Base85EncodeBinary(IN rgbBinary, 2);
+	TEST_Base85EncodeBinary(IN rgbBinary, 3);
+	TEST_Base85EncodeBinary(IN rgbBinary, 4);
+
+	// Do the full test to see if the round-trip of encoding and decoding gives the same result
+	#if 0	// Those tests are slow, especially the encoding and decoding of 3 bytes and there is no need to run this test every time Cambrian starts
+	int ich;
+	for (ich = 0; ich <= 0xFF; ich++)
+		{
+		rgbBinary[0] = ich;
+		TEST_Base85EncodeBinary(IN rgbBinary, 1);	// Test the encoding and decoding of a single byte
+		}
+	for (ich = 0; ich <= 0xFFFF; ich++)
+		{
+		rgbBinary[0] = (BYTE)ich;
+		rgbBinary[1] = ich >> 8;
+		TEST_Base85EncodeBinary(IN rgbBinary, 2);	// Test the encoding and decoding of 2 bytes
+		}
+	for (ich = 0; ich <= 0xFFFFFF; ich++)
+		{
+		rgbBinary[0] = (BYTE)ich;
+		rgbBinary[1] = ich >> 8;
+		rgbBinary[3] = ich >> 16;
+		TEST_Base85EncodeBinary(IN rgbBinary, 3);	// Test the encoding and decoding of 3 bytes
+		}
+	#endif
+
 	/*
 	RECT rc = { 10, 0, 100, 100 };
 	CHU szRectBase85[100];

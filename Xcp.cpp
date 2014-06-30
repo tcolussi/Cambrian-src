@@ -86,6 +86,13 @@
 #define d_chXCPe_zNA									'\0'	// Not applicable
 
 
+void
+CBinXcpStanzaType::BinXmlAppendAttributesXcpApiError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData)
+	{
+
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core method of the Cambrian Protocol.
 //
 //	This method is related to a contact receiving an XCP stanza.
@@ -378,7 +385,8 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_Api_strName);
 				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_ApiReply_s ">", pszApiName);
 				int ibParameters = binXcpStanzaReply.CbGetData();
-				if (XcpApi_FReturnData(pszApiName, pXmlNodeXcpEvent, INOUT &binXcpStanzaReply))
+				EErrorXcpApi eErrorXcpApi = XcpApi_EReturnData(pszApiName, pXmlNodeXcpEvent, INOUT &binXcpStanzaReply);
+				if (eErrorXcpApi == eErrorXcpApi_zSuccess)
 					{
 					// Close the XML tag
 					binXcpStanzaReply.BinAppendText("</" d_szXCPe_ApiReply_close ">");
@@ -860,7 +868,7 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 				// This code is only for debugging
 				TContact * pContactGroupSender = pParent->m_pAccount->Contact_PFindByIdentifierGroupSender_YZ(IN pXmlNodeEvent);
 				if (pContactGroupSender != NULL)
-					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "tsEventID $t of class '$U' should NOT have a pContactGroupSender ^j\n", tsEventID, pEvent->EGetEventClass(), pContactGroupSender);
+					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "tsEventID $t ({tL}) of class '$U' should NOT have a pContactGroupSender ^j\n", tsEventID, tsEventID, pEvent->EGetEventClass(), pContactGroupSender);
 				}
 			Assert(pEvent->m_pVaultParent_NZ == pVault);
 			pEvent->XmlUnserializeCore(IN pXmlNodeEvent);
@@ -1548,9 +1556,15 @@ CEventFileSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, CBinXcpS
 	L64 iblDataSource = pXmlNodeExtraData->LFindAttributeXcpOffset();
 	int cbDataRead = _PFileOpenReadOnly_NZ()->CbDataReadAtOffset(iblDataSource, sizeof(rgbBuffer), OUT rgbBuffer);
 	m_cblDataTransferred = iblDataSource + cbDataRead;
+	MessageLog_AppendTextFormatSev(eSeverityComment, "$t: CEventFileSent::XcpExtraDataRequest() offset: $L + cbDataRead: $i = $L bytes completed\n", m_tsEventID, iblDataSource, cbDataRead, m_cblDataTransferred);
+	if (cbDataRead == 3)
+		MessageLog_AppendTextFormatSev(eSeverityComment, "Test\n");
 	pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataReply_tsO d_szXCPa_EventExtraData_iblOffset_l d_szXCPa_EventExtraData_bin85Payload_pvcb "/>", m_tsEventID, iblDataSource, IN rgbBuffer, cbDataRead);
 	if (cbDataRead <= 0)
+		{
+		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventFileSent::XcpExtraDataRequest() - Closing file $S\n", &m_strFileName);
 		_FileClose();	// There is nothing to send, therefore assume we reached the end of the file, and consequently close the file.  Of course, if the contact wishes more data (or request to resend the last block, then the file will be re-opened)
+		}
 	}
 
 void
@@ -1566,5 +1580,8 @@ CEventFileReceived::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOU
 		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataRequest_tsI d_szXCPa_EventExtraData_iblOffset_l "/>", m_tsOther, m_cblDataTransferred);
 		}
 	else
+		{
+		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventFileReceived::XcpExtraDataArrived() - Closing file $S\n", &m_strFileName);
 		_FileClose();
+		}
 	}

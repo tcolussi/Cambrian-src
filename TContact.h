@@ -106,7 +106,7 @@ public:
 	void Xcp_ServiceDiscovery();
 	void Xcp_Synchronize();
 	void XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters);
-	BOOL XcpApi_FReturnData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiParameterData);
+	EErrorXcpApi XcpApi_EReturnData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiParameterData);
 	void XcpApi_ProcessReturnedData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest);
 
 	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const;

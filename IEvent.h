@@ -126,6 +126,19 @@ inline EEventClass EEventClassFromPsz(PSZUC pszEventClass) { return (EEventClass
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+enum EErrorXcpApi
+{
+	eErrorXcpApi_zSuccess,			// No error
+	eErrorXcpApi_ApiUnknown,
+	eErrorXcpApi_IdentifierMissing,		// No identifier was supplied while the API is expecting one
+	eErrorXcpApi_IdentifierInvalid,		// The identifier is not valid for the API, typically of an incorrect syntax
+	eErrorXcpApi_IdentifierNotFound,	// The identifier could not be found.
+	eErrorXcpApi_ParameterMissing,		// The API is missing an essential parameter, thus failing
+	eErrorXcpApi_ParameterInvalid,		// One of the parameter is invalid
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 enum EStanzaType
 	{
 	eStanzaType_zInformation,		// The stanza is sent directly to the remote client, or it is ignored if the remote client is unavailable
@@ -135,7 +148,7 @@ enum EStanzaType
 
 //	Object to store information necessary to send an XCP stanza.
 //	An XCP Stanza is an XML within a XMPP message.
-class CBinXcpStanzaType : public CBin
+class CBinXcpStanzaType : public CBin	// TODO: Rename to CBinXcpStanza
 {
 public:
 	EStanzaType m_eStanzaType;	// How to send the XCP stanza.
@@ -149,6 +162,7 @@ public:
 	void BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact);
 	void BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember);
 	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
+	void BinXmlAppendAttributesXcpApiError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData);
 	void BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters);
 	void BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier);
 

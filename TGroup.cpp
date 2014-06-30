@@ -476,4 +476,4 @@ TAccountXmpp::Group_PFindByIdentifier(PSZUC pszGroupIdentifier, INOUT CBinXcpSta
 		return pGroup;
 		}
 	return NULL;
-	} // Group_PFindByIdentifier_NZ()
+	} // Group_PFindByIdentifier()

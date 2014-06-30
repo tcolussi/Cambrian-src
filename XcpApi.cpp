@@ -11,10 +11,15 @@
 #endif
 #include "XcpApi.h"
 
+
+
 #if 0
 	Group.Profile.Get [idGroup]
+	Group.Profile.GetPicture [idGroup]
 	Contact.Profile.Get [idContact]
-	Contact.Wallet.GetAddress [idContact, strCurrency]
+	Contact.Profile.GetPicture [idContact]
+	Contact.Profile.GetPicturePanoramic [idContact]
+	Contact.Wallet.GetAddress [idContact], strCurrency, strInvoiceNumber
 
 	Me.Profile.Get
 	Me.Wallet.GetAddress
@@ -29,14 +34,14 @@ CBinXcpStanzaType::BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	XcpApi_FReturnData()
+//	XcpApi_EReturnData()
 //
 //	Entry point to return the data of request XCP API.
 //
 //	Return TRUE if the API data was stored in pbinXcpApiParameterData.
 //	Return FALSE if the API is unknown.
-BOOL
-TContact::XcpApi_FReturnData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiParameterData)
+EErrorXcpApi
+TContact::XcpApi_EReturnData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiParameterData)
 	{
 	Assert(pszApiName != NULL);
 	Assert(pXmlNodeApiParameters != NULL);
@@ -50,19 +55,19 @@ TContact::XcpApi_FReturnData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParam
 			{
 			// Return our own profile
 			//XcpApiContact_ProfileSerialize(INOUT pbinXcpStanzaReply);
-			return TRUE;
+			return eErrorXcpApi_zSuccess;
 			}
-		TGroup * pGroup = NULL; //= m_pAccount->Group_PFindByIdentifier(pszProfileIdentifier);
+		TGroup * pGroup = m_pAccount->Group_PFindByIdentifier(pszProfileIdentifier, NULL);
 		if (pGroup != NULL)
 			{
 			pGroup->XcpApiGroup_ProfileSerialize(INOUT pbinXcpApiParameterData);
-			return TRUE;
+			return eErrorXcpApi_zSuccess;
 			}
 		pbinXcpApiParameterData->BinAppendTextSzv_VE("<Profile ID='^j' Name='^S' />", m_pAccount, &m_pAccount->m_pProfileParent->m_strNameProfile);
-		return TRUE;
+		return eErrorXcpApi_zSuccess;
 		}
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unknown API '$s'\n", pszApiName);
-	return FALSE;
+	return eErrorXcpApi_zSuccess;
 	}
 
 //	Entry point to process the data returned by XcpApi_FReturnData()
