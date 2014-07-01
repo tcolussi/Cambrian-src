@@ -115,8 +115,7 @@ class DDialogGroupAddContacts : public DDialogOkCancelWithLayouts
 	Q_OBJECT
 protected:
 	ITreeItemChatLogEvents * m_pContactOrGroup;
-	TGroup * m_pGroup;
-	TGroup * m_paGroup;
+	TGroup * m_pGroup;							// Group to add contacts (if this pointer is NULL, then create a new group)
 	WListContacts * m_pwListContactsAvailable;
 	WListContacts * m_pwListContactsInGroup;
 

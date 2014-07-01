@@ -444,14 +444,19 @@ TAccountXmpp::Group_Delete(PA_DELETING TGroup * paGroup)
 	m_arraypaGroups.DeleteTreeItem(PA_DELETING paGroup);
 	} // Group_Delete()
 
-//	Find the group matching the identifier, or allocate a new one if not found.
-//	This method will never return NULL if pbinXcpApiExtraRequest is not NULL.
+//	Find the group matching the identifier, and if not found and eFindGroupCreate then allocate a new group.
+//	This method may return NULL despite eFindGroupCreate if the identifier is not valid.
 TGroup *
-TAccountXmpp::Group_PFindByIdentifier(PSZUC pszGroupIdentifier, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest)
+TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest, EFindGroup eFindGroup)
 	{
 	Report(pszGroupIdentifier != NULL);	// This is not a bug, however unsual
+	Assert(pbinXcpApiExtraRequest != NULL);
 	SHashSha1 shaGroupIdentifier;
-	HashSha1_FInitFromStringBase85_ZZR_ML(OUT &shaGroupIdentifier, IN pszGroupIdentifier);
+	if (!HashSha1_FInitFromStringBase85_ZZR_ML(OUT &shaGroupIdentifier, IN pszGroupIdentifier))
+		{
+		pbinXcpApiExtraRequest->BinXmlAppendXcpAttributesForApiRequestError(eErrorXcpApi_IdentifierInvalid, pszGroupIdentifier);
+		return NULL;
+		}
 	TGroup * pGroup;
 	TGroup ** ppGroupStop;
 	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
@@ -466,7 +471,7 @@ TAccountXmpp::Group_PFindByIdentifier(PSZUC pszGroupIdentifier, INOUT CBinXcpSta
 			return pGroup;
 		}
 	// Unable to find the group, therefore allocate a new one
-	if (pbinXcpApiExtraRequest != NULL)
+	if (eFindGroup == eFindGroupCreate)
 		{
 		pGroup = new TGroup(this);
 		m_arraypaGroups.Add(PA_CHILD pGroup);
@@ -475,5 +480,6 @@ TAccountXmpp::Group_PFindByIdentifier(PSZUC pszGroupIdentifier, INOUT CBinXcpSta
 		pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_ProfileGet(pszGroupIdentifier);	// If the group does not exist, then query the contact who sent the stanza to get more information about the group
 		return pGroup;
 		}
+	pbinXcpApiExtraRequest->BinXmlAppendXcpAttributesForApiRequestError(eErrorXcpApi_IdentifierNotFound, pszGroupIdentifier);
 	return NULL;
-	} // Group_PFindByIdentifier()
+	} // Group_PFindByIdentifier_YZ()

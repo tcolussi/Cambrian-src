@@ -71,11 +71,9 @@
 #define d_chXCPe_ApiReply									'A'
 #define d_szXCPe_ApiReply_s							d_szXCP_"A n='$s'"
 #define d_szXCPe_ApiReply_close						d_szXCP_"A"
-	#define d_chXCPa_Api_eErrorCode								'e'
-	#define d_chXCPv_Api_eErrorCode_Success						0
-	#define d_chXCPv_Api_eErrorCode_UnknownApi					1
-	#define d_chXCPv_Api_eErrorCode_InvalidParameter			2
+	#define d_chXCPa_Api_eErrorCode								'e'	// Store the error code EErrorXcpApi
 	#define d_chXCPa_Api_strxErrorData							'd'
+	#define d_szXCPa_ErrorCodeAndErrorData_i_s					" e='$i' d='^s'"
 
 #if 0
 	// API call
@@ -87,10 +85,36 @@
 
 
 void
-CBinXcpStanzaType::BinXmlAppendAttributesXcpApiError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData)
+CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_ElementOpen(PSZUC pszApiName)
 	{
-
+	Assert(m_ibXmlApiReply == d_zNA);
+	BinAppendTextSzv_VE("<" d_szXCPe_ApiReply_s ">", pszApiName);	// Open the XML tag
+	m_ibXmlApiReply = m_paData->cbData;
+	Assert(XcpApi_FIsXmlElementOpened());
 	}
+
+void
+CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_ElementClose()
+	{
+	if (m_ibXmlApiReply <= 0)
+		return;
+	BinAppendText("</" d_szXCPe_ApiReply_close ">");	// Close the XML tag
+	m_ibXmlApiReply = d_zNA;
+	}
+
+void
+CBinXcpStanzaType::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData)
+	{
+	Assert(eErrorXcpApi != eErrorXcpApi_zSuccess);
+	if (m_ibXmlApiReply <= 0)
+		return;
+	Assert(m_paData != NULL);
+	m_paData->cbData = m_ibXmlApiReply - 1;		// Remove the tailing '>' from BinXmlAppendXcpElementApiReplyOpen()
+	Assert(m_paData->rgbData[m_paData->cbData] == '>');
+	BinAppendTextSzv_VE(d_szXCPa_ErrorCodeAndErrorData_i_s ">", eErrorXcpApi, pszxErrorData);
+	m_ibXmlApiReply = d_zNA;
+	}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core method of the Cambrian Protocol.
@@ -140,11 +164,18 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				{
 			case d_chXCPe_GroupSelector:
 				// The events belong to a group, so attempt to find the group
+				Report(pGroup == NULL);
+				Report(pMember == NULL);
 				pszEventValue = pXmlNodeXcpEvent->m_pszuTagValue;
 				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_GroupSelector ">^s</" d_szXCPe_GroupSelector ">", pszEventValue);
 				cbXcpStanzaReplyEmpty = binXcpStanzaReply.CbGetData();
-				pChatLogEvents = pGroup = m_pAccount->Group_PFindByIdentifier(IN pszEventValue, INOUT &binXcpStanzaReply);
-				Assert(pGroup != NULL);	// The group should be always created for pszEventValue, even if pszEventValue contains dummy data
+				pGroup = m_pAccount->Group_PFindByIdentifier_YZ(IN pszEventValue, INOUT &binXcpStanzaReply, TAccountXmpp::eFindGroupCreate);	// Find the group matching the identifier, and if not there create it
+				if (pGroup == NULL)
+					{
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Group identifier '$s' is not valid\n", pszEventValue);
+					break;
+					}
+				pChatLogEvents = pGroup;
 				pMember = pGroup->Member_PFindOrAddContact_NZ(this);
 				Assert(pMember != NULL);
 				Assert(pMember->m_pContact == this);
@@ -380,28 +411,24 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unable to find CEventDownloader matching tsOther $t for d_chXCPe_EventSplitDataReply\n", tsOther);
 				break;
 			case d_chXCPe_ApiRequest:
-				{
-				// Respond to the request for a given API name
-				PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_Api_strName);
-				binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_ApiReply_s ">", pszApiName);
-				int ibParameters = binXcpStanzaReply.CbGetData();
-				EErrorXcpApi eErrorXcpApi = XcpApi_EReturnData(pszApiName, pXmlNodeXcpEvent, INOUT &binXcpStanzaReply);
-				if (eErrorXcpApi == eErrorXcpApi_zSuccess)
+				Assert(binXcpStanzaReply.m_pContact == this);
+				if (binXcpStanzaReply.m_pContact == this)
 					{
-					// Close the XML tag
-					binXcpStanzaReply.BinAppendText("</" d_szXCPe_ApiReply_close ">");
-					break;
+					// Respond to the request for a given API name
+					PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_Api_strName);
+					binXcpStanzaReply.BinXmlAppendXcpElementForApiRequest_ElementOpen(IN pszApiName);
+					binXcpStanzaReply.BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(IN pszApiName, IN pXmlNodeXcpEvent);
+					binXcpStanzaReply.BinXmlAppendXcpElementForApiRequest_ElementClose();
 					}
-				// We have an error invoking the API, therefore flush any data in binXcpStanzaReply and append an error code.
-				binXcpStanzaReply.TruncateData(ibParameters - 1);	// Remove the closing angle bracket '>'
-				binXcpStanzaReply.BinAppendTextSzv_VE(" e='$s'/>", pszApiName);	// Return an error code
-				}
 				break;
 			case d_chXCPe_ApiReply:
-				{
-				PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_Api_strName);
-				XcpApi_ProcessReturnedData(pszApiName, IN pXmlNodeXcpEvent, INOUT &binXcpStanzaReply);
-				}
+				Assert(binXcpStanzaReply.m_pContact == this);
+				if (binXcpStanzaReply.m_pContact == this)
+					{
+					PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_Api_strName);
+					if (pXmlNodeXcpEvent->m_pElementsList != NULL)
+						binXcpStanzaReply.BinXmlAppendXcpElementForApiReply(IN pszApiName, IN pXmlNodeXcpEvent->m_pElementsList);
+					}
 				break;
 			default:
 				MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unknown XCP directive $s: chXCPe = $i ($b)\n", pszEventName, chXCPe, chXCPe);
@@ -949,6 +976,7 @@ CBinXcpStanzaType::CBinXcpStanzaType(EStanzaType eStanzaType)
 	{
 	m_eStanzaType = eStanzaType;
 	m_pContact = NULL;
+	m_ibXmlApiReply = d_zNA;
 	PvSizeAlloc(300);	// Pre-allocate 300 bytes, which should be enough for a small stanza
 	}
 
@@ -1556,9 +1584,7 @@ CEventFileSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, CBinXcpS
 	L64 iblDataSource = pXmlNodeExtraData->LFindAttributeXcpOffset();
 	int cbDataRead = _PFileOpenReadOnly_NZ()->CbDataReadAtOffset(iblDataSource, sizeof(rgbBuffer), OUT rgbBuffer);
 	m_cblDataTransferred = iblDataSource + cbDataRead;
-	MessageLog_AppendTextFormatSev(eSeverityComment, "$t: CEventFileSent::XcpExtraDataRequest() offset: $L + cbDataRead: $i = $L bytes completed\n", m_tsEventID, iblDataSource, cbDataRead, m_cblDataTransferred);
-	if (cbDataRead == 3)
-		MessageLog_AppendTextFormatSev(eSeverityComment, "Test\n");
+	//MessageLog_AppendTextFormatSev(eSeverityComment, "$t: CEventFileSent::XcpExtraDataRequest() offset: $L + cbDataRead: $i = $L bytes completed\n", m_tsEventID, iblDataSource, cbDataRead, m_cblDataTransferred);
 	pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szXCPe_EventExtraDataReply_tsO d_szXCPa_EventExtraData_iblOffset_l d_szXCPa_EventExtraData_bin85Payload_pvcb "/>", m_tsEventID, iblDataSource, IN rgbBuffer, cbDataRead);
 	if (cbDataRead <= 0)
 		{

@@ -360,6 +360,11 @@ typedef QRgb QRGB;	// co
 #define d_coThistle			MAKE_QRGB_(0xD8BFD8)		// This color is a light violet
 #define d_coViolet			MAKE_QRGB_(0xEE82EE)
 
+#define d_coTurquoise		0x40E0D0
+#define d_coTeal			0x008080
+#define d_coNavy			0x000080
+#define d_coPurple			0x800080
+#define d_coPurpleLight		0xE8CFD8
 
 //	Extensions of the RGB triple
 typedef QRGB QRGBX;	// cox

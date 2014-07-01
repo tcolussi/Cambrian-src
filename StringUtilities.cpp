@@ -1745,7 +1745,7 @@ Base85_CbDecodeToBinary(IN PSZUC pszStringBase85, OUT_F_INV BYTE prgbDataBinary[
 				}
 			else
 				{
-				// The falue is so big, we need 4 bytes to store it
+				// The binary data requires 4 bytes of storage
 				*pdwBinary = uBinary;
 				pbBinary += 4;
 				} // if...else
@@ -2876,13 +2876,15 @@ TEST_Base64()
 	Test_EncodeDecodeTimestampBase64(1234567890);
 	}
 
-void
+int
 TEST_Base85EncodeBinary(const BYTE prgbData[], int cbData)
 	{
-	CHU szEncoded[100];
+	CHU szEncoded[20];
+	InitToGarbage(OUT szEncoded, sizeof(szEncoded));
 	int cchEncoded = Base85_CchEncodeToText(OUT szEncoded, prgbData, cbData);
+	Assert(cchEncoded < (int)sizeof(szEncoded) - 1);
 	Assert((int)strlenU(szEncoded) == cchEncoded);
-	CHU szDecoded[100];
+	CHU szDecoded[20];
 	int cchDecoded = Base85_CbDecodeToBinary(IN szEncoded, OUT szDecoded);
 	if (cbData != cchDecoded || memcmp(prgbData, szDecoded, cbData) != 0)
 		MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Base85 Encoding/Decoding Error!\n"
@@ -2892,6 +2894,7 @@ TEST_Base85EncodeBinary(const BYTE prgbData[], int cbData)
 			cbData, prgbData, cbData,
 			cchEncoded, szEncoded, cchEncoded,
 			cchDecoded, szDecoded, cchDecoded);
+	return cchEncoded;
 	}
 
 void
@@ -3039,9 +3042,18 @@ TEST_Base85()
 	TEST_Base85EncodeBinary(IN rgbBinary, 3);
 	TEST_Base85EncodeBinary(IN rgbBinary, 4);
 
+	UINT uBinary = 85*85*85*85;
+	cchEncoded = TEST_Base85EncodeBinary(IN (const BYTE *)&uBinary, 3);
+	Assert(cchEncoded == 4);		// Encoding 3 bytes always requires 4 Base85 characters
+	cchEncoded = TEST_Base85EncodeBinary(IN (const BYTE *)&uBinary, 4);
+	Assert(cchEncoded == 5);		// Encoding 4 bytes always requires 5 Base85 characters
+	uBinary = 85*85*85*85 + 1;
+	cchEncoded = TEST_Base85EncodeBinary(IN (const BYTE *)&uBinary, 4);
+	Assert(cchEncoded == 5);		// Encoding 4 bytes always requires 5 Base85 characters
+
 	// Do the full test to see if the round-trip of encoding and decoding gives the same result
 	#if 0	// Those tests are slow, especially the encoding and decoding of 3 bytes and there is no need to run this test every time Cambrian starts
-	int ich;
+	UINT ich;
 	for (ich = 0; ich <= 0xFF; ich++)
 		{
 		rgbBinary[0] = ich;
@@ -3059,6 +3071,16 @@ TEST_Base85()
 		rgbBinary[1] = ich >> 8;
 		rgbBinary[3] = ich >> 16;
 		TEST_Base85EncodeBinary(IN rgbBinary, 3);	// Test the encoding and decoding of 3 bytes
+		}
+	#endif
+	#if 0
+	for (ich = 0xFFFFFFFF; ich > 0; ich--)
+		{
+		rgbBinary[0] = (BYTE)ich;
+		rgbBinary[1] = ich >> 8;
+		rgbBinary[3] = ich >> 16;
+		rgbBinary[4] = ich >> 24;
+		TEST_Base85EncodeBinary(IN rgbBinary, 4);	// Test the encoding and decoding of 4 bytes (this test takes about 15 minutes, as it tests 4 billion possibilities)
 		}
 	#endif
 

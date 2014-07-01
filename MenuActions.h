@@ -78,6 +78,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_ShowLogMessages,		// Show the MessageLog
 	eMenuAction_ShowLogErrors,			// Show the ErrorLog (aka Recent Errors)
 	eMenuAction_FindText,				// Search text in the message log
+	eMenuAction_DebugSendChatLog,		// Send the Chat Log to the Cambrian developer for debugging purpose
 
 	eMenuAction_PlaySound,
 

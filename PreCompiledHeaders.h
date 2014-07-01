@@ -8,8 +8,8 @@
 #define d_szApplicationName				"Cambrian"
 #define d_szwApplicationName		   L"Cambrian"
 #define d_szwApplicationNameSetup	   L"Cambrian Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.0.7.5"
-#define d_szwApplicationVersion		   L"0.0.7.5"
+#define d_szApplicationVersion			"0.0.7.6"
+#define d_szwApplicationVersion		   L"0.0.7.6"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -25,7 +25,7 @@
 #include <QWebView>
 #include <QMainWindow>
 
-//	Determine for which platform / operating system Cambrian was compiled
+//	Determine which platform / operating system Cambrian was compiled
 #if defined(Q_OS_WIN)
 	#define d_szOS		"Windows"
 #elif defined (Q_OS_MAC)
@@ -210,6 +210,7 @@ class CVaultEvents;
 extern const QBrush c_brushGreenSuperPale;
 extern const QBrush c_brushGreenSuperSuperPale;
 extern const QBrush c_brushFileTransfer;		// Display file transfers with the blue background color
+extern const QBrush c_brushDebugPurple;			// Display debugging events with a light purple color
 
 /*
 #ifndef NDEBUG

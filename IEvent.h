@@ -72,9 +72,10 @@ enum EEventClass
 	eEventClass_eMessageXmlRaw_class				= eEventClass_eMessageXmlRaw | eEventClass_kfNeverSerializeToDisk,	// The raw XML is never 'serialized' as part of the Cambrian Protocol because it is sent directly to the server unencrypted.
 
 	eEventClassLegacy_eFileSent						= _USZU1('F'),
-	eEventClassLegacy_eFileReceived					= _USZU1('f'),	// Basic compatibility with old file format so
+	eEventClassLegacy_eFileReceived					= _USZU1('f'),	// Basic compatibility with old file format so we can load old events
 
-	eEventClass_eFileSent							= _USZU2('F', 'D'),
+	eEventClass_eFileSent							= _USZU2('F', 'D'),	// TODO: Replace this by 'F' in about August, 2015
+	eEventClass_eFileSentTo							= _USZU3('F', 'T', 'O'),
 	eEventClass_eFileReceived						= _USZU2('f', 'd'),
 	eEventClass_eFileReceived_class					= eEventClass_eFileReceived | eEventClass_kfReceivedByRemoteClient,
 
@@ -153,6 +154,7 @@ class CBinXcpStanzaType : public CBin	// TODO: Rename to CBinXcpStanza
 public:
 	EStanzaType m_eStanzaType;	// How to send the XCP stanza.
 	TContact * m_pContact;		// Contact to send the XCP stanza
+	int m_ibXmlApiReply;		// Offset where the XML of the API reply is (this field is useful to append errors to the object)
 protected:
 	CBinXcpStanzaType(EStanzaType eStanzaType);
 public:
@@ -162,7 +164,16 @@ public:
 	void BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact);
 	void BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember);
 	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
-	void BinXmlAppendAttributesXcpApiError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData);
+
+	BOOL XcpApi_FIsXmlElementOpened() const { return (m_ibXmlApiReply > 0); }
+	BOOL XcpApi_FIsXmlElementClosedBecauseOfError() const { return (m_ibXmlApiReply == 0); }
+	void BinXmlAppendXcpElementForApiRequest_ElementOpen(PSZUC pszApiName);
+	void BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters);
+	void BinXmlAppendXcpElementForApiRequest_ElementClose();
+	void BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData);
+
+	void BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters);
+
 	void BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters);
 	void BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier);
 
@@ -322,10 +333,6 @@ public:
 
 protected:
 	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const;
-	void _BinHtmlInitWithTimeAndNickname(OUT CBin * pbinTextHtml, PSZUC pszNickname) const;
-	void _BinHtmlInitWithTimeAndNickname(OUT CBin * pbinTextHtml, ITreeItemChatLog * pTreeItemNickname) const;
-	void _BinHtmlInitWithTimeAsSender(OUT CBin * pbinTextHtml) const;
-	void _BinHtmlInitWithTimeAsReceiver(OUT CBin * pbinTextHtml) const;
 	void _BinHtmlAppendHyperlinkToLocalFile(INOUT CBin * pbinTextHtml, PSZUC pszFilename, BOOL fDisabled = FALSE) const;
 	void _BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfHyperlink) const;
 	void _XmlUnserializeAttributeOfContactIdentifier(CHS chAttributeName, OUT TContact ** ppContact, const CXmlNode * pXmlNodeElement) const;
@@ -336,6 +343,43 @@ public:
 	static int S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort = d_zNA);
 }; // IEvent
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+enum EWalletViewFlags	// Various flags to determine what data to display to the user
+	{
+	eWalletViewFlag_kfDisplayTransactionsSent		= 0x0001,
+	eWalletViewFlag_kfDisplayTransactionsReceived	= 0x0002,
+	eWalletViewFlag_kmDisplayTransactionsAll		= eWalletViewFlag_kfDisplayTransactionsSent | eWalletViewFlag_kfDisplayTransactionsReceived
+	};
+
+class CArrayPtrEvents : public CArray
+{
+protected:
+
+public:
+	inline void EventAdd(IEvent * pEvent) { Add(pEvent); }
+	BOOL Event_FoosAddSorted(IEvent * pEventNew);
+	inline IEvent ** PrgpGetEventsStop(OUT IEvent *** pppEventStop) const { return (IEvent **)PrgpvGetElementsStop(OUT (void ***)pppEventStop); }
+	inline IEvent * PGetEventLast_YZ() const { return (IEvent *)PvGetElementLast_YZ(); }
+	IEvent * PFindEventLastSent() const;
+	IEvent * PFindEventNextForXcp(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const;
+	TIMESTAMP TsEventIdLastEventSent() const;
+	TIMESTAMP TsEventOtherLastEventReceived() const;
+	TIMESTAMP TsEventOtherLast() const;
+	TIMESTAMP TsEventIdLast() const;
+
+	void EventsSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlEvents) const;
+	void EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITreeItemChatLogEvents * pParent);
+	CEventMessageTextReceived * PFindEventMessageReceivedByTimestamp(TIMESTAMP tsOther) const;
+	IEvent * PFindEventByID(TIMESTAMP tsEventID) const;
+	void SortEventsByIDs();
+	BOOL FEventsSortedByIDs() const;
+	void DeleteAllEvents();
+	void DeleteAllEventsReceivedHavingDuplicateTsOther();
+
+	void Wallets_AppendEventsTransactionsFor(ITreeItem * pFilterBy, EWalletViewFlags eWalletViewFlags);
+}; // CArrayPtrEvents
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Data to attach to a QTextBlock.
 //	Unfortunately Qt does not allow to just attach a pointer to a text block, consequently a QTextBlockUserData must be allocated on the heap.
 //	Using setUserData(NULL) does not work either because the method setUserData() will delete the existing pointer before setting the user data to NULL.
@@ -348,6 +392,7 @@ public:
 	inline OTextBlockUserDataEvent(IEvent * pEvent) { m_pEvent = pEvent; }
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Event containing a text message
 class IEventMessageText : public IEvent
 {
@@ -444,7 +489,7 @@ class CEventFileSent : public IEventFile
 public:
 	static const EEventClass c_eEventClass = eEventClass_eFileSent;
 public:
-	CEventFileSent(const TIMESTAMP * ptsEventID);
+	CEventFileSent(const TIMESTAMP * ptsEventID) : IEventFile(ptsEventID) { }
 	CEventFileSent(PSZUC pszFileToSend);
 	virtual ~CEventFileSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
@@ -457,6 +502,19 @@ public:
 
 	static const int c_cbBufferSizeMaxXmppBase64 = 4096;	// 4 KiB us the default block size to transfer files via XMPP when encoding in Base64
 }; // CEventFileSent
+
+//	Very similar as CEventFileSent however capable to send a file directly to a JID
+//	At the moment this event is used for debugging by sending information to the Cambrian developers
+class CEventFileSentTo : public CEventFileSent
+{
+public:
+	CStr m_strJidTo;		// Which JID to send the file
+public:
+	CEventFileSentTo(const TIMESTAMP * ptsEventID) : CEventFileSent(ptsEventID) { }
+	CEventFileSentTo(PSZUC pszFileToSend, PSZAC pszJidTo);
+	virtual EEventClass EGetEventClass() const { return eEventClass_eFileSentTo; }
+	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+};
 
 //	The user received a file offer from the contact
 class CEventFileReceived : public IEventFile
@@ -501,42 +559,6 @@ public:
 */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-enum EWalletViewFlags	// Various flags to determine what data to display to the user
-	{
-	eWalletViewFlag_kfDisplayTransactionsSent		= 0x0001,
-	eWalletViewFlag_kfDisplayTransactionsReceived	= 0x0002,
-	eWalletViewFlag_kmDisplayTransactionsAll		= eWalletViewFlag_kfDisplayTransactionsSent | eWalletViewFlag_kfDisplayTransactionsReceived
-	};
-
-class CArrayPtrEvents : public CArray
-{
-protected:
-
-public:
-	inline void EventAdd(IEvent * pEvent) { Add(pEvent); }
-	BOOL Event_FoosAddSorted(IEvent * pEventNew);
-	inline IEvent ** PrgpGetEventsStop(OUT IEvent *** pppEventStop) const { return (IEvent **)PrgpvGetElementsStop(OUT (void ***)pppEventStop); }
-	inline IEvent * PGetEventLast_YZ() const { return (IEvent *)PvGetElementLast_YZ(); }
-	IEvent * PFindEventLastSent() const;
-	IEvent * PFindEventNextForXcp(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const;
-	TIMESTAMP TsEventIdLastEventSent() const;
-	TIMESTAMP TsEventOtherLastEventReceived() const;
-	TIMESTAMP TsEventOtherLast() const;
-	TIMESTAMP TsEventIdLast() const;
-
-	void EventsSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlEvents) const;
-	void EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITreeItemChatLogEvents * pParent);
-	CEventMessageTextReceived * PFindEventMessageReceivedByTimestamp(TIMESTAMP tsOther) const;
-	IEvent * PFindEventByID(TIMESTAMP tsEventID) const;
-	void SortEventsByIDs();
-	BOOL FEventsSortedByIDs() const;
-	void DeleteAllEvents();
-	void DeleteAllEventsReceivedHavingDuplicateTsOther();
-
-	void Wallets_AppendEventsTransactionsFor(ITreeItem * pFilterBy, EWalletViewFlags eWalletViewFlags);
-}; // CArrayPtrEvents
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 class IEventWalletTransaction : public IEvent
 {
 public:
@@ -577,7 +599,6 @@ public:
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return CEventWalletTransactionSent::c_eEventClass; }
 };
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Ping the contact and wait for the response

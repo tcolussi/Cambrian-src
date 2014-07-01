@@ -470,6 +470,15 @@ ITreeItemChatLogEvents::Vault_SGetPath() const
 	return PGetConfiguration()->SGetPathOfFileName(IN &hashFileNameEvents);
 	}
 
+void
+ITreeItemChatLogEvents::Vault_SendToJID(PSZAC pszJID)
+	{
+	Vault_WriteEventsToDiskIfModified();	// Make sure the latest events have been written to disk before sending the file
+	CStr strPathVault = Vault_SGetPath();
+	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventFileSentTo(strPathVault, pszJID));
+	EMessageBoxWarning("The code to send a file to $s is still under construction and does not work!!!", pszJID);
+	}
+
 /*
 void
 ITreeItemChatLogEvents::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...) const
@@ -482,7 +491,6 @@ ITreeItemChatLogEvents::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...) cons
 		pSocket->Socket_WriteXmlFormatted_VL(pszFmtTemplate, vlArgs);
 		}
 	}
-
 */
 
 //	SUPPORTED COMMANDS

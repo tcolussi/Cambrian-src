@@ -151,7 +151,12 @@ public:
 	static const int c_iGroupNew = -1;
 	void Group_AddNewMember_UI(TContact * pContact, int iGroup);
 	void Group_Delete(PA_DELETING TGroup * pGroup);
-	TGroup * Group_PFindByIdentifier(PSZUC pszGroupIdentifier, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest);
+	enum EFindGroup
+		{
+		eFindGroupOnly,		// Return NULL if there is no group matchng the identifier
+		eFindGroupCreate,		// Create a new group if not present
+		};
+	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest, EFindGroup eFindGroup);
 
 	void DisplayDialogProperties();
 public:

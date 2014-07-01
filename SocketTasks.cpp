@@ -29,9 +29,5 @@ ISocketTask::Socket_WriteStanzaIqSet_Gso(PSZAC pszFmtTemplate, ...)
 	}
 
 #define d_cbBufferSizeDefaultTransferFiles		4096	// Default block size to transfer files
-#define d_coTurquoise	0x40E0D0
-#define d_coTeal		0x008080
-#define d_coNavy		0x000080
-#define d_coPurple		0x800080
 
 #endif

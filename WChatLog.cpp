@@ -13,6 +13,7 @@ const QBrush c_brushSilver(d_coSilver);			// Display messages from Cambrian in a
 const QBrush c_brushGreenSuperPale(d_coGreenSuperPale);
 const QBrush c_brushGreenSuperSuperPale(d_coGreenSuperSuperPale);
 const QBrush c_brushFileTransfer(d_coBlueSky);
+const QBrush c_brushDebugPurple(d_coPurpleLight);
 
 WChatLog::WChatLog(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup) : WTextBrowser(pwParent)
 	{
@@ -263,6 +264,7 @@ WChatLog::contextMenuEvent(QContextMenuEvent * pEvent)
 	if (oCursorSelection.hasSelection())
 		oMenu.ActionAdd(eMenuAction_Copy);
 	oMenu.ActionAdd(eMenuAction_SelectAll);
+	oMenu.ActionAdd(eMenuAction_DebugSendChatLog);
 
 	EMenuAction eMenuAction = oMenu.EDisplayContextMenu();
 	switch (eMenuAction)
@@ -278,7 +280,11 @@ WChatLog::contextMenuEvent(QContextMenuEvent * pEvent)
 		break;
 	case eMenuAction_SelectAll:
 		selectAll();
+		break;
+	case eMenuAction_DebugSendChatLog:
+		m_pContactOrGroup->Vault_SendToJID("chatlogs@xmpp.cambrian.org");
 		} // switch
+
 	} // contextMenuEvent()
 
 

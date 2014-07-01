@@ -157,7 +157,7 @@ DDialogPropertiyPageGroupGeneral::DDialogPropertiyPageGroupGeneral(TGroup * pGro
 	OLayoutHorizontal * poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
 	poLayout->Layout_AddLabelAndWidgetH_PA("Group ID", new WEditReadOnly(g_strScratchBufferStatusBar.Format("{h|}", &pGroup->m_hashGroupIdentifier)));
 	poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
-	poLayout->Layout_AddLabelAndWidgetH_PA("File Name", new WEditReadOnly(pGroup->Vault_SGetPath()));
+	poLayout->Layout_AddLabelAndWidgetH_PA("File Name", new WEditReadOnly(QDir::toNativeSeparators(pGroup->Vault_SGetPath())));
 	//poLayout->addWidget(PA_CHILD new QWidget, 1);
 	}
 
@@ -249,14 +249,12 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 	m_pwListContactsInGroup = new WListContacts;
 
 	m_pContactOrGroup = pContactOrGroup;
-	TAccountXmpp * pAccount = pContactOrGroup->m_pAccount;
-	m_arraypContactsAvailable.Copy(IN &pAccount->m_arraypaContacts);
+	m_arraypContactsAvailable.Copy(IN &pContactOrGroup->m_pAccount->m_arraypaContacts);
 	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
 		{
 		// We are updating an existing group
 		m_pGroup = (TGroup *)pContactOrGroup;
 		m_pGroup->Members_GetContacts(IOUT &m_arraypContactsInGroup);
-		m_paGroup = NULL;
 		}
 	else
 		{
@@ -264,9 +262,8 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 		Assert(pContactOrGroup->EGetRuntimeClass() == RTI(TContact));
 		m_arraypContactsInGroup.Add((TContact *)pContactOrGroup);
 		//m_pwListContactsInGroup->ContactAdd((TContact *)pContactOrGroup);
-		m_paGroup = m_pGroup = new TGroup(pAccount);
+		m_pGroup = NULL;
 		}
-	Assert(m_pGroup->EGetRuntimeClass() == RTI(TGroup));
 
 	m_poLayoutBody->Layout_PwAddRowLabel("Double-click on the contacts you wish to add or remove to the group:");
 	OLayoutHorizontal * poLayoutHorizontal = new OLayoutHorizontal(m_poLayoutBody);
@@ -279,11 +276,11 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 	poLayoutVertical->addWidget(PA_CHILD m_pwListContactsInGroup);
 //	poLayoutVertical->addWidget(new WButtonIcon(eMenuAction_ContactRemove, "Remove selected contact(s) from the group"));
 	poLayoutHorizontal = new OLayoutHorizontal(m_poLayoutBody);
-	WButtonText * pwButtonOK = new WButtonTextWithIcon((m_paGroup == NULL) ? " Add Contacts " : " Create Group ", eMenuAction_Group);
+	WButtonText * pwButtonOK = new WButtonTextWithIcon((m_pGroup != NULL) ? " Add Contacts " : " Create Group ", eMenuAction_Group);
 	poLayoutHorizontal->addWidget(pwButtonOK, d_zNA, Qt::AlignRight);
 
 	// Populate the lists of contacts
-	m_arraypContactsAvailable.RemoveTreeItems(IN m_arraypContactsInGroup);
+	m_arraypContactsAvailable.RemoveTreeItems(IN m_arraypContactsInGroup);	// Make sure m_arraypContactsAvailable and m_arraypContactsInGroup are mutually exclusive
 	m_pwListContactsAvailable->ContactsAdd(IN_MOD_SORT m_arraypContactsAvailable);
 	m_pwListContactsInGroup->ContactsAdd(IN_MOD_SORT m_arraypContactsInGroup);
 	connect(m_pwListContactsAvailable, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(SL_ContactAvailableDoubleClicked(QListWidgetItem*)));
@@ -293,40 +290,41 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 
 DDialogGroupAddContacts::~DDialogGroupAddContacts()
 	{
-	delete m_paGroup;
 	}
 
 // Update group by adding the new selected contacts and removing the contacts not in the list
 void
 DDialogGroupAddContacts::SL_ButtonOK()
 	{
-	if (m_paGroup != NULL)
-		{
-		// We are creating a new group, therefore display it to the Navigation Tree before adding/removing members
-		m_paGroup->m_pAccount->m_arraypaGroups.Add(PA_CHILD m_paGroup);
-		m_paGroup->GroupInitNewIdentifier();
-		m_paGroup->TreeItemGroup_DisplayWithinNavigationTree();
-		m_paGroup = NULL;
-		}
-
 	CArrayPtrContacts arraypContactsInGroup;
 	m_pwListContactsInGroup->ContactsGetAll(IOUT &arraypContactsInGroup);
 
-	// First, remove any group member (contact) not in the list
-	TGroupMember ** ppMemberStop;
-	TGroupMember ** ppMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);
-	while (ppMember != ppMemberStop)
+	if (m_pGroup == NULL)
 		{
-		TGroupMember * pMember = *ppMember++;
-		Assert(pMember != NULL);
-		Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
-		Assert(pMember->m_pContact->EGetRuntimeClass() == RTI(TContact));
-		if (!arraypContactsInGroup.FindElementF(pMember->m_pContact))
-			m_pGroup->Member_Remove_UI(pMember);
+		// We are creating a new group, therefore display it to the Navigation Tree before adding/removing members
+		m_pGroup = new TGroup(m_pContactOrGroup->m_pAccount);
+		m_pGroup->m_pAccount->m_arraypaGroups.Add(PA_CHILD m_pGroup);
+		m_pGroup->GroupInitNewIdentifier();
+		m_pGroup->TreeItemGroup_DisplayWithinNavigationTree();
+		}
+	else
+		{
+		// Update the existing group by removing any group member (contact) not in the list
+		TGroupMember ** ppMemberStop;
+		TGroupMember ** ppMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);
+		while (ppMember != ppMemberStop)
+			{
+			TGroupMember * pMember = *ppMember++;
+			Assert(pMember != NULL);
+			Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
+			Assert(pMember->m_pContact->EGetRuntimeClass() == RTI(TContact));
+			if (!arraypContactsInGroup.FindElementF(pMember->m_pContact))
+				m_pGroup->Member_Remove_UI(pMember);
+			}
+		arraypContactsInGroup.RemoveTreeItems(IN m_arraypContactsInGroup);	// Remove the existing contacts and we have a list of the new contacts to add
 		}
 
-	// Then add the new group members (contacts)
-	arraypContactsInGroup.RemoveTreeItems(IN m_arraypContactsInGroup);	// Remove the existing contacts and we have a list of the new contacts to add
+	// Add the new group members (contacts)
 	TContact ** ppContactStop;
 	TContact ** ppContact = arraypContactsInGroup.PrgpGetContactsStop(OUT &ppContactStop);
 	while (ppContact != ppContactStop)

@@ -120,6 +120,7 @@ public:
 	CEventMessageTextSent * Vault_PFindEventLastMessageTextSentMatchingText(const CStr & strMessageText) const;
 	void Vault_WriteEventsToDiskIfModified();
 	QString Vault_SGetPath() const;
+	void Vault_SendToJID(PSZAC pszJID);
 
 	WLayoutChatLog * ChatLog_PwGetLayout_YZ() const { return m_pawLayoutChatLog; }
 	WLayoutChatLog * ChatLog_PwGetLayout_NZ() CONST_MCC;

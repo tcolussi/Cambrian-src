@@ -532,54 +532,6 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	} // _BinHtmlInitWithTime()
 
 
-/*
-void
-IEvent::_BinHtmlInitWithTimeAndNickname(OUT CBin * pbinTextHtml, PSZUC pszNickname) const
-	{
-	_BinHtmlInitWithTime(OUT pbinTextHtml);
-	pbinTextHtml->BinAppendTextSzv_VE(c_szHtmlTemplateNickname, pszNickname);
-	}
-
-void
-IEvent::_BinHtmlInitWithTimeAndNickname(OUT CBin * pbinTextHtml, ITreeItemChatLog * pTreeItemNickname) const
-	{
-	_BinHtmlInitWithTime(OUT pbinTextHtml);
-	if (pTreeItemNickname != NULL)
-		pbinTextHtml->BinAppendTextSzv_VE(c_szHtmlTemplateNickname, pTreeItemNickname->ChatLog_PszGetNickname());
-	}
-*/
-/*
-void
-IEvent::_BinHtmlInitWithTimeAndNickname(OUT CBin * pbinTextHtml, PSZUC pszNickname) const
-	{
-	Assert(pbinTextHtml != NULL);
-	const QDateTime dtlMessage = QDateTime::fromMSecsSinceEpoch(m_tsEventID).toLocalTime();
-	const QString sTime = dtlMessage.toString("hh:mm");
-	const QString sDateTime = dtlMessage.toString(Qt::SystemLocaleLongDate); // DefaultLocaleLongDate);
-	(void)pbinTextHtml->PvSizeAlloc(300);	// Empty the binary object and also pre-allocate 300 bytes of memory to avoid unnecessary memory re-allocations
-	TIMESTAMP_DELTA dts = m_tsOther - m_tsEventID;
-	if (dts < 0 && dts > -15 * d_ts_cDays)
-		pbinTextHtml->BinAppendTextSzv_VE("[$T] ", dts);
-	pbinTextHtml->BinAppendTextSzv_VE("<span title='^Q'>[^Q] </span>", &sDateTime, &sTime);
-	if (dts > 0) // d_ts_cMinutes * 5)
-		pbinTextHtml->BinAppendTextSzv_VE("[$T] ", dts);
-	pbinTextHtml->BinAppendTextSzv_VE(c_szHtmlTemplateNickname, pszNickname);
-	}
-*/
-/*
-void
-IEvent::_BinHtmlInitWithTimeAsSender(OUT CBin * pbinTextHtml) const
-	{
-	_BinHtmlInitWithTimeAndNickname(OUT pbinTextHtml, mu_parentowner.pTreeItem->m_pAccount);
-	}
-
-void
-IEvent::_BinHtmlInitWithTimeAsReceiver(OUT CBin * pbinTextHtml) const
-	{
-	_BinHtmlInitWithTimeAndNickname(OUT pbinTextHtml, mu_parentowner.pTreeItem);
-	}
-*/
-
 //	Typical actions for an event hyperlink
 #define d_chActionForEvent_Hyperlink			'h'		// "c:h"		// A typical hyperlink to the web
 #define d_szActionForEvent_Hyperlink			"h"		// "c:h"
@@ -703,7 +655,7 @@ void
 CEventMessageXmlRawSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
 	_BinHtmlInitWithTimeAndMessage(OUT &g_strScratchBufferStatusBar);
-	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(0xE8CFD8));
+	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushDebugPurple);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -967,10 +919,6 @@ IEventFile::_FileTransferCancelledByLocalUser(INOUT OCursor * poCursorTextBlock)
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventFileSent::CEventFileSent(const TIMESTAMP * ptsEventID) : IEventFile(ptsEventID)
-	{
-	}
-
 CEventFileSent::CEventFileSent(PSZUC pszFileToSend) : IEventFile(NULL)
 	{
 	m_strFileName = pszFileToSend;
@@ -1019,6 +967,18 @@ CEventFileSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_
 	_BinAppendHtmlForEvent(INOUT &g_strScratchBufferStatusBar, pszTextHtmlTemplate);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushFileTransfer);
 	} // ChatLogUpdateTextBlock()
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+CEventFileSentTo::CEventFileSentTo(PSZUC pszFileToSend, PSZAC pszJidTo) : CEventFileSent(pszFileToSend)
+	{
+	m_strJidTo.InitFromStringU((PSZUC)pszJidTo);
+	}
+
+void
+CEventFileSentTo::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
+	{
+	CEventFileSent::ChatLogUpdateTextBlock(poCursorTextBlock);
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CEventFileReceived::CEventFileReceived(const TIMESTAMP * ptsEventID) : IEventFile(ptsEventID)
@@ -1724,7 +1684,7 @@ CEventPing::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_
 		}
 	if (!m_strError.FIsEmptyString())
 		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("  <b>(error: ^S)</b>", &m_strError);
-	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(0xE8CFD8));
+	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushDebugPurple);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1751,7 +1711,6 @@ CEventVersion::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpSt
 void
 CEventVersion::XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact)
 	{
-	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Need to implement CEventVersion::XmppProcessStanzaFromContact(^j): ^N", pContact, pXmlNodeStanza);
 	CXmlNode * pXmlNodeQuery = pXmlNodeStanza->PFindElementQuery();
 	if (pXmlNodeQuery != NULL)
 		{
@@ -1768,7 +1727,7 @@ CEventVersion::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_M
 	{
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
 	g_strScratchBufferStatusBar.BinAppendTextSzv_VE(m_strVersion.FIsEmptyString() ? "Querying which version <b>^s</b> is using..." : "<b>^s</b> is running <b>^S</b> version <b>^S</b> on ^S", ChatLog_PszGetNickNameOfContact(), &m_strClient, &m_strVersion, &m_strOperatingSystem);
-	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(0xE8CFD8));
+	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushDebugPurple);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
