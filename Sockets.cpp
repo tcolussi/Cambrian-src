@@ -756,7 +756,7 @@ CSocketXmpp::FStanzaProcessedByTaskMatchingEventID()
 					pEvent->Event_SetCompletedAndUpdateWidgetWithinParentChatLog();	// A ping is very simple, as the event completes as soon as we get a reply
 					return TRUE;
 				case CEventVersion::c_eEventClass:
-					((CEventVersion *)pEvent)->XmppProcessStanzaFromContact(m_pXmlNodeStanzaCurrent_YZ, pContact);
+					((CEventVersion *)pEvent)->XmppProcessStanzaFromContact(m_pXmlNodeStanzaCurrent_YZ);
 					return TRUE;
 				case CEventFileSent::c_eEventClass:
 					((CEventFileSent *)pEvent)->XmppProcessStanzaFromContact(m_pXmlNodeStanzaCurrent_YZ, pContact);

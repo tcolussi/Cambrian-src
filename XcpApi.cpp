@@ -60,15 +60,11 @@ CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PS
 		Assert(XcpApi_FIsXmlElementClosedBecauseOfError());
 		return;
 		}
-	/*
-		pbinXcpApiParameterData->BinAppendTextSzv_VE("<Profile ID='^j' Name='^S' />", m_pAccount, &m_pAccount->m_pProfileParent->m_strNameProfile);
-		return eErrorXcpApi_zSuccess;
-	*/
 	} // BinXmlAppendXcpElementForApiRequest_AppendApiParameterData()
 
 
 //	Method to unserialize the data from BinXmlAppendXcpElementForApiRequest_AppendApiParameterData().
-//	Although the reply typically does not need the CBinXcpStanzaType, it may use the CBinXcpStanzaType to make additional request.
+//	Although the reply typically does not need the object CBinXcpStanzaType, the reply may necessitate the CBinXcpStanzaType to make additional request.
 //	For instance, when unserializing a group, the method may need to query information about new group members to fetch the contact profile.
 void
 CBinXcpStanzaType::BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters)
@@ -100,55 +96,6 @@ CBinXcpStanzaType::BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier
 	{
 	BinXmlAppendXcpApiRequest((PSZAC)c_szaApi_Group_Profile_Get, pszGroupIdentifier);
 	}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	XcpApi_EReturnData()
-//
-/*
-//
-//	Return TRUE if the API data was stored in pbinXcpApiParameterData.
-//	Return FALSE if the API is unknown.
-EErrorXcpApi
-TContact::XcpApi_EReturnData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiParameterData)
-	{
-	Assert(pszApiName != NULL);
-	Assert(pXmlNodeApiParameters != NULL);
-	Assert(pbinXcpApiParameterData != NULL);
-	MessageLog_AppendTextFormatSev(eSeverityComment, "Processing API '$s'\n", pszApiName);
-	if (FCompareStringsNoCase(pszApiName, (PSZUC)c_szaApi_ProfileGet))
-		{
-		// Return the information about a profile.  The profile may be for an individual, or a group.
-		PSZUC pszProfileIdentifier = pXmlNodeApiParameters->m_pszuTagValue;
-		if (pszProfileIdentifier == NULL || *pszProfileIdentifier == '\0')
-			{
-			// Return our own profile
-			//XcpApiContact_ProfileSerialize(INOUT pbinXcpStanzaReply);
-			return eErrorXcpApi_zSuccess;
-			}
-		TGroup * pGroup = m_pAccount->Group_PFindByIdentifier_YZ(pszProfileIdentifier, INOUT pbinXcpApiParameterData, TAccountXmpp::eFindGroupOnly);
-		if (pGroup != NULL)
-			{
-			pGroup->XcpApiGroup_ProfileSerialize(INOUT pbinXcpApiParameterData);
-			return eErrorXcpApi_zSuccess;
-			}
-		pbinXcpApiParameterData->BinAppendTextSzv_VE("<Profile ID='^j' Name='^S' />", m_pAccount, &m_pAccount->m_pProfileParent->m_strNameProfile);
-		return eErrorXcpApi_zSuccess;
-		}
-	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unknown API '$s'\n", pszApiName);
-	return eErrorXcpApi_zSuccess;
-	}
-
-//	Entry point to process the data returned by XcpApi_FReturnData()
-void
-TContact::XcpApi_ProcessReturnedData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest)
-	{
-	if (FCompareStringsNoCase(pszApiName, (PSZUC)c_szaApi_Group_Profile_Get))
-		{
-		// We received a profile information
-		MessageLog_AppendTextFormatSev(eSeverityComment, "Updating profile ^N", pXmlNodeApiParameters);
-		}
-	}
-*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void

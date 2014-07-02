@@ -632,7 +632,7 @@ public:
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 
-	void XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact);
+	void XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza);
 };
 
 //	Display help in the Chat Log

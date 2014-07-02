@@ -921,15 +921,18 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 		IEvent * pEventFirst = PFindEventNextForXcp(d_ts_zNULL, OUT &cEventsRemaining);
 		Assert(pEventFirst == m_paArrayHdr->rgpvData[0]);
 		Assert(cEventsRemaining == m_paArrayHdr->cElements - 1);
-		IEvent * pEventNext = PFindEventNextForXcp(pEventFirst->m_tsEventID, &cEventsRemaining);
-		if (pEventNext != NULL)
+		if (pEventFirst != NULL)
 			{
-			Assert(pEventNext == m_paArrayHdr->rgpvData[1]);
-			Assert(cEventsRemaining == m_paArrayHdr->cElements - 2);
-			}
-		else
-			{
-			Assert(m_paArrayHdr->cElements == 1);
+			IEvent * pEventNext = PFindEventNextForXcp(pEventFirst->m_tsEventID, &cEventsRemaining);
+			if (pEventNext != NULL)
+				{
+				Assert(pEventNext == m_paArrayHdr->rgpvData[1]);
+				Assert(cEventsRemaining == m_paArrayHdr->cElements - 2);
+				}
+			else
+				{
+				Assert(m_paArrayHdr->cElements == 1);
+				}
 			}
 		IEvent * pEventLast = PGetEventLast_YZ();
 		Assert(PFindEventNextForXcp(pEventLast->m_tsEventID, OUT &cEventsRemaining) == NULL);

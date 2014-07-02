@@ -62,7 +62,7 @@ public:
 WLayoutGroupMember::WLayoutGroupMember(TGroupMember * pMember)
 	{
 	m_pMember = pMember;
-	WLabel * pLabel = new WLabel;
+	WLabel * pLabel = new WLabelSelectableWrap;
 	pLabel->Label_SetTextFormat_VE_Gsb("Placeholder to display all messages written by $s for the group $s", pMember->TreeItem_PszGetNameDisplay(), pMember->m_pGroup->TreeItem_PszGetNameDisplay());
 	pLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 	pLabel->setFrameShape(QFrame::Box);
@@ -369,7 +369,15 @@ TGroup::TreeItem_PszGetNameDisplay() CONST_MCC
 	while (ppMember != ppMemberStop)
 		{
 		if (pMember != NULL)
-			m_strNameDisplayTyped.AppendTextU((PSZUC)c_szaCommaSeparator);
+			{
+			if (m_strNameDisplayTyped.CchGetLength() < 30)
+				m_strNameDisplayTyped.AppendTextU((PSZUC)c_szaCommaSeparator);
+			else
+				{
+				m_strNameDisplayTyped.AppendTextU((PSZUC)" ...");
+				break;
+				}
+			}
 		pMember = *ppMember++;
 		Assert(pMember != NULL);
 		Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));

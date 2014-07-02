@@ -1709,7 +1709,7 @@ CEventVersion::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpSt
 	}
 
 void
-CEventVersion::XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact)
+CEventVersion::XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza)
 	{
 	CXmlNode * pXmlNodeQuery = pXmlNodeStanza->PFindElementQuery();
 	if (pXmlNodeQuery != NULL)
