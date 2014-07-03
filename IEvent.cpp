@@ -139,9 +139,6 @@ IEvent::IEvent(const TIMESTAMP * ptsEventID)
 		m_tsEventID = *ptsEventID;						// We are creating an event with an existing timestamp, which is typically when an event is being unserialized from disk or XCP
 	else
 		m_tsEventID = Timestamp_GetCurrentDateTime();	// We are creating a new event, so use the current date & time as the timestamp.
-	#ifdef d_szEventDebug_strVersion
-	m_strDebugVersion = (PSZUC)d_szApplicationVersion;
-	#endif
 	}
 
 IEvent::~IEvent()
