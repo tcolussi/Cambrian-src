@@ -282,7 +282,7 @@ public:
 		FE_kfEventOutOfSync			= 0x0001,	// The event is out of sync, and therefore display a little icon to show to the user
 		FE_kfEventDeliveryConfirmed	= 0x0002,	// The event was delivered and its checkmark was displayed.  This flag should be eventually removed, however it is a workaround a Qt bug in the QTextEdit
 		FE_kfEventProtocolWarning	= 0x0004,	// Therew was a minor error while transmitting the event.  This bit is set to give a second chance to retry, however to prevent an infinite loop to retry over and over
-		FE_kfEventProtocolError		= 0x0008,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
+		FE_kfEventProtocolError		= 0x0008	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
 		};
 	mutable UINT m_uFlagsEvent;				// Flags related to the event (not serialized)
 	#ifdef d_szEventDebug_strContactSource
@@ -664,7 +664,7 @@ public:
 //	Class to download a large event.
 //	This class is a hybrid between an event and the core of the XCP protocol.
 //	The CEventDownloader is never allocated by the sender, however it is always unserialized and allocated by the receiver.
-//	Until the large event has been fully downloaded, the downloader will have its own class, and later will morph into the class of the downloaded event.
+//	Until the large event has been fully downloaded, the downloader will have its own class, and later will emulate the behavior of the downloaded event.
 class CEventDownloader : public IEvent
 {
 protected:
@@ -687,7 +687,10 @@ public:
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 
 	void XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply, QTextEdit * pwEditChatLog);
+	inline BOOL FIsDownloaderMatchingEvent(const IEvent * pEvent) const { return (pEvent == m_paEvent); }
+
 	static const EEventClass c_eEventClass = eEventClass_eDownloader_class;
+	friend class CBinXcpStanzaType;
 }; // CEventDownloader
 
 class CDataXmlLargeEvent;	// Object holding the data to send to CEventDownloader

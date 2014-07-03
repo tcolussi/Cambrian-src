@@ -649,11 +649,24 @@ TContact::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Method to serialize the event to be saved on disk disk.
+//	Method to serialize the event to be saved on disk.
 void
 CBinXcpStanzaType::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 	{
-	const EEventClass eEventClass = pEvent->EGetEventClass();
+	EEventClass eEventClass = pEvent->EGetEventClass();
+	if (eEventClass == CEventDownloader::c_eEventClass)
+		{
+		// We have a 'downloader', and therefore we have to perform some processing to decide if we save the downloader, or if we save the downloaded event
+		IEvent * pEventDownloaded = ((CEventDownloader *)pEvent)->m_paEvent;
+		if (pEventDownloaded != NULL)
+			{
+			if (pEventDownloaded->m_uFlagsEvent & IEvent::FE_kfEventProtocolError)
+				return;	// Don't save the downloader if there is a protocol error.  This is to prevent the downloader to attempt to download something that no longer exist
+			// Substitute the class of the downloader by the class of the allocated event
+			eEventClass = pEventDownloaded->EGetEventClass();	//	The downloaded event will be serialized as a native object and next time Cambrian will load, the downloader will no longer exist.
+			pEvent = pEventDownloaded;
+			}
+		}
 	if ((eEventClass & eEventClass_kfNeverSerializeToDisk) == 0)
 		{
 		BinAppendTextSzv_VE("<$U" _tsI _tsO, eEventClass, pEvent->m_tsEventID, pEvent->m_tsOther);
@@ -670,7 +683,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 		else
 			BinAppendTextSzv_VE("</$U>\n", eEventClass);
 		}
-	}
+	} // BinXmlSerializeEventForDisk()
 
 
 //	Core method to serialize an event to be transmitted through the Cambrian Protocol.
@@ -750,9 +763,9 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 			return;		// The virtual method XmlSerializeCore() may set m_pContact to NULL if the contact does not support XCP.
 		Assert(m_paData != NULL);
 		#ifdef DEBUG
-		if (m_paData->cbData > 100)		// For debugging conider 200 characters as a 'large stanza' to force this code to be executed frequently
+		if (m_paData->cbData > 100)		// For debugging conider 100 characters as a 'large stanza' to force this code to be executed frequently
 		#else
-		if (m_paData->cbData > 1000)		// Also test this code in the release build, however with a higher threshold
+		if (m_paData->cbData > 150)		// Also test this code in the release build, however with a higher threshold
 		//if (m_paData->cbData > c_cbStanzaMaxPayload)
 		#endif
 			{
@@ -1163,24 +1176,22 @@ CEventDownloader::~CEventDownloader()
 	delete m_paEvent;
 	}
 
-//	Return the class of the event when the download is complete.
-//	This is where the morphing occurs, because the downloaded event will be serialized as a native object and next time Cambrian will load, the downloader will no longer exist.
+//	Return the class of the downloader.
+//	It is important to return the true event class because there are many instances of the code where a typecast is made based on the event class.
 EEventClass
 CEventDownloader::EGetEventClass() const
 	{
-	if (m_paEvent != NULL)
-		return m_paEvent->EGetEventClass();
-	if (m_uFlagsEvent & FE_kfEventProtocolError)
-		return eEventClass_mfNeverSerialize;	// Don't save the downloader if there is a protocol error.  This is to prevent the downloader to attempt to download something that no longer exist
 	return c_eEventClass;
 	}
 
+//	Return the event class to serialize the event via XCP.
+//	In this virtual method, it is appropriate to substitute the class by the downloaded event if available because no typecast is made based on this method.
 EEventClass
 CEventDownloader::EGetEventClassForXCP() const
 	{
 	if (m_paEvent != NULL)
 		return m_paEvent->EGetEventClassForXCP();
-	return c_eEventClass;
+	return c_eEventClass;	// This value does not serialize via XCP
 	}
 
 //	CEventDownloader::IEvent::XmlSerializeCore()
@@ -1372,6 +1383,25 @@ CEventDownloader::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * p
 	{
 	if (m_paEvent != NULL)
 		m_paEvent->HyperlinkClicked(pszActionOfHyperlink, INOUT poCursorTextBlock);
+	}
+
+CEventDownloader *
+CVaultEvents::PFindEventDownloaderMatchingEvent(const IEvent * pEvent) const
+	{
+	Assert(pEvent != NULL);
+	Assert(pEvent->EGetEventClass() != CEventDownloader::c_eEventClass);
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		CEventDownloader * pEventDownloader = (CEventDownloader *)*--ppEventStop;
+		if (pEventDownloader->EGetEventClass() == CEventDownloader::c_eEventClass)
+			{
+			if (pEventDownloader->FIsDownloaderMatchingEvent(pEvent))
+				return pEventDownloader;
+			}
+		}
+	return NULL;
 	}
 
 

@@ -8,9 +8,9 @@
 #endif
 #include "IEventBallot.h"
 #ifdef DEBUG
-	#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
+	//#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
-	#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
+	//#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
 #endif
 
 CHS
@@ -327,6 +327,10 @@ IEvent::Event_FIsEventRecentThanMinutes(int cMinutes) const
 //	Return the text block matching the event.
 //	In the rare case where there is no text block matching the event, this method will return an invalid text block,
 //	however not a NULL text block which will crash the application if used by a QTextCursor.
+//
+//	PERFORMANCE NOTES
+//	Blocks should be searched from the end of the Chat Log, as the recently added blocks are the ones which are mostly modified.
+//	However given the implementation of QTextBlock.previous() is unknown and there is a risk of having a search O(n^2), we stick to a search from the beginning.
 QTextBlock
 IEvent::ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const
 	{
@@ -341,7 +345,21 @@ IEvent::ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const
 		oTextBlock = oTextBlock.next();
 		}
 	if (!oTextBlock.isValid())
-		MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Unable to find text block matching event of class $U [i=$t, o=$t]\n", EGetEventClass(), m_tsEventID, m_tsOther);
+		{
+		// We were unable to find a text block matching the event, however is is possible the event is hidden within a CEventDownloader.
+		EEventClass eEventClass = EGetEventClass();
+		if (eEventClass != CEventDownloader::c_eEventClass)
+			{
+			// MessageLog_AppendTextFormatSev(eSeverityInformation, "Unable to find text block matching event of class $U [i=$t, o=$t]\n", eEventClass, m_tsEventID, m_tsOther);
+			CEventDownloader * pEventDownloader = m_pVaultParent_NZ->PFindEventDownloaderMatchingEvent(this);
+			if (pEventDownloader != NULL)
+				{
+				MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "Using CEventDownloader as a substitute for event of class $U [i=$t, o=$t]\n", eEventClass, m_tsEventID, m_tsOther);
+				return pEventDownloader->ChatLog_GetTextBlockRelatedToDocument(poDocument);
+				}
+			}
+		MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Unable to find text block matching event of class $U [i=$t, o=$t]\n", eEventClass, m_tsEventID, m_tsOther);
+		}
 	return oTextBlock;
 	}
 
