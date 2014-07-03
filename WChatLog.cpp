@@ -8,6 +8,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include "IEventBallot.h"
 
 const QBrush c_brushSilver(d_coSilver);			// Display messages from Cambrian in a silver (light gray) color
 const QBrush c_brushGreenSuperPale(d_coGreenSuperPale);
@@ -243,7 +244,7 @@ void
 WChatLog::contextMenuEvent(QContextMenuEvent * pEvent)
 	{
 	//WTextBrowser::contextMenuEvent(pEvent);
-	CEventMessageTextSent * pEventMessageSent = NULL;
+	IEvent * pEventSelected = NULL;
 
 	WMenu oMenu;
 
@@ -253,9 +254,17 @@ WChatLog::contextMenuEvent(QContextMenuEvent * pEvent)
 	OTextBlockUserDataEvent * pUserData = (OTextBlockUserDataEvent *)oCursor.block().userData();
 	if (pUserData != NULL)
 		{
-		pEventMessageSent = (CEventMessageTextSent *)pUserData->m_pEvent;
-		if (pEventMessageSent->EGetEventClass() == eEventClass_eMessageTextSent)
+		pEventSelected = pUserData->m_pEvent;
+		Assert(pEventSelected != NULL);
+		switch (pEventSelected->EGetEventClass())
+			{
+		case CEventMessageTextSent::c_eEventClass:
 			oMenu.ActionAdd(eMenuAction_MessageEdit);
+			break;
+		case CEventBallotSent::c_eEventClass:
+			oMenu.ActionAdd(eMenuAction_BallotReSend);
+			break;
+			}
 		}
 	CStr strHyperlink = anchorAt(ptEvent);
 	if (strHyperlink.PathUrl_FIsValidHyperlinkNonCambrian())
@@ -270,7 +279,10 @@ WChatLog::contextMenuEvent(QContextMenuEvent * pEvent)
 	switch (eMenuAction)
 		{
 	case eMenuAction_MessageEdit:
-		m_pContactOrGroup->ChatLog_EventEditMessageSent(pEventMessageSent);
+		m_pContactOrGroup->ChatLog_EventEditMessageSent((CEventMessageTextSent *)pEventSelected);
+		break;
+	case eMenuAction_BallotReSend:
+		m_pContactOrGroup->DisplayDialogBallotSend((CEventBallotSent *)pEventSelected);
 		break;
 	case eMenuAction_CopyHyperlink:
 		Clipboard_SetText(strHyperlink);

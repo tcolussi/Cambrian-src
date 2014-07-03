@@ -35,6 +35,12 @@ WLabel::WLabel(PSZAC pszmLabelTextAndToolTip)
 	Label_SetTextWithToolTip(pszmLabelTextAndToolTip);
 	}
 
+WLabel::WLabel(const CStr & strLabelText)
+	{
+	_Init();
+	Label_SetTextPlain(strLabelText);
+	}
+
 WLabel::WLabel(PA_PARENT QBoxLayout * poParentLayout)
 	{
 	Assert(poParentLayout);
@@ -137,6 +143,11 @@ WLabelSelectable::WLabelSelectable(PSZAC pszmLabelTextAndToolTip) : WLabel(pszmL
 	Label_SetTextSelectable();
 	}
 
+WLabelSelectable::WLabelSelectable(const CStr & strLabelText) : WLabel(strLabelText)
+	{
+	Label_SetTextSelectable();
+	}
+
 WLabelSelectable::WLabelSelectable(PA_PARENT QBoxLayout * poParentLayout) : WLabel(poParentLayout)
 	{
 	Label_SetTextSelectable();
@@ -148,6 +159,11 @@ WLabelSelectableWrap::WLabelSelectableWrap()
 	}
 
 WLabelSelectableWrap::WLabelSelectableWrap(PSZAC pszmLabelTextAndToolTip) : WLabelSelectable(pszmLabelTextAndToolTip)
+	{
+	setWordWrap(true);
+	}
+
+WLabelSelectableWrap::WLabelSelectableWrap(const CStr & strLabelText) : WLabelSelectable(strLabelText)
 	{
 	setWordWrap(true);
 	}
@@ -1196,6 +1212,12 @@ OLayoutForm::OLayoutForm(PA_PARENT QWidget * pwParent)
 	pwParent->setLayout(PA_CHILD this);
 	}
 
+OLayoutForm::OLayoutForm(PA_PARENT QBoxLayout * poParentLayout)
+	{
+	Assert(poParentLayout != NULL);
+	poParentLayout->addLayout(PA_CHILD this);
+	}
+
 //	Make sure there are no more margins around the layout.
 //	By default Qt sets the margins to about 5 pixels, however if we want to put layouts within layouts, we have to remove the margins.
 void
@@ -1505,6 +1527,12 @@ void
 Widget_SetText(INOUT QWidget * pwWidget, PSZAC pszText)
 	{
 	pwWidget->setWindowTitle(pszText);
+	}
+
+void
+Widget_SetText(INOUT QWidget * pwWidget, const CStr & strText)
+	{
+	pwWidget->setWindowTitle(strText);
 	}
 
 void

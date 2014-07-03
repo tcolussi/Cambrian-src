@@ -16,6 +16,7 @@ public:
 	DDialog();
 	virtual ~DDialog();
 	void Dialog_SetCaption(PSZAC pszCaption);
+	void Dialog_SetCaption(const CStr & strCaption);
 	void Dialog_SetCaptionFormat_VE(PSZAC pszFmtTemplate, ...);
 	void Dialog_SetIcon(EMenuAction eMenuIcon);
 	void Dialog_SetSizeMinimum(int cxWidthMinimum = d_zDEFAULT, int cyHeightMinimum = d_zDEFAULT);

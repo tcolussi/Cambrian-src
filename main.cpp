@@ -122,7 +122,7 @@ HUNGARIAN PREFIX
 	ez		Enumeration containing the zero value
 	k		Prefix to manipulate bits within a value, such as an integer.  Originaly, it was named "mask" and the name got reduced to "msk" to "mk" to just "k".
 	kf		Single bit
-	km		Multiple bits
+	km		Multiple bits (for instance, ukm means an unsigned integer storing multiple bits)
 	kz		Zero bits (typically the default value)
 	ke		Enumeration packed within a range of bits
 	kez		Enumeration containing the zero value

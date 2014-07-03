@@ -134,4 +134,82 @@ protected slots:
 };
 
 
+//	Array of pointers of QObject
+class CArrayPtrQObjects : public CArray
+{
+};
+
+class CArrayPtrQWidgets : public CArrayPtrQObjects
+{
+public:
+	inline QWidget ** PrgpGetWidgetsStop(OUT QWidget *** pppWidgetStop) const { return (QWidget **)PrgpvGetElementsStop(OUT (void ***)pppWidgetStop); }
+
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#include "IEventBallot.h"
+
+class DDialogBallotSend;
+
+class _OLayoutBallotChoice : public OLayoutHorizontal
+{
+public:
+	WButtonIcon * m_pwButtonRemove;	// Remove the choice on the ballot
+	WEdit * m_pwEditChoice;			// Widget to enter the text choice
+	WEdit * m_pwEditGroup;
+
+public:
+	_OLayoutBallotChoice(DDialogBallotSend * pwDialogBallotParent);
+	~_OLayoutBallotChoice();
+};
+
+
+class CArrayPtrLayoutsBallotChoices : public CArrayPtrQObjects
+{
+public:
+	inline _OLayoutBallotChoice ** PrgpGetQuestionsStop(OUT _OLayoutBallotChoice *** pppLayoutStop) const { return (_OLayoutBallotChoice **)PrgpvGetElementsStop(OUT (void ***)pppLayoutStop); }
+};
+
+class DDialogBallotSend : public DDialogOkCancelWithLayouts
+{
+public:
+	ITreeItemChatLogEvents * m_pContactOrGroup;
+	CArrayPtrLayoutsBallotChoices m_arraypLayoutChoices;
+	WEdit * m_pwEditTitle;
+	WEdit * m_pwEditDescription;
+	OLayoutVertical * m_pLayoutQuestions;
+
+public:
+	DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, CEventBallotSent * pEventBallotInit = NULL);
+	~DDialogBallotSend();
+
+protected slots:
+	void SL_ButtonOK_clicked();
+	void SL_ButtonAdd();
+	void SL_ButtonRemove();
+
+	SL_OBJECT(DDialogBallotSend)
+}; // DDialogBallotSend
+
+
+class DDialogBallotVote : public DDialogOkCancelWithLayouts
+{
+protected:
+	CEventBallotReceived * m_pEventBallotVote;
+	CArrayPtrQWidgets m_arraypwButtonOptions;
+
+public:
+	DDialogBallotVote(CEventBallotReceived * pEventBallotVote);
+
+protected slots:
+	void SL_ButtonVote();
+	SL_OBJECT(DDialogBallotVote)
+};
+
+class WButtonRadio : public QRadioButton
+{
+public:
+
+};
+
 #endif // DDIALOGPROPERTIES_H

@@ -11,7 +11,12 @@
         <file alias="GroupDelete">Icons/GroupDelete.png</file>
         <file alias="GroupEdit">Icons/GroupEdit.png</file>
         <file alias="Find">Icons/Find.png</file>
-        <file>Icons/list-add.png</file>
+        <file alias="Accept">Icons/Accept.png</file>
+        <file alias="Ok">Icons/Ok.png</file>
+        <file alias="Deny">Icons/No.png</file>
+        <file alias="Issue">Icons/Issue.png</file>
+        <file>Icons/Add.png</file>
+        <file alias="Add">Icons/list-add.png</file>
         <file alias="Remove">Icons/list-remove.png</file>
         <file alias="LogErrors">Icons/LogErrors.png</file>
         <file alias="LogMessages">Icons/LogMessages.png</file>
@@ -32,15 +37,11 @@
         <file alias="StatusInvisible">Icons/Status/invisible.png</file>
         <file alias="SysTrayNewMessage">Icons/IconMessageGreen.png</file>
         <file alias="Sound">Icons/Sound.png</file>
-        <file alias="Accept">Icons/Accept.png</file>
-        <file alias="Ok">Icons/Ok.png</file>
-        <file alias="Deny">Icons/No.png</file>
         <file alias="ServerConnect">Icons/ServerConnect.png</file>
         <file alias="Server">Icons/Server.png</file>
         <file alias="ServerDeny">Icons/ServerDeny.png</file>
         <file alias="ServerSecure">Icons/ServerSecure.png</file>
         <file alias="ServerWarning">Icons/ServerWarning.png</file>
-        <file alias="Add">Icons/Add.png</file>
         <file alias="Market">Icons/Market.png</file>
         <file alias="FileOpen">Icons/FileOpen.png</file>
         <file alias="FileSaveAs">Icons/FileSaveAs.png</file>
@@ -52,7 +53,7 @@
         <file alias="Forward">Icons/Forward.png</file>
         <file alias="Copy">Icons/Copy.png</file>
         <file alias="Pencil">Icons/Pencil_10x10.PNG</file>
-		<file alias="Pencil_16x16">Icons/Pencil_16x16.PNG</file>
+        <file alias="Pencil_16x16">Icons/Pencil_16x16.PNG</file>
         <file alias="DeliveredAndRead">Icons/check2.png</file>
         <file alias="Delivered">Icons/check1.png</file>
         <file alias="Bitcoin">Icons/BitcoinIcon.png</file>
@@ -75,7 +76,6 @@
         <file alias="Browser">Icons/Browser.png</file>
         <file alias="GoBack">Icons/GoBack.png</file>
         <file alias="GoForward">Icons/GoForward.png</file>
-        <file alias="Issue">Icons/Issue.png</file>
         <file alias="Listen">Icons/Listen.png</file>
         <file alias="Announce">Icons/Announce.png</file>
         <file alias="Futures">Icons/Futures.png</file>

@@ -52,6 +52,7 @@ public slots:
 	void SL_ButtonSendBitcoin();
 	void SL_ButtonSendFile();
 	void SL_ButtonAddContacts();
+	void SL_ButtonSendBallot();
 }; // WLayoutChatLog
 
 

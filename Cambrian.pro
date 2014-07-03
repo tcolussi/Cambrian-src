@@ -75,7 +75,8 @@ SOURCES += main.cpp\
     ChatLogEvents.cpp \
     Xcp.cpp \
     WLayoutBrowser.cpp \
-    XcpApi.cpp
+    XcpApi.cpp \
+	IEventBallot.cpp
 
 
 HEADERS += PreCompiledHeaders.h \
@@ -138,7 +139,8 @@ HEADERS += PreCompiledHeaders.h \
     ChatLogEvents.h \
     Xcp.h \
     WLayoutBrowser.h \
-    XcpApi.h
+    XcpApi.h \
+	IEventBallot.h
 
 
 FORMS +=

@@ -2407,6 +2407,17 @@ CBin::BinAppendXmlAttributeUInt(CHS chAttributeName, UINT uAttributeValue)
 	}
 
 void
+CBin::BinAppendXmlAttributeUIntHexadecimal(CHS chAttributeName, UINT uAttributeValueHexadecimal)
+	{
+	if (uAttributeValueHexadecimal != 0)
+		{
+		CHU szValue[16];
+		IntegerToString(OUT szValue, uAttributeValueHexadecimal, ITS_mskfHexadecimal);
+		BinAppendXmlAttributeText(chAttributeName, szValue);
+		}
+	}
+
+void
 CBin::BinAppendXmlAttributeInt(CHS chAttributeName, int nAttributeValue)
 	{
 	if (nAttributeValue != 0)

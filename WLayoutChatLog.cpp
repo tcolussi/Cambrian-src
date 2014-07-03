@@ -520,13 +520,17 @@ WLayoutChatLog::WLayoutChatLog(ITreeItemChatLogEvents * pParent)
 	pLayoutButtons->addWidget(m_pwButtonSendBitcoin);
 	connect(m_pwButtonSendBitcoin, SIGNAL(clicked()), this, SLOT(SL_ButtonSendBitcoin()));
 
-	WButtonIcon * pwButtonSendFile = new WButtonIcon(eMenuAction_ContactSendFile, "Send File\n\nYou may drag and drop the file, or copy & paste the file from Windows Explorer");
-	pLayoutButtons->addWidget(pwButtonSendFile);
-	connect(pwButtonSendFile, SIGNAL(clicked()), this, SLOT(SL_ButtonSendFile()));
+	WButtonIcon * pwButton = new WButtonIcon(eMenuAction_ContactSendFile, "Send File\n\nYou may drag and drop the file, or copy & paste the file from Windows Explorer");
+	pLayoutButtons->addWidget(pwButton);
+	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonSendFile()));
 
-	WButtonIcon * pwButton = new WButtonIcon(eMenuAction_ContactAdd, "Add people to the converstation");
+	pwButton = new WButtonIcon(eMenuAction_ContactAdd, "Add people to the converstation");
 	pLayoutButtons->addWidget(pwButton);
 	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonAddContacts()));
+
+	pwButton = new WButtonIcon(eMenuAction_BallotSend, "Send a ballot to the group to vote");
+	pLayoutButtons->addWidget(pwButton);
+	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonSendBallot()));
 
 	setChildrenCollapsible(false);		// Do not allow the widget WChatInput() to collapse; it would be very confusing to the user
 
@@ -859,4 +863,10 @@ void
 WLayoutChatLog::SL_ButtonAddContacts()
 	{
 	PGetContactOrGroup_NZ()->DisplayDialogAddContactsToGroup();
+	}
+
+void
+WLayoutChatLog::SL_ButtonSendBallot()
+	{
+	PGetContactOrGroup_NZ()->DisplayDialogBallotSend();
 	}

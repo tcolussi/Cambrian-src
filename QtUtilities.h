@@ -36,6 +36,7 @@ class WLabel : public QLabel
 public:
 	WLabel();
 	WLabel(PSZAC pszmLabelTextAndToolTip);
+	WLabel(const CStr & strLabelText);
 	WLabel(PA_PARENT QBoxLayout * poParentLayout);
 	void _Init();
 	void Label_SetTextSelectable();
@@ -58,6 +59,7 @@ class WLabelSelectable : public WLabel
 public:
 	WLabelSelectable();
 	WLabelSelectable(PSZAC pszmLabelTextAndToolTip);
+	WLabelSelectable(const CStr & strLabelText);
 	WLabelSelectable(PA_PARENT QBoxLayout * poParentLayout);
 };
 
@@ -66,6 +68,7 @@ class WLabelSelectableWrap : public WLabelSelectable
 public:
 	WLabelSelectableWrap();
 	WLabelSelectableWrap(PSZAC pszmLabelTextAndToolTip);
+	WLabelSelectableWrap(const CStr & strLabelText);
 	WLabelSelectableWrap(PA_PARENT QBoxLayout * poParentLayout);
 };
 
@@ -383,6 +386,7 @@ class OLayoutForm : public QFormLayout
 {
 public:
 	explicit OLayoutForm(PA_PARENT QWidget * pwParent);
+	explicit OLayoutForm(PA_PARENT QBoxLayout * poParentLayout);
 	void Layout_RemoveMargins();
 	void Layout_AddRowLabelFormat_VE_Gsb(PSZAC pszFmtTemplate, ...);
 	WEdit * Layout_PwAddRowLabelEdit(PSZAC pszLabel, const CString & sEditText);
@@ -457,6 +461,7 @@ public:
 };
 
 void Widget_SetText(INOUT QWidget * pwWidget, PSZAC pszText);
+void Widget_SetText(INOUT QWidget * pwWidget, const CStr & strText);
 void Widget_SetTextFormat_VE_Gsb(INOUT QWidget * pwWidget, PSZAC pszFmtTemplate, ...);
 void Widget_SetTextFormat_VL_Gsb(INOUT QWidget * pwWidget, PSZAC pszFmtTemplate, va_list vlArgs);
 void Widget_SetTextAndToolTip(INOUT QWidget * pwWidget, PSZAC pszmTextAndToolTip);

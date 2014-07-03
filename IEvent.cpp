@@ -6,6 +6,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include "IEventBallot.h"
 #ifdef DEBUG
 	//#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
@@ -101,6 +102,11 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 	case eEventClass_eDownloader:
 		return new CEventDownloader(ptsEventID);
 
+	case eEventClass_eBallotSent:
+		return new CEventBallotSent(ptsEventID);
+	case eEventClass_eBallotReceived:
+		return new CEventBallotReceived(ptsEventID);
+
 	default:
 		return NULL;
 		} // switch
@@ -133,6 +139,9 @@ IEvent::IEvent(const TIMESTAMP * ptsEventID)
 		m_tsEventID = *ptsEventID;						// We are creating an event with an existing timestamp, which is typically when an event is being unserialized from disk or XCP
 	else
 		m_tsEventID = Timestamp_GetCurrentDateTime();	// We are creating a new event, so use the current date & time as the timestamp.
+	#ifdef d_szEventDebug_strVersion
+	m_strDebugVersion = (PSZUC)d_szApplicationVersion;
+	#endif
 	}
 
 IEvent::~IEvent()
@@ -157,13 +166,11 @@ IEvent::EventAddToVault(PA_PARENT TContact * pContactParent)
 //	EGetEventClassForXCP(), virtual
 //
 //	This virtual method is necessary for an event to serialize itself in a suitable way for the Cambrian Protocol.
-//	Essentially this virtual method returns the class the remote client instanciate to unserialize the data, which is often the opposite class as the event itself.
+//	Essentially this virtual method returns the class necessary for the remote client to instanciate a class, which is often the opposite class as the event itself, to unserialize the data.
 //	For instance, a 'message sent' by the user is a 'message received' by the contact.
 EEventClass
-IEvent::EGetEventClassForXCP(const TContact * pContactToSerializeFor) const
+IEvent::EGetEventClassForXCP() const
 	{
-	Assert(pContactToSerializeFor != NULL);
-	Assert(pContactToSerializeFor->EGetRuntimeClass() == RTI(TContact));
 	return EGetEventClass();		// By default, return the same as the event class.  This is useful for objects which may not be serialized, however may send stanzas such as a ping or raw XML.
 	}
 
@@ -513,15 +520,15 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 		}
 	#ifdef DEBUG_DISPLAY_TIMESTAMPS
 	pbinTextHtml->BinAppendTextSzv_VE("<code>[i=<b>$t</b> o=<b>$t</b>] </code>", m_tsEventID, m_tsOther);
-	#ifdef d_szEvent_strContactSource
-	if (!m_strContactSource.FIsEmptyString())
+	#ifdef d_szEventDebug_strContactSource
+	if (!m_strDebugContactSource.FIsEmptyString())
 		{
 		if (m_pContactGroupSender_YZ != NULL)
 			{
-			if (m_pContactGroupSender_YZ->m_strJidBare.FCompareStringsNoCase(m_strContactSource))
+			if (m_pContactGroupSender_YZ->m_strJidBare.FCompareStringsNoCase(m_strDebugContactSource))
 				goto SkipSource;
 			}
-		pbinTextHtml->BinAppendTextSzv_VE(" <img src=':/ico/Exchange' title='This event was forwarded by ^S, however originally written by ^j'/> ", &m_strContactSource, m_pContactGroupSender_YZ);
+		pbinTextHtml->BinAppendTextSzv_VE(" <img src=':/ico/Exchange' title='This event was forwarded by ^S, however originally written by ^j'/> ", &m_strDebugContactSource, m_pContactGroupSender_YZ);
 		SkipSource:;
 		}
 	#endif
@@ -589,8 +596,14 @@ IEvent::_BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfH
 		pszButtonName = "Open";
 		break;
 		} // switch
-	pbinTextHtml->BinAppendTextSzv_VE(" " _nbsp " <a class="d_szClassForChatLog_ButtonHtml" href='"d_szSchemeCambrian":{t_},$b'>[" _nbsp2 "$s" _nbsp2 "]</a>", m_tsEventID, chActionOfHyperlink, pszButtonName);
+	_BinHtmlAppendHyperlinkAction(INOUT pbinTextHtml, chActionOfHyperlink, pszButtonName);
 	} // _BinHtmlAppendHyperlinkAction()
+
+void
+IEvent::_BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfHyperlink, PSZAC pszButtonName) const
+	{
+	pbinTextHtml->BinAppendTextSzv_VE(" " _nbsp " <a class="d_szClassForChatLog_ButtonHtml" href='"d_szSchemeCambrian":{t_},$b'>[" _nbsp2 "$s" _nbsp2 "]</a>", m_tsEventID, chActionOfHyperlink, pszButtonName);
+	}
 
 void
 ITreeItemChatLogEvents::ChatLog_EventEditMessageSent(CEventMessageTextSent * pEventMessageSent)
@@ -673,13 +686,13 @@ CEventMessageTextSent::~CEventMessageTextSent()
 	}
 
 EEventClass
-CEventMessageTextSent::EGetEventClassForXCP(const TContact *) const
+CEventMessageTextSent::EGetEventClassForXCP() const
 	{
 	return CEventMessageTextReceived::c_eEventClass;
 	}
 
 EEventClass
-CEventFileSent::EGetEventClassForXCP(const TContact *) const
+CEventFileSent::EGetEventClassForXCP() const
 	{
 	return CEventFileReceived::c_eEventClass;
 	}

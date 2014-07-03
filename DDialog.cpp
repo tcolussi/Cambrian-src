@@ -20,6 +20,12 @@ DDialog::Dialog_SetCaption(PSZAC pszCaption)
 	}
 
 void
+DDialog::Dialog_SetCaption(const CStr & strCaption)
+	{
+	Widget_SetText(INOUT this, strCaption);
+	}
+
+void
 DDialog::Dialog_SetCaptionFormat_VE(PSZAC pszFmtTemplate, ...)
 	{
 	va_list vlArgs;

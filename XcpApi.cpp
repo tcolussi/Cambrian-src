@@ -32,7 +32,7 @@ const CHU c_szaApi_Group_Profile_Get[] = "Group.Profile.Get";
 	#define d_chAPIa_Group_strName			'n'
 #define d_chAPIe_GroupMember_			'M'
 #define d_szAPIe_GroupMember_			"M"
-	#define d_chAPIe_GroupMember_idContact	'c'
+	#define d_chAPIa_GroupMember_idContact	'c'
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +119,7 @@ TGroup::XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaRepl
 		if (pMember->m_pContact != pbinXcpStanzaReply->m_pContact)
 			{
 			pbinXcpStanzaReply->BinAppendText("<" d_szAPIe_GroupMember_);
-			pbinXcpStanzaReply->BinAppendXmlAttributeOfContactIdentifier(d_chAPIe_GroupMember_idContact, pMember->m_pContact);	// {ic}, {is}	^i
+			pbinXcpStanzaReply->BinAppendXmlAttributeOfContactIdentifier(d_chAPIa_GroupMember_idContact, pMember->m_pContact);	// {ic}, {is}	^i
 			pbinXcpStanzaReply->BinAppendText("/>");
 			}
 		}
@@ -143,7 +143,7 @@ TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, I
 	const CXmlNode * pXmlNodeMembers = pXmlNodeApiParameters->PFindElement(d_szAPIe_GroupMember_);
 	while (pXmlNodeMembers != NULL)
 		{
-		Member_PFindOrAllocate_NZ(pXmlNodeMembers->PszuFindAttributeValue(d_chAPIe_GroupMember_idContact));
+		Member_PFindOrAllocate_NZ(pXmlNodeMembers->PszuFindAttributeValue(d_chAPIa_GroupMember_idContact));
 		//TContact * pContact = m_pAccount->Contact_PFindByIdentifierOrCreate_YZ(pXmlNodeMembers, d_chAPIe_GroupMember_idContact, INOUT pbinXcpApiExtraRequest);
 		//MessageLog_AppendTextFormatCo(d_coRed, "XcpApiGroup_ProfileUnserialize() - Adding group member ^j\n", pContact);
 		pXmlNodeMembers = pXmlNodeMembers->m_pNextSibling;

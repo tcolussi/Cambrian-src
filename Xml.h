@@ -107,6 +107,7 @@ public:
 	UINT_P UFindAttributeValueDecimal_ZZR(PSZAC pszaAttributeName) const;
 	UINT_P UFindAttributeValueDecimal_ZZR(CHS chAttributeName) const;
 	UINT_P UFindAttributeValueHexadecimal_ZZR(PSZAC pszaAttributeName) const;
+	UINT_P UFindAttributeValueHexadecimal_ZZR(CHS chAttributeName) const;
 	INT_P NFindElementOrAttributeValueNumeric(PSZAC pszuNodePath) const;
 	INT_P GetElementOrAttributeNumericValue(PSZAC pszuNodePath) const;
 	INT_P GetElementOrAttributeNumericValue(PSZAC pszuNodePath, int iError) const;
@@ -117,6 +118,7 @@ public:
 	void GetAttributeValueCStr(PSZAC pszaAttributeName, OUT CStr * pstrValue) const;
 	void UpdateAttributeValueInt(CHS chAttributeName, OUT_F_UNCH int * pnValue) const;
 	void UpdateAttributeValueUInt(CHS chAttributeName, OUT_F_UNCH UINT * puValue) const;
+	void UpdateAttributeValueUIntHexadecimal(CHS chAttributeName, OUT_F_UNCH UINT * puValue) const;
 	void UpdateAttributeValueL64(CHS chAttributeName, OUT_F_UNCH L64 * plValue) const;
 	void UpdateAttributeValueTimestamp(CHS chAttributeName, OUT_F_UNCH TIMESTAMP * ptsValue) const;
 	void UpdateAttributeValueCStr(CHS chAttributeName, OUT_F_UNCH CStr * pstrValue) const;

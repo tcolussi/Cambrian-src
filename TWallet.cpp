@@ -235,7 +235,7 @@ IEventWalletTransaction::FuIsTransactionMatchingViewFlags(EWalletViewFlags eWall
 	}
 
 EEventClass
-CEventWalletTransactionSent::EGetEventClassForXCP(const TContact *) const
+CEventWalletTransactionSent::EGetEventClassForXCP() const
 	{
 	return CEventWalletTransactionReceived::c_eEventClass;
 	}

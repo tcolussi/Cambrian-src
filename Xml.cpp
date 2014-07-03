@@ -1239,6 +1239,13 @@ CXmlNode::UFindAttributeValueHexadecimal_ZZR(PSZAC pszaAttributeName) const
 	return 0;
 	} // UFindAttributeValueHexadecimal_ZZR()
 
+UINT_P
+CXmlNode::UFindAttributeValueHexadecimal_ZZR(CHS chAttributeName) const
+	{
+	const CHA szuAttributeName[2] = { (CHA)chAttributeName, '\0' };
+	return UFindAttributeValueHexadecimal_ZZR(szuAttributeName);
+	}
+
 //	Wrapper to return the numeric value of an element or attribute.
 //	Return 0 if the node could not be found or contains empty text.
 //	Return -1 if an error occurred during the parsing such as invalid digits.
@@ -1320,6 +1327,15 @@ CXmlNode::UpdateAttributeValueUInt(CHS chAttributeName, OUT_F_UNCH UINT * puValu
 	if (pNodeAttribute == NULL)
 		return;
 	*puValue = NStringToNumber_ZZR_ML(pNodeAttribute->m_pszuTagValue);
+	}
+void
+CXmlNode::UpdateAttributeValueUIntHexadecimal(CHS chAttributeName, OUT_F_UNCH UINT * puValue) const
+	{
+	Assert(puValue != NULL);
+	CXmlNode * pNodeAttribute = PFindAttribute(chAttributeName);
+	if (pNodeAttribute == NULL)
+		return;
+	*puValue = UStringToNumberHexadecimal_ZZR_ML(pNodeAttribute->m_pszuTagValue);
 	}
 void
 CXmlNode::UpdateAttributeValueL64(CHS chAttributeName, OUT_F_UNCH L64 * plValue) const

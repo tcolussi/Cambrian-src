@@ -273,6 +273,7 @@ const EMenuActionByte c_rgzeActionsMenuContactGroup[] =
 	eMenuAction_GroupRename,
 	eMenuAction_GroupDelete,
 	eMenuAction_GroupProperties,
+	eMenuAction_BallotSend,
 	ezMenuActionNone
 	};
 
@@ -298,6 +299,9 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		return ezMenuActionNone;
 	case eMenuAction_GroupProperties:
 		DisplayDialogProperties();
+		return ezMenuActionNone;
+	case eMenuAction_BallotSend:
+		DisplayDialogBallotSend();
 		return ezMenuActionNone;
 	default:
 		return ITreeItemChatLogEvents::TreeItem_EDoMenuAction(eMenuAction);

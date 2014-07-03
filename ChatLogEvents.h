@@ -156,6 +156,7 @@ public:
 	void Xmpp_QueryVersion();
 	CSocketXmpp * Xmpp_PGetSocketOnlyIfReady() const;
 
+	void DisplayDialogBallotSend(CEventBallotSent * pEventBallotInit = NULL);
 	void DisplayDialogSendFile();
 	void DisplayDialogAddContactsToGroup();
 	friend class CVaultEvents;

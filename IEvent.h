@@ -13,7 +13,8 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#define d_szEvent_strContactSource						"_CONTACTSOURCE"	// Add an extra field to the base class IEvent to include the contact who transmitted the event.  This field is useful to debug group chat.
+#define d_szEventDebug_strContactSource					"_CONTACTSOURCE"	// Add an extra field to the base class IEvent to include the contact who transmitted the event.  This field is useful to debug group chat.
+#define d_szEventDebug_strVersion						"_VERSION"			// Add the Cambrian version when the event was created (sent or received).  Again, this is useful to save time by avoiding debugging old events received before a given bugfix.
 
 #define d_chEvent_Attribute_tsEventID					'i'	// Identifier of the event
 #define d_szEvent_Attribute_tsEventID_t					" i='$t'"
@@ -111,6 +112,12 @@ enum EEventClass
 	eEventClass_eWalletTransactionReceived			= _USZU1('w'),
 	eEventClass_eWalletTransactionReceived_class	= eEventClass_eWalletTransactionReceived | eEventClass_kfReceivedByRemoteClient,
 
+	eEventClass_eBallotSent							= _USZU3('B', 'A', 'L'),
+	eEventClass_eBallotSent_class					= eEventClass_eBallotSent | eEventClass_kfSerializeDataAsXmlElement,
+	eEventClass_eBallotReceived						= _USZU3('b', 'a', 'l'),
+	eEventClass_eBallotReceived_class				= eEventClass_eBallotReceived | eEventClass_kfReceivedByRemoteClient | eEventClass_kfSerializeDataAsXmlElement,
+
+	// Not used
 	eEventClass_eServiceDiscovery_Query				= _USZU2('S', 'D'),		// There is no 'event' for service discovery, however the "SD"
 	eEventClass_eServiceDiscovery_Response			= _USZU2('s', 'd'),
 
@@ -278,8 +285,11 @@ public:
 		FE_kfEventProtocolError		= 0x0008,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
 		};
 	mutable UINT m_uFlagsEvent;				// Flags related to the event (not serialized)
-	#ifdef d_szEvent_strContactSource
-	CStr m_strContactSource;				// Contact JID who transmitted the event
+	#ifdef d_szEventDebug_strContactSource
+	CStr m_strDebugContactSource;				// Contact JID who transmitted the event
+	#endif
+	#ifdef d_szEventDebug_strVersion
+	CStr m_strDebugVersion;
 	#endif
 
 public:
@@ -289,7 +299,7 @@ public:
 	void EventAddToVault(PA_PARENT TContact * pContactParent);
 
 	virtual EEventClass EGetEventClass() const  = 0;
-	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
+	virtual EEventClass EGetEventClassForXCP() const;
 	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
@@ -335,6 +345,7 @@ protected:
 	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const;
 	void _BinHtmlAppendHyperlinkToLocalFile(INOUT CBin * pbinTextHtml, PSZUC pszFilename, BOOL fDisabled = FALSE) const;
 	void _BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfHyperlink) const;
+	void _BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfHyperlink, PSZAC pszButtonName) const;
 	void _XmlUnserializeAttributeOfContactIdentifier(CHS chAttributeName, OUT TContact ** ppContact, const CXmlNode * pXmlNodeElement) const;
 
 public:
@@ -434,7 +445,7 @@ public:
 	CEventMessageTextSent(PSZUC pszMessageText);
 	virtual ~CEventMessageTextSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
+	virtual EEventClass EGetEventClassForXCP() const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	void MessageResendUpdate(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate);
 };
@@ -446,7 +457,7 @@ public:
 public:
 	CEventMessageTextReceived(const TIMESTAMP * ptsEventID);
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return CEventMessageTextSent::c_eEventClass; }
+	virtual EEventClass EGetEventClassForXCP() const { return CEventMessageTextSent::c_eEventClass; }
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 	void MessageUpdated(PSZUC pszMessageUpdated, INOUT WChatLog * pwChatLog);
@@ -493,7 +504,7 @@ public:
 	CEventFileSent(PSZUC pszFileToSend);
 	virtual ~CEventFileSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
+	virtual EEventClass EGetEventClassForXCP() const;
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 
@@ -525,7 +536,7 @@ public:
 	CEventFileReceived(const TIMESTAMP * ptsEventID);
 	virtual ~CEventFileReceived();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return CEventFileSent::c_eEventClass; }
+	virtual EEventClass EGetEventClassForXCP() const { return CEventFileSent::c_eEventClass; }
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -587,7 +598,7 @@ public:
 public:
 	CEventWalletTransactionSent(const TIMESTAMP * ptsEventID = NULL) : IEventWalletTransaction(ptsEventID) { }
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
+	virtual EEventClass EGetEventClassForXCP() const;
 };
 
 class CEventWalletTransactionReceived : public IEventWalletTransaction
@@ -597,7 +608,7 @@ public:
 public:
 	CEventWalletTransactionReceived(const TIMESTAMP * ptsEventID) : IEventWalletTransaction(ptsEventID) { }
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual EEventClass EGetEventClassForXCP(const TContact *) const { return CEventWalletTransactionSent::c_eEventClass; }
+	virtual EEventClass EGetEventClassForXCP() const { return CEventWalletTransactionSent::c_eEventClass; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -662,9 +673,9 @@ protected:
 	IEvent * m_paEvent;				// Allocated event (when the download is complete)
 public:
 	CEventDownloader(const TIMESTAMP * ptsEventID);
-	~CEventDownloader();
+	virtual ~CEventDownloader();
 	virtual EEventClass EGetEventClass() const;
-	virtual EEventClass EGetEventClassForXCP(const TContact * pContactToSerializeFor) const;
+	virtual EEventClass EGetEventClassForXCP() const;
 	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);

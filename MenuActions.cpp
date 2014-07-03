@@ -92,6 +92,8 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 
 	"Generate Random Transactions" _ "i=Add" _, // eMenuAction_WalletGenerateDummyTransactions
 	"Close Wallet" _ "i=Close" _, // eMenuAction_WalletClose
+	"Send Ballot..." _ "s=Send a ballot to poll votes from the group" _ "i=Vote" _, // eMenuAction_BallotSend
+	"Resend Ballot..." _ "s=Resend an existing ballot" _ "i=Vote" _, // eMenuAction_BallotReSend
 
 	"Message Log..." _ "a=Ctrl+Shift+L" _ "i=LogMessages" _,	// eMenuAction_ShowLogMessages (BTW: Ctrl+Shift+L does not respond, and so Ctrl+Shift+M, however others such as Ctrl+Shift+K or Ctrl+Shift+B work)
 	"Recent Error..." _ "a=Ctrl+Shift+E" _ "i=LogErrors" _,	// eMenuAction_ShowLogErrors
@@ -115,7 +117,9 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Revoke Server" _ "i=ServerDeny" _, // eMenuIconServerDeny
 	"Question" _ "i=Question" _, // eMenuIconQuestion
 	"Warning" _ "i=Warning" _, // eMenuIconWarning
-	"Deny" _ "i=Deny" _, //eMenuIconDeny
+	"Deny" _ "i=Deny" _, // eMenuIconDeny
+	"Add" _ "i=Add" _, // eMenuIconAdd
+	"Remove" _ "i=Remove" _, // eMenuIconRemove
 	"Pencil" _ "i=Pencil" _, // eMenuIconPencil_10x10
 	"Pencil" _ "i=Pencil_16x16" _, // eMenuIconPencil_16x16
 	"Bitcoin" _ "i=Bitcoin" _, // eMenuIconBitcoin

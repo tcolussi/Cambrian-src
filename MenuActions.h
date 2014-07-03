@@ -74,6 +74,8 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 
 	eMenuAction_WalletGenerateDummyTransactions,
 	eMenuAction_WalletClose,
+	eMenuAction_BallotSend,				// Send a ballot to poll votes from the group
+	eMenuAction_BallotReSend,			// Resend an existing ballot
 
 	eMenuAction_ShowLogMessages,		// Show the MessageLog
 	eMenuAction_ShowLogErrors,			// Show the ErrorLog (aka Recent Errors)
@@ -99,6 +101,8 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuIconQuestion,
 	eMenuIconWarning,
 	eMenuIconDeny,
+	eMenuIconAdd,
+	eMenuIconRemove,
 	eMenuIconPencil_10x10,
 	eMenuIconPencil_16x16,
 	eMenuIconBitcoin,

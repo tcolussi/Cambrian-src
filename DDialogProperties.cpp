@@ -353,3 +353,189 @@ ITreeItemChatLogEvents::DisplayDialogAddContactsToGroup()
 	DDialogGroupAddContacts dialog(this);
 	dialog.FuExec();
 	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void
+ITreeItemChatLogEvents::DisplayDialogBallotSend(CEventBallotSent * pEventBallotInit)
+	{
+	DDialogBallotSend dialog(this, pEventBallotInit);
+	dialog.FuExec();
+	}
+
+#define SL_DDialogBallotSend(pfmSlot)		SL_DDialog(pfmSlot, DDialogBallotSend)
+DDialogBallotSend::DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, CEventBallotSent * pEventBallotInit) : DDialogOkCancelWithLayouts("Send Ballot", eMenuAction_BallotSend)
+	{
+	Assert(pContactOrGroup != NULL);
+	m_pContactOrGroup = pContactOrGroup;
+	CEventBallotSent * paEventBallotInit = NULL;
+	if (pEventBallotInit == NULL)
+		paEventBallotInit = pEventBallotInit = new CEventBallotSent(NULL);	// Create an empty ballot event to initialize the dialog
+
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotSend(SL_ButtonOK_clicked), "Send Ballot |Broadcast the ballot the group", eMenuAction_BallotSend);
+	m_pwButtonOK->setDefault(false);
+
+	OLayoutForm * pLayout = new OLayoutForm(m_poLayoutBody);
+	m_pwEditTitle = pLayout->Layout_PwAddRowLabelEdit("Title:", pEventBallotInit->m_strTitle);
+	m_pwEditDescription = pLayout->Layout_PwAddRowLabelEdit("Description:", pEventBallotInit->m_strDescription);
+
+	m_pLayoutQuestions = new OLayoutVertical(m_poLayoutBody);
+	_CEventBallotChoice ** ppChoiceStop;
+	_CEventBallotChoice ** ppChoice = pEventBallotInit->m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
+	if (ppChoice == ppChoiceStop)
+		SL_ButtonAdd();		// Add an empty question
+	else
+		{
+		while (ppChoice != ppChoiceStop)
+			{
+			_CEventBallotChoice * pChoice = *ppChoice++;
+			_OLayoutBallotChoice * paQuestion = new _OLayoutBallotChoice(this);
+			paQuestion->m_pwEditChoice->Edit_SetText(pChoice->m_strQuestion);
+			}
+		}
+
+	WButtonTextWithIcon * pwButtonAdd = new WButtonTextWithIcon("&New Question |Add a new question to the ballot", eMenuIconAdd);
+	m_poLayoutBody->addWidget(pwButtonAdd);
+	connect(pwButtonAdd, SIGNAL(clicked()), this, SLOT(SL_ButtonAdd()));
+	delete paEventBallotInit;
+	m_pwEditTitle->setFocus();
+	}
+
+DDialogBallotSend::~DDialogBallotSend()
+	{
+	}
+
+void
+DDialogBallotSend::SL_ButtonOK_clicked()
+	{
+	// Always create a new ballot when the user click on OK
+	CEventBallotSent * pEventBallot = new CEventBallotSent(NULL);
+	pEventBallot->m_strTitle = m_pwEditTitle;
+	pEventBallot->m_strDescription = m_pwEditDescription;
+
+	CStr strQuestion;
+	// Add the ballot questions to the event
+	_OLayoutBallotChoice ** ppLayoutStop;
+	_OLayoutBallotChoice ** ppLayout = m_arraypLayoutChoices.PrgpGetQuestionsStop(OUT &ppLayoutStop);
+	while (ppLayout != ppLayoutStop)
+		{
+		_OLayoutBallotChoice * pLayout = *ppLayout++;
+		strQuestion = pLayout->m_pwEditChoice;
+		if (strQuestion.FIsEmptyString())
+			continue;	// Don't include empty questions
+		_CEventBallotChoice * pChoice = pEventBallot->PAllocateNewChoice();
+		pChoice->m_strQuestion = strQuestion;
+		}
+	m_pContactOrGroup->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEventBallot);
+	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
+	}
+
+void
+DDialogBallotSend::SL_ButtonAdd()
+	{
+	_OLayoutBallotChoice * paQuestion = new _OLayoutBallotChoice(this);
+	paQuestion->m_pwEditChoice->setFocus();
+	}
+
+void
+DDialogBallotSend::SL_ButtonRemove()
+	{
+	WButtonIcon * pwButtonRemove = (WButtonIcon *)sender();	// Which button the user clicked
+	_OLayoutBallotChoice ** ppLayoutStop;
+	_OLayoutBallotChoice ** ppLayout = m_arraypLayoutChoices.PrgpGetQuestionsStop(OUT &ppLayoutStop);
+	while (ppLayout != ppLayoutStop)
+		{
+		_OLayoutBallotChoice * pLayout = *ppLayout++;
+		if (pwButtonRemove == pLayout->m_pwButtonRemove)
+			{
+			m_arraypLayoutChoices.RemoveElementI(pLayout);
+			delete pLayout; // Delete the question
+			return;
+			}
+		}
+	Assert(FALSE && "Unreachable code");
+	}
+
+_OLayoutBallotChoice::_OLayoutBallotChoice(PA_PARENT DDialogBallotSend * pwDialogBallotParent) : OLayoutHorizontal(pwDialogBallotParent->m_pLayoutQuestions)
+	{
+	pwDialogBallotParent->m_arraypLayoutChoices.Add(this);
+	m_pwButtonRemove = new WButtonIcon(eMenuIconRemove, "Remove this question from the ballot");
+	addWidget(m_pwButtonRemove);
+	m_pwEditChoice = new WEdit;
+	connect(m_pwEditChoice, SIGNAL(returnPressed()), pwDialogBallotParent, SLOT(SL_ButtonAdd()));
+	connect(m_pwButtonRemove, SIGNAL(clicked()), pwDialogBallotParent, SLOT(SL_ButtonRemove()));
+	Layout_AddLabelAndWidgetH_PA("Ballot Question:", m_pwEditChoice);
+	}
+
+_OLayoutBallotChoice::~_OLayoutBallotChoice()
+	{
+	// This destructor is a workaround of a Qt bug where a deleted layout remains displayed on the screen.  Hopefully this Qt bug will be fixed and this code won't be needed
+	int cItems = count();
+	while (--cItems >= 0)
+		{
+		QWidget * pwWidget = itemAt(cItems)->widget();
+		if (pwWidget != NULL)
+			pwWidget->hide();	// Hide every widget in the layout
+		}
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void
+CEventBallotReceived::DisplayDialogBallotVote()
+	{
+	DDialogBallotVote dialog(this);
+	dialog.FuExec();
+	}
+
+#define SL_DDialogBallotVote(pfmSlot)		SL_DDialog(pfmSlot, DDialogBallotVote)
+DDialogBallotVote::DDialogBallotVote(CEventBallotReceived * pEventBallotVote) : DDialogOkCancelWithLayouts("Vote", eMenuAction_BallotSend)
+	{
+	m_pEventBallotVote = pEventBallotVote;
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotVote(SL_ButtonVote), "Vote |Cast a vote on this ballot", eMenuAction_BallotSend);
+
+	Dialog_SetCaption(pEventBallotVote->m_strTitle);
+	m_poLayoutBody->addWidget(new WLabelSelectableWrap(pEventBallotVote->m_strDescription));
+	//m_poLayoutBody->addWidget(new WLabel("Please select one option:"));
+
+	WGroupBox * pwGroupBox = new WGroupBox(m_poLayoutBody);
+	pwGroupBox->Widget_SetTitleFormat_VE_Gsb("Please select one option:");
+	m_poLayoutBody->addWidget(pwGroupBox);
+
+	UINT_BALLOT_CHOICES ukfChoiceMask = 0x00000001;	// Initialize the first bit
+	OLayoutVertical * pLayoutOptions = new OLayoutVertical(pwGroupBox);
+	_CEventBallotChoice ** ppChoiceStop;
+	_CEventBallotChoice ** ppChoice = pEventBallotVote->m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
+	while (ppChoice != ppChoiceStop)
+		{
+		_CEventBallotChoice * pChoice = *ppChoice++;
+		WButtonRadio * pwButtonRadio = new WButtonRadio;
+		m_arraypwButtonOptions.Add(pwButtonRadio);
+		pwButtonRadio->setText(pChoice->m_strQuestion);
+		pLayoutOptions->addWidget(pwButtonRadio);
+		//pLayoutOptions->addWidget(new WLabel(pChoice->m_strQuestion));
+		pwButtonRadio->setChecked((pEventBallotVote->m_ukmChoices & ukfChoiceMask) != 0);
+		ukfChoiceMask <<= 1;
+		}
+	}
+
+void
+DDialogBallotVote::SL_ButtonVote()
+	{
+	UINT_BALLOT_CHOICES ukfChoiceMask = 0x00000001;	// Initialize the first bit
+	UINT_BALLOT_CHOICES ukmChoices = 0;			// Nothing selected yet
+	QWidget ** ppWidgetStop;
+	QWidget ** ppWidget = m_arraypwButtonOptions.PrgpGetWidgetsStop(OUT &ppWidgetStop);
+	while (ppWidget != ppWidgetStop)
+		{
+		WButtonRadio * pwButtonRadio = (WButtonRadio *)*ppWidget++;
+		if (pwButtonRadio->isChecked())
+			ukmChoices |= ukfChoiceMask;
+		ukfChoiceMask <<= 1;
+		}
+	if (ukmChoices == 0)
+		{
+		EMessageBoxWarning("Please select a choice!");
+		return;
+		}
+	m_pEventBallotVote->SetChoices(ukmChoices);
+	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
+	}

@@ -346,7 +346,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					pEvent->ChatLog_UpdateEventWithinWidget(pwChatLog);	// This will typically show a progress bar
 					}
 				else
-					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unable to find EventID $t for d_chXCPe_EventExtraDataRequest\n", tsEventID);
+					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unable to find EventID $t for d_chXCPe_EventExtraDataRequest (group $s)\n", tsEventID, (pGroup == NULL) ? NULL : pGroup->TreeItem_PszGetNameDisplay());
 				break;
 			case d_chXCPe_EventExtraDataReply:
 				// A 'data reply' may occur if there is no 'request', therefore we need to check for tsEventID as well as tsOther
@@ -541,9 +541,12 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				}
 			Assert(pEvent->m_pVaultParent_NZ == NULL);
 			pEvent->m_pVaultParent_NZ = pVault;	// Assign the parent vault right away
-			#ifdef d_szEvent_strContactSource
+			#ifdef d_szEventDebug_strContactSource
 			if (pGroup != NULL)
-				pEvent->m_strContactSource = m_strJidBare;
+				pEvent->m_strDebugContactSource = m_strJidBare;
+			#endif
+			#ifdef d_szEventDebug_strVersion
+			pEvent->m_strDebugVersion = (PSZUC)d_szApplicationVersion;
 			#endif
 			#ifdef DEBUG
 			if (USZU_from_USZUF(pEvent->EGetEventClass()) != eEventClass)
@@ -655,11 +658,17 @@ CBinXcpStanzaType::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 		{
 		BinAppendTextSzv_VE("<$U" _tsI _tsO, eEventClass, pEvent->m_tsEventID, pEvent->m_tsOther);
 		BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
-		#ifdef d_szEvent_strContactSource
-		BinAppendXmlAttributeText(d_szEvent_strContactSource, pEvent->m_strContactSource);
+		#ifdef d_szEventDebug_strContactSource
+		BinAppendXmlAttributeText(d_szEventDebug_strContactSource, pEvent->m_strDebugContactSource);
+		#endif
+		#ifdef d_szEventDebug_strVersion
+		BinAppendXmlAttributeText(d_szEventDebug_strVersion, pEvent->m_strDebugVersion);
 		#endif
 		pEvent->XmlSerializeCore(IOUT this);
-		BinAppendXmlForSelfClosingElement();
+		if ((eEventClass & eEventClass_kfSerializeDataAsXmlElement) == 0)
+			BinAppendXmlForSelfClosingElement();
+		else
+			BinAppendTextSzv_VE("</$U>\n", eEventClass);
 		}
 	}
 
@@ -677,7 +686,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTA
 	Assert(tsOther == d_ts_zNULL || tsOther == pEvent->m_tsOther);
 	Assert(m_pContact != NULL);
 	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
-	EEventClass eEventClassXcp = pEvent->EGetEventClassForXCP(m_pContact);
+	EEventClass eEventClassXcp = pEvent->EGetEventClassForXCP();
 	TIMESTAMP tsEventID = pEvent->m_tsEventID;
 	if (pEvent->m_pContactGroupSender_YZ != NULL)
 		{
@@ -713,7 +722,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 	Assert(m_pContact != NULL);
 	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
 	Assert(m_paData	!= NULL);
-	EEventClass eEventClassXcp = pEvent->EGetEventClassForXCP(m_pContact);
+	EEventClass eEventClassXcp = pEvent->EGetEventClassForXCP();
 	if ((eEventClassXcp & eEventClass_kfNeverSerializeToXCP) == 0)
 		{
 		const int ibDataElementStart = m_paData->cbData;
@@ -871,8 +880,11 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 				pEvent->m_pVaultParent_NZ = pVault;
 				AssertValidEvent(pEvent);
 				Assert(pEvent->m_tsEventID == tsEventID);
-				#ifdef d_szEvent_strContactSource
-				pEvent->m_strContactSource = pXmlNodeEvent->PszuFindAttributeValue(d_szEvent_strContactSource);
+				#ifdef d_szEventDebug_strContactSource
+				pEvent->m_strDebugContactSource = pXmlNodeEvent->PszuFindAttributeValue(d_szEventDebug_strContactSource);
+				#endif
+				#ifdef d_szEventDebug_strVersion
+				pEvent->m_strDebugVersion = pXmlNodeEvent->PszuFindAttributeValue(d_szEventDebug_strVersion);
 				#endif
 				fOutOfSync |= Event_FoosAddSorted(PA_CHILD pEvent);
 				}
@@ -1164,10 +1176,10 @@ CEventDownloader::EGetEventClass() const
 	}
 
 EEventClass
-CEventDownloader::EGetEventClassForXCP(const TContact * pContactToSerializeFor) const
+CEventDownloader::EGetEventClassForXCP() const
 	{
 	if (m_paEvent != NULL)
-		return m_paEvent->EGetEventClassForXCP(pContactToSerializeFor);
+		return m_paEvent->EGetEventClassForXCP();
 	return c_eEventClass;
 	}
 

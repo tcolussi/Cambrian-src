@@ -122,6 +122,7 @@ public:
 	void BinAppendXmlTextW(PSZWC pszwText);
 	void BinAppendXmlAttributeUInt(PSZAC pszAttributeName, UINT uAttributeValue);
 	void BinAppendXmlAttributeUInt(CHS chAttributeName, UINT uAttributeValue);
+	void BinAppendXmlAttributeUIntHexadecimal(CHS chAttributeName, UINT uAttributeValueHexadecimal);
 	void BinAppendXmlAttributeInt(CHS chAttributeName, int nAttributeValue);
 	void BinAppendXmlAttributeL64(PSZAC pszAttributeName, L64 lAttributeValue);
 	void BinAppendXmlAttributeL64(CHS chAttributeName, L64 lAttributeValue);
