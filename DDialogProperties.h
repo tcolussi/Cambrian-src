@@ -176,7 +176,7 @@ public:
 	ITreeItemChatLogEvents * m_pContactOrGroup;
 	CArrayPtrLayoutsBallotChoices m_arraypLayoutChoices;
 	WEdit * m_pwEditTitle;
-	WEdit * m_pwEditDescription;
+	WEditTextArea * m_pwEditDescription;
 	OLayoutVertical * m_pLayoutQuestions;
 
 public:

@@ -752,7 +752,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 		#ifdef DEBUG
 		if (m_paData->cbData > 100)		// For debugging conider 200 characters as a 'large stanza' to force this code to be executed frequently
 		#else
-		if (m_paData->cbData > 200)		// Also test this code in the release build, however with a higher threshold
+		if (m_paData->cbData > 1000)		// Also test this code in the release build, however with a higher threshold
 		//if (m_paData->cbData > c_cbStanzaMaxPayload)
 		#endif
 			{

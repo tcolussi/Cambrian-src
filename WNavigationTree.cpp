@@ -728,6 +728,15 @@ NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact()
 	return (TContact *)NavigationTree_PGetSelectedTreeItemMatchingInterface(RTI(TContact));
 	}
 
+ITreeItemChatLogEvents *
+NavigationTree_PGetSelectedTreeItemMatchingContractOrGroup()
+	{
+	TContact * pContact = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact();
+	if (pContact != NULL)
+		return pContact;
+	return (TGroup *)NavigationTree_PGetSelectedTreeItemMatchingInterface(RTI(TGroup));
+	}
+
 void
 NavigationTree_RenameSelectedItem()
 	{

@@ -376,7 +376,7 @@ DDialogBallotSend::DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, C
 
 	OLayoutForm * pLayout = new OLayoutForm(m_poLayoutBody);
 	m_pwEditTitle = pLayout->Layout_PwAddRowLabelEdit("Title:", pEventBallotInit->m_strTitle);
-	m_pwEditDescription = pLayout->Layout_PwAddRowLabelEdit("Description:", pEventBallotInit->m_strDescription);
+	m_pwEditDescription = pLayout->Layout_PwAddRowLabelEditTextAreaH("Description:", pEventBallotInit->m_strDescription, 3);
 
 	m_pLayoutQuestions = new OLayoutVertical(m_poLayoutBody);
 	_CEventBallotChoice ** ppChoiceStop;
@@ -457,6 +457,7 @@ DDialogBallotSend::SL_ButtonRemove()
 
 _OLayoutBallotChoice::_OLayoutBallotChoice(PA_PARENT DDialogBallotSend * pwDialogBallotParent) : OLayoutHorizontal(pwDialogBallotParent->m_pLayoutQuestions)
 	{
+	_OLayoutBallotChoice * poLayoutLast = (_OLayoutBallotChoice *)pwDialogBallotParent->m_arraypLayoutChoices.PvGetElementLast_YZ();
 	pwDialogBallotParent->m_arraypLayoutChoices.Add(this);
 	m_pwButtonRemove = new WButtonIcon(eMenuIconRemove, "Remove this question from the ballot");
 	addWidget(m_pwButtonRemove);
@@ -464,6 +465,8 @@ _OLayoutBallotChoice::_OLayoutBallotChoice(PA_PARENT DDialogBallotSend * pwDialo
 	connect(m_pwEditChoice, SIGNAL(returnPressed()), pwDialogBallotParent, SLOT(SL_ButtonAdd()));
 	connect(m_pwButtonRemove, SIGNAL(clicked()), pwDialogBallotParent, SLOT(SL_ButtonRemove()));
 	Layout_AddLabelAndWidgetH_PA("Ballot Question:", m_pwEditChoice);
+
+	QWidget::setTabOrder((poLayoutLast != NULL) ? poLayoutLast->m_pwEditChoice : (QWidget *)pwDialogBallotParent->m_pwEditDescription, m_pwEditChoice);	// Make sure the new edit follows a smooth smooth continuity with others
 	}
 
 _OLayoutBallotChoice::~_OLayoutBallotChoice()

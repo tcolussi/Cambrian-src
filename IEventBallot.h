@@ -5,6 +5,7 @@
 #endif
 
 typedef UINT UINT_BALLOT_CHOICES;	// (ukm) Use a 32-bit integer to store multiple ballot choices.  Each bit represent a choice, which means a ballot is limited to 32 choices.  In the future, this data type may be extended to 64 bits
+#define d_cBallotChoicesMax			(sizeof(UINT_BALLOT_CHOICES) * 8) // Number of bits in UINT_BALLOT_CHOICES (which at the moment is 32)
 
 class _CEventBallotChoice
 {
@@ -16,7 +17,11 @@ public:
 class CArrayPtrBallotChoices : public CArray
 {
 public:
+	inline _CEventBallotChoice ** PrgpGetChoices() const { return (_CEventBallotChoice **)PrgpvGetElements(); }
 	inline _CEventBallotChoice ** PrgpGetChoicesStop(OUT _CEventBallotChoice *** pppChoiceStop) const { return (_CEventBallotChoice **)PrgpvGetElementsStop(OUT (void ***)pppChoiceStop); }
+	void DeleteAllChoices();
+
+	void BinHtmlAppendVoteChoices(INOUT CBin * pbinHtml, UINT_BALLOT_CHOICES ukmChoices) const;
 };
 
 class _CEventBallotVote
@@ -24,12 +29,15 @@ class _CEventBallotVote
 public:
 	TContact * m_pContact;				// Who voted
 	UINT_BALLOT_CHOICES m_ukmChoices;	// What was voted
+	TIMESTAMP m_tsVote;					// When the vote was casted
+	//CStr m_strComment;
 };
 
 class CArrayPtrBallotVotes : public CArray
 {
 public:
 	inline _CEventBallotVote ** PrgpGetVotesStop(OUT _CEventBallotVote *** pppVoteStop) const { return (_CEventBallotVote **)PrgpvGetElementsStop(OUT (void ***)pppVoteStop); }
+	void DeleteAllVotes();
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,8 +71,6 @@ class CEventBallotSent : public IEventBallot
 public:
 	static const EEventClass c_eEventClass = eEventClass_eBallotSent_class;
 public:
-	// Responses
-public:
 	CEventBallotSent(const TIMESTAMP * ptsEventID = NULL);
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const { return eEventClass_eBallotReceived_class; }
@@ -85,6 +91,7 @@ public:
 	virtual EEventClass EGetEventClassForXCP() const { return CEventBallotSent::c_eEventClass; }
 	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
+	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 
 	void DisplayDialogBallotVote();
 	void SetChoices(UINT_BALLOT_CHOICES ukmChoices);

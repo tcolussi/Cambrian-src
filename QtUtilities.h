@@ -190,7 +190,8 @@ public:
 	WEditTextArea(const QString & sText);
 	void _InitTextArea();
 	void Edit_SetColorBackgroundToGray();
-	void SetHeightRecommended(int cyHeightRecommended);
+	void Edit_SetHeightLines(int cLines);
+	void Edit_SetHeightRecommended(int cyHeightRecommended);
 	virtual QSize sizeHint() const;
 	virtual void paintEvent(QPaintEvent *);
 	void Edit_SetText(const CStr & strText);
@@ -395,6 +396,7 @@ public:
 	WEdit * Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszLabel, const QByteArray & arrayb);
 	WEdit * Layout_PwAddRowLabelEditReadOnlyFingerprint(PSZAC pszLabel, const QByteArray & arraybFingerprint);
 	WEdit * Layout_PwAddRowLabelEditReadOnlyFingerprint(PSZAC pszLabel, const CBin & binFingerprint);
+	WEditTextArea * Layout_PwAddRowLabelEditTextAreaH(PSZAC pszLabel, const CStr & strEditText, int cLines);
 	WEditTextArea * Layout_PwAddRowLabelEditTextArea(PSZAC pszLabel, const CString & sEditText, int cLines);
 	WEditTextArea * Layout_PwAddRowLabelEditTextAreaReadOnly(PSZAC pszLabel, const CString & sEditText, int cLines);
 	WEditPassword * Layout_PwAddRowLabelEditPassword(PSZAC pszLabel);

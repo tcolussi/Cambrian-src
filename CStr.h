@@ -21,6 +21,7 @@ public:
 	inline CStr(PSZUC pszuString) { BinInitFromStringWithNullTerminator((PSZAC)pszuString); }
 	inline const CStr & operator = (const QString & sString) { InitFromStringQ(sString); return *this; }
 	inline const CStr & operator = (const QLineEdit * pwLineEdit) { InitFromQLineEditTrimmed(*pwLineEdit); return *this; }
+	inline const CStr & operator = (const QTextEdit * pwTextEdit) { InitFromQTextEditTrimmed(*pwTextEdit); return *this; }
 	inline const CStr & operator = (const QByteArray & arrayb) { BinInitFromBinaryData(arrayb.constData(), arrayb.size() + 1); return *this; }
 	inline const CStr & operator = (PSZUC pszuString) { BinInitFromStringWithNullTerminator((PSZAC)pszuString); return *this; }
 	inline operator PSZUC() const { return PszuGetDataNZ(); }

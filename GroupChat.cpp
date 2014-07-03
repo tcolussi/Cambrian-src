@@ -87,7 +87,7 @@ TAccountXmpp::Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEven
 //	IMPLEMENTATION NOTES
 //	At the moment the Contact Identifier is the JID, however in the future it may be a hash of the contact's public key.
 //
-//	SEE ALSO: Contact_PFindByIdentifierOrCreate_YZ()
+//	SEE ALSO: Contact_PFindByIdentifierOrCreate_YZ(), CBin ^i
 void
 CBin::BinAppendXmlAttributeOfContactIdentifier(CHS chAttributeName, const TContact * pContact)
 	{

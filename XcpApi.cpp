@@ -140,7 +140,7 @@ TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, I
 			m_uFlagsTreeItem &= ~FTI_kfTreeItemNameDisplayedGenerated;
 			}
 		}
-	const CXmlNode * pXmlNodeMembers = pXmlNodeApiParameters->PFindElement(d_szAPIe_GroupMember_);
+	const CXmlNode * pXmlNodeMembers = pXmlNodeApiParameters->PFindElement(d_chAPIe_GroupMember_);
 	while (pXmlNodeMembers != NULL)
 		{
 		Member_PFindOrAllocate_NZ(pXmlNodeMembers->PszuFindAttributeValue(d_chAPIa_GroupMember_idContact));

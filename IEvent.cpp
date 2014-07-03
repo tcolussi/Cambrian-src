@@ -8,9 +8,9 @@
 #endif
 #include "IEventBallot.h"
 #ifdef DEBUG
-	//#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
+	#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
-	//#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
+	#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
 #endif
 
 CHS
@@ -366,6 +366,15 @@ IEvent::ChatLog_UpdateEventWithinWidget(QTextEdit * pwEditChatLog)
 	}
 
 void
+IEvent::ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree()
+	{
+	ITreeItemChatLogEvents * pContactOrGroup = NavigationTree_PGetSelectedTreeItemMatchingContractOrGroup();
+	Assert(pContactOrGroup != NULL);
+	if (pContactOrGroup != NULL)
+		ChatLog_UpdateEventWithinWidget(pContactOrGroup->ChatLog_PwGet_YZ());
+	}
+
+void
 IEvent::Event_UpdateWidgetWithinParentChatLog()
 	{
 	ChatLog_UpdateEventWithinWidget(m_pVaultParent_NZ->m_pParent->ChatLog_PwGet_YZ());
@@ -393,6 +402,18 @@ IEvent::PGetContactOrGroup_NZ() const
 	{
 	Assert(m_pVaultParent_NZ != NULL);
 	return m_pVaultParent_NZ->m_pParent;
+	}
+
+TContact *
+IEvent::PGetContactForReply_YZ() const
+	{
+	if (m_pContactGroupSender_YZ != NULL)
+		return m_pContactGroupSender_YZ;
+	ITreeItemChatLogEvents * pContactOrGroup = m_pVaultParent_NZ->m_pParent;
+	if (pContactOrGroup->EGetRuntimeClass() == RTI(TContact))
+		return (TContact *)pContactOrGroup;
+	Assert(FALSE && "The event does not have a valid contact to reply");
+	return NULL;
 	}
 
 TAccountXmpp *

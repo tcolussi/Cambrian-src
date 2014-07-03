@@ -35,7 +35,7 @@ DDialogInvitationCore::CreateEditInvitation()
 	m_pwEditInvitation = new WEditTextArea;
 	m_pwEditInvitation->Edit_SetWatermark("Paste your invitation here");
 	//m_pwEditInvitation->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	m_pwEditInvitation->SetHeightRecommended(200);
+	m_pwEditInvitation->Edit_SetHeightRecommended(200);
 	m_paInvitationEdit = Invitation_PazAllocateFromTextOfClipboard();
 	if (m_paInvitationEdit != NULL)
 		m_pwEditInvitation->Edit_SetText(m_paInvitationEdit->m_strInvitationText);

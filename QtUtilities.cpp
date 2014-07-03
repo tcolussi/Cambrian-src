@@ -478,7 +478,7 @@ void
 WEditTextArea::_InitTextArea()
 	{
 	setTabChangesFocus(true);
-	SetHeightRecommended(d_cyHeightEditTextArea);
+	Edit_SetHeightRecommended(d_cyHeightEditTextArea);
 	setTabStopWidth(16);
 	}
 
@@ -489,7 +489,13 @@ WEditTextArea::Edit_SetColorBackgroundToGray()
 	}
 
 void
-WEditTextArea::SetHeightRecommended(int cyHeightRecommended)
+WEditTextArea::Edit_SetHeightLines(int cLines)
+	{
+	setFixedHeight(1 + cLines * 16);	// Assume 16 pixels per text line
+	}
+
+void
+WEditTextArea::Edit_SetHeightRecommended(int cyHeightRecommended)
 	{
 	m_cyHeightRecommended = cyHeightRecommended;
 	//MessageLog_AppendTextFormatCo(d_coBlack, "minimumHeight = $i\n", minimumHeight());
@@ -1293,6 +1299,17 @@ OLayoutForm::Layout_PwAddRowLabelEditReadOnlyFingerprint(PSZAC pszLabel, const C
 	return Layout_PwAddRowLabelEditReadOnly(pszLabel, g_strScratchBufferStatusBar);
 	}
 
+WEditTextArea *
+OLayoutForm::Layout_PwAddRowLabelEditTextAreaH(PSZAC pszLabel, const CStr & strEditText, int cLines)
+	{
+	WEditTextArea * pwEdit = new WEditTextArea(strEditText);
+	pwEdit->Edit_SetHeightLines(cLines);
+	pwEdit->setStyleSheet("background-color: #FFF");	// This is a workaround of a Qt bug where the background color turns black if nothing is specified when adding a new widget in the dialog
+	addRow(PA_CHILD new WLabel(pszLabel), PA_CHILD pwEdit);
+	return pwEdit;
+	}
+
+/*
 // Add two rows: one with a label and another with a multi-line text edit
 WEditTextArea *
 OLayoutForm::Layout_PwAddRowLabelEditTextArea(PSZAC pszLabel, const CString & sEditText, int cLines)
@@ -1312,6 +1329,7 @@ OLayoutForm::Layout_PwAddRowLabelEditTextAreaReadOnly(PSZAC pszLabel, const CStr
 	pwEdit->setReadOnly(true);
 	return pwEdit;
 	}
+*/
 
 WEdit *
 OLayoutForm::Layout_PwAddRowLabelEditAndPushButton(PSZAC pszLabel, const QString & sEditText, PSZAC pszButtonText, OUT QPushButton ** ppwButton)

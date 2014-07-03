@@ -69,6 +69,7 @@ ITreeItem * NavigationTree_PGetSelectedTreeItemMatchingInterface(RTI_ENUM rti);
 TProfile * NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
 TAccountXmpp * NavigationTree_PGetSelectedTreeItemMatchingInterfaceTAccount();
 TContact * NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact();
+ITreeItemChatLogEvents * NavigationTree_PGetSelectedTreeItemMatchingContractOrGroup();
 void NavigationTree_RenameSelectedItem();
 
 #endif // MAINWINDOW_H

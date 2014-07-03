@@ -3,21 +3,27 @@
 #endif
 #include "IEventBallot.h"
 
-#define d_chAPIa_Ballot_strTitle		't'
-#define d_chAPIa_Ballot_strDescription	'd'
-#define d_chAPIa_BallotReceived_uVotedChoice	'v'		// Which choice(s) the user voted
-#define d_chAPIa_BallotReceived_tsConfirmation	'c'		// Timestamp where the confirmation
-#define d_chAPIe_BallotEntries			'E'
-#define d_szAPIe_BallotEntries			"E"
-#define d_chAPIe_BallotChoice			'C'
-#define d_szAPIe_BallotChoice_s			"C t='^S'"
-#define d_chAPIa_BallotChoice_strText	't'
+#define d_chAPIa_Ballot_strTitle					't'
+#define d_chAPIa_Ballot_strDescription				'd'
+#define d_chAPIa_BallotReceived_uxVotedChoice		'v'		// What was voted (which choice(s) the user selected)
+#define d_szAPIa_BallotReceived_uxVotedChoice_ux	" v='$x'"
+#define d_chAPIa_BallotReceived_tsConfirmation		'c'		// Timestamp where the confirmation
 
-#define d_chAPIe_BallotVotes			'V'
-#define d_szAPIe_BallotVotes			"V"
-#define d_chAPIe_BallotVote				'o'
-#define d_szAPIe_BallotVote				"o"
-#define d_szAPIa_BallotVote_pContact	'c'
+#define d_chAPIe_BallotChoices						'C'
+#define d_szAPIe_BallotChoices						"C"
+#define d_chAPIe_BallotChoice						'C'
+#define d_szAPIe_BallotChoice_S						"C t='^S'"
+#define d_chAPIa_BallotChoice_strText				't'				// Text to appear on the ballot choice
+#define d_chAPIa_BallotChoice_strGroup				'g'				// NYI: Which sub-group to automatically create
+
+#define d_chAPIe_BallotVotes						'V'
+#define d_szAPIe_BallotVotes						"V"
+#define d_chAPIe_BallotVote							'V'
+#define d_szAPIe_BallotVote_p_u_ts					"V f='^i' v='$x' t='$t'"
+#define d_chAPIa_BallotVote_pContactFrom			'f'
+#define d_chAPIa_BallotVote_uxVotedChoice			'v'
+#define d_chAPIa_BallotVote_tsTime					't'
+#define d_chAPIa_BallotVote_strComment				'c'				// NYI: Feedback comment of the user who casted the vote
 
 
 IEventBallot::IEventBallot(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
@@ -26,14 +32,28 @@ IEventBallot::IEventBallot(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 
 IEventBallot::~IEventBallot()
 	{
+	m_arraypaChoices.DeleteAllChoices();
+	m_arraypaVotes.DeleteAllVotes();
+	}
+
+void
+CArrayPtrBallotChoices::DeleteAllChoices()
+	{
 	_CEventBallotChoice ** ppChoiceStop;
-	_CEventBallotChoice ** ppChoice = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
+	_CEventBallotChoice ** ppChoice = PrgpGetChoicesStop(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
 		delete *ppChoice++;
+	RemoveAllElements();
+	}
+
+void
+CArrayPtrBallotVotes::DeleteAllVotes()
+	{
 	_CEventBallotVote ** ppVoteStop;
-	_CEventBallotVote ** ppVote = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
+	_CEventBallotVote ** ppVote = PrgpGetVotesStop(OUT &ppVoteStop);
 	while (ppVote != ppVoteStop)
 		delete *ppVote++;
+	RemoveAllElements();
 	}
 
 //	IEventBallot::IEvent::XmlUnserializeCore()
@@ -43,27 +63,29 @@ IEventBallot::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_Ballot_strTitle, m_strTitle);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_Ballot_strDescription, m_strDescription);
 
-	pbinXmlAttributes->BinAppendText("><" d_szAPIe_BallotEntries ">");
+	pbinXmlAttributes->BinAppendText("><" d_szAPIe_BallotChoices ">");
 	_CEventBallotChoice ** ppChoiceStop;
 	_CEventBallotChoice ** ppChoice = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
 		{
 		_CEventBallotChoice * pChoice = *ppChoice++;
-		pbinXmlAttributes->BinAppendTextSzv_VE("<" d_szAPIe_BallotChoice_s "/>", &pChoice->m_strQuestion);
+		pbinXmlAttributes->BinAppendTextSzv_VE("<" d_szAPIe_BallotChoice_S "/>", &pChoice->m_strQuestion);
 		}
-	pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotEntries ">");
+	pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotChoices ">");
 
-	pbinXmlAttributes->BinAppendText("><" d_szAPIe_BallotVotes ">");
-	_CEventBallotVote ** ppVoteStop;
-	_CEventBallotVote ** ppVote = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
-	while (ppVote != ppVoteStop)
+	if (pbinXmlAttributes->FSerializingEventToDisk())
 		{
-		_CEventBallotVote * pVote = *ppVote++;
-		pbinXmlAttributes->BinAppendTextSzv_VE("<" d_szAPIe_BallotVote " v='$x'", pVote->m_ukmChoices);
-		pbinXmlAttributes->BinAppendXmlAttributeOfContactIdentifier(d_szAPIa_BallotVote_pContact, pVote->m_pContact);;
-		pbinXmlAttributes->BinAppendTextSzv_VE("/>");
+		// Do not transmit the votes to the contacts; only serialize the vote to disk.
+		pbinXmlAttributes->BinAppendText("><" d_szAPIe_BallotVotes ">");
+		_CEventBallotVote ** ppVoteStop;
+		_CEventBallotVote ** ppVote = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
+		while (ppVote != ppVoteStop)
+			{
+			_CEventBallotVote * pVote = *ppVote++;
+			pbinXmlAttributes->BinAppendTextSzv_VE("<" d_szAPIe_BallotVote_p_u_ts "/>",  pVote->m_pContact, pVote->m_ukmChoices, pVote->m_tsVote);
+			}
+		pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotVotes ">");
 		}
-	pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotVotes ">");
 	}
 
 //	IEventBallot::IEvent::XmlUnserializeCore()
@@ -73,10 +95,11 @@ IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	pXmlNodeElement->UpdateAttributeValueCStr(d_chAPIa_Ballot_strTitle, OUT_F_UNCH &m_strTitle);
 	pXmlNodeElement->UpdateAttributeValueCStr(d_chAPIa_Ballot_strDescription, OUT_F_UNCH &m_strDescription);
 
-	const CXmlNode * pXmlNodeEntities = pXmlNodeElement->PFindElement(d_szAPIe_BallotEntries);
-	if (pXmlNodeEntities != NULL)
+	const CXmlNode * pXmlNodeChoices = pXmlNodeElement->PFindElement(d_chAPIe_BallotChoices);
+	if (pXmlNodeChoices != NULL)
 		{
-		const CXmlNode * pXmlNodeChoice = pXmlNodeEntities->m_pElementsList;
+		m_arraypaChoices.DeleteAllChoices();	// Delete any previous choice(s) before adding new ones
+		const CXmlNode * pXmlNodeChoice = pXmlNodeChoices->m_pElementsList;
 		while (pXmlNodeChoice != NULL)
 			{
 			_CEventBallotChoice * pChoice = PAllocateNewChoice();
@@ -84,15 +107,17 @@ IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 			pXmlNodeChoice = pXmlNodeChoice->m_pNextSibling;
 			}
 		}
-	const CXmlNode * pXmlNodeVotes = pXmlNodeElement->PFindElement(d_szAPIe_BallotVotes);
+	const CXmlNode * pXmlNodeVotes = pXmlNodeElement->PFindElement(d_chAPIe_BallotVotes);
 	if (pXmlNodeVotes != NULL)
 		{
+		m_arraypaVotes.DeleteAllVotes();	// Delete any previous vote(s) results before adding new ones
 		const CXmlNode * pXmlNodeVote = pXmlNodeVotes->m_pElementsList;
 		while (pXmlNodeVote != NULL)
 			{
 			_CEventBallotVote * pVote = PAllocateNewVote();
-			_XmlUnserializeAttributeOfContactIdentifier(d_szAPIa_BallotVote_pContact, OUT &pVote->m_pContact, IN pXmlNodeVote);
-			pXmlNodeVote->UpdateAttributeValueUIntHexadecimal(d_chAPIa_BallotReceived_uVotedChoice, OUT_F_UNCH &pVote->m_ukmChoices);
+			_XmlUnserializeAttributeOfContactIdentifier(d_chAPIa_BallotVote_pContactFrom, OUT &pVote->m_pContact, IN pXmlNodeVote);
+			pXmlNodeVote->UpdateAttributeValueUIntHexadecimal(d_chAPIa_BallotVote_uxVotedChoice, OUT_F_UNCH &pVote->m_ukmChoices);
+			pXmlNodeVote->UpdateAttributeValueTimestamp(d_chAPIa_BallotVote_tsTime, OUT_F_UNCH &pVote->m_tsVote);
 			pXmlNodeVote = pXmlNodeVote->m_pNextSibling;
 			}
 		}
@@ -119,48 +144,105 @@ IEventBallot::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpSta
 void
 IEventBallot::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
-	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
+	CBin * pbinHtmlBallot = &g_strScratchBufferStatusBar;
+	_BinHtmlInitWithTime(OUT pbinHtmlBallot);
 	BOOL fBallotSent = Event_FIsEventTypeSent();
-	g_strScratchBufferStatusBar.BinAppendTextSzv_VE(fBallotSent ? "Sending Ballot: <b>^S</b>" : "Please vote on the following: <b>^S</b>", &m_strTitle);
+	pbinHtmlBallot->BinAppendTextSzv_VE(fBallotSent ? "Sending Ballot: <b>^S</b>" : "Please vote on the following: <b>^S</b>", &m_strTitle);
 	if (!m_strDescription.FIsEmptyString())
-		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("<br/><i>$S</i>", &m_strDescription);
+		pbinHtmlBallot->BinAppendTextSzv_VE("<br/><i>$S</i>", &m_strDescription);
+
+	UINT rgcVotes[d_cBallotChoicesMax];	// Count how many votes for each choice
+	InitToZeroes(OUT rgcVotes, sizeof(rgcVotes));
+	UINT cChoices = m_arraypaChoices.GetSize();
+	if (cChoices > LENGTH(rgcVotes))
+		cChoices = LENGTH(rgcVotes);
+
+	_CEventBallotVote ** ppVoteStop;
+	_CEventBallotVote ** ppVoteFirst = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
+	_CEventBallotVote ** ppVote = ppVoteFirst;
+	while (ppVote != ppVoteStop)
+		{
+		_CEventBallotVote * pVote = *ppVote++;
+		UINT_BALLOT_CHOICES ukfChoiceMask = 0x00000001;	// Initialize the first bit
+		UINT iChoice = 0;
+		while (iChoice < cChoices)
+			{
+			if (pVote->m_ukmChoices & ukfChoiceMask)
+				rgcVotes[iChoice]++;
+			iChoice++;
+			ukfChoiceMask <<= 1;
+			}
+		}
+
+	UINT iChoice = 0;
 	_CEventBallotChoice ** ppChoiceStop;
 	_CEventBallotChoice ** ppChoiceFirst = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
 	_CEventBallotChoice ** ppChoice = ppChoiceFirst;
 	while (ppChoice != ppChoiceStop)
 		{
 		_CEventBallotChoice * pChoice = *ppChoice++;
-		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("<br/> ^_^_ &#149; ^S", &pChoice->m_strQuestion);
+		pbinHtmlBallot->BinAppendTextSzv_VE("<br/> ^_^_ $I ^S", rgcVotes[iChoice], &pChoice->m_strQuestion);
+		// &#149;, &#8226;, 249	// Other HTML bullets, U+2219 bullet operator
+		iChoice++;
 		}
-	// &#8226;, 249	// Other HTML bullets, U+2219 bullet operator
-	const int cChoices = m_arraypaChoices.GetSize();
-	_CEventBallotVote ** ppVoteStop;
-	_CEventBallotVote ** ppVote = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
+
+	ppVote = ppVoteFirst;
 	while (ppVote != ppVoteStop)
 		{
 		_CEventBallotVote * pVote = *ppVote++;
-		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("<br/>- ^j voted: ", pVote->m_pContact);
+		TIMESTAMP_DELTA dts = pVote->m_tsVote - m_tsEventID;	// Calculate how long it took for the user to respond (vote)
+		pbinHtmlBallot->BinAppendTextSzv_VE("<br/>[$T] ^j voted: ", dts, pVote->m_pContact);
+		m_arraypaChoices.BinHtmlAppendVoteChoices(INOUT pbinHtmlBallot, pVote->m_ukmChoices);
+		/*
 		UINT_BALLOT_CHOICES ukfChoiceMask = 0x00000001;	// Initialize the first bit
-		int iChoice = 0;
+		UINT iChoice = 0;
 		while (iChoice < cChoices)
 			{
 			if (pVote->m_ukmChoices & ukfChoiceMask)
 				{
 				_CEventBallotChoice * pChoice = ppChoiceFirst[iChoice];
-				g_strScratchBufferStatusBar.BinAppendTextSzv_VE(" ^S", &pChoice->m_strQuestion);
+				pbinHtmlBallot->BinAppendTextSzv_VE(" ^S", &pChoice->m_strQuestion);
 				}
 			iChoice++;
 			ukfChoiceMask <<= 1;
 			}
+		*/
 		} // while
 
 	if (!fBallotSent)
 		{
-		g_strScratchBufferStatusBar.BinAppendText("<br/>");
-		_BinHtmlAppendHyperlinkAction(INOUT &g_strScratchBufferStatusBar, d_chActionForEventBallot_Vote, "Vote");
+		Assert(EGetEventClass() == CEventBallotReceived::c_eEventClass);
+		pbinHtmlBallot->BinAppendText("<br/>");
+		_BinHtmlAppendHyperlinkAction(INOUT pbinHtmlBallot, d_chActionForEventBallot_Vote, "Vote");
+		UINT_BALLOT_CHOICES ukmChoices = ((CEventBallotReceived *)this)->m_ukmChoices;
+		if (ukmChoices != 0)
+			{
+			pbinHtmlBallot->BinAppendText(" &nbsp; You voted: ");
+			m_arraypaChoices.BinHtmlAppendVoteChoices(INOUT pbinHtmlBallot, ukmChoices);
+			}
 		}
-	//MessageLog_AppendTextFormatCo(d_coBlack, "$S", &g_strScratchBufferStatusBar);
-	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(d_coBallot));
+	//MessageLog_AppendTextFormatCo(d_coBlack, "$S", pbinHtmlBallot);
+	poCursorTextBlock->InsertHtmlBin(*pbinHtmlBallot, QBrush(d_coBallot));
+	}
+
+void
+CArrayPtrBallotChoices::BinHtmlAppendVoteChoices(INOUT CBin * pbinHtml, UINT_BALLOT_CHOICES ukmChoices) const
+	{
+	Assert(pbinHtml != NULL);
+	if (m_paArrayHdr == NULL)
+		return;
+	UINT_BALLOT_CHOICES ukfChoiceMask = 0x00000001;	// Initialize the first bit
+	int iChoice = 0;
+	while (iChoice < m_paArrayHdr->cElements)
+		{
+		if (ukmChoices & ukfChoiceMask)
+			{
+			_CEventBallotChoice * pChoice = (_CEventBallotChoice *)m_paArrayHdr->rgpvData[iChoice];
+			pbinHtml->BinAppendTextSzv_VE(" ^S", &pChoice->m_strQuestion);
+			}
+		iChoice++;
+		ukfChoiceMask <<= 1;
+		}
 	}
 
 //	IEventBallot::IEvent::HyperlinkGetTooltipText()
@@ -195,6 +277,7 @@ IEventBallot::PAllocateNewVote()
 	{
 	_CEventBallotVote * pVote = new _CEventBallotVote;
 	m_arraypaVotes.Add(PA_CHILD pVote);
+	InitToGarbage(OUT pVote, sizeof(*pVote));
 	return pVote;
 	}
 
@@ -206,7 +289,7 @@ CEventBallotSent::CEventBallotSent(const TIMESTAMP * ptsEventID) : IEventBallot(
 void
 CEventBallotSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
 	{
-	const UINT_BALLOT_CHOICES ukmChoices = pXmlNodeExtraData->UFindAttributeValueHexadecimal_ZZR(d_chAPIa_BallotReceived_uVotedChoice);
+	const UINT_BALLOT_CHOICES ukmChoices = pXmlNodeExtraData->UFindAttributeValueHexadecimal_ZZR(d_chAPIa_BallotReceived_uxVotedChoice);
 	//MessageLog_AppendTextFormatCo(d_coRed, "CEventBallotSent::XcpExtraDataArrived() - $x\n", ukmChoices);
 
 	TContact * pContact = pbinXcpStanzaReply->m_pContact; // Get the contact who voted
@@ -219,6 +302,8 @@ CEventBallotSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT 
 		pVote = *ppVote++;
 		if (pVote->m_pContact == pContact)
 			{
+			if (pVote->m_ukmChoices == ukmChoices)
+				return;		// This vote is a duplicate
 			MessageLog_AppendTextFormatSev(eSeverityComment, "Updating vote by ^j from 0x$x to 0x$x\n", pContact, pVote->m_ukmChoices, ukmChoices);
 			goto UpdateChoices;
 			}
@@ -229,8 +314,8 @@ CEventBallotSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT 
 	pVote->m_pContact = pContact;
 	UpdateChoices:
 	pVote->m_ukmChoices = ukmChoices;
+	pVote->m_tsVote = Timestamp_GetCurrentDateTime();
 	m_pVaultParent_NZ->SetModified();
-	// TODO: Update the GUI
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,7 +328,7 @@ CEventBallotReceived::CEventBallotReceived(const TIMESTAMP * ptsEventID) : IEven
 void
 CEventBallotReceived::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
 	{
-	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chAPIa_BallotReceived_uVotedChoice, m_ukmChoices);	// Save the attribute before the rest of the ballot, because the ballot includes XML elements
+	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chAPIa_BallotReceived_uxVotedChoice, m_ukmChoices);	// Save the attribute before the rest of the ballot, because the ballot includes XML elements
 	pbinXmlAttributes->BinAppendXmlAttributeTimestamp(d_chAPIa_BallotReceived_tsConfirmation, m_tsChoicesReceived);
 	IEventBallot::XmlSerializeCore(IOUT pbinXmlAttributes);
 	}
@@ -251,9 +336,15 @@ CEventBallotReceived::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttribute
 void
 CEventBallotReceived::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	{
-	pXmlNodeElement->UpdateAttributeValueUIntHexadecimal(d_chAPIa_BallotReceived_uVotedChoice, OUT_F_UNCH &m_ukmChoices);
+	pXmlNodeElement->UpdateAttributeValueUIntHexadecimal(d_chAPIa_BallotReceived_uxVotedChoice, OUT_F_UNCH &m_ukmChoices);
 	pXmlNodeElement->UpdateAttributeValueTimestamp(d_chAPIa_BallotReceived_tsConfirmation, OUT_F_UNCH &m_tsChoicesReceived);
 	IEventBallot::XmlUnserializeCore(pXmlNodeElement);
+	}
+
+PSZUC
+CEventBallotReceived::PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const
+	{
+	return pstrScratchBuffer->Format("Please vote: $S\n$S", &m_strTitle, &m_strDescription);
 	}
 
 void
@@ -263,9 +354,10 @@ CEventBallotReceived::SetChoices(UINT_BALLOT_CHOICES ukmChoices)
 		return;	// Nothing changed
 	m_ukmChoices = ukmChoices;
 	m_pVaultParent_NZ->SetModified();
-//	Event_UpdateWidgetWithinParentChatLog();	// BUGGY!
+	ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree();
+
 	// Send the selected choices to the ballot creator
 	CBinXcpStanzaTypeInfo binXcpStanza(this);
-	binXcpStanza.BinAppendTextSzv_VE("<" d_szXCP_"x" _tsI " v='$u'/>", m_tsOther, m_ukmChoices);	// TODO: rewrite this with more elegant code!
-	binXcpStanza.XcpSendStanzaToContact(m_pContactGroupSender_YZ);
+	binXcpStanza.BinAppendTextSzv_VE("<" d_szXCP_"x" _tsI d_szAPIa_BallotReceived_uxVotedChoice_ux "/>", m_tsOther, m_ukmChoices);	// TODO: rewrite this with more elegant code!
+	binXcpStanza.XcpSendStanzaToContact(PGetContactForReply_YZ());
 	}

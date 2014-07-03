@@ -326,10 +326,12 @@ public:
 	QTextBlock ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const;
 	QTextBlock ChatLog_GetTextBlockRelatedToWidget(QTextEdit * pwEditChatLog) const;
 	void ChatLog_UpdateEventWithinWidget(QTextEdit * pwEditChatLog);
+	void ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree();
 	const QBrush & ChatLog_OGetBrushForEvent() const;
 	PSZUC ChatLog_PszGetNickNameOfContact() const;
 
 	ITreeItemChatLogEvents * PGetContactOrGroup_NZ() const;
+	TContact * PGetContactForReply_YZ() const;
 	TAccountXmpp * PGetAccount_NZ() const;
 	CSocketXmpp * PGetSocket_YZ() const;
 	CSocketXmpp * PGetSocketOnlyIfReady() const;

@@ -1846,6 +1846,7 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chSourcePvPv					'P'	// Two pointers (one is the beginning and the other is the end).  The nummber of bytes representing the source is the difference between the pointers.
 #define d_chSourcePCXmlNode				'N'	// Serialize the content of a CXmlNode* (at the moment only {Nf} is allowed
 #define d_chSourcePCArrayPsz			'L' // Encode the content of a CArrayPsz* into an HTML list items (example: "<ul><li>example.com</li><li>cambrian.org</li></ul>")
+#define d_chSourceContactIdentifier		'i'
 #define d_chSourceJidBare				'j'
 #define d_chSourceJidFull				'J'
 #define d_chSourcePQDateTime			'D'	// Could be removed, not really used
@@ -1943,6 +1944,8 @@ union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outs
 	const QByteArray * parrayb;
 	const CArrayPsz * parraypsz;
 	const ITreeItem * piTreeItem;
+	const TContact * pContact;
+	const TAccountXmpp * pAccount;
 	QDateTime * pdtuDateTime;
 	UINT uValue;
 	UINT bValue;
@@ -2203,7 +2206,14 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 					BinAppendText("</ul></div>");
 					}
 				break;
-
+			case d_chSourceContactIdentifier: // ^i
+				u.pContact = va_arg(vlArgs, TContact *);
+				if (u.pContact != NULL)
+					{
+					Assert(u.pContact->EGetRuntimeClass() == RTI(TContact));
+					BinAppendXmlTextStr(u.pContact->m_strJidBare);
+					}
+				break;
 			case d_chSourceJidBare:		// ^j
 			case d_chSourceJidFull:		// ^J
 				u.piTreeItem = va_arg(vlArgs, ITreeItem *);
