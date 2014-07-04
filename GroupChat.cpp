@@ -141,3 +141,11 @@ CBinXcpStanzaType::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent
 		BinAppendXmlAttributeOfContactIdentifier(d_chXCPa_pContactGroupSender, pEvent->m_pContactGroupSender_YZ);
 		}
 	}
+
+void
+CBinXcpStanzaType::BinXmlAppendAttributeUIntHexadecimalExcludeForXcp(CHS chAttributeName, UINT uAttributeValueHexadecimal, UINT kmFlagsExcludeForXcp)
+	{
+	if (FSerializingEventForXcp())
+		uAttributeValueHexadecimal &= ~kmFlagsExcludeForXcp;	// Exclude some flags
+	BinAppendXmlAttributeUIntHexadecimal(chAttributeName, uAttributeValueHexadecimal);
+	}

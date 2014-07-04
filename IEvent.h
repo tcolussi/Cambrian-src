@@ -166,11 +166,13 @@ protected:
 	CBinXcpStanzaType(EStanzaType eStanzaType);
 public:
 	inline BOOL FSerializingEventToDisk() const { return (m_pContact == NULL); }
+	inline BOOL FSerializingEventForXcp() const { return (m_pContact != NULL); }
 	void BinXmlInitStanzaWithGroupSelector(TGroup * pGroup);
 	void BinXmlInitStanzaWithXmlRaw(PSZUC pszMessageXml);
 	void BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact);
 	void BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember);
 	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
+	void BinXmlAppendAttributeUIntHexadecimalExcludeForXcp(CHS chAttributeName, UINT uAttributeValueHexadecimal, UINT kmFlagsExcludeForXcp);
 
 	BOOL XcpApi_FIsXmlElementOpened() const { return (m_ibXmlApiReply > 0); }
 	BOOL XcpApi_FIsXmlElementClosedBecauseOfError() const { return (m_ibXmlApiReply == 0); }
@@ -353,6 +355,7 @@ protected:
 public:
 	static EEventClass S_EGetEventClassFromXmlStanzaXCP(IN const CXmlNode * pXmlNodeEventsStanza, INOUT TContact * pContact, INOUT ITreeItemChatLogEvents * pChatLogEvents, INOUT CBinXcpStanzaType * pbinXmlStanzaReply);
 	static IEvent * S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEventID);
+	static IEvent * S_PaAllocateEvent_YZ(const CXmlNode * pXmlNodeEvent, const TIMESTAMP * ptsEventID);
 	static int S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort = d_zNA);
 }; // IEvent
 

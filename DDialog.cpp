@@ -179,6 +179,7 @@ DDialogOkCancelWithLayouts::Dialog_AddButtonsOkCancel_RenameButtonOk(DDialogOkCa
 void
 DDialogOkCancelWithLayouts::Dialog_RenameButtonOk(PSZAC pszmTextAndToolTipButtonOk, EMenuAction eMenuIconButtonOK)
 	{
+	Assert(m_poLayoutButtons != NULL);
 	m_pwButtonOK->Button_SetTextAndToolTip(pszmTextAndToolTipButtonOk);
 	if (eMenuIconButtonOK != ezMenuActionNone)
 		m_pwButtonOK->Button_SetIcon(eMenuIconButtonOK);

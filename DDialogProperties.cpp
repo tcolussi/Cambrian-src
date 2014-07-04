@@ -369,10 +369,19 @@ DDialogBallotSend::DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, C
 	m_pContactOrGroup = pContactOrGroup;
 	CEventBallotSent * paEventBallotInit = NULL;
 	if (pEventBallotInit == NULL)
-		paEventBallotInit = pEventBallotInit = new CEventBallotSent(NULL);	// Create an empty ballot event to initialize the dialog
+		paEventBallotInit = pEventBallotInit = new CEventBallotSent;	// Create an empty ballot event to initialize the dialog
 
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotSend(SL_ButtonOK_clicked), "Send Ballot |Broadcast the ballot the group", eMenuAction_BallotSend);
-	m_pwButtonOK->setDefault(false);
+	Assert(m_poLayoutButtons != NULL);
+	WButtonTextWithIcon * pwButtonPreview = new WButtonTextWithIcon("Preview |Review your ballot before sending it to the group", eMenuAction_FindText);
+	m_poLayoutButtons->addWidget(pwButtonPreview);
+	connect(pwButtonPreview, SIGNAL(clicked()), this, SLOT(SL_buttonBallotPreview()));
+
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotSend(SL_ButtonBallotSend), "Send Ballot |Broadcast the ballot the group", eMenuAction_ContactInvite);
+	//m_pwButtonOK->setDefault(false);	// Do not allow the Enter key to close the dialog
+	pwButtonPreview->setDefault(true);	// Need to document this code
+	pwButtonPreview->setAutoDefault(false);
+	pwButtonPreview->setDefault(false);
+
 
 	OLayoutForm * pLayout = new OLayoutForm(m_poLayoutBody);
 	m_pwEditTitle = pLayout->Layout_PwAddRowLabelEdit("Title:", pEventBallotInit->m_strTitle);
@@ -393,9 +402,16 @@ DDialogBallotSend::DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, C
 			}
 		}
 
-	WButtonTextWithIcon * pwButtonAdd = new WButtonTextWithIcon("&New Question |Add a new question to the ballot", eMenuIconAdd);
+	WButtonTextWithIcon * pwButtonAdd = new WButtonTextWithIcon("Add Additional Choice |Add a new choice to the ballot", eMenuIconAdd);
 	m_poLayoutBody->addWidget(pwButtonAdd);
 	connect(pwButtonAdd, SIGNAL(clicked()), this, SLOT(SL_ButtonAdd()));
+
+	m_pwButtonAllowMultipleChoices = new WButtonCheckbox("Allow Multiple Choices|Allow the voter to select multiple choices on the ballot", pEventBallotInit->m_uFlagsBallot & CEventBallotSent::FB_kfAllowMultipleChoices);
+	m_poLayoutBody->addWidget(m_pwButtonAllowMultipleChoices);
+
+	m_pwButtonAllowComments = new WButtonCheckbox("Allow Feedback Comments|Allow the voter to include a comment along with his/her choices", (pEventBallotInit->m_uFlagsBallot & CEventBallotSent::FB_kfAllowNoComments) == 0);
+	m_poLayoutBody->addWidget(m_pwButtonAllowComments);
+
 	delete paEventBallotInit;
 	m_pwEditTitle->setFocus();
 	}
@@ -404,13 +420,86 @@ DDialogBallotSend::~DDialogBallotSend()
 	{
 	}
 
-void
-DDialogBallotSend::SL_ButtonOK_clicked()
+class CBinXcpStanzaEventPreview : public CBinXcpStanzaType
+{
+protected:
+	TContact * m_paContact;		// We need a contact to serialize to XCP, so use an empty contact so there is no interference with existing data
+	IEvent * m_paEventReceived;
+public:
+	CBinXcpStanzaEventPreview(ITreeItemChatLogEvents * pContactOrGroup);
+	~CBinXcpStanzaEventPreview();
+	void TransformEvents(IN_MOD_TMP IEvent * paEventSent, INOUT IEvent ** ppEventReceived);
+	void TransformEvents_PA(PA_DELETING IEvent * paEventSent, INOUT PA_CHILD IEvent ** ppaEventReceived);
+};
+
+CBinXcpStanzaEventPreview::CBinXcpStanzaEventPreview(ITreeItemChatLogEvents * pContactOrGroup) : CBinXcpStanzaType(eStanzaType_zInformation)
 	{
-	// Always create a new ballot when the user click on OK
-	CEventBallotSent * pEventBallot = new CEventBallotSent(NULL);
-	pEventBallot->m_strTitle = m_pwEditTitle;
-	pEventBallot->m_strDescription = m_pwEditDescription;
+	TAccountXmpp * pAccount = pContactOrGroup->m_pAccount;
+	m_pContact = m_paContact = new TContact(pAccount);	// We will serialize using a dummy contact
+	m_pContact->m_strNameDisplayTyped = m_pContact->m_pAccount->m_pProfileParent->m_strNameProfile;	// Use the profile name as the contact so the preview looks like someone is receiving the event from the sender
+	m_paEventReceived = NULL;
+	}
+
+CBinXcpStanzaEventPreview::~CBinXcpStanzaEventPreview()
+	{
+	delete m_paContact;
+	delete m_paEventReceived;
+	}
+
+void
+CBinXcpStanzaEventPreview::TransformEvents(IN_MOD_TMP IEvent * paEventSent, INOUT IEvent ** ppEventReceived)
+	{
+	Assert(paEventSent != NULL);
+	Assert(paEventSent->m_pVaultParent_NZ == NULL);
+	Assert(ppEventReceived != NULL);
+	Assert(*ppEventReceived != NULL);
+	CVaultEvents * pVault = m_pContact->Vault_PGet_NZ();	// Get an empty vault from the dummy contact
+	paEventSent->m_pVaultParent_NZ = pVault;				// We need a valid pointer because the event may need to access the vault, contact or account
+	BinXmlSerializeEventForXcpCore(paEventSent, d_ts_zNA);
+
+	CXmlTree oXmlTree;
+	(void)oXmlTree.EParseFileDataToXmlNodesCopy_ML(IN *this);
+	IEvent * pEventReceived = *ppEventReceived;
+	pEventReceived->m_pVaultParent_NZ = pVault;
+	pEventReceived->XmlUnserializeCore(IN &oXmlTree);
+	}
+
+void
+CBinXcpStanzaEventPreview::TransformEvents_PA(PA_DELETING IEvent * paEventSent, INOUT PA_CHILD IEvent ** ppaEventReceived)
+	{
+	TransformEvents(paEventSent, ppaEventReceived);
+	delete paEventSent;
+	m_paEventReceived = *ppaEventReceived;	// Remember the pointer, so the destructor may delete the object
+	}
+
+void
+DDialogBallotSend::SL_buttonBallotPreview()
+	{
+	// To preview a ballot, create a CEventBallotSent and serialize it into XML, then create a CEventBallotReceived and initialize it from the serialized XML.
+	// Although this may not be the most CPU efficient method, it is the most reliable code, and this code may be reused later for all kind of events.
+	//
+	CEventBallotReceived * paEventBallotReceived = new CEventBallotReceived(NULL);
+	CBinXcpStanzaEventPreview binXcpStanza(m_pContactOrGroup);
+	binXcpStanza.TransformEvents_PA(PA_DELETING PaAllocateBallot(), INOUT PA_CHILD (IEvent **)&paEventBallotReceived);
+	paEventBallotReceived->DisplayDialogBallotVote(TRUE);
+	}
+
+void
+DDialogBallotSend::SL_ButtonBallotSend()
+	{
+	// Always create a new ballot when the user click on send (there is no such thing as re-sending an old ballot)
+	m_pContactOrGroup->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD PaAllocateBallot());
+	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
+	}
+
+CEventBallotSent *
+DDialogBallotSend::PaAllocateBallot()
+	{
+	CEventBallotSent * paEventBallot = new CEventBallotSent;
+	paEventBallot->m_strTitle = m_pwEditTitle;
+	paEventBallot->m_strDescription = m_pwEditDescription;
+	if (m_pwButtonAllowMultipleChoices->isChecked())
+		paEventBallot->m_uFlagsBallot |= CEventBallotSent::FB_kfAllowMultipleChoices;
 
 	CStr strQuestion;
 	// Add the ballot questions to the event
@@ -422,12 +511,11 @@ DDialogBallotSend::SL_ButtonOK_clicked()
 		strQuestion = pLayout->m_pwEditChoice;
 		if (strQuestion.FIsEmptyString())
 			continue;	// Don't include empty questions
-		_CEventBallotChoice * pChoice = pEventBallot->PAllocateNewChoice();
+		_CEventBallotChoice * pChoice = paEventBallot->PAllocateNewChoice();
 		pChoice->m_strQuestion = strQuestion;
 		}
-	m_pContactOrGroup->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEventBallot);
-	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
-	}
+	return paEventBallot;
+	} // PaAllocateBallot()
 
 void
 DDialogBallotSend::SL_ButtonAdd()
@@ -464,7 +552,7 @@ _OLayoutBallotChoice::_OLayoutBallotChoice(PA_PARENT DDialogBallotSend * pwDialo
 	m_pwEditChoice = new WEdit;
 	connect(m_pwEditChoice, SIGNAL(returnPressed()), pwDialogBallotParent, SLOT(SL_ButtonAdd()));
 	connect(m_pwButtonRemove, SIGNAL(clicked()), pwDialogBallotParent, SLOT(SL_ButtonRemove()));
-	Layout_AddLabelAndWidgetH_PA("Ballot Question:", m_pwEditChoice);
+	Layout_AddLabelAndWidgetH_PA("Ballot Choice:", m_pwEditChoice);
 
 	QWidget::setTabOrder((poLayoutLast != NULL) ? poLayoutLast->m_pwEditChoice : (QWidget *)pwDialogBallotParent->m_pwEditDescription, m_pwEditChoice);	// Make sure the new edit follows a smooth smooth continuity with others
 	}
@@ -483,40 +571,53 @@ _OLayoutBallotChoice::~_OLayoutBallotChoice()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void
-CEventBallotReceived::DisplayDialogBallotVote()
+CEventBallotReceived::DisplayDialogBallotVote(BOOL fPreviewMode)
 	{
-	DDialogBallotVote dialog(this);
+	DDialogBallotVote dialog(this, fPreviewMode);
 	dialog.FuExec();
 	}
 
 #define SL_DDialogBallotVote(pfmSlot)		SL_DDialog(pfmSlot, DDialogBallotVote)
-DDialogBallotVote::DDialogBallotVote(CEventBallotReceived * pEventBallotVote) : DDialogOkCancelWithLayouts("Vote", eMenuAction_BallotSend)
+DDialogBallotVote::DDialogBallotVote(CEventBallotReceived * pEventBallotVote, BOOL fPreviewMode) : DDialogOkCancelWithLayouts("Vote", eMenuAction_BallotSend)
 	{
 	m_pEventBallotVote = pEventBallotVote;
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotVote(SL_ButtonVote), "Vote |Cast a vote on this ballot", eMenuAction_BallotSend);
+	TContact * pContactSender = pEventBallotVote->PGetContactForReply_YZ();	// Get the contact who sent the ballot
+
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotVote(SL_ButtonVote), "Vote |Cast my vote on this ballot", eMenuAction_BallotSend);
+	m_pwButtonOK->setDisabled(fPreviewMode);	// Disable the OK button if in preview mode so the vote does not get sent
 
 	Dialog_SetCaption(pEventBallotVote->m_strTitle);
 	m_poLayoutBody->addWidget(new WLabelSelectableWrap(pEventBallotVote->m_strDescription));
-	//m_poLayoutBody->addWidget(new WLabel("Please select one option:"));
 
 	WGroupBox * pwGroupBox = new WGroupBox(m_poLayoutBody);
-	pwGroupBox->Widget_SetTitleFormat_VE_Gsb("Please select one option:");
+	pwGroupBox->Widget_SetTitleFormat_VE_Gsb("Please make your choice:");
 	m_poLayoutBody->addWidget(pwGroupBox);
 
 	UINT_BALLOT_CHOICES ukfChoiceMask = 0x00000001;	// Initialize the first bit
-	OLayoutVertical * pLayoutOptions = new OLayoutVertical(pwGroupBox);
+	OLayoutVertical * pLayoutChoices = new OLayoutVertical(pwGroupBox);
 	_CEventBallotChoice ** ppChoiceStop;
 	_CEventBallotChoice ** ppChoice = pEventBallotVote->m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
 		{
 		_CEventBallotChoice * pChoice = *ppChoice++;
-		WButtonRadio * pwButtonRadio = new WButtonRadio;
-		m_arraypwButtonOptions.Add(pwButtonRadio);
-		pwButtonRadio->setText(pChoice->m_strQuestion);
-		pLayoutOptions->addWidget(pwButtonRadio);
-		//pLayoutOptions->addWidget(new WLabel(pChoice->m_strQuestion));
-		pwButtonRadio->setChecked((pEventBallotVote->m_ukmChoices & ukfChoiceMask) != 0);
+		QAbstractButton * pwButtonChoice;
+		if (pEventBallotVote->m_uFlagsBallot & CEventBallotReceived::FB_kfAllowMultipleChoices)
+			pwButtonChoice = new WButtonCheckbox;
+		else
+			pwButtonChoice = new WButtonRadio;
+		m_arraypwButtonsChoices.Add(pwButtonChoice);
+		pwButtonChoice->setChecked((pEventBallotVote->m_ukmChoices & ukfChoiceMask) != 0);
+		pwButtonChoice->setText(pChoice->m_strQuestion);
+		pLayoutChoices->addWidget(pwButtonChoice);
 		ukfChoiceMask <<= 1;
+		} // while
+
+	m_pwEditComments = NULL;
+	if ((pEventBallotVote->m_uFlagsBallot & CEventBallotReceived::FB_kfAllowNoComments) == 0)
+		{
+		m_poLayoutDialog->Layout_PwAddRowLabel_VE("Send a feedback comment to $s", pContactSender->TreeItem_PszGetNameDisplay());
+		m_pwEditComments = new WEditTextArea(pEventBallotVote->m_strComment);
+		m_poLayoutDialog->addWidget(m_pwEditComments);
 		}
 	}
 
@@ -526,7 +627,7 @@ DDialogBallotVote::SL_ButtonVote()
 	UINT_BALLOT_CHOICES ukfChoiceMask = 0x00000001;	// Initialize the first bit
 	UINT_BALLOT_CHOICES ukmChoices = 0;			// Nothing selected yet
 	QWidget ** ppWidgetStop;
-	QWidget ** ppWidget = m_arraypwButtonOptions.PrgpGetWidgetsStop(OUT &ppWidgetStop);
+	QWidget ** ppWidget = m_arraypwButtonsChoices.PrgpGetWidgetsStop(OUT &ppWidgetStop);
 	while (ppWidget != ppWidgetStop)
 		{
 		WButtonRadio * pwButtonRadio = (WButtonRadio *)*ppWidget++;
@@ -539,6 +640,7 @@ DDialogBallotVote::SL_ButtonVote()
 		EMessageBoxWarning("Please select a choice!");
 		return;
 		}
-	m_pEventBallotVote->SetChoices(ukmChoices);
+	m_pEventBallotVote->UpdateBallotChoices(ukmChoices, m_pwEditComments);
 	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
 	}
+

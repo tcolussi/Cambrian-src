@@ -178,13 +178,18 @@ public:
 	WEdit * m_pwEditTitle;
 	WEditTextArea * m_pwEditDescription;
 	OLayoutVertical * m_pLayoutQuestions;
+	WButtonCheckbox * m_pwButtonAllowMultipleChoices;
+	WButtonCheckbox * m_pwButtonAllowComments;
+
 
 public:
 	DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, CEventBallotSent * pEventBallotInit = NULL);
 	~DDialogBallotSend();
+	CEventBallotSent * PaAllocateBallot();
 
 protected slots:
-	void SL_ButtonOK_clicked();
+	void SL_buttonBallotPreview();
+	void SL_ButtonBallotSend();
 	void SL_ButtonAdd();
 	void SL_ButtonRemove();
 
@@ -195,21 +200,16 @@ protected slots:
 class DDialogBallotVote : public DDialogOkCancelWithLayouts
 {
 protected:
+	BOOL m_fPreviewMode;
 	CEventBallotReceived * m_pEventBallotVote;
-	CArrayPtrQWidgets m_arraypwButtonOptions;
-
+	CArrayPtrQWidgets m_arraypwButtonsChoices;
+	WEditTextArea * m_pwEditComments;
 public:
-	DDialogBallotVote(CEventBallotReceived * pEventBallotVote);
+	DDialogBallotVote(CEventBallotReceived * pEventBallotVote, BOOL fPreviewMode);
 
 protected slots:
 	void SL_ButtonVote();
 	SL_OBJECT(DDialogBallotVote)
-};
-
-class WButtonRadio : public QRadioButton
-{
-public:
-
 };
 
 #endif // DDIALOGPROPERTIES_H

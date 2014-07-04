@@ -108,6 +108,20 @@ public:
 	WButtonTextWithIcon(PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIcon);
 };
 
+class WButtonCheckbox : public QCheckBox
+{
+public:
+	WButtonCheckbox();
+	WButtonCheckbox(PSZAC pszmButtonTextAndToolTip, BOOL fChecked);
+};
+
+class WButtonRadio : public QRadioButton
+{
+public:
+
+};
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class WEdit : public QLineEdit
 {
@@ -475,6 +489,7 @@ int  Widget_GetWidthMinimumRecommended(const QWidget * pwWidget);
 void Widget_SetWidth(INOUT QWidget * pwWidget, int nWidth);
 void Widget_ScrollToEnd(INOUT QAbstractScrollArea * pwWidget);
 
+void WidgetButton_SetTextAndToolTip(INOUT QAbstractButton * pwButton, PSZAC pszmButtonTextAndToolTip);
 
 void SetCursorWait();
 void SetCursorRestoreDefault();

@@ -1866,15 +1866,15 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 //	The encoding characters are used by methods BinAppendTextSzv_VL() and BinAppendDataEncoded().
 #define d_chEncodingNone				'n'	// No encoding - just copy the source directly into the bin.  {Bn} is the same as $B
 #define d_chEncodingHexadecimal			'f'	// Encode the source in Hexadecimal (Base16)
-//#define d_chEncodingHexadecimalReversed	'F'
+//#define d_chEncodingHexadecimalReversed	'F'	// This may be never used because Base85 is superior
 #define d_chEncodingBase41				'!'	// Encode the source in Base41 (the last character of Base41 is the character !).  Base41 is useful to encode hashes into filenames.
 #define d_chEncodingBase58				'z' // Encode the source in Base58 (the last character of Base58 is the letter z)
 #define d_chEncodingBase64				'/'	// Encode the source in Base64 (typical values are {B/}, {S/}, {s/} and {p/}
 #define d_chEncodingBase64Url			'_'	// Encode the source in Base64url (RFC 4648)
 #define d_chEncodingBase85				'|'	// Encode the source in Base85 (one of the last character of Base85 is |)
 #define d_chEncodingHtml				'H'	// Encode the source string in HTML.  The source MUST be a null-terminated string.  Since method BinAppendDataEncoded() ignores the parameter cbData, the valid options are {sH}, {SH}, {BH} and {YH}.
-//#define d_chEncodingHtmlLink			'l' // Encode an HTML hyperlink
-//#define d_chEncodingHtmlButton			'b' // Encode an HTML button (implemented as an hyperlink, but with styles and colors making it look as a button)
+#define d_chEncodingXmlAttributeCh		'a' // Encode the source string as an XML attribute (of course if the value is not empty).  Valid options {Sa}, {sa}
+#define d_chEncodingXmlAttributePsz		'A'
 #define d_chEncodingCharacterSingle		'1'	// Encode (add) a single Unicode character (this is useful to report an invalid character when parsing data).  Typically {s1} is supported
 #define d_chEncodingFingerprint			'G'	// Encode the CBin* into a fingerprint.  At the moment, only {hG} and {BG} are valid.
 #define d_chEncodingPercentURL			'%'	// Encode a URL with the % escape (it is called percent encode)

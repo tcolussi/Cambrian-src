@@ -13,134 +13,135 @@ TEMPLATE = app
 
 PRECOMPILED_HEADER = PreCompiledHeaders.h
 
-SOURCES += main.cpp\
-	WMainWindow.cpp \
-	WChatLog.cpp \
-	TAccount.cpp \
-    CChatConfiguration.cpp \
+SOURCES += \
     CArray.cpp \
-    DebugUtil.cpp \
-	TContact.cpp \
-    WChatInput.cpp \
-    Xml.cpp \
-    CMemoryAccumulator.cpp \
-    List.cpp \
-    CMemoryHeap.cpp \
     CBin.cpp \
-    StringUtilities.cpp \
-	DialogAccountNew.cpp \
-    Sockets.cpp \
-    HashMd5.cpp \
-    MenuActions.cpp \
-    DialogContactNew.cpp \
-    ITreeItem.cpp \
-    EnumerationMap.cpp \
-    SocketTasks.cpp \
-    QtUtilities.cpp \
-    ErrorMessages.cpp \
-    IRuntimeObject.cpp \
-    FilePathUtilities.cpp \
-    StringsShared.cpp \
-    WFindText.cpp \
-	TCertificate.cpp \
-    HashSha1.cpp \
-    TMarketplace.cpp \
-    WMarketplace.cpp \
+    CChatConfiguration.cpp \
     CHashTable.cpp \
+    CMemoryAccumulator.cpp \
+    CMemoryHeap.cpp \
+    CStr.cpp \
+    DDialog.cpp \
+    DDialogProperties.cpp \
+    DebugUtil.cpp \
+    DialogAccountNew.cpp \
+    DialogContactNew.cpp \
+    DialogInvitations.cpp \
+    EnumerationMap.cpp \
+    ErrorMessages.cpp \
+    FilePathUtilities.cpp \
+    GroupChat.cpp \
+    HashMd5.cpp \
+    HashSha1.cpp \
+    HashSha256.cpp \
+    Idle.cpp \
+    IEvent.cpp \
+    IEventBallot.cpp \
+    InternetWebServices.cpp \
+    IRuntimeObject.cpp \
+    ITreeItem.cpp \
+    ITreeItemChatLogEvents.cpp \
+    List.cpp \
+    main.cpp \
+    MenuActions.cpp \
+    QtUtilities.cpp \
+    Sockets.cpp \
+    SocketTasks.cpp \
+    Sort.cpp \
+    StringNumeric.cpp \
+    StringsShared.cpp \
+    StringUtilities.cpp \
+    TAccount.cpp \
+    TApplicationMayanX.cpp \
+    TBrowser.cpp \
+    TCertificate.cpp \
+    TContact.cpp \
+    TGroup.cpp \
+    TMarketplace.cpp \
+    TProfile.cpp \
+    TWallet.cpp \
+    WChatInput.cpp \
+    WChatLog.cpp \
+    WFindText.cpp \
+    WGrid.cpp \
+    WLayoutAccount.cpp \
+    WLayoutApplicationMayanX.cpp \
+    WLayoutBrowser.cpp \
+    WLayoutCertificate.cpp \
     WLayoutChatLog.cpp \
     WLayoutContainer.cpp \
-    WNavigationTree.cpp \
-    WLayoutCertificate.cpp \
-	DialogInvitations.cpp \
-	WNotices.cpp \
-    CStr.cpp \
-    DDialogProperties.cpp \
-    Idle.cpp \
-    TWallet.cpp \
-    WGrid.cpp \
-    DDialog.cpp \
-    TGroup.cpp \
-    IEvent.cpp \
-    WLayoutApplicationMayanX.cpp \
-    Sort.cpp \
-    TProfile.cpp \
-    StringNumeric.cpp \
     WLayoutProfile.cpp \
-    HashSha256.cpp \
-    WLayoutAccount.cpp \
-    InternetWebServices.cpp \
-	TBrowser.cpp \
-    TApplicationMayanX.cpp \
-    GroupChat.cpp \
-    ChatLogEvents.cpp \
+    WMainWindow.cpp \
+    WMarketplace.cpp \
+    WNavigationTree.cpp \
+    WNotices.cpp \
     Xcp.cpp \
-    WLayoutBrowser.cpp \
     XcpApi.cpp \
-	IEventBallot.cpp
+    Xml.cpp
 
 
-HEADERS += PreCompiledHeaders.h \
-	QtUtilities.h \
-	DDialog.h \
-	WMainWindow.h \
-	IEvent.h \
-	WChatLog.h \
-	Sockets.h  \
-	TAccount.h \
-    CChatConfiguration.h \
-    DataTypesAndMacros.h \
+HEADERS += \
     CArray.h \
-    DebugUtil.h \
-	TContact.h \
-    WChatInput.h \
-	WFindText.h \
-    Xml.h \
-    CMemoryAccumulator.h \
-    List.h \
-    CMemoryHeap.h \
     CBin.h \
+    CChatConfiguration.h \
+    CHashTable.h \
+    CMemoryAccumulator.h \
+    CMemoryHeap.h \
+    CStr.h \
+    DataTypesAndMacros.h \
+    DDialog.h \
+    DDialogProperties.h \
+    DebugUtil.h \
+    DialogAccountNew.h \
+    DialogContactNew.h \
+    DialogInvitations.h \
+    EnumerationMap.h \
     ErrorCodes.h \
     ErrorMessages.h \
-    StringUtilities.h \
-	DialogInvitations.h \
-	DialogAccountNew.h \
-    MenuActions.h \
-    DialogContactNew.h \
-    ITreeItem.h \
-    EnumerationMap.h \
-    SocketTasks.h \
-    IRuntimeObject.h \
     FilePathUtilities.h \
-	StringsShared.h \
-	TCertificate.h \
-    TMarketplace.h \
-    WMarketplace.h \
-    CHashTable.h \
-    WLayoutContainer.h \
-    WLayoutChatLog.h \
-    WNavigationTree.h \
-    WLayoutCertificate.h \
-	WNotices.h \
-    CStr.h \
-    DDialogProperties.h \
-    TWallet.h \
-	WGrid.h \
-	TGroup.h \
-    WLayoutApplicationMayanX.h \
-    Sort.h \
-    TProfile.h \
-    StringNumeric.h \
-    WLayoutProfile.h \
-    WLayoutAccount.h \
-    InternetWebServices.h \
-	TBrowser.h \
-    TApplicationMayanX.h \
     GroupChat.h \
-    ChatLogEvents.h \
-    Xcp.h \
+    IEvent.h \
+    IEventBallot.h \
+    InternetWebServices.h \
+    IRuntimeObject.h \
+    ITreeItem.h \
+    ITreeItemChatLogEvents.h \
+    List.h \
+    MenuActions.h \
+    QtUtilities.h \
+    Sockets.h \
+    SocketTasks.h \
+    Sort.h \
+    StringNumeric.h \
+    StringsShared.h \
+    StringUtilities.h \
+    TAccount.h \
+    TApplicationMayanX.h \
+    TBrowser.h \
+    TCertificate.h \
+    TContact.h \
+    TGroup.h \
+    TMarketplace.h \
+    TProfile.h \
+    TWallet.h \
+    WChatInput.h \
+    WChatLog.h \
+    WFindText.h \
+    WGrid.h \
+    WLayoutAccount.h \
+    WLayoutApplicationMayanX.h \
     WLayoutBrowser.h \
+    WLayoutCertificate.h \
+    WLayoutChatLog.h \
+    WLayoutContainer.h \
+    WLayoutProfile.h \
+    WMainWindow.h \
+    WMarketplace.h \
+    WNavigationTree.h \
+    WNotices.h \
+    Xcp.h \
     XcpApi.h \
-	IEventBallot.h
+    Xml.h
 
 
 FORMS +=

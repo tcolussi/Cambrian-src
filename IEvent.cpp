@@ -73,6 +73,14 @@ Timestamp_GetCurrentDateTime()
 	}
 
 IEvent *
+IEvent::S_PaAllocateEvent_YZ(const CXmlNode * pXmlNodeEvent, const TIMESTAMP * ptsEventID)
+	{
+	Assert(pXmlNodeEvent != NULL);
+	Assert(pXmlNodeEvent->m_pszuTagName != NULL);
+	return S_PaAllocateEvent_YZ(EEventClassFromPsz(pXmlNodeEvent->m_pszuTagName), ptsEventID);
+	}
+
+IEvent *
 IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEventID)
 	{
 	Endorse(ptsEventID == NULL);	// Assign the value of the current date and time (aka: now)

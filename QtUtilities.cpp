@@ -214,10 +214,13 @@ WButtonText::WButtonText(PSZAC pszmButtonTextAndToolTip)
 void
 WButtonText::Button_SetTextAndToolTip(PSZAC pszmButtonTextAndToolTip)
 	{
+	WidgetButton_SetTextAndToolTip(INOUT this, pszmButtonTextAndToolTip);
+	/*
 	PSZAC pszToolTip = PszroGetToolTipNext(pszmButtonTextAndToolTip);
 	setText(QString::fromUtf8(pszmButtonTextAndToolTip, pszToolTip - pszmButtonTextAndToolTip));
 	if (pszToolTip != NULL && *pszToolTip != '\0')
 		setToolTip(QString::fromUtf8(pszToolTip + 1));
+	*/
 	}
 
 void
@@ -231,6 +234,15 @@ WButtonTextWithIcon::WButtonTextWithIcon(PSZAC pszmButtonTextAndToolTip, EMenuAc
 	Button_SetIcon(eMenuIcon);
 	}
 
+WButtonCheckbox::WButtonCheckbox()
+	{
+	}
+
+WButtonCheckbox::WButtonCheckbox(PSZAC pszmButtonTextAndToolTip, BOOL fChecked)
+	{
+	WidgetButton_SetTextAndToolTip(INOUT this, pszmButtonTextAndToolTip);
+	setChecked(fChecked);
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WEdit::WEdit()
@@ -1631,6 +1643,15 @@ Widget_ScrollToEnd(QAbstractScrollArea * pwWidget)
 	}
 
 void
+WidgetButton_SetTextAndToolTip(QAbstractButton * pwButton, PSZAC pszmButtonTextAndToolTip)
+	{
+	PSZAC pszToolTip = PszroGetToolTipNext(pszmButtonTextAndToolTip);
+	pwButton->setText(QString::fromUtf8(pszmButtonTextAndToolTip, pszToolTip - pszmButtonTextAndToolTip));
+	if (pszToolTip != NULL && *pszToolTip != '\0')
+		pwButton->setToolTip(QString::fromUtf8(pszToolTip + 1));
+	}
+
+void
 CStr::CopyStringToClipboard() const
 	{
 	Clipboard_SetText(*this);
@@ -1979,3 +2000,5 @@ CFileOpenWrite::CFileOpenWrite(const CStr & strFileName) : CFile(strFileName)
 	{
 	(void)open(QIODevice::WriteOnly);
 	}
+
+

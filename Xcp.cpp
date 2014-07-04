@@ -139,8 +139,6 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 	int cEventsRemaining;
 	PSZUC pszEventValue;
 
-	Assert(pVault->PFindEventNext(d_ts_zNULL, OUT &cEventsRemaining) == pVault->m_arraypaEvents.PvGetElementFirst_YZ());
-	Assert(cEventsRemaining == 0 || cEventsRemaining == pVault->m_arraypaEvents.GetSize() - 1);
 	BOOL fEventsOutOfSyncInChatLog = FALSE;			// The events in the Chat Log are out of sync and therefore display a special icon
 	TIMESTAMP_DELTA dtsOtherSynchronization = 1;	// By default, assume the events are NOT synchronized, therefore assign to the variable a non-zero value.
 	CHS chXCPe = d_chXCPe_zNA;			// Last known XCP element
@@ -739,7 +737,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 	if ((eEventClassXcp & eEventClass_kfNeverSerializeToXCP) == 0)
 		{
 		const int ibDataElementStart = m_paData->cbData;
-		Assert(ibDataElementStart > 0);
+		Assert(ibDataElementStart >= 0);
 		/*
 		TIMESTAMP tsEventID = pEvent->m_tsEventID;
 		TIMESTAMP tsOther = pEvent->m_tsOther;
@@ -884,7 +882,7 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 				// We have a new event to add to the Chat Log
 				tsEventLargest = tsEventID;
 				EventAllocate:
-				pEvent = IEvent::S_PaAllocateEvent_YZ(EEventClassFromPsz(pXmlNodeEvent->m_pszuTagName), IN &tsEventID);
+				pEvent = IEvent::S_PaAllocateEvent_YZ(IN pXmlNodeEvent, IN &tsEventID);
 				if (pEvent == NULL)
 					{
 					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to allocate event $t of class '$s'\n", tsEventID, pXmlNodeEvent->m_pszuTagName);
@@ -939,31 +937,6 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 	else
 		pParent->Vault_SetNotModified();
 	Assert(FEventsSortedByIDs());	// The events should always be sorted after being unserialized
-	#ifdef DEBUG
-	if (m_paArrayHdr != NULL && m_paArrayHdr->cElements > 0)
-		{
-		int cEventsRemaining;
-		IEvent * pEventFirst = PFindEventNextForXcp(d_ts_zNULL, OUT &cEventsRemaining);
-		Assert(pEventFirst == m_paArrayHdr->rgpvData[0]);
-		Assert(cEventsRemaining == m_paArrayHdr->cElements - 1);
-		if (pEventFirst != NULL)
-			{
-			IEvent * pEventNext = PFindEventNextForXcp(pEventFirst->m_tsEventID, &cEventsRemaining);
-			if (pEventNext != NULL)
-				{
-				Assert(pEventNext == m_paArrayHdr->rgpvData[1]);
-				Assert(cEventsRemaining == m_paArrayHdr->cElements - 2);
-				}
-			else
-				{
-				Assert(m_paArrayHdr->cElements == 1);
-				}
-			}
-		IEvent * pEventLast = PGetEventLast_YZ();
-		Assert(PFindEventNextForXcp(pEventLast->m_tsEventID, OUT &cEventsRemaining) == NULL);
-		Assert(cEventsRemaining == 0);
-		}
-	#endif
 	} // EventsUnserializeFromDisk()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1119,7 +1092,7 @@ CVaultEvents::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TM
 		}
 	else
 		{
-		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "PFindOrAllocateDataXmlLargeEvent_NZ() - Unable to find tsEventID $t, therefore initializing an empty cache entry!\n", tsEventID);
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "PFindOrAllocateDataXmlLargeEvent_NZ() - Unable to find tsEventID $t ({tL}), therefore initializing an empty cache entry!\n", tsEventID, tsEventID);
 		}
 	HashSha1_CalculateFromCBin(OUT &pDataXmlLargeEvent->m_hashXmlData, IN pDataXmlLargeEvent->m_binXmlData);	// Calculate the checksum for the data
 	plistaDataXmlLargeEvents->InsertNodeAtHead(PA_CHILD pDataXmlLargeEvent);	// Insert at the head, as the event is most likely to be accessed within the next minutes
@@ -1265,7 +1238,7 @@ CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONS
 		CXmlTree oXmlTree;
 		if (oXmlTree.EParseFileDataToXmlNodesCopy_ML(IN m_binDataDownloaded) == errSuccess)
 			{
-			m_paEvent = IEvent::S_PaAllocateEvent_YZ(EEventClassFromPsz(oXmlTree.m_pszuTagName), IN &m_tsEventID);
+			m_paEvent = IEvent::S_PaAllocateEvent_YZ(IN &oXmlTree, IN &m_tsEventID);
 			if (m_paEvent != NULL)
 				{
 				// We have successfully re-created a blank event class matching the blueprint of the downloader.  Now, we need to initialize the event variables.
