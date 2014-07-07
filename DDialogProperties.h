@@ -154,7 +154,7 @@ class DDialogBallotSend;
 class _OLayoutBallotChoice : public OLayoutHorizontal
 {
 public:
-	WButtonIcon * m_pwButtonRemove;	// Remove the choice on the ballot
+	WButtonIconForToolbar * m_pwButtonRemove;	// Remove the choice on the ballot
 	WEdit * m_pwEditChoice;			// Widget to enter the text choice
 	WEdit * m_pwEditGroup;
 

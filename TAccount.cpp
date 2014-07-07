@@ -470,7 +470,7 @@ TAccountXmpp::Contact_RosterSubscribe(INOUT TContact * pContact)
 	if (m_paSocket == NULL)
 		return;
 	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Adding contact ^j to roster...\n", pContact);
-	m_paSocket->Socket_WriteXmlFormatted("<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^j'></item></query></iq>", pContact);
+	m_paSocket->Socket_WriteXmlFormatted("<iq id='$p' type='set'><query xmlns='jabber:iq:roster'><item jid='^j'></item></query></iq>", pContact, pContact);
 	//m_paSocket->Socket_WriteXmlFormatted("<presence to='^j' type='subscribe'/>", pContact);
 	//m_paSocket->Socket_WriteXmlFormatted("<presence ^:jc from='^J' to='^j' type='subscribe'/>", this, pContact);
 	}

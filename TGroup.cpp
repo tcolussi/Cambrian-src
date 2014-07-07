@@ -270,10 +270,13 @@ TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 const EMenuActionByte c_rgzeActionsMenuContactGroup[] =
 	{
 	eMenuAction_GroupAddContacts,
+	eMenuAction_BallotSend,
+	eMenuActionSeparator,
 	eMenuAction_GroupRename,
 	eMenuAction_GroupDelete,
+	eMenuActionSeparator,
+	eMenuAction_TreeItemRecommended,
 	eMenuAction_GroupProperties,
-	eMenuAction_BallotSend,
 	ezMenuActionNone
 	};
 

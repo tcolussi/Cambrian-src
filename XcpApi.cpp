@@ -4,7 +4,7 @@
 //	Implementation of "Personal APIs" (PAPI) available through the Cambrian Protocol.
 //
 //	The content of this file could be within Xcp.cpp, however since file Xcp.cpp already has 1500 lines,
-//	it is easier to understand the code to have a file dedicated for the APIs.
+//	it is easier to understand the code related to the Cambrian APIs in a dedicated file.
 //
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
@@ -14,10 +14,12 @@
 #if 0
 	Group.Profile.Get [idGroup]
 	Group.Profile.GetPicture [idGroup]
+
 	Contact.Profile.Get [idContact]
 	Contact.Profile.GetPicture [idContact]
 	Contact.Profile.GetPicturePanoramic [idContact]
-	Contact.Wallet.GetAddress [idContact], strCurrency, strInvoiceNumber
+	Contact.Recommendations.Get							- Return all the recommendations from the contact (other contacts, groups, links, etc)
+	Contact.Wallet.GetAddress [idContact], strCurrency, strInvoiceNumber		// Return an address for payment
 
 	Me.Profile.Get
 	Me.Wallet.GetAddress
@@ -32,8 +34,15 @@ const CHU c_szaApi_Group_Profile_Get[] = "Group.Profile.Get";
 	#define d_chAPIa_TGroup_strName			'n'
 #define d_chAPIe_TGroupMember_				'M'
 #define d_szAPIe_TGroupMember_				"M"
-	#define d_chAPIa_TGroupMember_idContact	'c'
+	#define d_chAPIa_TGroupMember_idContact	'c'	// Perhaps rename to 'i'
 
+const CHU c_szaApi_Contact_Recommendations_Get[] = "Contact.Recommendations.Get";
+#define d_chAPIe_Recommendations_					'R'
+#define d_chAPIe_Recommendations_TContacts			'C'
+#define d_chAPIe_Recommendations_TGroups			'G'
+	#define d_chAPIa_Recommendations_shaIdentifier	'i'
+	#define d_chAPIa_Recommendations_strName		'n'
+	#define d_chAPIa_Recommendations_strDescription	'd'	// NYI
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core method to serialize the data for an XCP API request.
@@ -58,6 +67,19 @@ CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PS
 			return;
 			}
 		Assert(XcpApi_FIsXmlElementClosedBecauseOfError());
+		return;
+		}
+	if (FCompareStringsNoCase(pszApiName, c_szaApi_Contact_Recommendations_Get))
+		{
+		// Fetch the recommendations from the profile
+		TProfile * pProfile = pAccount->m_pProfileParent;
+		TAccountXmpp ** ppAccountStop;
+		TAccountXmpp ** ppAccount = pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+		while (ppAccount != ppAccountStop)
+			{
+			TAccountXmpp * pAccount = *ppAccount++;
+
+			}
 		return;
 		}
 	} // BinXmlAppendXcpElementForApiRequest_AppendApiParameterData()
@@ -151,3 +173,17 @@ TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, I
 	TreeItemChatLog_UpdateTextAndIcon();	// Need to optimize this
 	} // XcpApiGroup_ProfileUnserialize()
 
+#if 0
+	/*
+	A suggestion is an idea or plan by someone that is  put forward for certain considerations. While
+	A recommendation  is an opinion which is given by someone who did an analysis of something presented to his/her clients and is considering whether to buy it out or not.
+	Usually done by more knowlegeable people in that field being tackled. Anyone can make a suggestion.  But to make recommendations someone has to be more expert on that field.
+	*/
+
+	// Sample recommendations from a contact
+	<R>
+		<C i='contact identifier' n='name of the contact' d='description of the contact, or a comment why the contact is recommded' />	// Recommend a contact
+		<G i='group identifier' n='' d='' />	// Recommend a group
+	</R>
+
+#endif

@@ -69,14 +69,28 @@ CArray::PrgpvGetElementsStop(OUT void *** pppvDataStop) const
 //	Return a pointer to beginning of array to allow direct access
 //	to elements in the array.  May return NULL.
 //
-const void **
+void **
 CArray::PrgpvGetElements() const
 	{
 	if (m_paArrayHdr != NULL)
-		return (const void **)&m_paArrayHdr->rgpvData;
+		return (void **)&m_paArrayHdr->rgpvData;
 	return NULL;
 	}
 
+//	Similar as above except return the total number of elements instea
+void **
+CArray::PrgpvGetElements(OUT int * pcElements) const
+	{
+	if (m_paArrayHdr != NULL)
+		{
+		*pcElements = m_paArrayHdr->cElements;
+		return (void **)&m_paArrayHdr->rgpvData;
+		}
+	*pcElements = 0;
+	return NULL;
+	}
+
+/*
 /////////////////////////////////////////////////////////////////////
 void ** 
 CArray::PrgpvGetElements()
@@ -85,7 +99,7 @@ CArray::PrgpvGetElements()
 		return (void **)&m_paArrayHdr->rgpvData;
 	return NULL;
 	}
-
+*/
 
 //	Prevent the array from having more than cElementsMax
 VOID

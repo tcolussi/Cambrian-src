@@ -54,9 +54,6 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Account Properties..." _ "i=Properties" _ "s=Display the properties of the selected account" _, // eMenuAction_AccountProperties
 	"Reconnect" _ "i=ServerConnect" _ "s=Reconnect to the server" _, // eMenuAction_AccountReconnect
 
-//	"Online" _ "i=AccountOnline" _,// eMenuAction_AccountOnline
-//	"Offline" _ "i=AccountOffline" _,//eMenuAction_AccountOffline
-
 	"Contact" _ "i=Contact" _, //eMenuAction_Contact
 	"Add Contact..." _ /*"a=Ctrl+Shift+C" _*/ "i=ContactAdd" _ "s=Add a new contact for the selected account" _,	// eMenuAction_ContactAdd
 	"Add Contact to Group" _ "i=ContactAdd" _ "s=Add the selected contact to a group" _,	// eMenuAction_ContactAddToGroup
@@ -80,6 +77,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Remove Contact from Group" _ "i=ContactRemove" _, // eMenuAction_GroupRemoveContact
 	"Group Properties..." _ "i=Properties" _, // eMenuAction_GroupProperties
 
+	"Recommend..." _ "s=Recommend the selected item to your contacts" _ "i=Reputation" _,	// eMenuAction_TreeItemRecommended
 	"Rename..." _, // eMenuAction_TreeItemRename
 	"Edit Message..." _ "i=Pencil" _, // eMenuAction_MessageEdit
 	"Copy" _ "i=Copy" _, // eMenuAction_Copy
@@ -266,7 +264,7 @@ PaAllocateMenuAction(EMenuAction eMenuAction)
 QAction * g_rgpActions[eMenuActionMax];
 
 QAction *
-PGetMenuAction(EMenuAction eMenuAction)
+PGetMenuAction(EMenuAction eMenuAction)		// TODO:  Rename to PGetMenuAction_NZ() and make sure a NULL pointer is never returned.
 	{
 	Assert(eMenuAction > ezMenuActionNone);
 	Assert(eMenuAction < LENGTH(g_rgpActions));
@@ -346,7 +344,7 @@ Widget_SetIcon(INOUT QWidget * pwWidget, EMenuAction eMenuAction)
 		pwWidget->setWindowIcon(pAction->icon());
 	}
 
-//	See also class WButtonIcon
+//	See also class WButtonIconForToolbar
 void
 Widget_SetIconButton(INOUT QAbstractButton * pwButton, EMenuAction eMenuAction)
 	{
@@ -385,6 +383,14 @@ QAction * WMenu::s_pActionCurrentlyProcessedByMainWindow;
 
 WMenu::WMenu() : QMenu(g_pwMainWindow)
 	{
+	}
+
+WMenu::WMenu(PSZAC pszName) : QMenu(pszName, g_pwMenuBar)
+	{
+	InitAsDymanicMenu();
+//	MenuBarInitialize(this);		// We need to initialize the menu so the accelerators/shotcuts are there.  In the future, an optimization could be to skip menu items without accelerators/shortcuts
+	Assert(g_pwMenuBar != NULL);
+	g_pwMenuBar->addAction(menuAction());
 	}
 
 WMenu::~WMenu()
@@ -652,19 +658,12 @@ MenuBarInitialize(WMenu * pMenu)
 		prgzeActions = c_rgzeActionsMenuAdvanced;
 	else if (pMenu == g_pwMenuStatus)
 		prgzeActions = c_rgzeActionsMenuStatus;
-	Assert(prgzeActions && "Unknown menu to initialize");
+	Assert(prgzeActions != NULL && "Unknown menu to initialize");
 	if (prgzeActions != NULL)
 		{
 		pMenu->clear();
 		pMenu->ActionsAdd(prgzeActions);
 		}
-	}
-
-WMenu::WMenu(PSZAC pszName) : QMenu(pszName, g_pwMenuBar)
-	{
-	InitAsDymanicMenu();
-//	MenuBarInitialize(this);		// We need to initialize the menu so the accelerators/shotcuts are there.  In the future, an optimization could be to skip menu items without accelerators/shortcuts
-	g_pwMenuBar->addAction(menuAction());
 	}
 
 void

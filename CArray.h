@@ -47,8 +47,9 @@ public:
 
 	void ** PrgpvGetElementsStop(OUT void *** pppvElementStop) const;
 	inline const void ** PrgpvGetElementsUnsafe() const { return m_paArrayHdr->rgpvData; }	// For performance, when you are sure the array has been allocated
-	const void ** PrgpvGetElements() const;
-	void ** PrgpvGetElements();
+	void ** PrgpvGetElements() const;
+	//void ** PrgpvGetElements();
+	void ** PrgpvGetElements(OUT int * pcElements) const;
 	void KeepMaximumElements(int cElementsMax);
 	inline void SetSizeTruncate(int cElements);
 	inline void SetSizeTruncateAt(const void ** ppvDataEnd);

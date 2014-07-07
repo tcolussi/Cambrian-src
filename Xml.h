@@ -313,8 +313,8 @@ public:
 	void XmlExchangeInt(PSZAC pszuTagName, INOUT_F_UNCH_S int * pnValue);
 	void XmlExchangeUInt(PSZAC pszuTagName, INOUT_F_UNCH_S UINT * puValue);
 	void XmlExchangeUIntHex(PSZAC pszuTagName, INOUT_F_UNCH_S UINT * puValueHex);
+	void XmlExchangeUIntHexFlagsMasked(PSZAC pszuTagNameFlags, INOUT UINT * puFlags, UINT uFlagsSerializeMask);
 	void XmlExchangeUShort(PSZAC pszuTagName, INOUT_F_UNCH_S quint16 * pusValue);
-	void XmlExchangeFlags(PSZAC pszuTagNameFlags, INOUT UINT * puFlags, UINT uFlagsSerializeMask);
 	void XmlExchangeGuid(PSZAC pszuTagNameGuid, INOUT_F_UNCH_S GUID * pGuid);
 	void XmlExchangeSha1(PSZAC pszuTagNameSha1, INOUT_F_UNCH_S SHashSha1 * pHashSha1);
 	void XmlExchangeTimestamp(PSZAC pszuTagNameTimestamp, INOUT_F_UNCH_S TIMESTAMP * ptsValue);

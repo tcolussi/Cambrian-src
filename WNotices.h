@@ -77,7 +77,7 @@ public:
 		TContact * pContact;
 		} mu_sponsor;
 	WGroupBox * m_pwGroupBox;		// Group box displaying the notice (for concistency every notice has a group box)
-	WButtonIcon * m_pButtonClose;
+	WButtonIconForToolbar * m_pButtonClose;
 public:
 	INotice();
 	virtual ~INotice();
@@ -132,7 +132,7 @@ public slots:
 class INoticeWithIcon : public INoticeWithLayout
 {
 protected:
-	WButtonIcon * m_pwButtonIcon;	// Wiget displaying the icon.  This may be replaced with a WLabelSelectable.
+	WButtonIconForToolbar * m_pwButtonIcon;	// Wiget displaying the icon.  This may be replaced with a WLabelSelectable.
 	WLabelSelectable * m_pwLabelMessage;		// Core widget displaying the message text for the notice
 	WLabelSelectable * m_pwLabelMessageExtra;	// Optional widget to display additional text just below the message text.  By default, this label is NULL (hidden).
 public:

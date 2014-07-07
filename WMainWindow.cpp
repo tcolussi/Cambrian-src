@@ -19,26 +19,6 @@
 	//#define DEBUG_DISABLE_TIMER		// Useful for debugging the code booting the application without displaying the connection notifications in the Message Log
 #endif
 
-//	The QNetworkConfigurationManager works on some computers, so more testing needs to be done.
-bool g_fIsConnectedToInternet = true;	// true => The device is connected to the Internet.  Since SL_NetworkOnlineStateChanged() is unreliable, assume the machine is connected to the Internet.
-QNetworkConfigurationManager * g_poNetworkConfigurationManager;
-void
-WMainWindow::SL_NetworkOnlineStateChanged(bool fIsOnline)
-	{
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlue), "[$@] SL_NetworkOnlineStateChanged() $s\n", fIsOnline ? "online" : "offline");
-	g_fIsConnectedToInternet = fIsOnline;
-	TAccountXmpp ** ppAccountStop;
-	TAccountXmpp ** ppAccount = g_arraypAccounts.PrgpGetAccountsStop(OUT &ppAccountStop);
-	while (ppAccount != ppAccountStop)
-		{
-		TAccountXmpp * pAccount = *ppAccount++;
-		Assert(pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
-		if (fIsOnline)
-			pAccount->Socket_ReconnectIfDisconnected();
-		pAccount->IconUpdate_NetworkOnlineStateChanged();
-		}
-	}
-
 
 #ifdef Q_OS_WIN
 HWND g_hwndMainWindow;							// Win-32 handle of the main window.  This handle is used by the MessageLog.
@@ -65,6 +45,28 @@ enum EIdleState
 	eIdleState_AwayExtended,
 	};
 EIdleState g_eIdleState;
+
+TTreeItemMyInbox * g_pTreeItemCommunication;
+
+//	The QNetworkConfigurationManager works on some computers, so more testing needs to be done.
+bool g_fIsConnectedToInternet = true;	// true => The device is connected to the Internet.  Since SL_NetworkOnlineStateChanged() is unreliable, assume the machine is connected to the Internet.
+QNetworkConfigurationManager * g_poNetworkConfigurationManager;
+void
+WMainWindow::SL_NetworkOnlineStateChanged(bool fIsOnline)
+	{
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlue), "[$@] SL_NetworkOnlineStateChanged() $s\n", fIsOnline ? "online" : "offline");
+	g_fIsConnectedToInternet = fIsOnline;
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = g_arraypAccounts.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		Assert(pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
+		if (fIsOnline)
+			pAccount->Socket_ReconnectIfDisconnected();
+		pAccount->IconUpdate_NetworkOnlineStateChanged();
+		}
+	}
 
 void
 MainWindow_SetIdleState(EIdleState eIdleState)
@@ -187,6 +189,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 	#endif
 	g_pwMenuBar = new QMenuBar;
 	g_pwStatusBar = new QStatusBar;
+	//g_pwStatusBar->setStyleSheet("border: 1px solid red;");
 	m_cTimerEvents = 0;
 	m_tidFlashIconNewMessage = d_zNA;
 
@@ -474,6 +477,8 @@ WMainWindow::ConfigurationLoadFromXml()
 			}
 		*/
 		}
+	EMenuAction eMenuAction_Presence = (EMenuAction)(g_uPreferences & P_kmPresenceMask);
+	NavigationTree_UpdatePresenceIcon((eMenuAction_Presence == ezMenuActionNone) ? eMenuAction_PresenceAccountOnline : eMenuAction_Presence);
 	}
 
 

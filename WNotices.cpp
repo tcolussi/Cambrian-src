@@ -360,7 +360,7 @@ INotice::INotice() : WWidget(NULL)
 	m_plistaParent = NULL;
 	m_piwNoticeNext = NULL;
 	mu_sponsor.pvSponsor = NULL;
-	m_pButtonClose = NULL; // new WButtonIcon(this, eMenuAction_Quit);
+	m_pButtonClose = NULL; // new WButtonIconForToolbar(this, eMenuAction_Quit);
 	setFixedHeight(d_cyHeightNoticeDefault);
 	setContextMenuPolicy(Qt::DefaultContextMenu);
 	m_pwGroupBox = NULL;
@@ -531,7 +531,7 @@ void
 INoticeWithLayout::Notice_AddButtonIconClose()
 	{
 	//Notice_AddButton(PA_CHILD new WButtonTextWithIcon(pszButtonText, eMenuAction_Close), SL_INoticeWithLayout(SL_ButtonClose_clicked));
-	WButtonIcon * pwButton = new WButtonIcon(eMenuAction_Close, "Hide this notification message");
+	WButtonIconForToolbar * pwButton = new WButtonIconForToolbar(eMenuAction_Close, "Hide this notification message");
 	Notice_PoGetLayoutButtons_NZ()->addWidget(PA_CHILD pwButton);
 	ConnectButton(pwButton, SL_INoticeWithLayout(SL_ButtonClose_clicked));
 	}
@@ -546,7 +546,7 @@ INoticeWithLayout::SL_ButtonClose_clicked()
 INoticeWithIcon::INoticeWithIcon(PSZAC pszTitle, EMenuAction eMenuIcon)
 	{
 	m_pwGroupBox->setTitle(pszTitle);
-	m_pwButtonIcon = new WButtonIcon(this, eMenuIcon);
+	m_pwButtonIcon = new WButtonIconForToolbar(this, eMenuIcon);
 	m_poLayoutBody->addWidget(m_pwButtonIcon);
 	m_pwLabelMessage = new WLabelSelectableWrap(PA_PARENT m_poLayoutBody);
 	m_pwLabelMessageExtra = NULL;
@@ -623,7 +623,7 @@ WNoticeMessageSponsored::ETreeItemGotFocus(IN ITreeItem * piTreeItemFocus)
 WNoticeWarning::WNoticeWarning()
 	{
 	m_pwLabelStatus = NULL;
-	WButtonIcon * pButton = new WButtonIcon(this, eMenuIconWarning);
+	WButtonIconForToolbar * pButton = new WButtonIconForToolbar(this, eMenuIconWarning);
 	/*
 	QIcon oIcon = QIcon(":/ico/Warning");
 	pButton->setIcon(oIcon);

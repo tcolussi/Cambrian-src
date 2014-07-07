@@ -219,8 +219,8 @@ WLayoutBrowser::WLayoutBrowser(TBrowser * pBrowser)
 	pWidget->setMaximumHeight(24);
 	OLayoutHorizontal * poLayout = new OLayoutHorizontal(pWidget);
 	poLayout->setContentsMargins(2, 2, 2, 0);
-	m_pwButtonBack = new WButtonIcon(eMenuIconGoBack, "Go Back");
-	m_pwButtonForward = new WButtonIcon(eMenuIconGoForward, "Go Forward");
+	m_pwButtonBack = new WButtonIconForToolbar(eMenuIconGoBack, "Go Back");
+	m_pwButtonForward = new WButtonIconForToolbar(eMenuIconGoForward, "Go Forward");
 	poLayout->addWidget(m_pwButtonBack);
 	poLayout->addWidget(m_pwButtonForward);
 

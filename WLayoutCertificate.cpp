@@ -383,7 +383,7 @@ WCertificateAuthenticator::WCertificateAuthenticator(TCertificate * pCertificate
 	m_pwEditFingerprint->Edit_SetWatermark("Enter any fingerprint (MD5, SHA-1, SHA-256 or SHA-512) from below");
 	QPushButton * pwButtonAuthenticate = new WButtonTextWithIcon("Authenticate |Confirm the certificate is genuine based on its fingerprint", eMenuIconAccept);
 	OLayoutHorizontal * poLayout = new OLayoutHorizontal(PA_PARENT this);
-	poLayout->Layout_AddWidgetsH_VEZA(new WButtonIcon(NULL, eMenuIconQuestion), new WLabelSelectable("Certificate Fingerprint:"), m_pwEditFingerprint, pwButtonAuthenticate, NULL);
+	poLayout->Layout_AddWidgetsH_VEZA(new WButtonIconForToolbar(NULL, eMenuIconQuestion), new WLabelSelectable("Certificate Fingerprint:"), m_pwEditFingerprint, pwButtonAuthenticate, NULL);
 	connect(m_pwEditFingerprint, SIGNAL(returnPressed()), this, SLOT(SL_Authenticate()));
 	connect(pwButtonAuthenticate, SIGNAL(clicked()), this, SLOT(SL_Authenticate()));
 //	m_pwEditFingerprint->setFocus();

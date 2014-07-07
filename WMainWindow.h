@@ -72,4 +72,7 @@ TContact * NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact();
 ITreeItemChatLogEvents * NavigationTree_PGetSelectedTreeItemMatchingContractOrGroup();
 void NavigationTree_RenameSelectedItem();
 
+void NavigationTree_UpdatePresenceIcon(EMenuAction eMenuAction_Presence);
+void NavigationTree_UpdateNameOfSelectedProfile();
+
 #endif // MAINWINDOW_H

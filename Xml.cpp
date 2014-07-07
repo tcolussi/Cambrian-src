@@ -3340,22 +3340,22 @@ CXmlExchanger::XmlExchangeUIntHex(PSZAC pszuTagName, INOUT_F_UNCH_S UINT * puVal
 	}
 
 void
+CXmlExchanger::XmlExchangeUIntHexFlagsMasked(PSZAC pszuTagNameFlags, INOUT UINT * puFlags, UINT uFlagsSerializeMask)
+	{
+	Assert(uFlagsSerializeMask != 0 && "NOOP");
+	UINT uFlagsOld = *puFlags;
+	UINT uValueSerialize = (uFlagsOld & uFlagsSerializeMask);
+	XmlExchangeUIntHex(pszuTagNameFlags, INOUT_F_UNCH_S &uValueSerialize);
+	Assert((uValueSerialize & ~uFlagsSerializeMask) == 0 && "Those unserializable flags should not be present");
+	*puFlags = uValueSerialize | (uFlagsOld & ~uFlagsSerializeMask);
+	}
+
+void
 CXmlExchanger::XmlExchangeUShort(PSZAC pszuTagName, INOUT_F_UNCH_S quint16 * pusValue)
 	{
 	int nValue = *pusValue;
 	XmlExchangeInt(pszuTagName, INOUT_F_UNCH_S &nValue);
 	*pusValue = nValue;
-	}
-
-void
-CXmlExchanger::XmlExchangeFlags(PSZAC pszuTagNameFlags, INOUT UINT * puFlags, UINT uFlagsSerializeMask)
-	{
-	Assert(uFlagsSerializeMask != 0 && "NOOP");
-	UINT uFlagsOld = *puFlags;
-	int nValueSerialize = (uFlagsOld & uFlagsSerializeMask);
-	XmlExchangeInt(pszuTagNameFlags, INOUT_F_UNCH_S &nValueSerialize);
-	Assert((nValueSerialize & ~uFlagsSerializeMask) == 0 && "Those unserializable flags should not be present");
-	*puFlags = nValueSerialize | (uFlagsOld & ~uFlagsSerializeMask);
 	}
 
 void

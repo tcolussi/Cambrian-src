@@ -516,19 +516,19 @@ WLayoutChatLog::WLayoutChatLog(ITreeItemChatLogEvents * pParent)
 	pLayoutMessageInput->addWidget(m_pwChatInput);
 	OLayoutVertical * pLayoutButtons = new OLayoutVerticalAlignTop(pLayoutMessageInput);
 	pLayoutButtons->setSpacing(0);
-	m_pwButtonSendBitcoin = new WButtonIcon(eMenuIconBitcoin, "Send Bitcoins");
+	m_pwButtonSendBitcoin = new WButtonIconForToolbar(eMenuIconBitcoin, "Send Bitcoins");
 	pLayoutButtons->addWidget(m_pwButtonSendBitcoin);
 	connect(m_pwButtonSendBitcoin, SIGNAL(clicked()), this, SLOT(SL_ButtonSendBitcoin()));
 
-	WButtonIcon * pwButton = new WButtonIcon(eMenuAction_ContactSendFile, "Send File\n\nYou may drag and drop the file, or copy & paste the file from Windows Explorer");
+	WButtonIconForToolbar * pwButton = new WButtonIconForToolbar(eMenuAction_ContactSendFile, "Send File\n\nYou may drag and drop the file, or copy & paste the file from Windows Explorer");
 	pLayoutButtons->addWidget(pwButton);
 	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonSendFile()));
 
-	pwButton = new WButtonIcon(eMenuAction_ContactAdd, "Add people to the converstation");
+	pwButton = new WButtonIconForToolbar(eMenuAction_ContactAdd, "Add people to the converstation");
 	pLayoutButtons->addWidget(pwButton);
 	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonAddContacts()));
 
-	pwButton = new WButtonIcon(eMenuAction_BallotSend, "Send a ballot to the group to vote");
+	pwButton = new WButtonIconForToolbar(eMenuAction_BallotSend, "Send a ballot to the group to vote");
 	pLayoutButtons->addWidget(pwButton);
 	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonSendBallot()));
 

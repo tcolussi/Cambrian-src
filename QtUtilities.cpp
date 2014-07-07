@@ -176,12 +176,12 @@ WLabelSelectableWrap::WLabelSelectableWrap(PA_PARENT QBoxLayout * poParentLayout
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	See also Widget_SetIconButton()
-WButtonIcon::WButtonIcon(QWidget * pwParent, EMenuAction eMenuIcon) : QToolButton(pwParent)
+WButtonIconForToolbar::WButtonIconForToolbar(QWidget * pwParent, EMenuAction eMenuIcon) : QToolButton(pwParent)
 	{
 	_Init(eMenuIcon);
 	}
 
-WButtonIcon::WButtonIcon(EMenuAction eMenuIcon, PSZAC pszmToolTip)
+WButtonIconForToolbar::WButtonIconForToolbar(EMenuAction eMenuIcon, PSZAC pszmToolTip)
 	{
 	_Init(eMenuIcon);
 	Assert(!FTextContainsTooltip(pszmToolTip));	// The text is already the tooltip, so there is no need to include the tooltip separator
@@ -189,7 +189,7 @@ WButtonIcon::WButtonIcon(EMenuAction eMenuIcon, PSZAC pszmToolTip)
 	}
 
 void
-WButtonIcon::_Init(EMenuAction eMenuIcon)
+WButtonIconForToolbar::_Init(EMenuAction eMenuIcon)
 	{
 	QAction * pAction = PGetMenuAction(eMenuIcon);
 	Assert(pAction != NULL);
@@ -204,9 +204,18 @@ WButtonIcon::_Init(EMenuAction eMenuIcon)
 	setFocusPolicy(Qt::ClickFocus);	// Icons do not capture the focus by tabbing; only if the user explicitly clicks on the icon
 	}
 
+WButtonIconForToolbarWithDropDownMenu::WButtonIconForToolbarWithDropDownMenu(PA_PARENT QWidget * pwParent, EMenuAction eMenuIcon, PSZAC pszmButtonTextAndToolTip) : WButtonIconForToolbar(pwParent, eMenuIcon)
+	{
+	setText(pszmButtonTextAndToolTip);
+	setStyleSheet("QToolButton { border: none; padding: 1 10 1 1; }");		// Add 10 pixels to the left for the drop down arrow
+	setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	setPopupMode(QToolButton::InstantPopup);
+	setMenu(PA_CHILD new WMenu);
+	}
+
 WButtonText::WButtonText(PSZAC pszmButtonTextAndToolTip)
 	{
-	setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);	// By default buttons should take as little space as possible
+	setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);	// By default buttons should take as little vertical space as possible
 	//setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
 	Button_SetTextAndToolTip(pszmButtonTextAndToolTip);
 	}
@@ -460,6 +469,28 @@ void
 WEditNumber::_Init()
 	{
 	setFixedWidth(d_cxWidthEditNumber);
+	}
+
+WEditSearch::WEditSearch()
+	{
+	QToolButton * m_pwButtonSearch;
+	m_pwButtonSearch = new QToolButton(this);
+	QPixmap pixmap(":/ico/Find");
+	m_pwButtonSearch->setIcon(QIcon(pixmap));
+//	m_pwButtonSearch->setIconSize(pixmap.size());
+	m_pwButtonSearch->setCursor(Qt::ArrowCursor);
+	m_pwButtonSearch->setStyleSheet("QToolButton { border: none; padding: 1 1 1 3; }");	// Pad 3 pixels to the left
+	m_pwButtonSearch->setFocusPolicy(Qt::NoFocus);
+
+	//int frameWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
+	//setStyleSheet(QString("QLineEdit { border: none; padding-left: %1px; } ").arg(m_pwButtonSearch->sizeHint().width() + frameWidth + 1));
+	setStyleSheet("QLineEdit { border: none; padding: 2px 2px 2px 20px; } ");
+	//setStyleSheet("QLineEdit { padding-left: 5px; } ");
+	setPlaceholderText("Search");
+//	setFocusPolicy(Qt::ClickFocus);	// Prevent the edit control to receive the focus when the application starts
+	//setMinimumSize(40, 30);
+
+	// See http://aseigo.blogspot.com/2006/08/sweep-sweep-sweep-ui-floor.html for improvement of the search
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1649,6 +1680,12 @@ WidgetButton_SetTextAndToolTip(QAbstractButton * pwButton, PSZAC pszmButtonTextA
 	pwButton->setText(QString::fromUtf8(pszmButtonTextAndToolTip, pszToolTip - pszmButtonTextAndToolTip));
 	if (pszToolTip != NULL && *pszToolTip != '\0')
 		pwButton->setToolTip(QString::fromUtf8(pszToolTip + 1));
+	}
+
+void
+Layout_MarginsClear(INOUT QLayout * poLayout)
+	{
+	poLayout->setContentsMargins(0, 0, 0, 0);
 	}
 
 void

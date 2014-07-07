@@ -14,61 +14,19 @@
 extern CChatConfiguration g_oConfiguration;
 const QString c_sNavigation("Navigation");
 
-WLineEditSearch::WLineEditSearch(QWidget * pwParent) : QLineEdit(pwParent)
-	{
-	m_pwButtonSearch = new QToolButton(this);
-	QPixmap pixmap(":/ico/Find");
-	m_pwButtonSearch->setIcon(QIcon(pixmap));
-//	m_pwButtonSearch->setIconSize(pixmap.size());
-	m_pwButtonSearch->setCursor(Qt::ArrowCursor);
-	m_pwButtonSearch->setStyleSheet("QToolButton { border: none; padding: 1px; }");
-	m_pwButtonSearch->setFocusPolicy(Qt::NoFocus);
-
-	//int frameWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
-	//setStyleSheet(QString("QLineEdit { border: none; padding-left: %1px; } ").arg(m_pwButtonSearch->sizeHint().width() + frameWidth + 1));
-	setStyleSheet("QLineEdit { border: none; padding: 2px 2px 2px 20px; } ");
-	//setStyleSheet("QLineEdit { padding-left: 5px; } ");
-	setPlaceholderText("Search");
-//	setFocusPolicy(Qt::ClickFocus);	// Prevent the edit control to receive the focus when the application starts
-	//setMinimumSize(40, 30);
-	}
-
-#if 0
-QSize WNavigationTreeCaption::minimumSizeHint() const
-{
-	QSize result(50, m_pwLineEdit->height());
-	return result;
-}
-#endif
-
 QToolButton * g_pwButtonStatusOfNavigationTree;
+WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
+WMenu * g_pwMenuSwitchProfile;
 
-WNavigationTreeCaption::WNavigationTreeCaption(QWidget *parent) : QWidget(parent)
+WNavigationTreeCaption::WNavigationTreeCaption()
 	{
-	g_pwButtonStatusOfNavigationTree = new QToolButton(this);
-	g_pwButtonStatusOfNavigationTree->setToolTip("Change your status");
-	g_pwButtonStatusOfNavigationTree->setStyleSheet("QToolButton { border: none; padding: 3px; }");
-	g_pwButtonStatusOfNavigationTree->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-	g_pwButtonStatusOfNavigationTree->setPopupMode(QToolButton::InstantPopup);
-	g_pwButtonStatusOfNavigationTree->setCursor(Qt::ArrowCursor);
-	g_pwButtonStatusOfNavigationTree->setFocusPolicy(Qt::ClickFocus);
-	EMenuAction eMenuAction_Presence = (EMenuAction)(g_uPreferences & P_kmPresenceMask);
-	if (eMenuAction_Presence == ezMenuActionNone)
-		eMenuAction_Presence = eMenuAction_PresenceAccountOnline;
-	Widget_SetIconButton(INOUT g_pwButtonStatusOfNavigationTree, eMenuAction_Presence);
-	g_pwMenuStatus = new WMenu;
-	g_pwMenuStatus->InitAsDymanicMenu();
-	g_pwButtonStatusOfNavigationTree->setMenu(g_pwMenuStatus);
-//	connect(g_pMenuStatus, SIGNAL(aboutToShow()), g_pwMainWindow, SLOT(SL_MenuAboutToShow()));
-//	connect(g_pMenuStatus, SIGNAL(triggered(QAction*)), g_pwMainWindow, SLOT(SL_MenuActionTriggered(QAction*)));
-
-//	pwButtonStatus->addAction(new QAction("test", pwButtonStatus));
-
-	m_pwLineEdit = new WLineEditSearch(this);
-
 	QToolButton * pwButtonUndock = new QToolButton(this);
 	pwButtonUndock->setToolTip("Float / Unfloat");
+	#if 1
 	pwButtonUndock->setStyleSheet("QToolButton { border: none; padding: 3px; }");
+	#else
+	pwButtonUndock->setStyleSheet("QToolButton { border: none; padding: 0px; }");
+	#endif
 	QPixmap oPixmap = style()->standardPixmap(QStyle::SP_TitleBarNormalButton);
 	pwButtonUndock->setIcon(oPixmap);
 //	pwButtonUndock->setMaximumSize(oPixmap.size());
@@ -79,170 +37,19 @@ WNavigationTreeCaption::WNavigationTreeCaption(QWidget *parent) : QWidget(parent
 	layout->setMargin(0);
 //	layout->setSpacing(10);
 //	layout->addStretch();
+	#if 0
 	layout->addWidget(g_pwButtonStatusOfNavigationTree, Qt::AlignLeft | Qt::AlignHCenter);
-	layout->addWidget(m_pwLineEdit);
+	#endif
+	layout->addWidget(g_pwButtonSwitchProfile); // , Qt::AlignLeft | Qt::AlignHCenter);
+	//layout->addWidget(new QWidget);
+	layout->addStretch();
+	//layout->addWidget(pwButtonUndock, Qt::AlignRight | Qt::AlignHCenter);
 	layout->addWidget(pwButtonUndock);
 	setLayout(layout);
-	/*
-	m_pwLineEdit = new WLineEditSearch(this);
-	*/
-	m_pwLineEdit->installEventFilter(this);
-	connect(m_pwLineEdit, SIGNAL(textChanged(QString)), this, SLOT(SL_TextChanged(QString)));
-	connect(pwButtonUndock, SIGNAL(clicked()), this, SLOT(SL_ToggleDocking()));
-	//m_pwLineEdit = new LineEdit(this);
-	//m_pwLineEdit->setFrame(false);
-	//m_pwLineEdit->setPlaceholderText("Search Contacts");
-	/*
-	QToolButton * padLock = new QToolButton;
-	padLock->setIcon(QIcon(":/ico/Find"));
-	padLock->setCursor(Qt::ArrowCursor);
-	padLock->setToolTip("Find Contact");
-
-	int extent = m_pwLineEdit->height() - 2;
-	padLock->resize(extent, extent);
-	padLock->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Ignored);
-
-	QHBoxLayout *layout = new QHBoxLayout(m_pwLineEdit);
-	layout->setMargin(m_pwLineEdit->style()->pixelMetric(QStyle::PM_DefaultFrameWidth) * 2);
-	layout->setSpacing(10);
-	layout->addStretch();
-	layout->addWidget(padLock);
-	m_pwLineEdit->setLayout(layout);
-	*/
-	// http://aseigo.blogspot.com/2006/08/sweep-sweep-sweep-ui-floor.html
+	connect(pwButtonUndock, SIGNAL(clicked()), g_pwNavigationTree, SLOT(SL_ToggleDocking()));
 	setCursor(Qt::OpenHandCursor);		// This cursor shows to the user he/she may drag the widget to undock the Navigation Tree
 	}
 
-/*
-void QDockWidgetTitleButton::paintEvent(QPaintEvent *)
-{
-	QPainter p(this);
-
-	QStyleOptionToolButton opt;
-	opt.init(this);
-	opt.state |= QStyle::State_AutoRaise;
-
-	if (style()->styleHint(QStyle::SH_DockWidget_ButtonsHaveFrame, 0, this))
-	{
-		if (isEnabled() && underMouse() && !isChecked() && !isDown())
-			opt.state |= QStyle::State_Raised;
-		if (isChecked())
-			opt.state |= QStyle::State_On;
-		if (isDown())
-			opt.state |= QStyle::State_Sunken;
-		style()->drawPrimitive(QStyle::PE_PanelButtonTool, &opt, &p, this);
-	}
-
-	opt.icon = icon();
-	opt.subControls = 0;
-	opt.activeSubControls = 0;
-	opt.features = QStyleOptionToolButton::None;
-	opt.arrowType = Qt::NoArrow;
-	int size = style()->pixelMetric(QStyle::PM_SmallIconSize, 0, this);
-	opt.iconSize = QSize(size, size);
-	style()->drawComplexControl(QStyle::CC_ToolButton, &opt, &p, this);
-}
-*/
-/*
-void WNavigationTreeCaption::paintEvent(QPaintEvent *)
-	{
-	QRect rcCaption = rect();
-	QPainter oPainter(this);
-	QBrush oBrush(d_coWhite);
-	oPainter.fillRect(rcCaption, oBrush);
-	QPixmap oPixmap = style()->standardPixmap(QStyle::SP_TitleBarNormalButton);	// Get the bitmap for the icon to undock the Navigation Tree
-	oPainter.drawPixmap(rcCaption.right() - oPixmap.width() - 1, (rcCaption.height() - oPixmap.height()) / 2, oPixmap);
-	}
-
-void WNavigationTreeCaption::mousePressEvent(QMouseEvent * pEvent)
-	{
-	if (pEvent->pos().x() > width() - 14)
-		{
-		// The user clicked on the 'restore' icon
-		pEvent->accept();
-		QDockWidget *dw = qobject_cast<QDockWidget*>(parentWidget());
-		Q_ASSERT(dw != 0);
-		dw->setFloating(!dw->isFloating());
-		}
-	else
-		{
-		pEvent->ignore();	// This line is necessary so the user may drag the title bar and to dock/undock the Navigation Tree
-		}
-	}
-*/
-/*
-void WNavigationTreeCaption::updateMask()
-	{
-	QDockWidget *dw = qobject_cast<QDockWidget*>(parent());
-	Q_ASSERT(dw != 0);
-
-	QRect rect = dw->rect();
-	QPixmap bitmap(dw->size());
-
-		{
-		QPainter painter(&bitmap);
-		///initialize to transparent
-		painter.fillRect(rect, Qt::color0);
-		QRect contents = rect;
-		contents.setTopLeft(geometry().bottomLeft());
-		contents.setRight(geometry().right());
-		contents.setBottom(contents.bottom()-y());
-		painter.fillRect(contents, Qt::color1);
-		//let's pait the titlebar
-		QRect titleRect = this->geometry();
-		contents.setTopLeft(titleRect.bottomLeft());
-		contents.setRight(titleRect.right());
-		contents.setBottom(rect.bottom()-y());
-		QRect rect = titleRect;
-		painter.drawPixmap(rect.topLeft(), leftPm.mask());
-		painter.fillRect(rect.left() + leftPm.width(), rect.top(),
-			rect.width() - leftPm.width() - rightPm.width(),
-			rightPm.height(), Qt::color1);
-		painter.drawPixmap(rect.topRight() - QPoint(rightPm.width() - 1, 0), rightPm.mask());
-		painter.fillRect(contents, Qt::color1);
-		}
-	dw->setMask(bitmap);
-	}
-*/
-
-//	Filter the events from the QLineEdit
-bool
-WNavigationTreeCaption::eventFilter(QObject * obj, QEvent *event)
-	{
-	if (event->type() == QEvent::KeyPress)
-		{
-		QKeyEvent * keyEvent = static_cast<QKeyEvent *>(event);
-		if (keyEvent->key() == Qt::Key_Escape)
-			{
-			// MessageLog_AppendTextFormatCo(d_coRed, "WNavigationTreeCaption::eventFilter() - Escape key pressed\n");
-
-			}
-		}
-	return QWidget::eventFilter(obj, event);
-	}
-
-
-void
-WNavigationTreeCaption::SL_TextChanged(const QString & sText)
-	{
-	//MessageLog_AppendTextFormatCo(d_coRed, "WNavigationTreeCaption::SL_TextChanged() - $Q\n", &sText);
-	g_pwNavigationTree->NavigationTree_DisplayTreeItemsContainingText(sText);
-	}
-
-void
-WNavigationTreeCaption::SL_ToggleDocking()
-	{
-	//BOOL m_fFloatingRectAdjusted = FALSE;
-	QDockWidget * pwParentDockWidget = qobject_cast<QDockWidget*>(parentWidget());
-//	QRect rcGeometry = pwParentDockWidget->geometry();
-//	MessageLog_AppendTextFormatCo(d_coRed, "WNavigationTreeCaption::SL_ToggleDocking() - top=$i\n", rcGeometry.top());
-
-	Q_ASSERT(pwParentDockWidget != 0);
-	pwParentDockWidget->setFloating(!pwParentDockWidget->isFloating());
-//	MessageLog_AppendTextFormatCo(d_coRed, "\t - top=$i\n", pwParentDockWidget->geometry().top());
-	}
-
-TTreeItemMyInbox * g_pTreeItemCommunication;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
@@ -251,13 +58,31 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 	setObjectName(c_sNavigation);
 	m_pTreeWidgetItemEditing = NULL;
 
-	// Customize the title bar of the navigation tree
-	//QWidget * pwTitleBar = titleBarWidget();
-	//setTitleBarWidget(new TitleBar(this));
-	//titleBarWidget()->show();
-	setTitleBarWidget(new WNavigationTreeCaption(this));
-	//setTitleBarWidget(new WLineEditSearch());
-//	titleBarWidget()->show();
+	//setStyleSheet("border: 1px solid red;");
+	g_pwButtonSwitchProfile = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIconIdentities, NULL);
+	g_pwButtonSwitchProfile->setCursor(Qt::ArrowCursor);	// We need to explicitly set the cursor to arrow because the caption uses the OpenHandCursor which every child inherits
+	g_pwMenuSwitchProfile = g_pwButtonSwitchProfile->PwGetMenu();
+	connect(g_pwMenuSwitchProfile, SIGNAL(aboutToShow()), this, SLOT(SL_MenuProfilesShow()));
+	connect(g_pwMenuSwitchProfile, SIGNAL(triggered(QAction*)), this, SLOT(SL_MenuProfileSelected(QAction*)));
+
+#if 1
+	setTitleBarWidget(PA_CHILD new WNavigationTreeCaption);	// Customize the title bar of the navigation tree
+#endif
+
+	QWidget * pwWidgetLayout = new QWidget(this);	// Since the QDockWidget can handle only one widget, we create a widget with a layout inside
+	OLayoutVertical * pLayoutVertical = new OLayoutVertical(pwWidgetLayout);		// Vertical layout to stack the profile switcher, search, tree view and the status.
+	Layout_MarginsClear(INOUT pLayoutVertical);
+	pLayoutVertical->setSpacing(0);
+
+	/*
+	OLayoutHorizontal * pLayout = new OLayoutHorizontal(pLayoutVertical);
+	WButtonIconForToolbarWithDropDownMenu * pwButtonProfileSwitch = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIconAdd, "Profile");
+	connect(pwButtonProfileSwitch->menu(), SIGNAL(aboutToShow()), g_pwMainWindow, SLOT(SL_MenuAboutToShow()));
+	pLayout->addWidget(pwButtonProfileSwitch);
+	*/
+	WEditSearch * pwEditSearch = new WEditSearch;
+	connect(pwEditSearch, SIGNAL(textChanged(QString)), this, SLOT(SL_EditSearchTextChanged(QString)));
+	pLayoutVertical->addWidget(pwEditSearch);
 
 
 	//setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -265,22 +90,67 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 
 	m_pwTreeView = new WTreeWidget;
 	m_pwTreeView->header()->hide();
-	//m_pwTreeView->setFrameStyle(QFrame::NoFrame);
-
-	setWidget(PA_CHILD m_pwTreeView);
 	m_pwTreeView->setContextMenuPolicy(Qt::CustomContextMenu);	// Send the signal customContextMenuRequested()
-
+	//m_pwTreeView->setFrameStyle(QFrame::NoFrame);
 	connect(m_pwTreeView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SL_TreeCustomContextMenuRequested(QPoint)));
 	connect(m_pwTreeView, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)), this, SLOT(SL_TreeItemSelectionChanged(QTreeWidgetItem*,QTreeWidgetItem*)));
 	connect(m_pwTreeView, SIGNAL(itemClicked(QTreeWidgetItem*,int)), this, SLOT(SL_TreeItemClicked(QTreeWidgetItem*,int)));
 
+	pLayoutVertical->addWidget(m_pwTreeView);
+
+	OLayoutHorizontal * pLayout = new OLayoutHorizontal(pLayoutVertical);
+	//pLayout->addWidget(new WLabel("Status:"));
+
+	g_pwButtonStatusOfNavigationTree = new WButtonIconForToolbarWithDropDownMenu(this, eMenuAction_PresenceAccountOffline, "Status: Online");
+	g_pwButtonStatusOfNavigationTree->setToolTip("Change your status");
+	/*
+	//g_pwButtonStatusOfNavigationTree->setStyleSheet("QToolButton { border: none; padding: 3px; }");
+	g_pwButtonStatusOfNavigationTree->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	g_pwButtonStatusOfNavigationTree->setPopupMode(QToolButton::InstantPopup);
+	g_pwButtonStatusOfNavigationTree->setCursor(Qt::ArrowCursor);
+	g_pwButtonStatusOfNavigationTree->setFocusPolicy(Qt::ClickFocus);
+	*/
+	EMenuAction eMenuAction_Presence = (EMenuAction)(g_uPreferences & P_kmPresenceMask);
+	if (eMenuAction_Presence == ezMenuActionNone)
+		eMenuAction_Presence = eMenuAction_PresenceAccountOnline;
+	Widget_SetIconButton(INOUT g_pwButtonStatusOfNavigationTree, eMenuAction_Presence);
+	g_pwMenuStatus = (WMenu *)g_pwButtonStatusOfNavigationTree->menu();
+	g_pwMenuStatus->InitAsDymanicMenu();
+	/*
+	g_pwMenuStatus = new WMenu;
+	g_pwMenuStatus->InitAsDymanicMenu();
+	g_pwButtonStatusOfNavigationTree->setMenu(g_pwMenuStatus);
+	*/
+//	connect(g_pMenuStatus, SIGNAL(aboutToShow()), g_pwMainWindow, SLOT(SL_MenuAboutToShow()));
+//	connect(g_pMenuStatus, SIGNAL(triggered(QAction*)), g_pwMainWindow, SLOT(SL_MenuActionTriggered(QAction*)));
+
+//	pwButtonStatus->addAction(new QAction("test", pwButtonStatus));
+
+	pLayout->addWidget(g_pwButtonStatusOfNavigationTree);
+	pLayout->addStretch();
+	//WButtonTextWithIcon * pwButtonAddContact = new WButtonTextWithIcon("Add Contact |Add a new contact to your profile", eMenuAction_ContactAdd);
+	WButtonIconForToolbar * pwButtonAddContact = new WButtonIconForToolbar(eMenuAction_ContactAdd, "Add a new contact to your profile");
+	pLayout->addWidget(pwButtonAddContact, Qt::AlignBottom);
+	//pwButtonAddContact->addAction(PGetMenuAction(eMenuAction_ContactAdd));
+	connect(pwButtonAddContact, SIGNAL(clicked()), this, SLOT(SL_ContactNew()));
+
+	//pLayoutVertical->addWidget(g_pwButtonStatusOfNavigationTree);
+
+#if 1
+	setWidget(PA_CHILD pwWidgetLayout);
+#else
+	setWidget(PA_CHILD m_pwTreeView);
+#endif
+
+
 	// Create the root nodes
 	g_pTreeItemCommunication = new TTreeItemMyInbox;
+	/*
 	new TTreeItemDemo(NULL, "Applications", eMenuIconComponent);
-
 	new TTreeItemDemo(NULL, "Marketplace", eMenuIconMarketplace);
 	new TTreeItemDemo(NULL, "Finance", eMenuIconSell);
 	new TTreeItemDemo(NULL, "Registry", eMenuIconCorporations);
+	*/
 	(void)new TMyProfiles;
 	/*
 	TTreeItemDemo * pIDs = new TTreeItemDemo(NULL, "My Profiles", eMenuIconSettings);
@@ -321,16 +191,6 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 WNavigationTree::~WNavigationTree()
 	{
 	}
-
-/*
-CTreeWidgetItem *
-WNavigationTree::PAllocateTreeItemWidget(ITreeItem * piTreeItem)
-	{
-	CTreeWidgetItem * poTreeItem = new CTreeWidgetItem;
-	poTreeItem->m_piTreeItem = piTreeItem;
-	return poTreeItem;
-	}
-*/
 
 void
 WNavigationTree::NavigationTree_SelectTreeItemWidget(CTreeWidgetItem * poTreeItem)
@@ -398,7 +258,14 @@ WNavigationTree::SL_TreeItemEdited(QTreeWidgetItem * pItemEdited, int iColumn)
 	} // SL_TreeItemEdited()
 
 void
-WNavigationTree::NavigationTree_DisplayTreeItemsContainingText(const QString & sSearch)
+WNavigationTree::SL_EditSearchTextChanged(const QString & sTextFind)
+	{
+	NavigationTree_DisplayTreeItemsContainingText(sTextFind);
+	}
+
+
+void
+WNavigationTree::NavigationTree_DisplayTreeItemsContainingText(const QString & sSearch)	//TODO: Move to SL_EditSearchTextChanged()
 	{
 	QTreeWidgetItemIterator oIterator(m_pwTreeView);
 	if (sSearch.isEmpty())
@@ -432,6 +299,54 @@ WNavigationTree::NavigationTree_DisplayTreeItemsContainingText(const QString & s
 			}
 		}
 	} // NavigationTree_DisplayTreeItemsContainingText()
+
+void
+WNavigationTree::SL_ToggleDocking()
+	{
+	setFloating(!isFloating());
+	// Attempt to have a border when the widget is floating
+	//setStyleSheet("QWidget#Navigation { border: 1px solid red; }");
+	//setStyleSheet("QWidget { border: 1px solid red; }");
+	}
+
+void
+WNavigationTree::SL_ContactNew()
+	{
+	void DisplayDialogContactNew();
+	DisplayDialogContactNew();
+	}
+
+#define d_iProfile_DisplayAll		(-1)
+#define d_iProfile_DisplayNew		(-2)
+
+void
+WNavigationTree::SL_MenuProfilesShow()
+	{
+	g_pwMenuSwitchProfile->clear();
+	int cProfiles;
+	TProfile ** prgpProfiles = (TProfile **)g_oConfiguration.m_arraypaProfiles.PrgpvGetElements(OUT &cProfiles);
+	for (int iProfile = 0; iProfile < cProfiles; iProfile++)
+		{
+		TProfile * pProfile = prgpProfiles[iProfile];
+		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
+		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIconIdentities);
+		}
+	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All Profiles>", d_iProfile_DisplayAll, eMenuIconIdentities);
+	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Create New Profile...>", d_iProfile_DisplayNew, eMenuIconIdentities);
+	}
+
+void
+WNavigationTree::SL_MenuProfileSelected(QAction * pAction)
+	{
+	const int iProfile = pAction->data().toInt();
+	if (iProfile != d_iProfile_DisplayNew)
+		g_oConfiguration.NavigationTree_ProfileSwitch((TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementAtSafe_YZ(iProfile));
+	else
+		{
+		TMyProfiles::s_pThis->TreeItemWidget_Expand();		// Make sure all the profiles are visible
+		TMyProfiles::s_pThis->TreeItemLayout_SetFocus();	// Select the Tree Item to create a new profile
+		}
+	}
 
 const EMenuActionByte c_rgzeActionsMenuNavigationTree[] =
 	{

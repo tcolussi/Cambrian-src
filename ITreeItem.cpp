@@ -170,6 +170,9 @@ ITreeItem::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	{
 	switch (eMenuAction)
 		{
+	case eMenuAction_TreeItemRecommended:
+		m_uFlagsTreeItem |= FTI_kfRecommended;
+		return ezMenuActionNone;
 	case eMenuSpecialAction_ITreeItemRenamed:
 		m_uFlagsTreeItem &= ~FTI_kfTreeItemNameDisplayedGenerated;
 		return ezMenuActionNone;

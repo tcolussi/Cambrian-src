@@ -20,6 +20,7 @@
 singleton CChatConfiguration
 {
 public:
+	TProfile * m_pProfileSelected;				// Which profile was selected by the user.  NULL means to display all profiles in the Navigation Tree.
 	CArrayPtrProfiles m_arraypaProfiles;
 	TCertificates m_oTreeItemCertificates;
 	CArrayPtrBrowsers m_arraypaBrowsers;	// This is a bit of a hack, however at the moment, it will work
@@ -35,7 +36,8 @@ public:
 	void Destroy();
 	TCertificate * PCertificateRegister(TCertificate * pCertificateParent, const CSslCertificate & oCertificateSsl);
 	TCertificate * PCertificatesRegister(QSslSocket * pSocket);
-	void NavigationTree_AddAccounts();
+	void NavigationTree_ProfileSwitch(TProfile * pProfileSelected);
+	void NavigationTree_DisplayProfiles();
 	void NavigationTree_DisplayAllCertificates();
 	void NavigationTree_DisplayAllCertificatesToggle();
 	void NavigationTree_DisplayWallet();

@@ -1853,7 +1853,7 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chSourceTIMESTAMP				't'	// {t_} {tL} {tU}
 #define d_chSourceTIMESTAMP_DELTA		'T'	// {T-} {T_}
 #define d_chSourceAmount				'A' // {AB} {Am} {A$} {A*}
-#define d_chSourceKiB_32				'k'
+#define d_chSourceKiB_32				'k'	// {kT} {kK}
 #define d_chSourceKiB_64				'K'
 
 
@@ -1882,8 +1882,8 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chEncodingKiB_Percent			'%'	// Show the percentage (%) by dividing two values (this is useful to show the progress of a download)
 #define d_chEncodingKiB_PercentOfTotal	'T'	// Show the the percentage (%) as well as the total
 
-#define d_chEncodingQDateTimeLocal		'L'	// Display a TIMESTAMP in the local date and time
-#define d_chEncodingQDateTimeUTC		'U'	// Display a TIMESTAMP in the UTC date and time
+#define d_chEncodingQDateTimeLocal		'L'	// Display a TIMESTAMP in the local date and time	{tL}
+#define d_chEncodingQDateTimeUTC		'U'	// Display a TIMESTAMP in the UTC date and time		{tU}
 
 void
 CBin::BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding)
@@ -2141,14 +2141,14 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 					u.fValue = (chSource == d_chSourceKiB_32);
 					L64 cblValue = u.fValue ? va_arg(vlArgs, int) : va_arg(vlArgs, L64);
 					if (chEncoding == d_chEncodingKiB)
-						BinAppendTextBytesKiB(cblValue);
+						BinAppendTextBytesKiB(cblValue);		// {KK} {kK}
 					else
 						{
 						L64 cblTotal = u.fValue ? va_arg(vlArgs, int) : va_arg(vlArgs, L64);
 						if (chSource == d_chEncodingKiB_Percent)
-							BinAppendTextBytesKiBPercent(cblValue, cblTotal);
+							BinAppendTextBytesKiBPercent(cblValue, cblTotal);	// {K%} {k%}
 						else
-							BinAppendTextBytesKiBPercentProgress(cblValue, cblTotal);
+							BinAppendTextBytesKiBPercentProgress(cblValue, cblTotal);	// {KT} {kT}
 						}
 					}
 					break;

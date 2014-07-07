@@ -117,6 +117,72 @@ CChatConfiguration::PCertificatesRegister(QSslSocket * pSocket)
 	return pCertificateParent;	// This pointer is no longer a parent, but the last certificate registered which is the current 'peer' certificate of the socket.
 	} // PCertificatesRegister()
 
+extern QToolButton * g_pwButtonStatusOfNavigationTree;
+
+void
+NavigationTree_UpdatePresenceIcon(EMenuAction eMenuAction_Presence)
+	{
+	QAction * pAction = PGetMenuAction(eMenuAction_Presence);
+	Assert(pAction != NULL);
+	if (pAction != NULL)
+		{
+		g_pwButtonStatusOfNavigationTree->setIcon(pAction->icon());
+		g_pwButtonStatusOfNavigationTree->setText(pAction->text());
+		}
+	}
+
+
+extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
+
+void
+NavigationTree_UpdateNameOfSelectedProfile()
+	{
+	Assert(g_pwButtonSwitchProfile != NULL);
+	TProfile * pProfileSelected = g_oConfiguration.m_pProfileSelected;
+	if (pProfileSelected == NULL)
+		pProfileSelected = (TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementUnique_YZ();
+	if (pProfileSelected != NULL)
+		g_strScratchBufferStatusBar.Format("Profile: $S", &pProfileSelected->m_strNameProfile);
+	else
+		g_strScratchBufferStatusBar.Format("Switch Profile");
+	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
+	}
+
+//	Switch profiles
+void
+CChatConfiguration::NavigationTree_ProfileSwitch(TProfile * pProfileSelected)
+	{
+	Endorse(pProfileSelected == NULL);	// Display all profiles
+	if (pProfileSelected == m_pProfileSelected)
+		return;
+	m_pProfileSelected = pProfileSelected;
+	TProfile ** ppProfileStop;
+	TProfile ** ppProfile = m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfileStop);
+	while (ppProfile != ppProfileStop)
+		{
+		TProfile * pProfile = *ppProfile++;
+		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
+		BOOL fVisible = m_pProfileSelected == NULL || m_pProfileSelected == pProfile;
+		//MessageLog_AppendTextFormatCo(d_coOrange, "Profile $S: fVisible=$i\n", &pProfile->m_strNameProfile, fVisible);
+		pProfile->m_paTreeWidgetItem->setVisible(fVisible);
+		}
+	NavigationTree_UpdateNameOfSelectedProfile();
+	} // NavigationTree_ProfileSwitch()
+
+void
+CChatConfiguration::NavigationTree_DisplayProfiles()
+	{
+	TProfile ** ppProfileStop;
+	TProfile ** ppProfile = m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfileStop);
+	while (ppProfile != ppProfileStop)
+		{
+		TProfile * pProfile = *ppProfile++;
+		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
+		if (m_pProfileSelected == NULL || m_pProfileSelected == pProfile)
+			pProfile->TreeItemProfile_DisplayWithinNavigationTree();
+		}
+	NavigationTree_UpdateNameOfSelectedProfile();
+	}
 
 extern TTreeItemDemo * g_pSecurity;
 void
@@ -318,14 +384,7 @@ CChatConfiguration::XmlConfigurationLoadFromFile(const QString * psPathFileOpen)
 		}
 	*/
 
-	TProfile ** ppProfileStop;
-	TProfile ** ppProfile = m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfileStop);
-	while (ppProfile != ppProfileStop)
-		{
-		TProfile * pProfile = *ppProfile++;
-		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
-		pProfile->TreeItemProfile_DisplayWithinNavigationTree();
-		}
+	NavigationTree_DisplayProfiles();
 
 	TBrowser ** ppBrowserStop;
 	TBrowser ** ppBrowser = m_arraypaBrowsers.PrgpGetBrowsersStop(OUT &ppBrowserStop);
@@ -552,9 +611,12 @@ Configuration_GlobalSettingsPresenceUpdate(EMenuAction eMenuAction)
 		TAccountXmpp * pAccount = *ppAccount++;
 		pAccount->PresenceUpdateFromGlobalSettings(eMenuAction);
 		}
-
+	NavigationTree_UpdatePresenceIcon(eMenuAction);
+	/*
 	extern QToolButton * g_pwButtonStatusOfNavigationTree;
 	Widget_SetIconButton(INOUT g_pwButtonStatusOfNavigationTree, eMenuAction);
+	g_pwButtonStatusOfNavigationTree->setText(PGetMenuAction(eMenuAction)->text());
+	*/
 	}
 
 QString c_sFilter = "Cambrian Configuration (*.xml)";	// This string should be 'const' however the function getSaveFileName() accepts only a QString* without 'const'

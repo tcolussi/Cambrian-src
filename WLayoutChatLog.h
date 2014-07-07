@@ -21,8 +21,8 @@ public:
 	WChatInput * m_pwChatInput;	// Widget for the user to enter text to send to the contact
 protected:
 	class WFindText * m_pwFindText;			// Widget to search text within the chat history.  Eventually this widget should be built-in to WChatLog
-	WButtonIcon * m_pwButtonSendBitcoin;
-	//WButtonIcon * m_pwButtonSendFile;
+	WButtonIconForToolbar * m_pwButtonSendBitcoin;
+	//WButtonIconForToolbar * m_pwButtonSendFile;
 
 public:
 	explicit WLayoutChatLog(ITreeItemChatLogEvents * pParent);

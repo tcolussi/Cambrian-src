@@ -46,7 +46,7 @@ class CGridCell
 	CGridRow * m_pRow;
 };
 
-typedef PCVOID PVDATA;
+typedef void * PVDATA;
 typedef PVDATA PVDATAROW;
 
 class CGridSortParameters	// Extra parameters to sort the data within a column, such as the column index/identifier and other cached data

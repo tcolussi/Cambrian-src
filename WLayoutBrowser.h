@@ -74,8 +74,8 @@ class WLayoutBrowser  : public WLayout
 protected:
 	TBrowser * m_pBrowser;
 	WEdit * m_pwEdit;
-	WButtonIcon * m_pwButtonBack;
-	WButtonIcon * m_pwButtonForward;
+	WButtonIconForToolbar * m_pwButtonBack;
+	WButtonIconForToolbar * m_pwButtonForward;
 
 	OCambrian * m_paCambrian;
 

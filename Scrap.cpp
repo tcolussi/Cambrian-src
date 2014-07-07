@@ -139,3 +139,19 @@ CArrayPtrEvents::PFindEventLastReceived() const
 		}
 	return NULL;
 	}
+
+//	Filter the events from the QLineEdit
+bool
+WNavigationTreeCaption::eventFilter(QObject * obj, QEvent *event)
+	{
+	if (event->type() == QEvent::KeyPress)
+		{
+		QKeyEvent * keyEvent = static_cast<QKeyEvent *>(event);
+		if (keyEvent->key() == Qt::Key_Escape)
+			{
+			// MessageLog_AppendTextFormatCo(d_coRed, "WNavigationTreeCaption::eventFilter() - Escape key pressed\n");
+
+			}
+		}
+	return QWidget::eventFilter(obj, event);
+	}

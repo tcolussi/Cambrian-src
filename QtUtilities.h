@@ -85,13 +85,22 @@ class WSpacer : public QLabel
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Button displaying an icon.  The difference between WButtonIcon and WLabelIcon is the button may be clicked while the label solely display the icon/pixmap.
-class WButtonIcon : public QToolButton
+//	Button displaying an icon.  The difference between WButtonIconForToolbar and WLabelIcon is the button may be clicked while the label solely displays the icon/pixmap.
+class WButtonIconForToolbar : public QToolButton
 {
 public:
-	WButtonIcon(PA_PARENT QWidget * pwParent, EMenuAction eMenuIcon);
-	WButtonIcon(EMenuAction eMenuIcon, PSZAC pszmToolTip = NULL);
+	WButtonIconForToolbar(PA_PARENT QWidget * pwParent, EMenuAction eMenuIcon);
+	WButtonIconForToolbar(EMenuAction eMenuIcon, PSZAC pszmToolTip = NULL);
 	void _Init(EMenuAction eMenuIcon);
+
+	WMenu * PwGetMenu() const { return (WMenu *)menu(); }
+};
+
+//	Button displaying an icon and a menu when clicked
+class WButtonIconForToolbarWithDropDownMenu : public WButtonIconForToolbar
+{
+public:
+	WButtonIconForToolbarWithDropDownMenu(PA_PARENT QWidget * pwParent, EMenuAction eMenuIcon, PSZAC pszmButtonTextAndToolTip);
 };
 
 class WButtonText : public QPushButton
@@ -102,12 +111,14 @@ public:
 	void Button_SetIcon(EMenuAction eMenuIcon);
 };
 
+//	This is a text button with an icon on the left of the text.  This is different than WButtonIconForToolbarWithDropDownMenu because no menu will be displayed when clicked.
 class WButtonTextWithIcon : public WButtonText
 {
 public:
 	WButtonTextWithIcon(PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIcon);
 };
 
+//	A normal checkbox where the user may switched on (checked) or off (unchecked)
 class WButtonCheckbox : public QCheckBox
 {
 public:
@@ -115,6 +126,7 @@ public:
 	WButtonCheckbox(PSZAC pszmButtonTextAndToolTip, BOOL fChecked);
 };
 
+//	A radio button where only one button may be selected (somewhat complement to a checkbox)
 class WButtonRadio : public QRadioButton
 {
 public:
@@ -150,7 +162,7 @@ public:
 	WEditReadOnly(const QString & sText);
 };
 
-//	Class to edit and validate a username
+//	Widget to edit and validate a username
 class WEditUsername : public WEdit
 {
 public:
@@ -185,6 +197,19 @@ class WEditNumberReadOnly : public WEditNumber
 {
 public:
 	WEditNumberReadOnly() { setReadOnly(true); }
+};
+
+//	Widget for the user to enter text to search.  This widget displays the 'search icon'
+class WEditSearch : public WEdit
+{
+/*
+	Q_OBJECT
+protected:
+	QToolButton * m_pwButtonSearch;		// Button to display the search icon located on the left of widget
+*/
+
+public:
+	WEditSearch();
 };
 
 
@@ -490,6 +515,8 @@ void Widget_SetWidth(INOUT QWidget * pwWidget, int nWidth);
 void Widget_ScrollToEnd(INOUT QAbstractScrollArea * pwWidget);
 
 void WidgetButton_SetTextAndToolTip(INOUT QAbstractButton * pwButton, PSZAC pszmButtonTextAndToolTip);
+
+void Layout_MarginsClear(INOUT QLayout * poLayout);
 
 void SetCursorWait();
 void SetCursorRestoreDefault();

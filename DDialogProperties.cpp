@@ -270,11 +270,11 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(poLayoutHorizontal);
 	poLayoutVertical->Layout_PwAddRowLabel("Contacts not in group");
 	poLayoutVertical->addWidget(PA_CHILD m_pwListContactsAvailable);
-//	poLayoutVertical->addWidget(new WButtonIcon(eMenuAction_ContactAdd, "Include the selected contact(s) to the group"), d_zNA, Qt::AlignRight);
+//	poLayoutVertical->addWidget(new WButtonIconForToolbar(eMenuAction_ContactAdd, "Include the selected contact(s) to the group"), d_zNA, Qt::AlignRight);
 	poLayoutVertical = new OLayoutVerticalAlignTop(poLayoutHorizontal);
 	poLayoutVertical->Layout_PwAddRowLabel("Contacts in group");
 	poLayoutVertical->addWidget(PA_CHILD m_pwListContactsInGroup);
-//	poLayoutVertical->addWidget(new WButtonIcon(eMenuAction_ContactRemove, "Remove selected contact(s) from the group"));
+//	poLayoutVertical->addWidget(new WButtonIconForToolbar(eMenuAction_ContactRemove, "Remove selected contact(s) from the group"));
 	poLayoutHorizontal = new OLayoutHorizontal(m_poLayoutBody);
 	WButtonText * pwButtonOK = new WButtonTextWithIcon((m_pGroup != NULL) ? " Add Contacts " : " Create Group ", eMenuAction_Group);
 	poLayoutHorizontal->addWidget(pwButtonOK, d_zNA, Qt::AlignRight);
@@ -527,7 +527,7 @@ DDialogBallotSend::SL_ButtonAdd()
 void
 DDialogBallotSend::SL_ButtonRemove()
 	{
-	WButtonIcon * pwButtonRemove = (WButtonIcon *)sender();	// Which button the user clicked
+	WButtonIconForToolbar * pwButtonRemove = (WButtonIconForToolbar *)sender();	// Which button the user clicked
 	_OLayoutBallotChoice ** ppLayoutStop;
 	_OLayoutBallotChoice ** ppLayout = m_arraypLayoutChoices.PrgpGetQuestionsStop(OUT &ppLayoutStop);
 	while (ppLayout != ppLayoutStop)
@@ -547,7 +547,7 @@ _OLayoutBallotChoice::_OLayoutBallotChoice(PA_PARENT DDialogBallotSend * pwDialo
 	{
 	_OLayoutBallotChoice * poLayoutLast = (_OLayoutBallotChoice *)pwDialogBallotParent->m_arraypLayoutChoices.PvGetElementLast_YZ();
 	pwDialogBallotParent->m_arraypLayoutChoices.Add(this);
-	m_pwButtonRemove = new WButtonIcon(eMenuIconRemove, "Remove this question from the ballot");
+	m_pwButtonRemove = new WButtonIconForToolbar(eMenuIconRemove, "Remove this question from the ballot");
 	addWidget(m_pwButtonRemove);
 	m_pwEditChoice = new WEdit;
 	connect(m_pwEditChoice, SIGNAL(returnPressed()), pwDialogBallotParent, SLOT(SL_ButtonAdd()));

@@ -77,7 +77,7 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		Vault_WriteEventsToDiskIfModified();		// This line is important to be first because saving the events may modify some variables which may be serialized by ITreeItemChatLogEvents::XmlExchange()
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
 	pXmlExchanger->XmlExchangeStr("JID", INOUT_F_UNCH_S &m_strJidBare);
-	pXmlExchanger->XmlExchangeFlags("Flags", INOUT &m_uFlagsContact, FC_kmFlagsSerializeMask);
+	pXmlExchanger->XmlExchangeUIntHexFlagsMasked("Flags", INOUT &m_uFlagsContact, FC_kmFlagsSerializeMask);
 //	pXmlExchanger->XmlExchangeUIntHex("F", INOUT &m_uFlagsContactSerialized);
 	pXmlExchanger->XmlExchangeTimestamp("tsSync", INOUT_F_UNCH_S &m_tsOtherLastSynchronized);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT_F_UNCH_S &m_strComment);
@@ -435,7 +435,7 @@ TContact::XmppRosterSubscriptionUpdate(PSZUC pszSubscription)
 			if ((m_uFlagsContact & FC_kfSubscribeAsk) == 0)
 				{
 				m_uFlagsContact |= FC_kfSubscribeAsk;
-				m_pAccount->PGetSocket_YZ()->Socket_WriteXmlFormatted("<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^j' subscription='from' ask='subscribe'></item></query></iq>", this);
+				m_pAccount->PGetSocket_YZ()->Socket_WriteXmlFormatted("<iq id='$p' type='set'><query xmlns='jabber:iq:roster'><item jid='^j' subscription='from' ask='subscribe'></item></query></iq>", this, this);
 				}
 			}
 		if ((m_uFlagsContact & FC_kfSubscribe) == 0)

@@ -151,8 +151,9 @@ const char c_szHtmlBulletSmall[]		= "&#8226;";	// Bullet
 const char c_szHtmlBulletLarge[]		= "&#9679;";	// Black circle
 //const char c_szHtmlBulletLarge[]		= "&#11044;";	// Black large circle
 //const char c_szHtmlBulletLarge[]		= "&#10687;";	// Circled bullet
-const char c_szHtmlCheckboxEmpty[]		= "&#9744;";
-const char c_szHtmlCheckboxSelected[]	= "&#9745;";
+const char c_szHtmlCheckboxEmpty[]		= "&#9744;";	// Ballot box
+//const char c_szHtmlCheckboxSelected[]	= "&#9745;";	// Ballot with a checkmark
+const char c_szHtmlCheckboxSelected[]	= "&#9746;";	// Ballot with a x
 
 #define d_chActionForEventBallot_Vote			'v'
 #define d_coBallot		0xCCFF99		// Display the ballot with a light green color
@@ -218,7 +219,7 @@ IEventBallot::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MA
 			}
 		pbinHtmlBallot->BinAppendTextSzv_VE("<br/> ^_^_ $s ^S", pszHtmlBullet, &pChoice->m_strQuestion);
 		iChoice++;
-		}
+		} // while
 
 	// Display who voted
 	ppVote = ppVoteFirst;
@@ -245,7 +246,7 @@ IEventBallot::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MA
 		}
 	//MessageLog_AppendTextFormatCo(d_coBlack, "$S", pbinHtmlBallot);
 	poCursorTextBlock->InsertHtmlBin(*pbinHtmlBallot, QBrush(d_coBallot));
-	}
+	} // ChatLogUpdateTextBlock()
 
 void
 CArrayPtrBallotChoices::BinHtmlAppendVoteChoices(INOUT CBin * pbinHtml, UINT_BALLOT_CHOICES ukmChoices, const CStr & strComment) const
