@@ -346,7 +346,7 @@ DDialogAccountAdd::SL_ButtonOK_clicked()
 		}
 	else
 		{
-		m_paAccount->m_paTreeWidgetItem->setText(0, (CString)m_paAccount->TreeItem_PszGetNameDisplay());	// Update the display text
+		m_paAccount->TreeItem_SetTextToDisplayNameTyped();  // Update the display text
 		}
 	m_paAccount->Socket_ConnectUI(this, TRUE);
 	} // SL_ButtonOK_clicked()
@@ -406,7 +406,9 @@ DDialogAccountAdd::SocketUI_OnSuccess()
 	{
 	Assert(m_pSocket_YZ != NULL);
 	Assert(m_paAccount != NULL);
-	g_pTreeItemCommunication->TreeItemWidget_EnsureVisible();	// Make sure the "Inbox" is always visible
+	#if FIX_THIS
+	g_pTreeItemCommunication->TreeItemWidget_EnsureVisible();	// Make sure the 'Inbox' is always visible
+	#endif
 	AddContactInvitationToNavigationTree_MB(m_paAccount);
 	m_paAccount->Socket_DisconnectUI();
 	m_paAccount = PA_CAST_TO_P NULL;		// Complete the transfer of ownership (to prevent the destructor of DDialogAccountAdd to delete it)

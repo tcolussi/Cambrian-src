@@ -56,7 +56,7 @@ TProfile::PAllocateApplicationMayanX()
 	{
 	TApplicationMayanX * pApplication = (TApplicationMayanX *)PaAllocateApplicationMayanX(this);
 	m_arraypaApplications.Add(PA_CHILD pApplication);
-	pApplication->TreeItem_DisplayWithinNavigationTree(this, "MayanX", eMenuIconCoffeeExchange);
+	pApplication->TreeItem_DisplayWithinNavigationTreeExpand(this, "MayanX", eMenuIconCoffeeExchange);
 	return pApplication;
 	}
 

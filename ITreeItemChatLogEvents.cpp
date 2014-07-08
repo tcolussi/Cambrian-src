@@ -76,12 +76,15 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 		{
 		TContact * pContact = (TContact *)m_pParent;
 		TIMESTAMP tsOtherLastReceived = m_arraypaEvents.TsEventOtherLastEventReceived();
+		if (tsOtherLastReceived > 0)
+			pContact->SetFlagContactAsInvited();	// If there is one event received, then the contact does not need an invitation
 		if (tsOtherLastReceived < pContact->m_tsOtherLastSynchronized || pContact->m_tsOtherLastSynchronized == d_ts_zNA)
 			{
 			if (pContact->m_tsOtherLastSynchronized != tsOtherLastReceived)
 				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastSynchronized from $t to $t for '$s'\n", pContact->m_tsOtherLastSynchronized, tsOtherLastReceived, m_pParent->TreeItem_PszGetNameDisplay());
 			pContact->m_tsOtherLastSynchronized = tsOtherLastReceived;
 			}
+
 		}
 	else
 		{

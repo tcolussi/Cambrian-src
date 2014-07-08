@@ -36,8 +36,6 @@ public:
 	void Destroy();
 	TCertificate * PCertificateRegister(TCertificate * pCertificateParent, const CSslCertificate & oCertificateSsl);
 	TCertificate * PCertificatesRegister(QSslSocket * pSocket);
-	void NavigationTree_ProfileSwitch(TProfile * pProfileSelected);
-	void NavigationTree_DisplayProfiles();
 	void NavigationTree_DisplayAllCertificates();
 	void NavigationTree_DisplayAllCertificatesToggle();
 	void NavigationTree_DisplayWallet();

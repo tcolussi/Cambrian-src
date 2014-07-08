@@ -11,6 +11,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+//#ifdef WANT_TREE_NODE_NEW_CONTACT		// Code to add the node <New Contact...>
 
 //	Base class for a chat account.
 class TAccountCore : public ITreeItemChatLog
@@ -63,7 +64,9 @@ protected:
 	CSocketXmpp * m_paSocket;							// Socket to send and receive XMPP messages.
 	CBin m_binFingerprintCertificate;					// The fingerprint (typically SHA-1) of the pinned certificate encrypting the connection with the server.  Any change to this value will cutoff the socket communication until manually approved by the user.
 	TCertificateServerName * m_pCertificateServerName;	// Pinned certificate for the account.  Any change of certificate automatically notifies the user, and often require manual approval by the user.
+	#ifdef WANT_TREE_NODE_NEW_CONTACT
 	TContactNew * m_pTreeItemContactNew;				// Pointer to the node <New Contact...>   (this pointer is necessary so we may insert new contact(s) and group(s) before it)
+	#endif
 
 public:
 	TAccountXmpp(TProfile * pProfileParent);
@@ -78,6 +81,7 @@ public:
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);					// From ITreeItem
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);			// From ITreeItem
 	virtual void TreeItem_GotFocus();												// From ITreeItem
+	PSZUC TreeItemAccount_PszGetNameDisplay() const;
 	void TreeItemAccount_DisplayWithinNavigationTree();
 	void TreeItemAccount_DisplayWithinNavigationTreeInit(PSZUC pszServerName, UINT uServerPort);
 	void TreeItemAccount_DeleteFromNavigationTree_MB(PA_DELETING);
@@ -124,6 +128,8 @@ public:
 	PSZUC ChatLog_PszGetInvitationLink(OUT_IGNORE CStr * pstrInvitationLink) const;
 	PSZUC ChatLog_PszGetPathFolderDownload();
 	void ChatLog_DisplayStanza(const CXmlNode * pXmlNodeMessageStanza);
+
+	TAccountAlias * PGetAlias_NZ() CONST_MCC;
 
 	inline int Contacts_UGetCount() const { return m_arraypaContacts.GetSize(); }
 	inline TContact ** PrgpGetContactsStop(OUT TContact *** pppContactStop) const { return (TContact **)m_arraypaContacts.PrgpvGetElementsStop(OUT (void ***)pppContactStop); }

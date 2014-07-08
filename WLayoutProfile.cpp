@@ -1,11 +1,12 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include "ProfileSwitching.h"
 #include "WLayoutProfile.h"
 
-//	TMyProfiles::ITreeItem::TreeItem_GotFocus()
+//	TProfiles::ITreeItem::TreeItem_GotFocus()
 void
-TMyProfiles::TreeItem_GotFocus()
+TProfiles::TreeItem_GotFocus()
 	{
 	MainWindow_SetCurrentLayoutAutoDelete(PA_CHILD new WLayoutMyProfiles);
 	}
@@ -86,7 +87,7 @@ WLayoutMyProfiles::SL_ButtonCreateNewProfile()
 	g_oConfiguration.m_arraypaProfiles.Add(PA_CHILD pProfile);
 	pProfile->m_strNameProfile = strProfileName;
 	pProfile->GenerateKeys();
-	pProfile->TreeItemProfile_DisplayWithinNavigationTree();
+	pProfile->TreeItemProfile_DisplayProfileWithinNavigationTree();
 	//pProfile->m_paTreeWidgetItem->setExpanded(true);
 
 	#ifdef DEBUG_IMPORT_OLD_CONFIG_XML

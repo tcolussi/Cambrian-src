@@ -73,7 +73,7 @@ OProfile::CreateNew(const QString & sNameProfile)
 	g_oConfiguration.m_arraypaProfiles.Add(PA_CHILD pProfile);
 	pProfile->m_strNameProfile = sNameProfile;
 	pProfile->GenerateKeys();
-	pProfile->TreeItemProfile_DisplayWithinNavigationTree();
+	pProfile->TreeItemProfile_DisplayProfileWithinNavigationTree();
 	pProfile->TreeItemWidget_EnsureVisible();
 	return sNameProfile;	// Until we have the keys generated, return the name fo the profile as its identifier (this is good enough for proof of concept)
 	}

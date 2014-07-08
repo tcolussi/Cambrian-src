@@ -96,13 +96,6 @@ CTreeItemWelcome::TreeItem_GotFocus()
 	}
 #endif
 
-//	TTreeItemMyInbox::ITreeItem::TreeItem_GotFocus()
-void
-TTreeItemMyInbox::TreeItem_GotFocus()
-	{
-	MainWindow_SetCurrentLayout(NULL);
-	}
-
 class CTableAccounts : public WTable
 {
 public:
@@ -638,7 +631,7 @@ WNoticeWarningCertificateNotAuthenticated::ETreeItemGotFocus(IN ITreeItem * piTr
 	NoticeStatus_SetTextFormat_VE("Please confirm with friends or the site operators to verify this certificate is correct.");
 	switch (rtiTreeItemFocus)
 		{
-	case RTI(TTreeItemMyInbox):
+	case RTI(TTreeItemInbox):
 	case RTI(TCertificates):		// Since we are displaying all certificates, why not displaying notices of all unauthenticated certificates
 		return eNoticeActionDisplay;
 	default:

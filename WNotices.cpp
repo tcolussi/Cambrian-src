@@ -114,7 +114,7 @@ INotice *
 CListNotices::Notice_PazDetach(INotice * piwNoticeDetach)
 	{
 	Assert(piwNoticeDetach != NULL);
-	Endorse(piwNoticeDetach->parent() != NULL);	// The notice may still have a parent, however if this is the case, the parent will delete it.  What is important is having the notice removed from the list to avoid a dangling poiinter
+	Endorse(piwNoticeDetach->parent() != NULL);	// The notice may still have a parent, however if this is the case, the parent will delete it.  What is important is having the notice removed from the list to avoid a dangling pointer
 	INotice * piwNoticePrevious = NULL;
 	INotice * piwNotice = m_paiwNoticeList;
 	while (piwNotice != NULL)

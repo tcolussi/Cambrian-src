@@ -100,8 +100,8 @@ TContact::Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const
 const QBrush &
 TContact::ChatLog_OGetBrushForNewMessageReceived()
 	{
-	m_uFlagsTreeItem ^= FTI_kfChatLogBrushColor;	// Alternate the color for every message received
-	return (m_uFlagsTreeItem & FTI_kfChatLogBrushColor) ? c_brushGreenSuperPale : c_brushGreenSuperSuperPale;
+	m_uFlagsTreeItem ^= FTI_kfChatLog_BrushColor;	// Alternate the color for every message received
+	return (m_uFlagsTreeItem & FTI_kfChatLog_BrushColor) ? c_brushGreenSuperPale : c_brushGreenSuperSuperPale;
 	}
 
 //	TContact::ITreeItem::TreeItem_FContainsMatchingText()
@@ -334,7 +334,7 @@ TContact::TreeItemContact_UpdateNameDisplayOfAliases()
 		if (pAlias->EGetRuntimeClass() == RTI(TGroupMember))
 			{
 			TGroupMember * pMember = (TGroupMember *)pAlias;
-			pMember->m_pGroup->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEventsRepopulateAll;	// Refresh the Chat Log of each group where the contact participates, so the new name is updated there.
+			pMember->m_pGroup->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEvents_RepopulateAll;	// Refresh the Chat Log of each group where the contact participates, so the new name is updated there.
 			}
 		pAlias = pAlias->m_pNextAlias;
 		}
@@ -640,6 +640,21 @@ IContactAlias::~IContactAlias()
 	Assert(FALSE && "Alias not found");
 	}
 
+//	IContactAlias::IRuntimeObject::PGetRuntimeInterface()
+void *
+IContactAlias::PGetRuntimeInterface(const RTI_ENUM rti) const
+	{
+	switch (rti)
+		{
+	case RTI(TContact):
+		return m_pContact;
+	case RTI(TAccountXmpp):
+		return m_pContact->m_pAccount;
+	default:
+		return ITreeItem::PGetRuntimeInterface(rti);
+		} // switch
+	}
+
 void
 IContactAlias::XmlExchangeContactAlias(INOUT CXmlExchanger * pXmlExchanger, CHS chAttributeContactAlias)
 	{
@@ -704,7 +719,7 @@ CArrayPtrContactAliases::DeleteAllAliasesRelatedToContactsAboutBeingDeleted()
 		Assert(pAlias != NULL);
 		Assert(pAlias->m_pContact != NULL);
 		Assert(pAlias->m_pContact->EGetRuntimeClass() == RTI(TContact));
-		if ((pAlias->m_pContact->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItemAboutBeingDeleted) == 0)
+		if ((pAlias->m_pContact->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItem_AboutBeingDeleted) == 0)
 			*ppAliasDst++ = pAlias;
 		else
 			delete pAlias;
@@ -758,7 +773,7 @@ CArrayPtrContacts::ForEach_ChatLogResetNickNameAndRepopulateAllEvents()
 		{
 		TContact * pContact = *ppContact++;
 		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-		pContact->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEventsRepopulateAll;
+		pContact->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEvents_RepopulateAll;
 		pContact->ChatLog_ResetNickname();
 		}
 	}
@@ -769,6 +784,15 @@ TContactNew::TContactNew(TAccountXmpp * pAccount)
 	m_pAccount = pAccount;
 	TreeItem_DisplayWithinNavigationTree(m_pAccount);
 	TreeItem_SetTextColorAndIcon(d_coGray, eMenuAction_ContactAdd);
+	}
+
+//	TContactNew::IRuntimeObject::PGetRuntimeInterface()
+void *
+TContactNew::PGetRuntimeInterface(const RTI_ENUM rti) const
+	{
+	if (rti == RTI(TAccountXmpp))
+		return m_pAccount;
+	return ITreeItem::PGetRuntimeInterface(rti);
 	}
 
 //	TContactNew::ITreeItem::TreeItem_PszGetNameDisplay()

@@ -139,7 +139,7 @@ IEvent::S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lPa
 //	Base constructor for all events.
 IEvent::IEvent(const TIMESTAMP * ptsEventID)
 	{
-	m_pVaultParent_NZ = NULL;					// Although this pointer is declared 'non-zero', it is initialized to NULL because as soon ad the event is added to a vault, this poiinter will become valid
+	m_pVaultParent_NZ = NULL;					// Although this pointer is declared 'non-zero', it is initialized to NULL because as soon ad the event is added to a vault, this pointer will become valid
 	m_pContactGroupSender_YZ = NULL;
 	m_uFlagsEvent = FE_kzDefault;
 	m_tsOther = d_tsOther_ezEventNeverSent;		// Initialize m_tsOther to something so we don't get unpleasant surprises

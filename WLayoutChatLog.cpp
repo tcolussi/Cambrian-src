@@ -18,9 +18,9 @@
 WLayoutChatLog *
 ITreeItemChatLogEvents::ChatLog_PwGetLayout_NZ() CONST_MCC
 	{
-	if (m_uFlagsTreeItem & FTI_kfChatLogEventsRepopulateAll)
+	if (m_uFlagsTreeItem & FTI_kfChatLogEvents_RepopulateAll)
 		{
-		m_uFlagsTreeItem &= ~FTI_kfChatLogEventsRepopulateAll;
+		m_uFlagsTreeItem &= ~FTI_kfChatLogEvents_RepopulateAll;
 		if (m_pawLayoutChatLog != NULL)
 			{
 			m_pawLayoutChatLog->ChatLog_EventsRepopulateUpdateUI();
@@ -44,7 +44,7 @@ void
 TContact::Vault_GetEventsForChatLog(OUT CArrayPtrEvents * parraypEventsChatLog) CONST_MCC
 	{
 	Vault_PGet_NZ()->GetEventsForChatLog(OUT parraypEventsChatLog);
-	if (m_uFlagsTreeItem & FTI_kfChatLogEventsIncludeFromWallet)
+	if (m_uFlagsTreeItem & FTI_kfChatLogEvents_IncludeFromWallet)
 		{
 		parraypEventsChatLog->Wallets_AppendEventsTransactionsFor(this, eWalletViewFlag_kmDisplayTransactionsAll);
 		parraypEventsChatLog->SortEventsByIDs();	// Merging the transactions requires a sort to make sure the events are displayed in chronological order
@@ -186,7 +186,7 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 	{
 	Assert(pXmlNodeXmppXcp != NULL);
 	Assert(m_pAccount != NULL);
-	Assert(m_paTreeWidgetItem != NULL);
+	Endorse(m_paTreeWidgetItem_YZ == NULL);	// We may process stanzas (receive XMPP messages) for a contact not in the Navigation Tree
 	m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;
 //	m_uFlagsContact &= ~FC_kfNoCambrianProtocol;		// Any stanza received containing <xcp> is assumed the client software of the contact understands the Cambrian Protocol
 
@@ -212,7 +212,7 @@ TContact::ChatLogContact_DisplayStanzaToUI(const CXmlNode * pXmlNodeMessageStanz
 	{
 	Assert(pXmlNodeMessageStanza != NULL);
 	Assert(m_pAccount != NULL);
-	Assert(m_paTreeWidgetItem != NULL);
+	Endorse(m_paTreeWidgetItem_YZ == NULL);
 	m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;
 
 	#if 0

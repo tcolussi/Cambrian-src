@@ -7,7 +7,6 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class IApplication : public ITreeItem	// (application)
 {
@@ -45,7 +44,9 @@ public:
 	TProfile(CChatConfiguration * pConfigurationParent);
 	~TProfile();
 	void GenerateKeys();
-	void TreeItemProfile_DisplayWithinNavigationTree();
+	void TreeItemProfile_DisplayProfileWithinNavigationTree();
+	void TreeItemProfile_DisplayAccountsWithinNavigationTree();
+	void TreeItemProfile_DisplayApplicationsWithinNavigationTree(ITreeItem * pTreeItemParent);
 	void DeleteAccount(PA_DELETING TAccountXmpp * paAccount);
 
 	TAccountXmpp * PAllocateAccount();
@@ -54,8 +55,9 @@ public:
 	void UnserializeContactsFromOldConfigXml();
 	#endif
 
+	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;			// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);			// From IXmlExchange
-	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;						// From ITreeItem
+	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;					// From ITreeItem
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);			// From ITreeItem
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);	// From ITreeItem
 	virtual void TreeItem_GotFocus();										// From ITreeItem
@@ -70,29 +72,8 @@ public:
 class CArrayPtrProfiles : public CArrayPtrTreeItems
 {
 public:
+	inline TProfile ** PrgpGetProfiles(OUT int * pcProfiles) const { return (TProfile **)PrgpvGetElements(OUT pcProfiles); }
 	inline TProfile ** PrgpGetProfilesStop(OUT TProfile *** pppProfileStop) const { return (TProfile **)PrgpvGetElementsStop(OUT (void ***)pppProfileStop); }
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-singleton TMyProfiles : public ITreeItem
-{
-public:
-	TMyProfiles();
-	virtual void TreeItem_GotFocus();		// From ITreeItem
-	RTI_IMPLEMENTATION(TMyProfiles)
-
-public:
-	static TMyProfiles * s_pThis;
-};
-
-//	Root Tree Item to welcome the user.  This is the first thing the user will see
-class TTreeItemMyInbox : public ITreeItem
-{
-public:
-	TTreeItemMyInbox();
-	virtual void TreeItem_GotFocus();		// From ITreeItem
-
-	RTI_IMPLEMENTATION(TTreeItemMyInbox)
 };
 
 #endif // TPROFILE_H

@@ -3005,6 +3005,7 @@ CArrayPtrXmlSerializableObjects::PFindObjectById(UINT uObjectId) const
 			if (pObject->mu_Cookie.uSerializeObjectId == uObjectId)
 				return pObject;
 			} // while
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "PFindObjectById() - Identifier $u is out of range\n", uObjectId);
 		} // if
 	return NULL;
 	}
@@ -3580,8 +3581,8 @@ CXmlExchanger::XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S IXmlExcha
 					}
 				}
 			// An error occurred while parsing the integer
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "XmlExchangePointer('$b') - Invalid data '$s'\n", chTagNamePointer, pszuTagValue);
 			}
-
 		} // if...else
 	} // XmlExchangePointer()
 

@@ -159,8 +159,9 @@ public:
 	IContactAlias(TContact * pContact);
 	~IContactAlias();
 	void XmlExchangeContactAlias(INOUT CXmlExchanger * pXmlExchanger, CHS chAttributeContactAlias);
+	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;				// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);				// From IXmlExchange
-	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;							// From ITreeItem
+	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;						// From ITreeItem
 	virtual void ContactAlias_IconChanged(EMenuAction eMenuIconDisplay, EMenuAction eMenuIconPresence);
 };
 
@@ -202,8 +203,9 @@ public:
 	TAccountXmpp * m_pAccount;
 public:
 	TContactNew(TAccountXmpp * pAccount);
-	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;			// From ITreeItem
-	virtual void TreeItem_GotFocus();							// From ITreeItem
+	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;		// From IRuntimeObject
+	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;				// From ITreeItem
+	virtual void TreeItem_GotFocus();									// From ITreeItem
 
 	void TreeItemContactNew_DisplayWithinNavigationTree();
 

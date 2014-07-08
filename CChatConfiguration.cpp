@@ -11,7 +11,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "WNavigationTree.h"
+//#include "WNavigationTree.h"
 #include "TMarketplace.h"
 
 CChatConfiguration g_oConfiguration;
@@ -78,7 +78,7 @@ CChatConfiguration::PCertificateRegister(TCertificate * pCertificateParent, cons
 	parraypaCertificates->Add(PA_CHILD pCertificate);
 	pCertificate->m_binDataBinary = arraybCertificate;
 	oCertificateSsl.GetCertificateName(OUT &pCertificate->m_strCertificateName);
-	if (m_oTreeItemCertificates.m_paTreeWidgetItem != NULL)
+	if (m_oTreeItemCertificates.m_paTreeWidgetItem_YZ != NULL)
 		{
 		pCertificate->NavigationTree_DisplayCertificates(piCertificateParent);	// If the Tree Item "Certificates" is visible within the Navigation Tree, then display also the newly added certificate.
 		pCertificate->TreeItemWidget_EnsureVisible();
@@ -117,98 +117,6 @@ CChatConfiguration::PCertificatesRegister(QSslSocket * pSocket)
 	return pCertificateParent;	// This pointer is no longer a parent, but the last certificate registered which is the current 'peer' certificate of the socket.
 	} // PCertificatesRegister()
 
-extern QToolButton * g_pwButtonStatusOfNavigationTree;
-
-void
-NavigationTree_UpdatePresenceIcon(EMenuAction eMenuAction_Presence)
-	{
-	QAction * pAction = PGetMenuAction(eMenuAction_Presence);
-	Assert(pAction != NULL);
-	if (pAction != NULL)
-		{
-		g_pwButtonStatusOfNavigationTree->setIcon(pAction->icon());
-		g_pwButtonStatusOfNavigationTree->setText(pAction->text());
-		}
-	}
-
-
-extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
-
-void
-NavigationTree_UpdateNameOfSelectedProfile()
-	{
-	Assert(g_pwButtonSwitchProfile != NULL);
-	TProfile * pProfileSelected = g_oConfiguration.m_pProfileSelected;
-	if (pProfileSelected == NULL)
-		pProfileSelected = (TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementUnique_YZ();
-	if (pProfileSelected != NULL)
-		g_strScratchBufferStatusBar.Format("Profile: $S", &pProfileSelected->m_strNameProfile);
-	else
-		g_strScratchBufferStatusBar.Format("Switch Profile");
-	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
-	}
-
-//	Switch profiles
-void
-CChatConfiguration::NavigationTree_ProfileSwitch(TProfile * pProfileSelected)
-	{
-	Endorse(pProfileSelected == NULL);	// Display all profiles
-	if (pProfileSelected == m_pProfileSelected)
-		return;
-	m_pProfileSelected = pProfileSelected;
-	TProfile ** ppProfileStop;
-	TProfile ** ppProfile = m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfileStop);
-	while (ppProfile != ppProfileStop)
-		{
-		TProfile * pProfile = *ppProfile++;
-		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
-		BOOL fVisible = m_pProfileSelected == NULL || m_pProfileSelected == pProfile;
-		//MessageLog_AppendTextFormatCo(d_coOrange, "Profile $S: fVisible=$i\n", &pProfile->m_strNameProfile, fVisible);
-		pProfile->m_paTreeWidgetItem->setVisible(fVisible);
-		}
-	NavigationTree_UpdateNameOfSelectedProfile();
-	} // NavigationTree_ProfileSwitch()
-
-void
-CChatConfiguration::NavigationTree_DisplayProfiles()
-	{
-	TProfile ** ppProfileStop;
-	TProfile ** ppProfile = m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfileStop);
-	while (ppProfile != ppProfileStop)
-		{
-		TProfile * pProfile = *ppProfile++;
-		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
-		if (m_pProfileSelected == NULL || m_pProfileSelected == pProfile)
-			pProfile->TreeItemProfile_DisplayWithinNavigationTree();
-		}
-	NavigationTree_UpdateNameOfSelectedProfile();
-	}
-
-extern TTreeItemDemo * g_pSecurity;
-void
-CChatConfiguration::NavigationTree_DisplayAllCertificates()
-	{
-	if (m_oTreeItemCertificates.m_paTreeWidgetItem != NULL)
-		{
-		// The certificates are already on the tree, however may be hidden
-		m_oTreeItemCertificates.m_paTreeWidgetItem->setVisible(true);
-		return;
-		}
-	m_oTreeItemCertificates.NavigationTree_DisplayCertificates((ICertificate *)g_pSecurity);
-	g_pwNavigationTree->NavigationTree_ExpandAllRootTreeItems();	// Make sure all certificates are visibles
-	}
-
-void
-CChatConfiguration::NavigationTree_DisplayAllCertificatesToggle()
-	{
-	if (m_oTreeItemCertificates.m_paTreeWidgetItem != NULL)
-		{
-		// The certificates are already on the tree, however may be hidden
-		m_oTreeItemCertificates.TreeItemWidget_ToggleVisibility();
-		return;
-		}
-	NavigationTree_DisplayAllCertificates();
-	}
 
 int g_iWallet;
 void
@@ -220,7 +128,7 @@ CChatConfiguration::NavigationTree_DisplayWallet()
 void
 ITreeItem::TreeItem_DisplayTransactionsBitcoin()
 	{
-	if (m_paTreeWidgetItem->childCount() == 0)
+	if (m_paTreeWidgetItem_YZ->childCount() == 0)
 		{
 		new TWalletView(this, "Bitcoins Sent", eWalletViewFlag_kfDisplayTransactionsSent);
 		new TWalletView(this, "Bitcoins Received", eWalletViewFlag_kfDisplayTransactionsReceived);
@@ -263,17 +171,22 @@ CChatConfiguration::XmlConfigurationExchange(INOUT CXmlExchanger * pXmlExchanger
 	if (!pXmlExchanger->XmlExchangeNodeRootF("r"))
 		return;	// If there is no root node, there there is nothign to do!
 
-	pXmlExchanger->XmlExchangeElementBegin("d");	// Config Data
-		pXmlExchanger->XmlExchangeSha1("s", INOUT &m_hashSalt);
-	pXmlExchanger->XmlExchangeElementEnd("d");
+	m_arraypaProfiles.ForEach_UAssignObjectIds();	// Assign a unique identifier for each profile.  This is necessary to serialize the pointer of the selected profile
 
-	pXmlExchanger->XmlExchangeUInt("Preferences", INOUT &g_uPreferences);	// This should not be there, but in the Registry
-	pXmlExchanger->XmlExchangeObjects('I', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);
+	pXmlExchanger->XmlExchangeUInt("Preferences", INOUT &g_uPreferences);	// TODO: This should not be there, but in the Registry
+
+	pXmlExchanger->XmlExchangeObjects('P', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);
 	if (!pXmlExchanger->m_fSerializing && m_arraypaProfiles.FIsEmpty())
-		pXmlExchanger->XmlExchangeObjects('P', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);	// The element <I> has been renamed to <P>
+		pXmlExchanger->XmlExchangeObjects('I', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);	// Load old 'Identities' <I> which have been <P>
 	pXmlExchanger->XmlExchangeObjects('B', INOUT &m_arraypaBrowsers, TBrowser::S_PaAllocateBrowser, this);
 	m_oTreeItemCertificates.XmlExchange(INOUT pXmlExchanger);
 	m_oTreeItemCertificates.InitializeAsRootCertificates();
+
+	// Save the variables related to the configuration.  Those variables are saved last because they are sometimes modified by the serialization of other objects.
+	pXmlExchanger->XmlExchangeElementBegin("d");	// Config Data
+		pXmlExchanger->XmlExchangeSha1("s", INOUT &m_hashSalt);
+		pXmlExchanger->XmlExchangePointer('p', PPX &m_pProfileSelected, IN &m_arraypaProfiles);
+	pXmlExchanger->XmlExchangeElementEnd("d");
 	}
 
 #ifdef DEBUG_IMPORT_OLD_CONFIG_XML
@@ -333,7 +246,6 @@ TProfile::UnserializeContactsFromOldConfigXml()
 void
 CChatConfiguration::XmlConfigurationLoadFromFile(const QString * psPathFileOpen)
 	{
-	Assert(g_pwNavigationTree != NULL);
 	BOOL fOpenConfigurationFile = TRUE;
 	if (g_sPathConfigXmlDefault.isEmpty())
 		{
@@ -373,57 +285,8 @@ CChatConfiguration::XmlConfigurationLoadFromFile(const QString * psPathFileOpen)
 		XmlConfigurationExchange(INOUT &oXmlExchanger);		// Unserialize the XML configuration
 		}
 
-	// We are done unserializing, therefore add the Accounts and IDs
-	/*
-	TAccountXmpp ** ppAccountStop;
-	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
-	while (ppAccount != ppAccountStop)
-		{
-		TAccountXmpp * pAccount = *ppAccount++;
-		(void)pAccount->TreeItemAccount_DisplayWithinNavigationTree();
-		}
-	*/
-
-	NavigationTree_DisplayProfiles();
-
-	TBrowser ** ppBrowserStop;
-	TBrowser ** ppBrowser = m_arraypaBrowsers.PrgpGetBrowsersStop(OUT &ppBrowserStop);
-	while (ppBrowser != ppBrowserStop)
-		{
-		TBrowser * pBrowser = *ppBrowser++;
-		Assert(pBrowser->EGetRuntimeClass() == RTI(TBrowser));
-		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
-		}
-	g_pwNavigationTree->NavigationTree_ExpandAllRootTreeItems();
-	TMyProfiles::s_pThis->TreeItemWidget_Collapse();	// Collapse the "IDs"
-	/*
-	if (g_pwNavigationTree->m_pwTreeView->topLevelItemCount() == 0)
-		NavigationTree_SelectTreeItem(new CTreeItemWelcome);	// Add the 'Welcome' only if the Navigation Tree is empty
-	*/
-	ITreeItem * pTreeItemSelect = g_pTreeItemCommunication;
-	if (g_arraypAccounts.FIsEmpty())
-		{
-		g_pTreeItemCommunication->TreeItemWidget_Hide();	// No accounts yet, hide the node
-		pTreeItemSelect = TMyProfiles::s_pThis;			// And select the profiles
-		}
-	//NavigationTree_SelectTreeItem(pTreeItemSelect);
-
-	pTreeItemSelect->TreeItemLayout_SetFocus();
-	// NavigationTree_AddCertificates();
-
-	// Temporary stuff for the demo
-	//m_paExchangeCoffee = new CExchangeCoffee;
-	//(void)new TMarketplace;
-	/*
-	g_pwNavigationTree->NavigationTree_ExpandAllRootTreeItems();
-	TMyProfiles::s_pThis->m_paTreeWidgetItem->setExpanded(false);	// Collapse the "IDs"
-	WTreeWidget * pwTreeView = g_pwNavigationTree->m_pwTreeView;
-	pwTreeView->setFocus();
-	*/
-	/*
-	pwTreeView->setFocus(Qt::ActiveWindowFocusReason);
-	pwTreeView->setCurrentItem(pwTreeView->topLevelItem(0));	// Select the first item
-	*/
+	// We are done unserializing, populate the Navigation Tree
+	NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(m_pProfileSelected);
 	} // XmlConfigurationLoadFromFile()
 
 

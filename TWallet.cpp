@@ -305,7 +305,7 @@ CVaultEventsForContact::~CVaultEventsForContact()
 	if (m_pContactParent_YZ != NULL)
 		{
 		Assert(m_pContactParent_YZ->EGetRuntimeClass() == RTI(TContact));
-		m_pContactParent_YZ->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEventsRepopulateAll;	// Repopulate the Chat Log events which will remove the wallet transaction events
+		m_pContactParent_YZ->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEvents_RepopulateAll;	// Repopulate the Chat Log events which will remove the wallet transaction events
 		}
 	m_arraypaEvents.DeleteAllEvents();
 	}
@@ -316,7 +316,7 @@ CVaultEventsForContact::ContactBind(TContact * pContact)
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 	Assert(m_pContactParent_YZ == NULL);
 	m_pContactParent_YZ = pContact;
-	m_pContactParent_YZ->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEventsRepopulateAll | TContact::FTI_kfChatLogEventsIncludeFromWallet;
+	m_pContactParent_YZ->m_uFlagsTreeItem |= TContact::FTI_kfChatLogEvents_RepopulateAll | TContact::FTI_kfChatLogEvents_IncludeFromWallet;
 	}
 
 //	This is typically when a contact is being deleted
@@ -328,7 +328,7 @@ CVaultEventsForContact::ContactUnbindIfAboutBeingDeleted()
 		Assert(m_pContactParent_YZ->EGetRuntimeClass() == RTI(TContact));
 		if (m_binEventsEncrypted.FIsEmptyBinary())
 			EventsEncryptCb();
-		if (m_pContactParent_YZ->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItemAboutBeingDeleted)
+		if (m_pContactParent_YZ->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItem_AboutBeingDeleted)
 			{
 			m_pContactParent_YZ = NULL;
 			m_arraypaEvents.DeleteAllEvents();	// The events are no longer available since its parent contact is about being deleted
@@ -532,7 +532,7 @@ TWallet::TWallet(PSZUC pszPassword, const QString & sPathFileWallet, INOUT CBin 
 
 	if (!pbinWalletEncrypted->FIsEmptyBinary())
 		pbinWalletEncrypted->DataDecryptAES256(IN &m_hashKey);
-	TreeItem_DisplayWithinNavigationTree(g_pBanking, (PSZAC)pszPassword, eMenuIconBitcoin);	// Display the wallet in the navigation tree using the password as the name (in the future the name will be stored elsewhere)
+	TreeItem_DisplayWithinNavigationTreeExpand(g_pBanking, (PSZAC)pszPassword, eMenuIconBitcoin);	// Display the wallet in the navigation tree using the password as the name (in the future the name will be stored elsewhere)
 	}
 
 TWallet::~TWallet()
@@ -696,7 +696,7 @@ TWalletView::TWalletView(ITreeItem * pParentFilterBy, PSZAC pszName, EWalletView
 	{
 	m_pTreeItemFilterBy = pParentFilterBy;
 	m_eWalletViewFlags = eWalletViewFlags;
-	TreeItem_DisplayWithinNavigationTree(pParentFilterBy, pszName, eMenuIconBitcoin);
+	TreeItem_DisplayWithinNavigationTreeExpand(pParentFilterBy, pszName, eMenuIconBitcoin);
 	}
 
 TWalletView::~TWalletView()

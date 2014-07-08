@@ -338,3 +338,13 @@ TContactNew::TreeItem_GotFocus()
 	MainWindow_SetFocusToCurrentLayout();
 	}
 
+//	TAccountXmpp::ITreeItem::TreeItem_GotFocus()
+void
+TAccountXmpp::TreeItem_GotFocus()
+	{
+	#if 0
+	MainWindow_SetCurrentLayoutAutoDelete(PA_CHILD new WLayoutAccount(this));
+	#else
+	MainWindow_SetCurrentLayoutAutoDelete(PA_CHILD new WLayoutContactNew(this));
+	#endif
+	}

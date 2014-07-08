@@ -77,7 +77,8 @@ SOURCES += \
     WNotices.cpp \
     Xcp.cpp \
     XcpApi.cpp \
-    Xml.cpp
+    Xml.cpp \
+    ProfileSwitching.cpp
 
 
 HEADERS += \
@@ -141,7 +142,8 @@ HEADERS += \
     WNotices.h \
     Xcp.h \
     XcpApi.h \
-    Xml.h
+    Xml.h \
+    ProfileSwitching.h
 
 
 FORMS +=

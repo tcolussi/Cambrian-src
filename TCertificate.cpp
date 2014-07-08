@@ -104,7 +104,7 @@ TCertificate::PFindServerOrAllocate(const CStr & strServerName)
 	pServer = new TCertificateServerName(this);
 	m_arraypaServers.Add(PA_CHILD pServer);
 	pServer->m_strServerName = strServerName;
-	if (m_paTreeWidgetItem != NULL)
+	if (m_paTreeWidgetItem_YZ != NULL)
 		pServer->NavigationTree_DisplayServer();	// The certificate is already visible in the Navigation Tree, therefore add the Server as well
 	Done:
 	return pServer;
@@ -328,7 +328,7 @@ TCertificates::~TCertificates()
 void
 TCertificates::FlushDataAndCauseMemoryLeak()
 	{
-	m_paTreeWidgetItem = NULL;
+	m_paTreeWidgetItem_YZ = NULL;
 	m_arraypaCertificates.RemoveAllElements();
 	}
 

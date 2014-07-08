@@ -79,8 +79,6 @@ TGroupMember::TreeItem_GotFocus()
 void
 TGroupMember::TreeItem_IconUpdate()
 	{
-	if (m_paTreeWidgetItem == NULL)
-		return;	// The Tree Item is not yet in the Navigation Tree
 	if (m_cMessagesUnread <= 0)
 		TreeItem_SetTextColorAndIcon(d_coTreeItem_Default, m_pContact->Contact_EGetMenuActionPresence());
 	else
@@ -91,8 +89,6 @@ TGroupMember::TreeItem_IconUpdate()
 void
 TGroupMember::ContactAlias_IconChanged(EMenuAction eMenuIconDisplay, EMenuAction eMenuIconPresence)
 	{
-	if (m_paTreeWidgetItem == NULL)
-		return;	// The Tree Item is not yet in the Navigation Tree
 	QRGB coText = d_coTreeItem_Default;
 	if (m_cMessagesUnread > 0)
 		{
@@ -358,6 +354,7 @@ TGroup::TreeItemGroup_DisplayWithinNavigationTree()
 		}
 	TreeItemChatLog_UpdateTextToDisplayMessagesUnread();
 	TreeItem_IconUpdate();
+	TreeItemWidget_ExpandAccordingToSavedState();
 	} // TreeItemGroup_DisplayWithinNavigationTree()
 
 //	TGroup::ITreeItem::TreeItem_PszGetNameDisplay()
@@ -367,7 +364,7 @@ TGroup::TreeItem_PszGetNameDisplay() CONST_MCC
 	PSZUC pszNameDisplay = m_strNameDisplayTyped;
 	if (pszNameDisplay[0] != '\0')
 		return pszNameDisplay;
-	m_uFlagsTreeItem |= FTI_kfTreeItemNameDisplayedGenerated;
+	m_uFlagsTreeItem |= FTI_kfTreeItem_NameDisplayedGenerated;
 	// Generate a group name from the contacts
 	m_strNameDisplayTyped.AppendTextU((PSZUC)"Group: ");
 	TGroupMember * pMember = NULL;

@@ -98,26 +98,7 @@ TAccountAlias::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	return m_pAccount->TreeItem_EDoMenuAction(eMenuAction);
 	} // TreeItem_EDoMenuAction()
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-TMyProfiles * TMyProfiles::s_pThis;
-TMyProfiles::TMyProfiles()
-	{
-	Assert(s_pThis == NULL);
-	s_pThis = this;
-	//TreeItem_DisplayWithinNavigationTree(NULL, "My IDs", eMenuIconIdentities);
-	//TreeItem_DisplayWithinNavigationTree(NULL, "Settings", eMenuIconSettings);
-	TreeItem_DisplayWithinNavigationTree(NULL, "Profiles", eMenuIconSettings);
-	}
-
-TTreeItemMyInbox::TTreeItemMyInbox()
-	{
-	//TreeItem_DisplayWithinNavigationTree(NULL, "Communicate", eMenuIconCommunicate);
-	TreeItem_DisplayWithinNavigationTree(NULL, "Inbox", eMenuIconCommunicate);
-	}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 IXmlExchange *
 TProfile::S_PaAllocateProfile(PVOID pConfigurationParent)
 	{
@@ -147,27 +128,6 @@ TProfile::GenerateKeys()
 	m_binKeyPublic = m_binKeyPrivate;
 	}
 
-void
-TProfile::TreeItemProfile_DisplayWithinNavigationTree()
-	{
-	Assert(TMyProfiles::s_pThis != NULL);
-	TreeItem_DisplayWithinNavigationTree(TMyProfiles::s_pThis, eMenuIconIdentities);
-	TAccountXmpp ** ppAccountStop;
-	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
-	while (ppAccount != ppAccountStop)
-		{
-		TAccountXmpp * pAccount = *ppAccount++;
-		pAccount->TreeItemAccount_DisplayWithinNavigationTree();
-		}
-	IApplication ** ppApplicationStop;
-	IApplication ** ppApplication = m_arraypaApplications.PrgpGetApplicationsStop(OUT &ppApplicationStop);
-	while (ppApplication != ppApplicationStop)
-		{
-		IApplication * pApplication = *ppApplication++;
-		pApplication->TreeItem_DisplayWithinNavigationTree(NULL, "MayanX", eMenuIconCoffeeExchange);	// Display the applications at the root for debugging
-		}
-//	new TTreeItemDemo(this, "My Reputation", eMenuIconReputation, "Display my reputation according to other organizations", "Search Reputation Feedback Comments");
-	}
 /*
 void
 TProfile::DeleteAccount(PA_DELETING TAccountXmpp * paAccount)
@@ -176,6 +136,19 @@ TProfile::DeleteAccount(PA_DELETING TAccountXmpp * paAccount)
 	Assert(paAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
 	}
 */
+
+//	TProfile::IRuntimeObject::PGetRuntimeInterface()
+void *
+TProfile::PGetRuntimeInterface(const RTI_ENUM rti) const
+	{
+	switch (rti)
+		{
+	case RTI(TAccountXmpp):	// If there is only one account, then return the interface of this account
+		return m_arraypaAccountsXmpp.PvGetElementUnique_YZ();	// May return NULL
+	default:
+		return ITreeItem::PGetRuntimeInterface(rti);
+		}
+	}
 
 #define d_chElementName_Accounts			'A'
 #define d_chElementName_Applications		'X'	// User-defined applications
@@ -231,6 +204,7 @@ TProfile::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		else
 			{
 			m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING this);
+			NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(NULL);	// After deleting a profile, display all the remaining profiles
 			}
 		return ezMenuActionNone;
 	default:

@@ -8,12 +8,12 @@
 #define d_szApplicationName				"Cambrian"
 #define d_szwApplicationName		   L"Cambrian"
 #define d_szwApplicationNameSetup	   L"Cambrian Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.0.8.2"
-#define d_szwApplicationVersion		   L"0.0.8.2"
+#define d_szApplicationVersion			"0.0.8.3"
+#define d_szwApplicationVersion		   L"0.0.8.3"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
-#define DEBUG_IMPORT_OLD_CONFIG_XML
+//#define DEBUG_IMPORT_OLD_CONFIG_XML
 
 #ifndef PRECOMPILEDHEADERS_H
 #define PRECOMPILEDHEADERS_H
@@ -67,8 +67,8 @@ enum RTI_ENUM	// rti
 	eRTI_TCertificateServerName,
 	eRTI_TCertificates,
 	eRTI_CTreeItemWelcome,
-	eRTI_TTreeItemMyInbox,
-	eRTI_TMyProfiles,
+	eRTI_TTreeItemInbox,
+	eRTI_TProfiles,
 	eRTI_TProfile,
 	eRTI_IApplication,
 		eRTI_TApplicationMayanX,
@@ -167,7 +167,7 @@ class IRuntimeObject;
 					class TApplicationMayanX;
 				class TWallet;
 				class TWalletView;
-				class TTreeItemMyInbox;
+				class TTreeItemInbox;
 				class TContactNew;
 
 class CArrayPtrTreeItems;

@@ -47,7 +47,6 @@ public slots:
 }; // WMainWindow
 
 extern WMainWindow * g_pwMainWindow;
-extern TTreeItemMyInbox * g_pTreeItemCommunication;
 extern CInvitationFromUrlQueryString * g_paInvitation;
 CInvitationFromUrlQueryString * Invitation_PazAllocateFromUrlQueryString(PSZUC pszUrl);
 void Invitation_EraseFile();
@@ -74,5 +73,6 @@ void NavigationTree_RenameSelectedItem();
 
 void NavigationTree_UpdatePresenceIcon(EMenuAction eMenuAction_Presence);
 void NavigationTree_UpdateNameOfSelectedProfile();
+void NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSelected, BOOL fCreateNewProfile = FALSE);
 
 #endif // MAINWINDOW_H

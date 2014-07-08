@@ -34,6 +34,7 @@ protected:
 public:
 	explicit WNavigationTree();
 	virtual ~WNavigationTree();
+	void NavigationTree_TreeItemUnselect();
 
 	void NavigationTree_ExpandAllRootTreeItems();
 

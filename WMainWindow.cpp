@@ -46,8 +46,6 @@ enum EIdleState
 	};
 EIdleState g_eIdleState;
 
-TTreeItemMyInbox * g_pTreeItemCommunication;
-
 //	The QNetworkConfigurationManager works on some computers, so more testing needs to be done.
 bool g_fIsConnectedToInternet = true;	// true => The device is connected to the Internet.  Since SL_NetworkOnlineStateChanged() is unreliable, assume the machine is connected to the Internet.
 QNetworkConfigurationManager * g_poNetworkConfigurationManager;
@@ -263,9 +261,9 @@ WMainWindow::~WMainWindow()
 	// We are destroying the WMainWindow, so flush everything (both for performance, and also to prevent the application to crash)
 	g_listaNoticesRoaming.Notices_DeleteAll();
 	g_listaNoticesAuxiliary.Notices_DeleteAll();
-	MainWindow_SetCurrentLayout(NULL);	// Make sure there is no layout related to a selected Tree Item.  This is important before destroying the configuration object.
+	MainWindow_SetCurrentLayout(NULL);	// Make sure there is no layout related to a selected Tree Item.  This is important before destroying the configuration object, otherwise there may be a dangling pointer
 	g_pwChatLayoutContainer = NULL;		// Make sure the Navigation Tree does not call TreeItem_GotFocus() when receiving a signal that a new Tree Item was selected.
-	g_pTreeItemCommunication->TreeItem_SelectWithinNavigationTree();	// Select a root Tree Item, so Qt does not select a new one each time a selected Tree Item is being deleted.
+	g_pwNavigationTree->NavigationTree_TreeItemUnselect();
 	g_oConfiguration.Destroy();	// Destroy the configuration, with the accounts, contacts and groups.
 	}
 

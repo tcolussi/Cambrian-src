@@ -67,26 +67,28 @@ public:
 class ITreeItem : public IXmlExchangeObjectID
 {
 public:
-	CStr m_strNameDisplayTyped;				// Text to display in the Navigation Tree.  This text may be anything the user typed when renaming the Tree Item.
-	CTreeWidgetItem * m_paTreeWidgetItem;	// Corresponding widget to appear in the Navigation Tree.  The text of this Tree Item is initialized with TreeItem_PszGetNameDisplay() which by default uses m_strNameDisplayTyped.
+	CStr m_strNameDisplayTyped;					// Text to display in the Navigation Tree.  This text may be anything the user typed when renaming the Tree Item.
+	CTreeWidgetItem * m_paTreeWidgetItem_YZ;	// Corresponding widget to appear in the Navigation Tree.  The text of this Tree Item is initialized with TreeItem_PszGetNameDisplay() which by default uses m_strNameDisplayTyped.  This pointer may be NULL if the Tree Item exists, however not visible in the Navigation Tree.
 
 	enum // Values for m_uFlagsTreeItem
 		{
-		FTI_kfRecommended						= 0x00000001,	// The Tree Item (typically a contact or a group) was recommended by the user.  This flag is used for /api Contact.Recommendations.Get
-		FTI_kfFavorites							= 0x00000002,	// NYI: The Tree Item is among the user's favorites.  A favorite is private to the user, while a recommendation is public.
-		FTI_kfTreeItemNameDisplayedSuggested	= 0x00000004,	// The content of member variable m_strNameDisplayTyped was suggested by another contact, typically when querying a group for its name and list of contacts.
-		FTI_kmFlagsSerializeMask				= 0x0000FFFF,	// Bits to save to disk
+		FTI_kfTreeItem_IsExpanded				= 0x00000001,	// Expand this Tree Item when adding it to the Navigation Tree.  For instance, a user may wish to expand a group to see each group member.
+		FTI_kfTreeItem_NameDisplayedSuggested	= 0x00000002,	// The content of member variable m_strNameDisplayTyped was suggested by another contact, typically when querying a group for its name and list of contacts.
+		FTI_kfRecommended						= 0x00000010,	// The Tree Item (typically a contact or a group) was recommended by the user.  This flag is used for /api Contact.Recommendations.Get
+		FTI_kfFavorites							= 0x00000020,	// NYI: The Tree Item is among the user's favorites.  A favorite is private to the user, while a recommendation is public.
+
+		FTI_kmTreeItem_FlagsSerializeMask		= 0x0000FFFF,	// Bits to save to disk
 		FTI_kezIconNone							= 0x00000000,
 		FTI_kefIconWarning						= 0x00010000,
 		FTI_kefIconError						= 0x00020000,
 		FTI_kemIconMask							= 0x000F0000,
-		FTI_kfTreeItemBit						= 0x00100000,	// Generic bit to store a boolean value (this bit is used to efficiently merge or delete arrays)
-		FTI_kfTreeItemAboutBeingDeleted			= 0x00200000,	// The Tree Item is about being deleted (therefore any reference/pointer to it must be removed).  This flag is typically used when deleting accounts and contacts.
-		FTI_kfTreeItemNameDisplayedGenerated	= 0x00400000,	// The member variable m_strNameDisplayTyped has been generated, and therefore should not be serialized (saved to disk).  Since this flag is not stored to disk nor m_strNameDisplayTyped, the display name will be re-geneated each time Cambrian starts.
+		FTI_kfTreeItem_fBit						= 0x00100000,	// Generic bit to store a boolean value (this bit is used to efficiently merge or delete arrays)
+		FTI_kfTreeItem_AboutBeingDeleted		= 0x00200000,	// The Tree Item is about being deleted (therefore any reference/pointer to it must be removed).  This flag is typically used when deleting accounts and contacts.
+		FTI_kfTreeItem_NameDisplayedGenerated	= 0x00400000,	// The member variable m_strNameDisplayTyped has been generated, and therefore should not be serialized (saved to disk).  Since this flag is not stored to disk nor m_strNameDisplayTyped, the display name will be re-geneated each time Cambrian starts.
 		// The following flags FTI_kfChatLog* are used by ITreeItemChatLog and ITreeItemChatLogEvents.  The motivation for storing those flags in m_uFlagsTreeItem is avoiding another member variable.
-		FTI_kfChatLogBrushColor					= 0x01000000,	// Which brush color to use when displaying events in the Chat Log.
-		FTI_kfChatLogEventsRepopulateAll		= 0x02000000,	// Repopulate all events of the Chat Log next time the Tree Item gets the focus
-		FTI_kfChatLogEventsIncludeFromWallet	= 0x04000000	// Include wallet events when repopulating the Chat Log.  This is a small optimization preventing searching all wallets when there is nothing
+		FTI_kfChatLog_BrushColor				= 0x01000000,	// Which brush color to use when displaying events in the Chat Log.
+		FTI_kfChatLogEvents_RepopulateAll		= 0x02000000,	// Repopulate all events of the Chat Log next time the Tree Item gets the focus
+		FTI_kfChatLogEvents_IncludeFromWallet	= 0x04000000	// Include wallet events when repopulating the Chat Log.  This is a small optimization preventing searching all wallets when there is nothing
 		};
 	UINT m_uFlagsTreeItem;			// Various flags regarding the Tree Item (icon, error, Chat Log).  Some of those values are serialized (saved to disk)
 
@@ -111,9 +113,9 @@ public:
 	void TreeItem_SelectWithinNavigationTreeExpanded();
 	void TreeItem_RemoveFromNavigationTree();
 	void TreeItem_DisplayWithinNavigationTreeBefore(ITreeItem * pTreeItemBefore);
-	void TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent);
-	void TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent, EMenuAction eMenuActionIcon);
-	void TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon);
+	void TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent_YZ);
+	void TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon);
+	void TreeItem_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuAction eMenuActionIcon);
 	TTreeItemDemo * TreeItem_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon);
 	TTreeItemDemo * TreeItem_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch = NULL);
 	void TreeItem_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC pszName, ...);
@@ -131,6 +133,7 @@ public:
 	CTreeWidgetItem * TreeItemWidget_PAllocate();
 	BOOL TreeItemWidget_FIsExpanded() const;
 	void TreeItemWidget_Expand();
+	void TreeItemWidget_ExpandAccordingToSavedState();
 	void TreeItemWidget_Collapse();
 	void TreeItemWidget_EnsureVisible();
 	void TreeItemWidget_ToggleVisibility();

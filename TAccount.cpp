@@ -53,7 +53,7 @@ TAccountXmpp::TAccountXmpp(TProfile * pProfileParent) : TAccountCore(pProfilePar
 	{
 	m_paSocket = NULL;
 	m_pCertificateServerName = NULL;
-	m_paAlias = new TAccountAlias(this);
+	m_paAlias = NULL;
 	g_arraypAccounts.Add(this);	// Always add new account to the global array of accounts
 	}
 
@@ -70,6 +70,14 @@ TAccountXmpp::~TAccountXmpp()
 	m_arraypaContacts.DeleteAllTreeItems();
 	if (m_paSocket != NULL)
 		m_paSocket->Socket_Destroy(PA_DELETING);
+	}
+
+TAccountAlias *
+TAccountXmpp::PGetAlias_NZ() CONST_MCC
+	{
+	if (m_paAlias == NULL)
+		m_paAlias = new TAccountAlias(this);
+	return m_paAlias;
 	}
 
 CChatConfiguration *
@@ -158,13 +166,17 @@ TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(PSZUC pszCo
 	Assert(pszContactJID != NULL);
 	Endorse(pszContactNameDisplay == NULL);	// Automatically generate a display name
 	Assert(Contact_PFindByJID(pszContactJID) == NULL && "Contact already in the account");
-	Assert(m_paTreeWidgetItem != NULL && "No Tree Item to attach to");
+	Assert(m_paTreeWidgetItem_YZ != NULL && "No Tree Item to attach to");	// This line of code has to be revised
 	TContact * pContact = new TContact(this);
 	pContact->m_strRessource = pContact->m_strJidBare.AppendTextUntilCharacterPszr(pszContactJID, '/');
 	pContact->m_strNameDisplayTyped = pszContactNameDisplay;
 	pContact->TreeItemContact_GenerateDisplayNameFromJid();
 	m_arraypaContacts.Add(PA_CHILD pContact);
+	#ifdef WANT_TREE_NODE_NEW_CONTACT
 	pContact->TreeItem_DisplayWithinNavigationTreeBefore(m_pTreeItemContactNew);
+	#else
+	pContact->TreeItem_DisplayWithinNavigationTree(this);
+	#endif
 	pContact->TreeItemContact_UpdateIcon();
 	pContact->TreeItemWidget_EnsureVisible();	// Make sure the new contact is visible in the Navigation Tree
 	pContact->m_tsCreated = Timestamp_GetCurrentDateTime();
@@ -232,9 +244,8 @@ TAccountXmpp::TreeItem_FContainsMatchingText(PSZUC pszTextSearchLowercase) CONST
 	return (ITreeItem::TreeItem_FContainsMatchingText(pszTextSearchLowercase) || m_strJIDwithResource.FStringContainsSubStringNoCase(pszTextSearchLowercase));
 	}
 
-//	TAccountXmpp::ITreeItem::TreeItem_PszGetNameDisplay()
 PSZUC
-TAccountXmpp::TreeItem_PszGetNameDisplay() CONST_MCC
+TAccountXmpp::TreeItemAccount_PszGetNameDisplay() const
 	{
 	PSZUC pszNameDisplay = m_strNameDisplayTyped;
 	if (pszNameDisplay[0] != '\0')
@@ -527,7 +538,7 @@ TAccountXmpp::Contact_DeleteSafely(PA_DELETING TContact * paContactDelete)
 	{
 	Assert(paContactDelete != NULL);
 	Assert(paContactDelete->EGetRuntimeClass() == RTI(TContact));
-	paContactDelete->m_uFlagsTreeItem |= FTI_kfTreeItemAboutBeingDeleted;
+	paContactDelete->m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
 	TreeItem_SelectWithinNavigationTree();	// Select the parent deleting the contact (without this line of code, the application will crash if the contact was selected in the GUI because the contact is no longer there)
 	if (m_paSocket != NULL && m_paSocket->Socket_FuIsReadyToSendMessages())
 		{
@@ -552,37 +563,6 @@ TAccountXmpp::Contact_DeleteSafely(PA_DELETING TContact * paContactDelete)
 	} // Contact_DeleteSafely()
 
 void
-TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTree()
-	{
-	TreeItem_DisplayWithinNavigationTree(g_pTreeItemCommunication);
-	TContact ** ppContactStop;
-	TContact ** ppContact = m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
-	while (ppContact != ppContactStop)
-		{
-		TContact * pContact = *ppContact++;
-		Assert(pContact != NULL);
-		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-		Assert(pContact->m_pAccount == this);
-		pContact->TreeItemContact_DisplayWithinNavigationTree();
-		} // while
-	m_pTreeItemContactNew = new TContactNew(this);
-
-	TGroup ** ppGroupStop;
-	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
-	while (ppGroup != ppGroupStop)
-		{
-		TGroup * pGroup = *ppGroup++;
-		Assert(pGroup != NULL);
-		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-		Assert(pGroup->m_pAccount == this);
-		pGroup->TreeItemGroup_DisplayWithinNavigationTree();
-		}
-
-	// Display the alias as well
-	m_paAlias->TreeItem_DisplayWithinNavigationTree(m_pProfileParent, m_strJID, eMenuIconXmpp);
-	} // TreeItemAccount_DisplayWithinNavigationTree()
-
-void
 TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTreeInit(PSZUC pszServerName, UINT uServerPort)
 	{
 	Assert(pszServerName != NULL);
@@ -599,7 +579,7 @@ TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTreeInit(PSZUC pszServerNam
 	*/
 	TreeItemAccount_DisplayWithinNavigationTree();
 	TreeItemWidget_Expand();
-	TreeItemWidget_EnsureVisible();	// Make sure the account is visible under the "Communicate" node
+	TreeItemWidget_EnsureVisible();	// Make sure the account is visible under the 'Inbox' node
 	}
 
 void
@@ -611,7 +591,7 @@ TAccountXmpp::TreeItemAccount_DeleteFromNavigationTree_MB(PA_DELETING)
 		if (EMessageBoxQuestion("Are you sure you want to remove the account $S and its $i contacts?", &m_strJID, cContacts) != eAnswerYes)
 			return;
 		}
-	m_uFlagsTreeItem |= FTI_kfTreeItemAboutBeingDeleted;
+	m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
 	m_arraypaContacts.ForEach_SetFlagTreeItemAboutBeingDeleted();
 	m_arraypaGroups.ForEach_SetFlagTreeItemAboutBeingDeleted();
 	g_arraypContactsRecentMessages.RemoveAllTreeItemsAboutBeingDeleted();	// Make sure there is dangling pointer to a deleted contact
@@ -623,7 +603,8 @@ TAccountXmpp::TreeItemAccount_DeleteFromNavigationTree_MB(PA_DELETING)
 void
 TAccountXmpp::TreeItemAccount_UpdateIcon()
 	{
-	Assert(m_paTreeWidgetItem != NULL);
+	if (m_paTreeWidgetItem_YZ == NULL)
+		return;	// The account is not yet in the Navigation Tree.  This happens when Cambrian starts and is loading the accounts from the configuration
 	QRGB coText = d_coTreeItem_Default;
 	EMenuAction eMenuAction = eMenuAction_PresenceAccountOffline;
 	if (!m_arraypContactsMessagesUnread.FIsEmpty())

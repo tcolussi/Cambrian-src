@@ -4,13 +4,6 @@
 #include "WLayoutAccount.h"
 #include "DialogInvitations.h"
 
-//	TAccountXmpp::ITreeItem::TreeItem_GotFocus()
-void
-TAccountXmpp::TreeItem_GotFocus()
-	{
-	MainWindow_SetCurrentLayoutAutoDelete(PA_CHILD new WLayoutAccount(this));
-	}
-
 //	TAccountAlias::ITreeItem::TreeItem_GotFocus()
 void
 TAccountAlias::TreeItem_GotFocus()

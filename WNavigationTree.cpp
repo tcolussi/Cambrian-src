@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	WNavigationTree.cpp
 //
-//	Implementation of the widget displaying the navigation, such as events, accounts, servers and certificates.
+//	Implementation of the widget displaying the Navigation Tree which displays the profiles, contacts, groups, and other things such as certificates.
 //	The navigation wiget contains a tree where the user may expand and collapse nodes.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,12 +74,6 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 	Layout_MarginsClear(INOUT pLayoutVertical);
 	pLayoutVertical->setSpacing(0);
 
-	/*
-	OLayoutHorizontal * pLayout = new OLayoutHorizontal(pLayoutVertical);
-	WButtonIconForToolbarWithDropDownMenu * pwButtonProfileSwitch = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIconAdd, "Profile");
-	connect(pwButtonProfileSwitch->menu(), SIGNAL(aboutToShow()), g_pwMainWindow, SLOT(SL_MenuAboutToShow()));
-	pLayout->addWidget(pwButtonProfileSwitch);
-	*/
 	WEditSearch * pwEditSearch = new WEditSearch;
 	connect(pwEditSearch, SIGNAL(textChanged(QString)), this, SLOT(SL_EditSearchTextChanged(QString)));
 	pLayoutVertical->addWidget(pwEditSearch);
@@ -103,13 +97,7 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 
 	g_pwButtonStatusOfNavigationTree = new WButtonIconForToolbarWithDropDownMenu(this, eMenuAction_PresenceAccountOffline, "Status: Online");
 	g_pwButtonStatusOfNavigationTree->setToolTip("Change your status");
-	/*
-	//g_pwButtonStatusOfNavigationTree->setStyleSheet("QToolButton { border: none; padding: 3px; }");
-	g_pwButtonStatusOfNavigationTree->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-	g_pwButtonStatusOfNavigationTree->setPopupMode(QToolButton::InstantPopup);
-	g_pwButtonStatusOfNavigationTree->setCursor(Qt::ArrowCursor);
-	g_pwButtonStatusOfNavigationTree->setFocusPolicy(Qt::ClickFocus);
-	*/
+
 	EMenuAction eMenuAction_Presence = (EMenuAction)(g_uPreferences & P_kmPresenceMask);
 	if (eMenuAction_Presence == ezMenuActionNone)
 		eMenuAction_Presence = eMenuAction_PresenceAccountOnline;
@@ -131,74 +119,38 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 	//WButtonTextWithIcon * pwButtonAddContact = new WButtonTextWithIcon("Add Contact |Add a new contact to your profile", eMenuAction_ContactAdd);
 	WButtonIconForToolbar * pwButtonAddContact = new WButtonIconForToolbar(eMenuAction_ContactAdd, "Add a new contact to your profile");
 	pLayout->addWidget(pwButtonAddContact, Qt::AlignBottom);
-	//pwButtonAddContact->addAction(PGetMenuAction(eMenuAction_ContactAdd));
 	connect(pwButtonAddContact, SIGNAL(clicked()), this, SLOT(SL_ContactNew()));
 
 	//pLayoutVertical->addWidget(g_pwButtonStatusOfNavigationTree);
-
 #if 1
 	setWidget(PA_CHILD pwWidgetLayout);
 #else
 	setWidget(PA_CHILD m_pwTreeView);
 #endif
-
-
-	// Create the root nodes
-	g_pTreeItemCommunication = new TTreeItemMyInbox;
-	/*
-	new TTreeItemDemo(NULL, "Applications", eMenuIconComponent);
-	new TTreeItemDemo(NULL, "Marketplace", eMenuIconMarketplace);
-	new TTreeItemDemo(NULL, "Finance", eMenuIconSell);
-	new TTreeItemDemo(NULL, "Registry", eMenuIconCorporations);
-	*/
-	(void)new TMyProfiles;
-	/*
-	TTreeItemDemo * pIDs = new TTreeItemDemo(NULL, "My Profiles", eMenuIconSettings);
-	TTreeItemDemo * pID = new TTreeItemDemo(pIDs, "Jon Peters", eMenuIconIdentities);
-		TTreeItemDemo * pApplications = new TTreeItemDemo(pID, "Applications", eMenuIconComponent);
-			TTreeItemDemo * pCommunications = new TTreeItemDemo(pApplications, "Communications", eMenuIconCommunicate);
-				TTreeItemDemo * pAccount = new TTreeItemDemo(pCommunications, "jon", eMenuIconXmpp);
-					new TTreeItemDemo(pAccount, "Dan", eMenuAction_PresenceAccountOnline);
-					new TTreeItemDemo(pAccount, "Hiro", eMenuAction_PresenceAccountOnline);
-					new TTreeItemDemo(pAccount, "Light", eMenuAction_PresenceAway);
-				TTreeItemDemo * pFB = new TTreeItemDemo(pCommunications, "Jon Peters", eMenuIconFacebook);
-					new TTreeItemDemo(pFB, "Brittany", eMenuAction_PresenceAccountOnline);
-					new TTreeItemDemo(pFB, "Mom", eMenuAction_PresenceAccountOffline);
-			TTreeItemDemo * pMarketplace = new TTreeItemDemo(pApplications, "Marketplace", eMenuIconMarketplace);
-				new TTreeItemDemo(pMarketplace, "Jurisdictions", eMenuIconJurisdiction);
-				new TTreeItemDemo(pMarketplace, "Services", eMenuIconServices);
-				new TTreeItemDemo(pMarketplace, "Smart Contracts", eMenuIconMarketplaceLawyers);
-				new TTreeItemDemo(pMarketplace, "For Sale", eMenuIconSell);
-				new TTreeItemDemo(pMarketplace, "Jobs", eMenuIconJobs);
-				new TTreeItemDemo(pMarketplace, "Housing", eMenuIconHome);
-				new TTreeItemDemo(pMarketplace, "Gigs", eMenuIconRipple);
-			TTreeItemDemo * pFinance = new TTreeItemDemo(pApplications, "Finance", eMenuIconIssueDividends);
-				new TTreeItemDemo(pFinance, "Exchange", eMenuIconExchange);
-				new TTreeItemDemo(pFinance, "Wallets", eMenuIconBitcoin);
-				new TTreeItemDemo(pFinance, "Banking", eMenuIconBank);
-			TTreeItemDemo * pRegistry = new TTreeItemDemo(pApplications, "Registry", eMenuIconVote);
-				new TTreeItemDemo(pRegistry, "Companies", eMenuIconCorporations);
-				new TTreeItemDemo(pRegistry, "Jurisdictions", eMenuIconJurisdiction);
-				new TTreeItemDemo(pRegistry, "Communities", eMenuIconCommunity);
-				new TTreeItemDemo(pRegistry, "Arbitrator", eMenuIconMarketplaceArbitration);
-				new TTreeItemDemo(pRegistry, "Mediator", eMenuIconMarketplaceMediation);
-				new TTreeItemDemo(pRegistry, "Oracle", eMenuIconListen);
-			new TTreeItemDemo(pApplications, "Calendar", eMenuIconIssueFuture);
-		new TTreeItemDemo(pIDs, "Cambrian Inc.", eMenuIconIdentities);
-		*/
 	}
 
 WNavigationTree::~WNavigationTree()
 	{
 	}
 
+//	Unselect any Tree Item from the Navigation Tree.
+//	This method is used when deleting the entire Navigation Tree as a small optimization so Qt does not select a new one each time a selected Tree Item is being deleted.
+void
+WNavigationTree::NavigationTree_TreeItemUnselect()
+	{
+	Assert(m_pwTreeView != NULL);
+	m_pwTreeView->setCurrentItem(NULL);
+	}
+
 void
 WNavigationTree::NavigationTree_SelectTreeItemWidget(CTreeWidgetItem * poTreeItem)
 	{
-	Assert(poTreeItem != NULL);
-	Assert(poTreeItem->m_piTreeItem != NULL);
-	Assert(poTreeItem->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
-	m_pwTreeView->setCurrentItem(poTreeItem);
+	if (poTreeItem != NULL)
+		{
+		Assert(poTreeItem->m_piTreeItem != NULL);
+		Assert(poTreeItem->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+		m_pwTreeView->setCurrentItem(poTreeItem);
+		}
 	}
 
 //	Enable the user to type something to rename a Tree Item.
@@ -317,35 +269,30 @@ WNavigationTree::SL_ContactNew()
 	}
 
 #define d_iProfile_DisplayAll		(-1)
-#define d_iProfile_DisplayNew		(-2)
+#define d_iProfile_CreateNew		(-2)
 
 void
 WNavigationTree::SL_MenuProfilesShow()
 	{
 	g_pwMenuSwitchProfile->clear();
 	int cProfiles;
-	TProfile ** prgpProfiles = (TProfile **)g_oConfiguration.m_arraypaProfiles.PrgpvGetElements(OUT &cProfiles);
+	TProfile ** prgpProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfiles(OUT &cProfiles);
 	for (int iProfile = 0; iProfile < cProfiles; iProfile++)
 		{
 		TProfile * pProfile = prgpProfiles[iProfile];
 		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
 		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIconIdentities);
 		}
-	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All Profiles>", d_iProfile_DisplayAll, eMenuIconIdentities);
-	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Create New Profile...>", d_iProfile_DisplayNew, eMenuIconIdentities);
+	if (cProfiles > 1)
+		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All Profiles>", d_iProfile_DisplayAll, eMenuIconIdentities);
+	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Create New Profile...>", d_iProfile_CreateNew, eMenuIconIdentities);
 	}
 
 void
 WNavigationTree::SL_MenuProfileSelected(QAction * pAction)
 	{
 	const int iProfile = pAction->data().toInt();
-	if (iProfile != d_iProfile_DisplayNew)
-		g_oConfiguration.NavigationTree_ProfileSwitch((TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementAtSafe_YZ(iProfile));
-	else
-		{
-		TMyProfiles::s_pThis->TreeItemWidget_Expand();		// Make sure all the profiles are visible
-		TMyProfiles::s_pThis->TreeItemLayout_SetFocus();	// Select the Tree Item to create a new profile
-		}
+	NavigationTree_PopulateTreeItemsAccordingToSelectedProfile((TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementAtSafe_YZ(iProfile), iProfile == d_iProfile_CreateNew);
 	}
 
 const EMenuActionByte c_rgzeActionsMenuNavigationTree[] =
@@ -400,56 +347,60 @@ WNavigationTree::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn)
 CTreeWidgetItem *
 ITreeItem::TreeItemWidget_PAllocate()
 	{
-	Assert(m_paTreeWidgetItem == NULL && "Memory leak!");
-	m_paTreeWidgetItem = new CTreeWidgetItem;
-	m_paTreeWidgetItem->m_piTreeItem = this;
-	m_paTreeWidgetItem->setText(0, (CString)TreeItem_PszGetNameDisplay());
-	return m_paTreeWidgetItem;
+	Assert(m_paTreeWidgetItem_YZ == NULL && "Memory leak!");
+	m_paTreeWidgetItem_YZ = new CTreeWidgetItem;
+	m_paTreeWidgetItem_YZ->m_piTreeItem = this;
+	m_paTreeWidgetItem_YZ->setText(0, (CString)TreeItem_PszGetNameDisplay());
+	return m_paTreeWidgetItem_YZ;
 	}
 
+//	This method will NOT add the Tree Item to the Navigation Tree if the 'before' is not present
 void
 ITreeItem::TreeItem_DisplayWithinNavigationTreeBefore(ITreeItem * pTreeItemBefore)
 	{
 	Assert(pTreeItemBefore->PGetRuntimeInterface(RTI(ITreeItem)) == pTreeItemBefore);
-	Assert(pTreeItemBefore->m_paTreeWidgetItem != NULL);
-	CTreeWidgetItem * poTreeWidgetItem = pTreeItemBefore->m_paTreeWidgetItem;
-	QTreeWidgetItem * poParent = poTreeWidgetItem->parent();
-	Assert(poParent != NULL);
-	int iChild = poParent->indexOfChild(poTreeWidgetItem);
-	poParent->insertChild(iChild, TreeItemWidget_PAllocate());
+	CTreeWidgetItem * poTreeWidgetItem = pTreeItemBefore->m_paTreeWidgetItem_YZ;
+	if (poTreeWidgetItem != NULL)
+		{
+		QTreeWidgetItem * poParent = poTreeWidgetItem->parent();
+		Assert(poParent != NULL);
+		int iChild = poParent->indexOfChild(poTreeWidgetItem);
+		poParent->insertChild(iChild, TreeItemWidget_PAllocate());
+		}
 	}
 
 void
-ITreeItem::TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent)
+ITreeItem::TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent_YZ)
 	{
 	Assert(g_pwNavigationTree != NULL);
 	TreeItemWidget_PAllocate();
-	Assert(m_paTreeWidgetItem != NULL);
-	if (pParent != NULL)
+	Assert(m_paTreeWidgetItem_YZ != NULL);
+	if (pParent_YZ != NULL)
 		{
-		Assert(pParent->m_paTreeWidgetItem != NULL);
-		pParent->m_paTreeWidgetItem->addChild(PA_CHILD m_paTreeWidgetItem);
+		if (pParent_YZ->m_paTreeWidgetItem_YZ != NULL)
+			pParent_YZ->m_paTreeWidgetItem_YZ->addChild(PA_CHILD m_paTreeWidgetItem_YZ);
 		}
 	else
 		{
 		// No parent, so add the Tree Item at the root
-		g_pwNavigationTree->m_pwTreeView->addTopLevelItem(PA_CHILD m_paTreeWidgetItem);
+		g_pwNavigationTree->m_pwTreeView->addTopLevelItem(PA_CHILD m_paTreeWidgetItem_YZ);
 		}
 	}
 
 void
-ITreeItem::TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent, EMenuAction eMenuActionIcon)
+ITreeItem::TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon)
 	{
-	TreeItem_DisplayWithinNavigationTree(pParent);
+	TreeItem_DisplayWithinNavigationTree(pParent_YZ);
 	TreeItem_SetIcon(eMenuActionIcon);
 	}
 
 //	This method is used mostly to do a prototype and populate the Navigation Tree quickly
 void
-ITreeItem::TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon)
+ITreeItem::TreeItem_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuAction eMenuActionIcon)
 	{
 	m_strNameDisplayTyped.BinInitFromStringWithNullTerminator(pszName);
-	TreeItem_DisplayWithinNavigationTree(pParent, eMenuActionIcon);
+	TreeItem_DisplayWithinNavigationTree(pParent_YZ, eMenuActionIcon);
+	TreeItemWidget_Expand();
 	}
 
 class WLayoutDemo : public WLayout
@@ -480,7 +431,7 @@ TTreeItemDemo::TTreeItemDemo()
 TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon)
 	{
 	m_pawLayoutDemo = NULL;
-	TreeItem_DisplayWithinNavigationTree(pParent, pszName, eMenuActionIcon);
+	TreeItem_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuActionIcon);
 	}
 
 TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch)
@@ -488,7 +439,7 @@ TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMe
 	m_pawLayoutDemo = NULL;
 	m_strDescription = (PSZUC)pszDescription;
 	m_strSearch = (PSZUC)pszSearch;
-	TreeItem_DisplayWithinNavigationTree(pParent, pszName, eMenuActionIcon);
+	TreeItem_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuActionIcon);
 	}
 
 
@@ -510,7 +461,7 @@ TTreeItemDemo *
 ITreeItem::TreeItem_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon)
 	{
 	TTreeItemDemo * pChild = new TTreeItemDemo;
-	pChild->TreeItem_DisplayWithinNavigationTree(this, pszName, eMenuActionIcon);
+	pChild->TreeItem_DisplayWithinNavigationTreeExpand(this, pszName, eMenuActionIcon);
 	return pChild;
 	}
 
@@ -540,8 +491,8 @@ ITreeItem::TreeItem_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC pszN
 void
 ITreeItem::TreeItem_SelectWithinNavigationTree()
 	{
-	Assert(m_paTreeWidgetItem != NULL && "No Tree Item to select");
-	g_pwNavigationTree->NavigationTree_SelectTreeItemWidget(m_paTreeWidgetItem);
+	Report(m_paTreeWidgetItem_YZ != NULL && "No Tree Item to select");
+	g_pwNavigationTree->NavigationTree_SelectTreeItemWidget(m_paTreeWidgetItem_YZ);
 	}
 
 //	Select the Tree Item and make sure it is expanded
@@ -556,20 +507,11 @@ ITreeItem::TreeItem_SelectWithinNavigationTreeExpanded()
 void
 ITreeItem::TreeItem_RemoveFromNavigationTree()
 	{
-	delete m_paTreeWidgetItem;	// Delete the CTreeWidgetItem (if any).  The destructor will automatically remove the CTreeWidgetItem from the GUI.
-	m_paTreeWidgetItem = NULL;
+	delete m_paTreeWidgetItem_YZ;	// Delete the CTreeWidgetItem (if any).  The destructor will automatically remove the CTreeWidgetItem from the GUI.
+	m_paTreeWidgetItem_YZ = NULL;
 	}
 
-/*
-void
-ITreeItem::TreeItem_Rename()
-	{
-	m_paTreeWidgetItem->setFlags(m_paTreeWidgetItem->flags() | Qt::ItemIsEditable);	// Make the item editable, so the method editItem() does not fail
-	g_pwNavigationTree->m_pwTreeView->editItem(m_paTreeWidgetItem);
-	}
-*/
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
 void
 WNavigationTree::NavigationTree_ExpandAllRootTreeItems()
 	{

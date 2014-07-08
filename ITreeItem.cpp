@@ -49,7 +49,7 @@ CTreeWidgetItem::ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ITreeItem::ITreeItem()
 	{
-	m_paTreeWidgetItem = NULL;
+	m_paTreeWidgetItem_YZ = NULL;
 	m_uFlagsTreeItem = 0;
 	}
 
@@ -57,7 +57,7 @@ ITreeItem::~ITreeItem()
 	{
 	NoticeListAuxiliary_DeleteAllNoticesRelatedToTreeItem(IN this);
 	NoticeListRoaming_TreeItemDeleting(IN this);
-	delete m_paTreeWidgetItem;	// This will remove the widget from the Navigation Tree.  Of course, this is not the most elegant mechanism, but it is the safest to avoid bugs
+	delete m_paTreeWidgetItem_YZ;	// This will remove the widget from the Navigation Tree.  Of course, this is not the most elegant mechanism, but it is the safest to avoid bugs
 	}
 
 //	ITreeItem::IRuntimeObject::PGetRuntimeInterface()
@@ -74,8 +74,19 @@ void
 ITreeItem::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	IXmlExchangeObjectID::XmlExchange(pXmlExchanger);
-	pXmlExchanger->XmlExchangeStrConditional("NameDisplay", INOUT &m_strNameDisplayTyped, (m_uFlagsTreeItem & FTI_kfTreeItemNameDisplayedGenerated) == 0);
-	}
+	if (pXmlExchanger->m_fSerializing && m_paTreeWidgetItem_YZ != NULL)
+		{
+		// Remember the state of the Tree Item is expanded or collapsed
+		if (m_paTreeWidgetItem_YZ->isExpanded())
+			m_uFlagsTreeItem |= FTI_kfTreeItem_IsExpanded;
+		else
+			m_uFlagsTreeItem &= ~FTI_kfTreeItem_IsExpanded;
+		}
+	pXmlExchanger->XmlExchangeUIntHexFlagsMasked("F", INOUT &m_uFlagsTreeItem, FTI_kmTreeItem_FlagsSerializeMask);
+	pXmlExchanger->XmlExchangeStrConditional("N", INOUT &m_strNameDisplayTyped, (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated) == 0);
+	if (!pXmlExchanger->m_fSerializing && m_strNameDisplayTyped.FIsEmptyString())
+		pXmlExchanger->XmlExchangeStr("NameDisplay", INOUT &m_strNameDisplayTyped);	// Compatibility with the old file format
+	} // XmlExchange()
 
 //	TreeItem_FContainsMatchingText(), virtual
 //
@@ -113,7 +124,7 @@ ITreeItem::_PszGetDisplayNameOr(const CStr & strName) const
 void
 ITreeItem::_FlushDisplayNameIfGenerated()
 	{
-	if (m_uFlagsTreeItem & FTI_kfTreeItemNameDisplayedGenerated)
+	if (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated)
 		m_strNameDisplayTyped.Empty();
 	}
 
@@ -174,7 +185,7 @@ ITreeItem::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		m_uFlagsTreeItem |= FTI_kfRecommended;
 		return ezMenuActionNone;
 	case eMenuSpecialAction_ITreeItemRenamed:
-		m_uFlagsTreeItem &= ~FTI_kfTreeItemNameDisplayedGenerated;
+		m_uFlagsTreeItem &= ~FTI_kfTreeItem_NameDisplayedGenerated;
 		return ezMenuActionNone;
 	default:
 		return eMenuAction;
@@ -205,22 +216,13 @@ ITreeItem::TreeItemLayout_SetFocus()
 void
 ITreeItem::TreeItem_SetIconWithToolTip(EMenuAction eMenuIcon, const QString & sToolTip)
 	{
-	#if 0
-	MessageLog_AppendTextFormatCo((eMenuActionIcon == eMenuIconFailure) ? d_coOrange : d_coGreenLime, "TreeItem_SetIcon(eMenuAction=$i, $s) for '$S'\n", eMenuActionIcon, PszGetMenuActionText(eMenuActionIcon), &m_strNameDisplay);
-	if (eMenuActionIcon == (EMenuAction)6 && m_strNameDisplay.FCompareStringsNoCase((PSZUC)"abc"))
-		MessageLog_AppendTextFormatCo(d_coRed, "!");	// Dummy statement for debugging
-	#endif
-
-	Assert(m_paTreeWidgetItem != NULL);
+	if (m_paTreeWidgetItem_YZ == NULL)
+		return;	// Sometimes the Tree Item is not visible in the Navigation Tree, so there is no need to update its icon or tool tip
 	QAction * pAction = PGetMenuAction(eMenuIcon);
 	Assert(pAction != NULL);
 	if (pAction != NULL)
-		{
-		if (m_paTreeWidgetItem != NULL)
-			m_paTreeWidgetItem->setIcon(0, pAction->icon());
-		}
-	if (m_paTreeWidgetItem != NULL)
-		m_paTreeWidgetItem->setToolTip(0, sToolTip);
+		m_paTreeWidgetItem_YZ->setIcon(0, pAction->icon());
+	m_paTreeWidgetItem_YZ->setToolTip(0, sToolTip);
 	}
 
 //	Set the icon of the QTreeWidgetItem from a menu action.
@@ -233,22 +235,23 @@ ITreeItem::TreeItem_SetIcon(EMenuAction eMenuIcon)
 void
 ITreeItem::TreeItem_SetTextColorAndIcon(QRGB coTextColor, EMenuAction eMenuIcon)
 	{
-	Assert(m_paTreeWidgetItem != NULL);
-	m_paTreeWidgetItem->setTextColor(0, coTextColor);
+	if (m_paTreeWidgetItem_YZ == NULL)
+		return;	// Sometimes the Tree Item is not visible in the Navigation Tree, so there is no need to update its icon or tool tip
+	m_paTreeWidgetItem_YZ->setTextColor(0, coTextColor);
 	TreeItem_SetIcon(eMenuIcon);
 	}
 
 void
 ITreeItem::TreeItem_SetTextColor(QRGB coTextColor)
 	{
-	Assert(m_paTreeWidgetItem != NULL);
-	m_paTreeWidgetItem->setTextColor(0, coTextColor);
+	if (m_paTreeWidgetItem_YZ != NULL)
+		m_paTreeWidgetItem_YZ->setTextColor(0, coTextColor);
 	}
 
 void
 ITreeItem::TreeItem_SetTextToDisplayNameIfGenerated()
 	{
-	if (m_uFlagsTreeItem & FTI_kfTreeItemNameDisplayedGenerated)
+	if (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated)
 		{
 		m_strNameDisplayTyped.Empty();
 		TreeItem_SetTextToDisplayNameTyped();
@@ -256,10 +259,10 @@ ITreeItem::TreeItem_SetTextToDisplayNameIfGenerated()
 	}
 
 void
-ITreeItem::TreeItem_SetTextToDisplayNameTyped()
+ITreeItem::TreeItem_SetTextToDisplayNameTyped()	// TODO: Rename to TreeItemWidget_UpdateText()
 	{
-	Assert(m_paTreeWidgetItem != NULL);
-	m_paTreeWidgetItem->setText(0, CString(TreeItem_PszGetNameDisplay()));
+	if (m_paTreeWidgetItem_YZ != NULL)
+		m_paTreeWidgetItem_YZ->setText(0, CString(TreeItem_PszGetNameDisplay()));
 	}
 
 void
@@ -270,9 +273,12 @@ ITreeItem::TreeItem_SetTextToDisplayMessagesUnread(int cMessagesUnread)
 		TreeItem_SetTextToDisplayNameTyped();
 		return;
 		}
-	CStr str;
-	str.Format("$s ($i)", TreeItem_PszGetNameDisplay(), cMessagesUnread);
-	m_paTreeWidgetItem->setText(0, str);
+	else if (m_paTreeWidgetItem_YZ != NULL)
+		{
+		CStr str;
+		str.Format("$s ($i)", TreeItem_PszGetNameDisplay(), cMessagesUnread);
+		m_paTreeWidgetItem_YZ->setText(0, str);
+		}
 	}
 
 void
@@ -284,17 +290,20 @@ ITreeItem::TreeItem_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
 		{
 		// There is already an error, so concatenate both, unless this is the same error.
 		// Sometimes a server may send two stanzas with the same identical error.  I have no idea what is the motivation (or if it is a bug), however the same error should be displayed only once
-		QString sErrorPrevious = m_paTreeWidgetItem->toolTip(0);
-		if (!sErrorPrevious.contains(sError))
+		if (m_paTreeWidgetItem_YZ != NULL)
 			{
-			if (!sErrorPrevious.endsWith("</ol>"))
+			QString sErrorPrevious = m_paTreeWidgetItem_YZ->toolTip(0);
+			if (!sErrorPrevious.contains(sError))
 				{
-				sError.Format("<div style='margin:-25px;'><ol><li>$Q</li><li>$Q</li></ol></div>", &sErrorPrevious, &sError);
-				}
-			else
-				{
-				sErrorPrevious.truncate(sErrorPrevious.length() - 5);	// Remove the "</ul>"
-				sError.Format("$Q<li>$Q</li></ol></div>", &sErrorPrevious, &sError);
+				if (!sErrorPrevious.endsWith("</ol>"))
+					{
+					sError.Format("<div style='margin:-25px;'><ol><li>$Q</li><li>$Q</li></ol></div>", &sErrorPrevious, &sError);
+					}
+				else
+					{
+					sErrorPrevious.truncate(sErrorPrevious.length() - 5);	// Remove the "</ul>"
+					sError.Format("$Q<li>$Q</li></ol></div>", &sErrorPrevious, &sError);
+					}
 				}
 			}
 		}
@@ -307,54 +316,65 @@ ITreeItem::TreeItem_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
 BOOL
 ITreeItem::TreeItemWidget_FIsExpanded() const
 	{
-	Assert(m_paTreeWidgetItem != NULL);
-	return m_paTreeWidgetItem->isExpanded();
+	if (m_paTreeWidgetItem_YZ != NULL)
+		return m_paTreeWidgetItem_YZ->isExpanded();
+	return FALSE;
 	}
 
 void
 ITreeItem::TreeItemWidget_Expand()
 	{
-	Assert(m_paTreeWidgetItem != NULL);
-	return m_paTreeWidgetItem->setExpanded(true);
+	if (m_paTreeWidgetItem_YZ != NULL)
+		m_paTreeWidgetItem_YZ->setExpanded(true);
+	}
+
+void
+ITreeItem::TreeItemWidget_ExpandAccordingToSavedState()
+	{
+	if ((m_uFlagsTreeItem & FTI_kfTreeItem_IsExpanded) && m_paTreeWidgetItem_YZ != NULL)
+		m_paTreeWidgetItem_YZ->setExpanded(true);
 	}
 
 void
 ITreeItem::TreeItemWidget_Collapse()
 	{
-	Assert(m_paTreeWidgetItem != NULL);
-	return m_paTreeWidgetItem->setExpanded(false);
+	if (m_paTreeWidgetItem_YZ != NULL)
+		m_paTreeWidgetItem_YZ->setExpanded(false);
 	}
 
 void
 ITreeItem::TreeItemWidget_EnsureVisible()
 	{
-	Assert(m_paTreeWidgetItem != NULL);
-	m_paTreeWidgetItem->SetItemVisibleAlongWithItsParents(TRUE);
+	if (m_paTreeWidgetItem_YZ != NULL)
+		m_paTreeWidgetItem_YZ->SetItemVisibleAlongWithItsParents(TRUE);
 	}
 
 void
 ITreeItem::TreeItemWidget_ToggleVisibility()
 	{
-	Assert(m_paTreeWidgetItem != NULL);
-	m_paTreeWidgetItem->setVisible(m_paTreeWidgetItem->isHidden());
+	if (m_paTreeWidgetItem_YZ != NULL)
+		m_paTreeWidgetItem_YZ->setVisible(m_paTreeWidgetItem_YZ->isHidden());
 	}
 
 void
 ITreeItem::TreeItemWidget_Hide()
 	{
-	Assert(m_paTreeWidgetItem != NULL);
-	m_paTreeWidgetItem->setVisible(false);
+	if (m_paTreeWidgetItem_YZ != NULL)
+		m_paTreeWidgetItem_YZ->setVisible(false);
 	}
 
 ITreeItem *
 ITreeItem::TreeItem_PGetParent() const
 	{
-	CTreeWidgetItem * poParent = (CTreeWidgetItem *)m_paTreeWidgetItem->parent();
-	if (poParent != NULL)
+	if (m_paTreeWidgetItem_YZ != NULL)
 		{
-		Assert(poParent->m_piTreeItem != NULL);
-		Assert(poParent->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
-		return poParent->m_piTreeItem;
+		CTreeWidgetItem * poParent = (CTreeWidgetItem *)m_paTreeWidgetItem_YZ->parent();
+		if (poParent != NULL)
+			{
+			Assert(poParent->m_piTreeItem != NULL);
+			Assert(poParent->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+			return poParent->m_piTreeItem;
+			}
 		}
 	return NULL;
 	}
@@ -429,20 +449,20 @@ CArrayPtrTreeItems::RemoveAllTreeItemsMatchingFlag(UINT kfFlagTreeItem)
 void
 CArrayPtrTreeItems::ForEach_SetFlagTreeItemAboutBeingDeleted() const
 	{
-	ForEach_SetFlagTreeItem(ITreeItem::FTI_kfTreeItemAboutBeingDeleted);
+	ForEach_SetFlagTreeItem(ITreeItem::FTI_kfTreeItem_AboutBeingDeleted);
 	}
 
 void
 CArrayPtrTreeItems::RemoveAllTreeItemsAboutBeingDeleted()
 	{
-	RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfTreeItemAboutBeingDeleted);
+	RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfTreeItem_AboutBeingDeleted);
 	}
 
 //	IMPLEMENTATION NOTES: Could also use ForEach_SetCookieValue()
 void
 CArrayPtrTreeItems::RemoveTreeItems(const CArrayPtrTreeItems & arraypTreeItemsToRemove)
 	{
-	ForEach_ClearFlagTreeItem(ITreeItem::FTI_kfTreeItemBit);
-	arraypTreeItemsToRemove.ForEach_SetFlagTreeItem(ITreeItem::FTI_kfTreeItemBit);
-	RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfTreeItemBit);
+	ForEach_ClearFlagTreeItem(ITreeItem::FTI_kfTreeItem_fBit);
+	arraypTreeItemsToRemove.ForEach_SetFlagTreeItem(ITreeItem::FTI_kfTreeItem_fBit);
+	RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfTreeItem_fBit);
 	}
