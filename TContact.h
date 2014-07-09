@@ -101,13 +101,9 @@ public:
 	void Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC;
 	CSocketXmpp * Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp() const;
 	void XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp);
-	void Xcp_WriteStanza_VE(PSZAC pszFmtTemplate, ...) CONST_MCC;
 	void Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEvent);
 	void Xcp_ServiceDiscovery();
 	void Xcp_Synchronize();
-	void XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters);
-	EErrorXcpApi XcpApi_EReturnData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiParameterData);
-	void XcpApi_ProcessReturnedData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest);
 
 	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const;
 	void XcpApiContact_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters);

@@ -211,3 +211,48 @@ TProfile::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		return ITreeItem::TreeItem_EDoMenuAction(eMenuAction);
 		} // switch
 	} // TreeItem_EDoMenuAction()
+
+void
+TProfile::GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypaContactsRecommended) const
+	{
+	Assert(parraypaContactsRecommended != NULL);
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		TContact ** ppContactStop;
+		TContact ** ppContact = pAccount->m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
+		while (ppContact != ppContactStop)
+			{
+			TContact * pContact = *ppContact++;
+			Assert(pContact != NULL);
+			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+			if (pContact->TreeItemFlags_FuIsRecommended())
+				parraypaContactsRecommended->Add(pContact);
+			} // while
+		} // while
+	}
+
+void
+TProfile::GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecommended) const
+	{
+	Assert(parraypaGroupsRecommended != NULL);
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		TGroup ** ppGroupStop;
+		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+		while (ppGroup != ppGroupStop)
+			{
+			TGroup * pGroup = *ppGroup++;
+			Assert(pGroup != NULL);
+			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+			Assert(pGroup->m_pAccount == pAccount);
+			if (pGroup->TreeItemFlags_FuIsRecommended())
+				parraypaGroupsRecommended->Add(pGroup);
+			} // while
+		} // while
+	}

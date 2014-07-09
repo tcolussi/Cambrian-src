@@ -352,12 +352,10 @@ WMainWindow::event(QEvent * pEvent)
 		//showMinimized();	// Minimize Cambrian to the System Tray
 		pEvent->ignore();	// This line is important, otherwise the Close event will be processed by the calling method, regardless if true is returned.
 		return true;	// The event was processed
-	/*
 	case QEvent::Quit:
-		SettingsSave();
-		Configuration_Save();
+		void MessageLog_ModuleShutdown();
+		MessageLog_ModuleShutdown();
 		break;
-	*/
 	case QEvent::ActivationChange:
 		// 2014-04-09: I don't think setIcon() is necessary, and I think the killTimer() should be moved with the destruction of g_poSystemTrayIcon
 		g_poSystemTrayIcon->setIcon(*g_pIconCambrian);	// Restore the default Cambrian icon

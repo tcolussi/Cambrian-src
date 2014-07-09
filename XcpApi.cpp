@@ -37,12 +37,6 @@ const CHU c_szaApi_Group_Profile_Get[] = "Group.Profile.Get";
 	#define d_chAPIa_TGroupMember_idContact	'c'	// Perhaps rename to 'i'
 
 const CHU c_szaApi_Contact_Recommendations_Get[] = "Contact.Recommendations.Get";
-#define d_chAPIe_Recommendations_					'R'
-#define d_chAPIe_Recommendations_TContacts			'C'
-#define d_chAPIe_Recommendations_TGroups			'G'
-	#define d_chAPIa_Recommendations_shaIdentifier	'i'
-	#define d_chAPIa_Recommendations_strName		'n'
-	#define d_chAPIa_Recommendations_strDescription	'd'	// NYI
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core method to serialize the data for an XCP API request.
@@ -71,15 +65,7 @@ CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PS
 		}
 	if (FCompareStringsNoCase(pszApiName, c_szaApi_Contact_Recommendations_Get))
 		{
-		// Fetch the recommendations from the profile
-		TProfile * pProfile = pAccount->m_pProfileParent;
-		TAccountXmpp ** ppAccountStop;
-		TAccountXmpp ** ppAccount = pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
-		while (ppAccount != ppAccountStop)
-			{
-			TAccountXmpp * pAccount = *ppAccount++;
-
-			}
+		pAccount->m_pProfileParent->XcpApiProfile_RecommendationsSerialize(INOUT this); // Return all the recommendations related to the profile
 		return;
 		}
 	} // BinXmlAppendXcpElementForApiRequest_AppendApiParameterData()
@@ -120,6 +106,56 @@ CBinXcpStanzaType::BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+void
+ITreeItemChatLogEvents::XcpApi_Invoke_RecommendationsGet()
+	{
+	XcpApi_Invoke(c_szaApi_Contact_Recommendations_Get, d_zNA, d_zNA);
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Serialize all recommendations related to a profile
+
+#define d_chAPIe_Recommendations_					'R'
+#define d_szAPIe_Recommendations_					"R"
+#define d_chAPIe_Recommendations_TContacts			'C'
+#define d_szAPIe_Recommendations_TContacts			"C"
+#define d_chAPIe_Recommendations_TGroups			'G'
+#define d_szAPIe_Recommendations_TGroups			"G"
+	#define d_chAPIa_Recommendations_shaIdentifier	'i'
+	#define d_chAPIa_Recommendations_strName		'n'
+	#define d_chAPIa_Recommendations_strDescription	'd'	// NYI
+	#define d_szAPIe_RecommendationContact_p_str	"C i='^i' n='^S'"
+	#define d_szAPIe_RecommendationGroup_h_str		"G i='{h|}' n='^S'"
+
+void
+TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const
+	{
+	Assert(pbinXcpStanzaReply != NULL);
+	pbinXcpStanzaReply->BinAppendText("<" d_szAPIe_Recommendations_ "><" d_szAPIe_Recommendations_TContacts ">");
+	CArrayPtrContacts arraypaContactsRecommended;
+	GetRecommendations_Contacts(OUT &arraypaContactsRecommended);
+	TContact ** ppContactStop;
+	TContact ** ppContact = arraypaContactsRecommended.PrgpGetContactsStop(OUT &ppContactStop);
+	while (ppContact != ppContactStop)
+		{
+		TContact * pContact = *ppContact++;
+		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_RecommendationContact_p_str "/>", pContact, &pContact->m_strNameDisplayTyped);	// Need to fix this for a real name of the contact (not what was typed for the Navigation Tree)
+		}
+	pbinXcpStanzaReply->BinAppendText("</" d_szAPIe_Recommendations_TContacts "><" d_szAPIe_Recommendations_TGroups ">");
+	CArrayPtrGroups arraypaGroupsRecommended;
+	GetRecommendations_Groups(OUT &arraypaGroupsRecommended);
+	TGroup ** ppGroupStop;
+	TGroup ** ppGroup = arraypaGroupsRecommended.PrgpGetGroupsStop(OUT &ppGroupStop);
+	while (ppGroup != ppGroupStop)
+		{
+		TGroup * pGroup = *ppGroup++;
+		Assert(pGroup != NULL);
+		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_RecommendationGroup_h_str "/>", &pGroup->m_hashGroupIdentifier, &pGroup->m_strNameDisplayTyped);
+		}
+	pbinXcpStanzaReply->BinAppendText( "</" d_szAPIe_Recommendations_TGroups "></" d_szAPIe_Recommendations_ ">");
+	} // XcpApiProfile_RecommendationsSerialize()
+
 void
 TContact::XcpApiContact_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const
 	{

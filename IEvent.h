@@ -189,6 +189,8 @@ public:
 	void BinXmlSerializeEventForDisk(const IEvent * pEvent);
 	void BinXmlSerializeEventForXcp(const IEvent * pEvent);
 	void BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTAMP tsOther);
+
+	void XcpSendStanzaToContactOrGroup(const ITreeItemChatLogEvents * pContactOrGroup) CONST_MCC;
 	void XcpSendStanzaToContact(TContact * pContact) CONST_MCC;
 	void XcpSendStanza() CONST_MCC;
 

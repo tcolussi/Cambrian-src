@@ -96,6 +96,8 @@ public:
 	ITreeItem();
 	virtual ~ITreeItem();
 
+	inline UINT TreeItemFlags_FuIsRecommended() const { return (m_uFlagsTreeItem & FTI_kfRecommended); }
+
 	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);	// From IXmlExchange
 	virtual BOOL TreeItem_FContainsMatchingText(PSZUC pszTextSearchLowercase) CONST_MCC;

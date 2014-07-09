@@ -196,10 +196,12 @@ const EMenuActionByte c_rgzeActionsMenuContact[] =
 	eMenuAction_ContactRename,
 	eMenuAction_ContactRemove,
 	eMenuAction_ContactInvite,
-	eMenuAction_ContactProperties,
 	eMenuAction_ContactTransactions,
 	eMenuAction_ContactPing,
-	eMenuIconOutOfSync,
+	eMenuIconOutOfSync,			// Synchronize
+	eMenuActionSeparator,
+	eMenuAction_TreeItemRecommended,
+	eMenuAction_ContactProperties,
 	ezMenuActionNone
 	};
 

@@ -638,13 +638,12 @@ CBinXcpStanzaType::BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiPa
 
 //	Invoke a function by sending an API request to the contact.  This is essentially invoking a remote procedure call.
 void
-TContact::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters)
+ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters)
 	{
 	CBinXcpStanzaTypeInfo binXcpStanza;
 	binXcpStanza.BinXmlAppendXcpApiRequest((PSZAC)pszApiName, pszXmlApiParameters);
-	binXcpStanza.XcpSendStanzaToContact(IN this);
+	binXcpStanza.XcpSendStanzaToContactOrGroup(IN this);
 	}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Method to serialize the event to be saved on disk.
@@ -962,17 +961,7 @@ ITreeItemChatLogEvents::XcpStanza_AppendServiceDiscovery(IOUT CBinXcpStanza * pb
 	pbinXcpStanza->BinAppendTextSzv_VE("<" d_szXCPe_EventInfo_tsO_tsI "/>");
 	}
 */
-/*
-void
-TContact::Xcp_WriteStanza_VE(PSZAC pszFmtTemplate, ...) CONST_MCC
-	{
-	CBinXcpStanzaTypeInfo binXcpStanza;
-	va_list vlArgs;
-	va_start(OUT vlArgs, pszFmtTemplate);
-	binXcpStanza.BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
-	binXcpStanza.XcpSendStanzaToContact(IN this);
-	}
-*/
+
 CBinXcpStanzaType::CBinXcpStanzaType(EStanzaType eStanzaType)
 	{
 	m_eStanzaType = eStanzaType;
@@ -1377,6 +1366,28 @@ CVaultEvents::PFindEventDownloaderMatchingEvent(const IEvent * pEvent) const
 	return NULL;
 	}
 
+void
+CBinXcpStanzaType::XcpSendStanzaToContactOrGroup(const ITreeItemChatLogEvents * pContactOrGroup) CONST_MCC
+	{
+	Assert(pContactOrGroup != NULL);
+	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
+		{
+		TGroupMember ** ppMemberStop;
+		TGroupMember ** ppMember = ((TGroup *)pContactOrGroup)->m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);
+		while (ppMember != ppMemberStop)
+			{
+			TGroupMember * pMember = *ppMember++;
+			Assert(pMember != NULL);
+			Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
+			Assert(pMember->m_pGroup == pContactOrGroup);
+			Assert(pMember->m_pContact->EGetRuntimeClass() == RTI(TContact));
+			XcpSendStanzaToContact(IN pMember->m_pContact);
+			}
+		return;
+		}
+	Assert(pContactOrGroup->EGetRuntimeClass() == RTI(TContact));
+	XcpSendStanzaToContact((TContact *)pContactOrGroup);
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core routine sending a stanza to a contact.
@@ -1491,18 +1502,7 @@ TGroup::Members_BroadcastChatState(EChatState eChatState) const
 	CBinXcpStanzaTypeInfo binXcpStanza;
 	binXcpStanza.BinInitFromTextSzv_VE("<" d_szXCPe_GroupSelector ">{h|}</" d_szXCPe_GroupSelector ">", &m_hashGroupIdentifier);
 	binXcpStanza.BinAppendText((eChatState == eChatState_zComposing) ? d_szXCPe_MessageTextComposingStarted : d_szXCPe_MessageTextComposingPaused);
-
-	TGroupMember ** ppMemberStop;
-	TGroupMember ** ppMember = m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);
-	while (ppMember != ppMemberStop)
-		{
-		TGroupMember * pMember = *ppMember++;
-		Assert(pMember != NULL);
-		Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
-		Assert(pMember->m_pGroup == this);
-		Assert(pMember->m_pContact->EGetRuntimeClass() == RTI(TContact));
-		binXcpStanza.XcpSendStanzaToContact(IN pMember->m_pContact);
-		}
+	binXcpStanza.XcpSendStanzaToContactOrGroup(this);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

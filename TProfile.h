@@ -62,6 +62,11 @@ public:
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);	// From ITreeItem
 	virtual void TreeItem_GotFocus();										// From ITreeItem
 
+	void XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const;
+	void GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypaContactsRecommended) const;
+	void GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecommended) const;
+	void GetRecommendations_Links() const;	// NYI
+
 	TApplicationMayanX * PAllocateApplicationMayanX();
 public:
 	static IXmlExchange * S_PaAllocateProfile(PVOID pConfigurationParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()

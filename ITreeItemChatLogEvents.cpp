@@ -576,12 +576,8 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 		PSZUC pszParameters =  PszrCompareStringBeginCommand(pszCommand, "api");
 		if (pszParameters != NULL && *pszParameters != '\0')
 			{
-			if (fIsContact)
-				{
-				// Invoke an XCP API on the remote contact
-				((TContact *)this)->XcpApi_Invoke(IN pszParameters, d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
-				goto Done;
-				}
+			XcpApi_Invoke(IN pszParameters, d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
+			goto Done;
 			}
 		pszParameters = PszrCompareStringBeginCommand(pszCommand, "sendxml");
 		if (pszParameters != NULL && pszParameters[0] == '<')
@@ -609,6 +605,11 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 				}
 			}
 		*/
+		if (PszrCompareStringBeginCommand(pszCommand, "recommendations") != NULL)
+			{
+			XcpApi_Invoke_RecommendationsGet();
+			goto Done;
+			}
 		if (pszCommand[0] == d_chChatLogPrefix_CommandLine)
 			{
 			pszMessage = (PSZU)pszCommand;	// The message begins with "//", therefore the message is the command
@@ -622,8 +623,9 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			"Valid commands are:<br/>"
 			"^_^_^_ <b>/ping</b> to ping a contact<br/>"
 			"^_^_^_ <b>/version</b> to query the version of the contact<br/>"
-			"^_^_^_ <b>/sendfile</b> to send a file to the contact<br/>"
-			"^_^_^_ <b>/sendballot</b> to send a file to the contact<br/>"
+			"^_^_^_ <b>/recommendations /b> to query the recommendations of the contact(s)<br/>"
+			"^_^_^_ <b>/sendfile</b> to send a file to the contact or group<br/>"
+			"^_^_^_ <b>/sendballot</b> to send a ballot to vote<br/>"
 			//"^_^_^_ <b>/sendbtc</b> to send Bitcoin to the contact<br/>"
 			"^_^_^_ <b>/sendxml</b> to send XML data directly through the socket (this is used for debugging)<br/>"
 			"^_^_^_ <b>/api</b> to invoke a remote API call on the contact (this is used for debugging)<br/>"

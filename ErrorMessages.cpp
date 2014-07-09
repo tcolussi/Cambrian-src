@@ -614,6 +614,15 @@ CMessageLog::Show()
 	#endif
 	}
 
+void
+CMessageLog::Hide()
+	{
+	#ifdef CONFIG_MESSAGE_LOG_WIN32
+	::ShowWindow(m_hwndMessageLog, SW_HIDE);
+	#else
+	#endif
+	}
+
 //	Empty the message log
 void
 CMessageLog::Empty()
@@ -741,6 +750,12 @@ MessageLog_ModuleInitialize()
 	g_oMessageLog.CreateWidget();
 	g_oErrorLog.CreateWidget();
 	#endif
+	}
+
+void
+MessageLog_ModuleShutdown()
+	{
+	g_oMessageLog.Hide();
 	}
 
 void

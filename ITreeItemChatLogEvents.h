@@ -157,6 +157,9 @@ public:
 	void Xmpp_QueryVersion();
 	CSocketXmpp * Xmpp_PGetSocketOnlyIfReady() const;
 
+	void XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters);
+	void XcpApi_Invoke_RecommendationsGet();
+
 	void DisplayDialogBallotSend(CEventBallotSent * pEventBallotInit = NULL);
 	void DisplayDialogSendFile();
 	void DisplayDialogAddContactsToGroup();
