@@ -1505,6 +1505,13 @@ CBin::BinAppendXmlNode(const CXmlNode * pXmlNode)
 		pXmlNode->SerializeToBinUtf8(IOUT this, CXmlNode::STBF_kfIndentTags | CXmlNode::STBF_kfCRLF | 1);
 	}
 
+void
+CBin::BinAppendXmlNodeNoWhiteSpaces(const CXmlNode * pXmlNode)
+	{
+	if (pXmlNode != NULL)
+		pXmlNode->SerializeToBinUtf8(IOUT this);
+	}
+
 PSZUC
 CBin::BinAppendNullTerminatorSz()
 	{
@@ -2700,6 +2707,17 @@ CBin::BinAppendStringBase64FromStringU(PSZUC pszuString)
 	}
 
 void
+CStr::InitFromTextEncodedInBase85(PSZUC pszBase85)
+	{
+	if (m_paData != NULL)
+		m_paData->cbData = 0;
+	BinAppendBinaryDataFromBase85Szv_ML(pszBase85);
+	m_paData->cbData++;	// Include the virtual null-terminator as a null-terminator
+	}
+
+/*
+Not used anymore... need testing
+void
 CStr::InitFromTextEncodedInBase64(const CStr & strText)
 	{
 	if (m_paData != NULL)
@@ -2707,6 +2725,7 @@ CStr::InitFromTextEncodedInBase64(const CStr & strText)
 	BinAppendStringBase64FromStringU(strText.PszuGetDataNZ());
 	BinAppendNullTerminator();
 	}
+*/
 
 PSZUC
 CStr::InitFromBase64Sz(PSZUC pszBase64)

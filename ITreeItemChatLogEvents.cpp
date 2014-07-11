@@ -554,7 +554,7 @@ PszroGetParameterNext(INOUT PSZU pszParameter)
 EUserCommand
 ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & strCommandLineOrMessage)
 	{
-	const BOOL fIsContact = (EGetRuntimeClass() == RTI(TContact));
+//	const BOOL fIsContact = (EGetRuntimeClass() == RTI(TContact));
 	PSZU pszMessage = strCommandLineOrMessage.PbGetData();
 	Assert(pszMessage != NULL);
 	// Check if there is a command line instead of a message
@@ -605,7 +605,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 				}
 			}
 		*/
-		if (PszrCompareStringBeginCommand(pszCommand, "recommendations") != NULL)
+		if (PszrCompareStringBeginCommand(pszCommand, "rec") != NULL || PszrCompareStringBeginCommand(pszCommand, "recommendations") != NULL)
 			{
 			XcpApi_Invoke_RecommendationsGet();
 			goto Done;
@@ -623,7 +623,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			"Valid commands are:<br/>"
 			"^_^_^_ <b>/ping</b> to ping a contact<br/>"
 			"^_^_^_ <b>/version</b> to query the version of the contact<br/>"
-			"^_^_^_ <b>/recommendations /b> to query the recommendations of the contact(s)<br/>"
+			"^_^_^_ <b>/recommendations</b> to query the recommendations of the contact(s)<br/>"
 			"^_^_^_ <b>/sendfile</b> to send a file to the contact or group<br/>"
 			"^_^_^_ <b>/sendballot</b> to send a ballot to vote<br/>"
 			//"^_^_^_ <b>/sendbtc</b> to send Bitcoin to the contact<br/>"

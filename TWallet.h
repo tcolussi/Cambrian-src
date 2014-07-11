@@ -4,8 +4,8 @@
 //	Classes to store events (transactions) related to a wallet.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#ifndef CWALLET_H
-#define CWALLET_H
+#ifndef TWALLET_H
+#define TWALLET_H
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
@@ -103,7 +103,6 @@ public:
 //	The class TWalletView may display transactions from multiple wallets.
 class TWalletView : public ITreeItem
 {
-	RTI_IMPLEMENTATION(TWalletView)
 protected:
 	ITreeItem * m_pTreeItemFilterBy;	// Pointer to a TWallet or TContact
 	EWalletViewFlags m_eWalletViewFlags;
@@ -112,8 +111,10 @@ public:
 	TWalletView(ITreeItem * pParentFilterBy, PSZAC pszName, EWalletViewFlags eWalletViewFlags);
 	~TWalletView();
 	virtual void TreeItem_GotFocus();										// From ITreeItem
+
+	RTI_IMPLEMENTATION(TWalletView)
 };
 
 // QIdentityProxyModel
 
-#endif // CWALLET_H
+#endif // TWALLET_H

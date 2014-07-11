@@ -95,6 +95,14 @@ CBinXcpStanzaType::BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXm
 			}
 		return;
 		}
+	if (FCompareStringsNoCase(pszApiName, (PSZUC)c_szaApi_Contact_Recommendations_Get))
+		{
+		// We received new recommendations from the contact
+		const_cast<CXmlNode *>(pXmlNodeApiParameters)->RemoveEmptyElements();
+		m_pContact->Contact_RecommendationsUpdateFromXml(IN pXmlNodeApiParameters);
+		return;
+		}
+
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unknown API: $s\n^N", pszApiName, pXmlNodeApiParameters);
 	}
 
@@ -111,50 +119,6 @@ ITreeItemChatLogEvents::XcpApi_Invoke_RecommendationsGet()
 	{
 	XcpApi_Invoke(c_szaApi_Contact_Recommendations_Get, d_zNA, d_zNA);
 	}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Serialize all recommendations related to a profile
-
-#define d_chAPIe_Recommendations_					'R'
-#define d_szAPIe_Recommendations_					"R"
-#define d_chAPIe_Recommendations_TContacts			'C'
-#define d_szAPIe_Recommendations_TContacts			"C"
-#define d_chAPIe_Recommendations_TGroups			'G'
-#define d_szAPIe_Recommendations_TGroups			"G"
-	#define d_chAPIa_Recommendations_shaIdentifier	'i'
-	#define d_chAPIa_Recommendations_strName		'n'
-	#define d_chAPIa_Recommendations_strDescription	'd'	// NYI
-	#define d_szAPIe_RecommendationContact_p_str	"C i='^i' n='^S'"
-	#define d_szAPIe_RecommendationGroup_h_str		"G i='{h|}' n='^S'"
-
-void
-TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const
-	{
-	Assert(pbinXcpStanzaReply != NULL);
-	pbinXcpStanzaReply->BinAppendText("<" d_szAPIe_Recommendations_ "><" d_szAPIe_Recommendations_TContacts ">");
-	CArrayPtrContacts arraypaContactsRecommended;
-	GetRecommendations_Contacts(OUT &arraypaContactsRecommended);
-	TContact ** ppContactStop;
-	TContact ** ppContact = arraypaContactsRecommended.PrgpGetContactsStop(OUT &ppContactStop);
-	while (ppContact != ppContactStop)
-		{
-		TContact * pContact = *ppContact++;
-		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_RecommendationContact_p_str "/>", pContact, &pContact->m_strNameDisplayTyped);	// Need to fix this for a real name of the contact (not what was typed for the Navigation Tree)
-		}
-	pbinXcpStanzaReply->BinAppendText("</" d_szAPIe_Recommendations_TContacts "><" d_szAPIe_Recommendations_TGroups ">");
-	CArrayPtrGroups arraypaGroupsRecommended;
-	GetRecommendations_Groups(OUT &arraypaGroupsRecommended);
-	TGroup ** ppGroupStop;
-	TGroup ** ppGroup = arraypaGroupsRecommended.PrgpGetGroupsStop(OUT &ppGroupStop);
-	while (ppGroup != ppGroupStop)
-		{
-		TGroup * pGroup = *ppGroup++;
-		Assert(pGroup != NULL);
-		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_RecommendationGroup_h_str "/>", &pGroup->m_hashGroupIdentifier, &pGroup->m_strNameDisplayTyped);
-		}
-	pbinXcpStanzaReply->BinAppendText( "</" d_szAPIe_Recommendations_TGroups "></" d_szAPIe_Recommendations_ ">");
-	} // XcpApiProfile_RecommendationsSerialize()
 
 void
 TContact::XcpApiContact_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const
@@ -208,18 +172,3 @@ TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, I
 		}
 	TreeItemChatLog_UpdateTextAndIcon();	// Need to optimize this
 	} // XcpApiGroup_ProfileUnserialize()
-
-#if 0
-	/*
-	A suggestion is an idea or plan by someone that is  put forward for certain considerations. While
-	A recommendation  is an opinion which is given by someone who did an analysis of something presented to his/her clients and is considering whether to buy it out or not.
-	Usually done by more knowlegeable people in that field being tackled. Anyone can make a suggestion.  But to make recommendations someone has to be more expert on that field.
-	*/
-
-	// Sample recommendations from a contact
-	<R>
-		<C i='contact identifier' n='name of the contact' d='description of the contact, or a comment why the contact is recommded' />	// Recommend a contact
-		<G i='group identifier' n='' d='' />	// Recommend a group
-	</R>
-
-#endif

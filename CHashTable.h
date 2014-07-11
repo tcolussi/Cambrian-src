@@ -71,7 +71,7 @@ public:
 //
 //	The return value cannot be NULL.
 //
-typedef PSZUC (* PFn_PszGetHashKey)(CHashElement * pHashElement);
+typedef PSZUC (* PFn_PszGetHashKey)(const CHashElement * pHashElement);
 
 
 /////////////////////////////////////////////////////////////////////

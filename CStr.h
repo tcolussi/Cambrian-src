@@ -85,6 +85,7 @@ public:
 	void InitFromFingerprintBinary(const void * pvFingerprint, int cbFingerprint);
 	void InitFromFingerprintBinary(const CBin & binFingerprint);
 	void InitFromFingerprintBinary(const QByteArray & arraybFingerprint);
+	void InitFromTextEncodedInBase85(PSZUC pszBase85);
 	void InitFromTextEncodedInBase64(const CStr & strText);
 	PSZUC InitFromBase64Sz(PSZUC pszBase64);
 	void CopyStringToClipboard() const;

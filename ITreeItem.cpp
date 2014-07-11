@@ -45,6 +45,21 @@ CTreeWidgetItem::ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove)
 		setFlags(eFlagsNew);
 	}
 
+ITreeItem *
+CTreeWidgetItem::PFindChildItemMatchingRuntimeClass(RTI_ENUM rti) const
+	{
+	// Search if there is already a node recommendations
+	int cChildren = childCount();
+	while (--cChildren >= 0)
+		{
+		CTreeWidgetItem * pChild = (CTreeWidgetItem *)child(cChildren);
+		Assert(pChild->m_piTreeItem != NULL);
+		Assert(pChild->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+		if (pChild->m_piTreeItem->EGetRuntimeClass() == rti)
+			return pChild->m_piTreeItem;
+		}
+	return NULL;
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ITreeItem::ITreeItem()
@@ -82,10 +97,10 @@ ITreeItem::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		else
 			m_uFlagsTreeItem &= ~FTI_kfTreeItem_IsExpanded;
 		}
+	pXmlExchanger->XmlExchangeStrConditional("N", INOUT &m_strNameDisplayTyped, (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated) == 0);	// Save the name before the flags (it makes the XML file a bit more organized, as the name is always present while the flags are not)
 	pXmlExchanger->XmlExchangeUIntHexFlagsMasked("F", INOUT &m_uFlagsTreeItem, FTI_kmTreeItem_FlagsSerializeMask);
-	pXmlExchanger->XmlExchangeStrConditional("N", INOUT &m_strNameDisplayTyped, (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated) == 0);
 	if (!pXmlExchanger->m_fSerializing && m_strNameDisplayTyped.FIsEmptyString())
-		pXmlExchanger->XmlExchangeStr("NameDisplay", INOUT &m_strNameDisplayTyped);	// Compatibility with the old file format
+		pXmlExchanger->XmlExchangeStr("NameDisplay", INOUT &m_strNameDisplayTyped);	// Compatibility with the old file format (to be removed in 2015)
 	} // XmlExchange()
 
 //	TreeItem_FContainsMatchingText(), virtual

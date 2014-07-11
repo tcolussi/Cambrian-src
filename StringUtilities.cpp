@@ -1771,6 +1771,7 @@ Base85_FDecodeToBinary_ML(IN PSZUC pszStringBase85, OUT_F_INV BYTE prgbDataBinar
 	return FALSE;
 	}
 
+//	Return a binary of zeroes if the Base85 string is empty or invalid
 BOOL
 Base85_FDecodeToBinary_ZZR_ML(IN PSZUC pszStringBase85, OUT_ZZR BYTE prgbDataBinary[], int cbDataBinary)
 	{

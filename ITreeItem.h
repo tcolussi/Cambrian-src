@@ -35,6 +35,7 @@ public:
 	void ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove);
 	void ItemFlagsEditingEnable() { ItemFlagsAdd(Qt::ItemIsEditable); }
 	void ItemFlagsEditingDisable() { ItemFlagsRemove(Qt::ItemIsEditable); }
+	ITreeItem * PFindChildItemMatchingRuntimeClass(RTI_ENUM rti) const;
 };
 
 class WTreeWidget : public QTreeWidget

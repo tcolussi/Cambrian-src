@@ -547,6 +547,35 @@ CXmlNode::ReverseLinkedListAttributes()
 	} // ReverseLinkedListAttributes()
 
 
+//	Recursive
+void
+CXmlNode::RemoveEmptyElements()
+	{
+	CXmlNode * pXmlElementPrev = NULL;
+	CXmlNode * pXmlElement = m_pElementsList;
+	while (pXmlElement != NULL)
+		{
+		CXmlNode * pXmlElementNext = pXmlElement->m_pNextSibling;
+		pXmlElement->RemoveEmptyElements();
+		if (pXmlElement->FIsEmptyElement())
+			{
+			MessageLog_AppendTextFormatCo(d_coRed, "XML element 0x$p <$s/> is empty\n", pXmlElement, pXmlElement->m_pszuTagName);
+			if (pXmlElementPrev == NULL)
+				m_pElementsList = pXmlElementNext;
+			else
+				pXmlElementPrev->m_pNextSibling = pXmlElementNext;
+			}
+		else
+			pXmlElementPrev = pXmlElement;
+		pXmlElement = pXmlElementNext;
+		} // while
+	}
+
+BOOL
+CXmlNode::FIsEmptyElement() const
+	{
+	return (m_pElementsList == NULL && m_pAttributesList == NULL && (m_pszuTagValue == NULL || m_pszuTagValue[0] == '\0'));
+	}
 
 //	Use a specific string to designate an XML comment.  The string can be almost anything, as long as its storage is constant because we are comparing pointers and not the data.
 //#define	c_szCommentXML		c_szZero
@@ -3168,7 +3197,7 @@ CXmlExchanger::XmlExchangeElementEnd(PSZAC pszuElementName)
 	}
 
 void
-CXmlExchanger::XmlExchangeBinary(PSZAC pszuTagName, INOUT_F_UNCH_S BYTE prgbDataBinary[], int cbDataBinary)
+CXmlExchanger::XmlExchangeBinary(PSZAC pszuTagName, INOUT_ZZR BYTE prgbDataBinary[], int cbDataBinary)
 	{
 	Assert(pszuTagName != NULL);
 	Assert(pszuTagName[0] != '\0');
@@ -3201,7 +3230,7 @@ CXmlExchanger::XmlExchangeBinary(PSZAC pszuTagName, INOUT_F_UNCH_S BYTE prgbData
 	} // XmlExchangeBinary()
 
 void
-CXmlExchanger::XmlExchangeBin(PSZAC pszuTagName, INOUT_F_UNCH_S CBin * pbinValue)
+CXmlExchanger::XmlExchangeBin(PSZAC pszuTagName, INOUT CBin * pbinValue)
 	{
 	Assert(pszuTagName != NULL);
 	Assert(pszuTagName[0] != '\0');
@@ -3233,8 +3262,32 @@ CXmlExchanger::XmlExchangeBin(PSZAC pszuTagName, INOUT_F_UNCH_S CBin * pbinValue
 		}
 	}
 
+//	Store a string encoded in base85.
+//	The motivation for this storing an XML string within an XML document.  The encoding in Base85 offers three benefits:
+//	1. There is no need to unserialize and serialize the XML string each time the XML is loaded, thus reducing CPU and memory requirements.
+//	2. No need to write extra code to handle an XML tree structure.  Manipulating a string is much simpler than manipulating an XML tree structure.
+//	3. Reduce disk storage.  Typically storing an XML within an XML result in a much larger storage requirement (since the entities <>&'" are encoded as &lt; &gt; &amp; &apos; &quot;),
+//	   the disk storags may be 200% to 300% than the Base85 encoding which is always 25% larger.
 void
-CXmlExchanger::XmlExchangeStr(PSZAC pszuTagName, INOUT_F_UNCH_S CStr * pstrValue)
+CXmlExchanger::XmlExchangeStrBase85(PSZAC pszuTagName, INOUT CStr * pstrValue)
+	{
+	Assert(m_pXmlNodeSerialize != NULL);
+	if (m_fSerializing)
+		{
+		// Serialize only non-empty strings
+		int cchString = pstrValue->CchGetLength();
+		if (cchString > 0)
+			XmlExchangeBinary(pszuTagName, IN pstrValue->PbGetData(), cchString);	// Reuse the same method as the encoding fixed binary data
+		}
+	else
+		{
+		pstrValue->InitFromTextEncodedInBase85(IN m_pXmlNodeSerialize->PszuFindElementOrAttributeValue(pszuTagName));
+		}
+
+	}
+
+void
+CXmlExchanger::XmlExchangeStr(PSZAC pszuTagName, INOUT CStr * pstrValue)
 	{
 	Assert(pszuTagName != NULL);
 	Assert(pszuTagName[0] != '\0');
@@ -3257,7 +3310,7 @@ CXmlExchanger::XmlExchangeStr(PSZAC pszuTagName, INOUT_F_UNCH_S CStr * pstrValue
 	} // XmlExchangeStr()
 
 void
-CXmlExchanger::XmlExchangeStrConditional(PSZAC pszuTagName, INOUT_F_UNCH_S CStr * pstrValue, BOOL fuConditionToSerialize)
+CXmlExchanger::XmlExchangeStrConditional(PSZAC pszuTagName, INOUT CStr * pstrValue, BOOL fuConditionToSerialize)
 	{
 	if (m_fSerializing && !fuConditionToSerialize)
 		return;

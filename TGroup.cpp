@@ -346,6 +346,7 @@ TGroup::TreeItemGroup_DisplayWithinNavigationTree()
 		cMessagesUnreadTotal += cMessagesUnread;
 		if (cMessagesUnread > 0)
 			pMember->TreeItem_SetTextToDisplayMessagesUnread(cMessagesUnread);
+		pMember->TreeItem_IconUpdate();
 		}
 	if (cMessagesUnreadTotal > m_cMessagesUnread)
 		{

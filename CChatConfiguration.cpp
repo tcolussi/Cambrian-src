@@ -132,6 +132,7 @@ ITreeItem::TreeItem_DisplayTransactionsBitcoin()
 		{
 		new TWalletView(this, "Bitcoins Sent", eWalletViewFlag_kfDisplayTransactionsSent);
 		new TWalletView(this, "Bitcoins Received", eWalletViewFlag_kfDisplayTransactionsReceived);
+		m_paTreeWidgetItem_YZ->setExpanded(true);
 		}
 	}
 

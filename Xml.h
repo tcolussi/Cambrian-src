@@ -84,6 +84,8 @@ public:
 	VOID ReverseLinkedListsElementsAndAttributes();
 	VOID ReverseLinkedListAttributes();
 	VOID MoveAttributeToHead(PSZAC pszaAttributeName);
+	void RemoveEmptyElements();
+	BOOL FIsEmptyElement() const;
 
 	void SerializeToBinUtf8(IOUT CBin * pbinUtf8, UINT uSerializeFlags = 0) const;
 
@@ -306,10 +308,11 @@ public:
 	BOOL XmlExchangeNodeRootF(PSZAC pszuNameRootNode);
 	void XmlExchangeElementBegin(PSZAC pszuElementName);
 	void XmlExchangeElementEnd(PSZAC pszuElementName);
-	void XmlExchangeBinary(PSZAC pszuTagName, INOUT_F_UNCH_S BYTE prgbDataBinary[], int cbDataBinary);
-	void XmlExchangeBin(PSZAC pszuTagName, INOUT_F_UNCH_S CBin * pbinValue);
-	void XmlExchangeStr(PSZAC pszuTagName, INOUT_F_UNCH_S CStr * pstrValue);
-	void XmlExchangeStrConditional(PSZAC pszuTagName, INOUT_F_UNCH_S CStr * pstrValue, BOOL fuConditionToSerialize);
+	void XmlExchangeBinary(PSZAC pszuTagName, INOUT_ZZR BYTE prgbDataBinary[], int cbDataBinary);
+	void XmlExchangeBin(PSZAC pszuTagName, INOUT CBin * pbinValue);
+	void XmlExchangeStrBase85(PSZAC pszuTagName, INOUT CStr * pstrValue);
+	void XmlExchangeStr(PSZAC pszuTagName, INOUT CStr * pstrValue);
+	void XmlExchangeStrConditional(PSZAC pszuTagName, INOUT CStr * pstrValue, BOOL fuConditionToSerialize);
 	void XmlExchangeInt(PSZAC pszuTagName, INOUT_F_UNCH_S int * pnValue);
 	void XmlExchangeUInt(PSZAC pszuTagName, INOUT_F_UNCH_S UINT * puValue);
 	void XmlExchangeUIntHex(PSZAC pszuTagName, INOUT_F_UNCH_S UINT * puValueHex);

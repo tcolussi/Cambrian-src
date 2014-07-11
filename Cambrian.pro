@@ -78,7 +78,8 @@ SOURCES += \
     Xcp.cpp \
     XcpApi.cpp \
     Xml.cpp \
-    ProfileSwitching.cpp
+    ProfileSwitching.cpp \
+    TRecommendations.cpp
 
 
 HEADERS += \
@@ -143,7 +144,8 @@ HEADERS += \
     Xcp.h \
     XcpApi.h \
     Xml.h \
-    ProfileSwitching.h
+    ProfileSwitching.h \
+    TRecommendations.h
 
 
 FORMS +=

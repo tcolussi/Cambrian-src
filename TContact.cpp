@@ -76,11 +76,13 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	if (pXmlExchanger->m_fSerializing)
 		Vault_WriteEventsToDiskIfModified();		// This line is important to be first because saving the events may modify some variables which may be serialized by ITreeItemChatLogEvents::XmlExchange()
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
-	pXmlExchanger->XmlExchangeStr("JID", INOUT_F_UNCH_S &m_strJidBare);
+	pXmlExchanger->XmlExchangeStr("JID", INOUT &m_strJidBare);
 	pXmlExchanger->XmlExchangeUIntHexFlagsMasked("Flags", INOUT &m_uFlagsContact, FC_kmFlagsSerializeMask);
 //	pXmlExchanger->XmlExchangeUIntHex("F", INOUT &m_uFlagsContactSerialized);
 	pXmlExchanger->XmlExchangeTimestamp("tsSync", INOUT_F_UNCH_S &m_tsOtherLastSynchronized);
-	pXmlExchanger->XmlExchangeStr("Comment", INOUT_F_UNCH_S &m_strComment);
+	pXmlExchanger->XmlExchangeStr("Comment", INOUT &m_strComment);
+	pXmlExchanger->XmlExchangeBin("Rec", INOUT &m_binXmlRecommendations);
+
 	m_strJidBare.StringTruncateAtCharacter('/');	// Remove the resource from the JID. In earlier version of the chat, the serialized JID could contain the resource.  Eventually this line should go away.
 	} // XmlExchange()
 
@@ -374,6 +376,9 @@ TContact::TreeItemContact_DisplayWithinNavigationTree()
 	Assert(m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
 	TreeItem_DisplayWithinNavigationTree(m_pAccount);
 	TreeItemChatLog_UpdateTextAndIcon();
+
+	if (!m_binXmlRecommendations.FIsEmptyBinary())
+		Contact_RecommendationsDisplayWithinNavigationTree();
 	}
 
 void

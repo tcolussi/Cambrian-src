@@ -140,6 +140,7 @@ public:
 	void BinAppendXmlForSelfClosingElement();
 
 	void BinAppendXmlNode(const CXmlNode * pXmlNode);
+	void BinAppendXmlNodeNoWhiteSpaces(const CXmlNode * pXmlNode);
 	void BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding);
 	PSZU BinAppendTextSzv_VE(PSZAC pszFmtTemplate, ...);
 	PSZU BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs);

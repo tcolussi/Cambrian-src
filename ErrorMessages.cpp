@@ -516,7 +516,7 @@ protected:
 public:
 	CMessageLog(const QString & sNameMessageLog);
 	void Show();
-	void Hide();
+	void Destroy();
 	void Empty();
 	void AppendTextU(QRGBX coxTextColor, PSZUC pszuTextAppend, PSZAC pszTextExtra = NULL);
 	void AppendTextFormat(QRGBX coxTextColor, PSZAC pszFmtTemplate, ...);
@@ -615,10 +615,11 @@ CMessageLog::Show()
 	}
 
 void
-CMessageLog::Hide()
+CMessageLog::Destroy()
 	{
 	#ifdef CONFIG_MESSAGE_LOG_WIN32
-	::ShowWindow(m_hwndMessageLog, SW_HIDE);
+	::DestroyWindow(m_hwndMessageLog);
+	//m_hwndMessageLog = NULL;
 	#else
 	#endif
 	}
@@ -755,7 +756,7 @@ MessageLog_ModuleInitialize()
 void
 MessageLog_ModuleShutdown()
 	{
-	g_oMessageLog.Hide();
+	g_oMessageLog.Destroy();
 	}
 
 void

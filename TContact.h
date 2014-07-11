@@ -18,6 +18,7 @@ public:
 	CStr m_strJidBare;							// Bare Jabber Identifier of the contact (this is similar as an email address).  The case is preserve, so the comparison must be case insensitive.  By keeping the Bare JID separate from its resource, we may use a hash table to quickly find a contact from its JID.
 	mutable CStr m_strRessource;				// Resource of the JID.  This field is either empty or begins with "/".  This value is not serialized as it is specific to an XMPP session.  This value may be updated each time the method PFindChatContactByJID() is called.
 	CStr m_strComment;							// Comment regarding the contact.  This comment is also used to store the original invitation for the handshake
+	CBin m_binXmlRecommendations;				// Store the raw XML of the recommendations from the contact
 	/*
 	enum
 		{
@@ -107,6 +108,9 @@ public:
 
 	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const;
 	void XcpApiContact_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters);
+
+	void Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParameters);
+	void Contact_RecommendationsDisplayWithinNavigationTree();
 
 	//void BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const;
 	void Contact_AddToGroup(int iGroup);

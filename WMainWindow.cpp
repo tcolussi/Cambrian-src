@@ -98,6 +98,7 @@ void
 MainWindow_SetCurrentLayout(IN WLayout * pwLayout)
 	{
 	Assert(g_pwChatLayoutContainer != NULL);
+	Endorse(pwLayout == NULL);
 	g_pwChatLayoutContainer->SetLayout(IN pwLayout);
 	}
 
@@ -645,7 +646,7 @@ MainWindow_SystemTrayNewMessageArrived(TContact * pContactFrom, PSZUC pszMessage
 	if (g_pIconNewMessage == NULL)
 		g_pIconNewMessage = new QIcon(":/ico/SysTrayNewMessage");
 	g_poSystemTrayIcon->setIcon(*g_pIconNewMessage);
-	//QCoreApplication::processEvents();	// Force the message to be displayed NOW! (this does not work AND crashed Cambrian when a new message arrives at the same time Cambrian starts)
+	//QCoreApplication::processEvents();	// Force the message to be displayed NOW! (BTW this line of code does not work AND creates a deadlock when a new message arrives at the same time Cambrian starts)
 
 	if ((g_uPreferences & P_kfDontPlaySoundWhenNewMessageArrive) == 0)
 		{
