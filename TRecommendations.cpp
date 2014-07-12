@@ -3,6 +3,10 @@
 #endif
 #include "TRecommendations.h"
 
+CHashTable * PInitHashTableWithAllIdentifiers();
+TAccountXmpp * PFindContactByIdentifier(PSZUC pszContactIdentifier);
+TGroup * PFindGroupByIdentifier(PSZUC pszContactIdentifier);
+
 CHashTableContactIdentities::CHashTableContactIdentities() : CHashTable((PFn_PszGetHashKey)S_PszGetHashKeyContactIdentity, eHashFunctionStringNoCase)
 	{
 	SetHashElementSize(sizeof(CHashElementContactIdentifier));
@@ -66,7 +70,7 @@ CHashTableContactIdentities::AddAllIdentifiersOfContact(TContact * pContact)
 #define d_chAPIa_Recommendation_strDescription			'd'	// NYI
 
 void
-TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const
+TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const
 	{
 	Assert(pbinXcpStanzaReply != NULL);
 	pbinXcpStanzaReply->BinAppendText("<" d_szAPIe_Recommendations_ "><" d_szAPIe_Recommendations_TContacts ">");
@@ -101,21 +105,21 @@ TContact::Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParam
 	m_binXmlRecommendations.Empty();
 	if (!pXmlNodeApiParameters->FIsEmptyElement())
 		m_binXmlRecommendations.BinAppendXmlNodeNoWhiteSpaces(pXmlNodeApiParameters);
-	MessageLog_AppendTextFormatCo(d_coRed, "Contact_RecommendationsUpdateFromXml(): $B\n", &m_binXmlRecommendations);
+	//MessageLog_AppendTextFormatCo(d_coRed, "Contact_RecommendationsUpdateFromXml(): $B\n", &m_binXmlRecommendations);
 	Contact_RecommendationsDisplayWithinNavigationTree();
-	TreeItemWidget_Expand();
+	TreeItemW_Expand();
 	}
 
 void
 TContact::Contact_RecommendationsDisplayWithinNavigationTree()
 	{
-	if (m_paTreeWidgetItem_YZ == NULL)
+	if (m_paTreeItemW_YZ == NULL)
 		return;	// If the parent contact is not present, then do not show its recommendations
-	TRecommendations * pRecommendation = (TRecommendations *)m_paTreeWidgetItem_YZ->PFindChildItemMatchingRuntimeClass(RTI(TRecommendations));	// Search if there is already a node recommendations
+	TRecommendations * pRecommendation = (TRecommendations *)m_paTreeItemW_YZ->PFindChildItemMatchingRuntimeClass(RTI(TRecommendations));	// Search if there is already a node recommendations
 	if (pRecommendation == NULL)
 		{
 		pRecommendation = new TRecommendations(this);
-		pRecommendation->TreeItem_DisplayWithinNavigationTreeExpand(this,  "Recommendations", eMenuAction_TreeItemRecommended);
+		pRecommendation->TreeItemW_DisplayWithinNavigationTreeExpand(this,  "Recommendations", eMenuAction_TreeItemRecommended);
 		}
 	}
 
@@ -240,13 +244,19 @@ void
 WLayoutRecommendations::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn)
 	{
 	MessageLog_AppendTextFormatCo(d_coBlack, "SL_TreeItemClicked($p, $i) \n", pItemClicked, iColumn);
+	CRecommendation * pRecommendation = ((CTreeWidgetItemRecommendation *)pItemClicked)->m_pRecommendation_YZ;
+	Assert(pRecommendation != NULL);
+	if (pRecommendation->mu_existing.pContact == NULL)
+		{
+
+		}
 	}
 
 
-QTreeWidgetItem *
+CTreeWidgetItemRecommendation *
 WLayoutRecommendations::_PTreeWidgetItemAdd(EMenuAction eMenuIcon, PSZAC pszName, PSZAC pszDescription, QTreeWidgetItem * pParent)
 	{
-	QTreeWidgetItem * poTreeItem = new QTreeWidgetItem;
+	CTreeWidgetItemRecommendation * poTreeItem = new CTreeWidgetItemRecommendation;
 	poTreeItem->setIcon(0, PGetMenuAction(eMenuIcon)->icon());
 	poTreeItem->setText(0, pszName);
 	poTreeItem->setText(1, pszDescription);
@@ -257,34 +267,17 @@ WLayoutRecommendations::_PTreeWidgetItemAdd(EMenuAction eMenuIcon, PSZAC pszName
 	return poTreeItem;
 	}
 
-QTreeWidgetItem *
+CTreeWidgetItemRecommendation *
 WLayoutRecommendations::_PTreeWidgetItemAddRecommendation(EMenuAction eMenuIcon, CRecommendation * pRecommendation, QTreeWidgetItem * pParent)
 	{
-	QTreeWidgetItem * poTreeItem = _PTreeWidgetItemAdd(eMenuIcon, pRecommendation->m_strIdentifier, NULL, pParent);
+	CTreeWidgetItemRecommendation * poTreeItem = _PTreeWidgetItemAdd(eMenuIcon, pRecommendation->m_strIdentifier, NULL, pParent);
+	poTreeItem->m_pRecommendation_YZ = pRecommendation;
 	const Qt::CheckState eCheckState = (pRecommendation->mu_existing.pTreeItem == NULL) ? Qt::Unchecked : Qt::Checked;
 	poTreeItem->setCheckState(0, eCheckState);
 	if (eCheckState != Qt::Unchecked)
 		poTreeItem->setFlags(poTreeItem->flags() & ~ Qt::ItemIsUserCheckable);
 	return poTreeItem;
 	}
-
-/*
-void
-WLayoutRecommendations::_RecommendationAddContact(PSZAC pszName, PSZAC pszDescription)
-	{
-	if (m_poTreeItemRecommendedContacts == NULL)
-		m_poTreeItemRecommendedContacts = _PRecommendationAdd(eMenuAction_Contact, "Contacts", "Recommended contacts", NULL);
-	_PRecommendationAdd(eMenuAction_Contact, pszName, pszDescription, m_poTreeItemRecommendedContacts);
-	}
-
-void
-WLayoutRecommendations::_RecommendationAddGroup(PSZAC pszName, PSZAC pszDescription)
-	{
-	if (m_poTreeItemRecommendedGroups == NULL)
-		m_poTreeItemRecommendedGroups = _PRecommendationAdd(eMenuAction_Group, "Groups", "Recommended groups", NULL);
-	_PRecommendationAdd(eMenuAction_Group, pszName, pszDescription, m_poTreeItemRecommendedGroups);
-	}
-*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 TRecommendations::TRecommendations(TContact * pContact)

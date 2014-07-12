@@ -38,19 +38,19 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 	QTreeWidgetItemIterator oIterator(pwTreeView);
 	while (TRUE)
 		{
-		CTreeWidgetItem * pTreeWidgetItem = (CTreeWidgetItem *)*oIterator++;
+		CTreeItemW * pTreeWidgetItem = (CTreeItemW *)*oIterator++;
 		if (pTreeWidgetItem == NULL)
 			break;
 		ITreeItem * piTreeItem = pTreeWidgetItem->m_piTreeItem;
 		Assert(piTreeItem != NULL);
 		Assert(piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) == piTreeItem);	// Make sure the pointer is valid
-		Assert(piTreeItem->m_paTreeWidgetItem_YZ != NULL);
+		Assert(piTreeItem->m_paTreeItemW_YZ != NULL);
 		// Remember the state of each Tree Item before switching profile, so next time the profile is re-selected, then the entire arborescence is restored.
-		if (piTreeItem->m_paTreeWidgetItem_YZ->isExpanded())
+		if (piTreeItem->m_paTreeItemW_YZ->isExpanded())
 			piTreeItem->m_uFlagsTreeItem |= ITreeItem::FTI_kfTreeItem_IsExpanded;
 		else
 			piTreeItem->m_uFlagsTreeItem &= ~ITreeItem::FTI_kfTreeItem_IsExpanded;
-		piTreeItem->m_paTreeWidgetItem_YZ = NULL;	// This would cause a memory leak in the absence of pwTreeView->clear()
+		piTreeItem->m_paTreeItemW_YZ = NULL;	// This would cause a memory leak in the absence of pwTreeView->clear()
 		} // while
 	pwTreeView->clear();
 	delete g_pTreeItemInbox;
@@ -154,7 +154,7 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 TTreeItemInbox::TTreeItemInbox()
 	{
-	TreeItem_DisplayWithinNavigationTreeExpand(NULL, (PSZAC)c_szContacts, eMenuIconCommunicate);
+	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, (PSZAC)c_szContacts, eMenuIconCommunicate);
 	}
 
 //	TTreeItemInbox::ITreeItem::TreeItem_GotFocus()
@@ -166,7 +166,7 @@ TTreeItemInbox::TreeItem_GotFocus()
 
 TProfiles::TProfiles()
 	{
-	TreeItem_DisplayWithinNavigationTreeExpand(NULL, "Profiles", eMenuIconSettings);
+	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, "Profiles", eMenuIconSettings);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,15 +174,15 @@ void
 TProfile::TreeItemProfile_DisplayProfileWithinNavigationTree()
 	{
 	Endorse(g_pTreeItemProfiles == NULL); // Display the profile at the root rather than under "Profiles"
-	TreeItem_DisplayWithinNavigationTree(g_pTreeItemProfiles, eMenuIconIdentities);
+	TreeItemW_DisplayWithinNavigationTree(g_pTreeItemProfiles, eMenuIconIdentities);
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
-		pAccount->PGetAlias_NZ()->TreeItem_DisplayWithinNavigationTreeExpand(this, pAccount->m_strJID, eMenuIconXmpp);
+		pAccount->PGetAlias_NZ()->TreeItemW_DisplayWithinNavigationTreeExpand(this, pAccount->m_strJID, eMenuIconXmpp);
 		}
-	TreeItemWidget_ExpandAccordingToSavedState();
+	TreeItemW_ExpandAccordingToSavedState();
 	}
 
 void
@@ -205,7 +205,7 @@ TProfile::TreeItemProfile_DisplayApplicationsWithinNavigationTree(ITreeItem * pT
 	while (ppApplication != ppApplicationStop)
 		{
 		IApplication * pApplication = *ppApplication++;
-		pApplication->TreeItem_DisplayWithinNavigationTreeExpand(pTreeItemParent, "MayanX", eMenuIconCoffeeExchange);	// Display the applications at the root for debugging
+		pApplication->TreeItemW_DisplayWithinNavigationTreeExpand(pTreeItemParent, "MayanX", eMenuIconCoffeeExchange);	// Display the applications at the root for debugging
 		}
 //	new TTreeItemDemo(this, "My Reputation", eMenuIconReputation, "Display my reputation according to other organizations", "Search Reputation Feedback Comments");
 	}
@@ -227,7 +227,7 @@ void
 TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTree()
 	{
 	Endorse(g_pTreeItemInbox == NULL);	// Display the account at the root of the Navigation Tree
-	TreeItem_DisplayWithinNavigationTree(g_pTreeItemInbox);
+	TreeItemW_DisplayWithinNavigationTree(g_pTreeItemInbox);
 	TContact ** ppContactStop;
 	TContact ** ppContact = m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
 	while (ppContact != ppContactStop)
@@ -252,7 +252,7 @@ TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTree()
 		Assert(pGroup->m_pAccount == this);
 		pGroup->TreeItemGroup_DisplayWithinNavigationTree();
 		}
-	TreeItemWidget_ExpandAccordingToSavedState();
+	TreeItemW_ExpandAccordingToSavedState();
 	TreeItemAccount_UpdateIcon();
 
 	#if FIX_THIS
@@ -265,10 +265,10 @@ extern TTreeItemDemo * g_pSecurity;
 void
 CChatConfiguration::NavigationTree_DisplayAllCertificates()
 	{
-	if (m_oTreeItemCertificates.m_paTreeWidgetItem_YZ != NULL)
+	if (m_oTreeItemCertificates.m_paTreeItemW_YZ != NULL)
 		{
 		// The certificates are already on the tree, however may be hidden
-		m_oTreeItemCertificates.m_paTreeWidgetItem_YZ->setVisible(true);
+		m_oTreeItemCertificates.m_paTreeItemW_YZ->setVisible(true);
 		return;
 		}
 	m_oTreeItemCertificates.NavigationTree_DisplayCertificates((ICertificate *)g_pSecurity);
@@ -278,10 +278,10 @@ CChatConfiguration::NavigationTree_DisplayAllCertificates()
 void
 CChatConfiguration::NavigationTree_DisplayAllCertificatesToggle()
 	{
-	if (m_oTreeItemCertificates.m_paTreeWidgetItem_YZ != NULL)
+	if (m_oTreeItemCertificates.m_paTreeItemW_YZ != NULL)
 		{
 		// The certificates are already on the tree, however may be hidden
-		m_oTreeItemCertificates.TreeItemWidget_ToggleVisibility();
+		m_oTreeItemCertificates.TreeItemW_ToggleVisibility();
 		return;
 		}
 	NavigationTree_DisplayAllCertificates();

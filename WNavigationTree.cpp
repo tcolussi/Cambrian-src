@@ -143,7 +143,7 @@ WNavigationTree::NavigationTree_TreeItemUnselect()
 	}
 
 void
-WNavigationTree::NavigationTree_SelectTreeItemWidget(CTreeWidgetItem * poTreeItem)
+WNavigationTree::NavigationTree_SelectTreeItemWidget(CTreeItemW * poTreeItem)
 	{
 	if (poTreeItem != NULL)
 		{
@@ -156,7 +156,7 @@ WNavigationTree::NavigationTree_SelectTreeItemWidget(CTreeWidgetItem * poTreeIte
 //	Enable the user to type something to rename a Tree Item.
 //	When the editing is done, a notification eMenuSpecialAction_ITreeItemRenamed will be sent to the Tree Item to validate the text.
 void
-WNavigationTree::NavigationTree_RenameTreeItemWidget(CTreeWidgetItem * poTreeItem)
+WNavigationTree::NavigationTree_RenameTreeItemWidget(CTreeItemW * poTreeItem)
 	{
 //	MessageLog_AppendTextFormatCo(d_coGreenDarker, "NavigationTree_RenameTreeItemWidget(0x$p) m_pTreeWidgetItemEditing=0x$p\n", pwTreeItem, m_pTreeWidgetItemEditing);
 	Assert(poTreeItem != NULL);
@@ -190,8 +190,8 @@ WNavigationTree::SL_TreeItemEdited(QTreeWidgetItem * pItemEdited, int iColumn)
 	if (pItemEdited == m_pTreeWidgetItemEditing)
 		{
 		m_pTreeWidgetItemEditing = NULL;
-		((CTreeWidgetItem *)pItemEdited)->ItemFlagsEditingDisable();	// Prevent the item from being editable.  This is important otherwise Qt will not send the signal itemChanged() if the user attempts to edit the same item again.
-		ITreeItem * piTreeItem = ((CTreeWidgetItem *)pItemEdited)->m_piTreeItem;
+		((CTreeItemW *)pItemEdited)->ItemFlagsEditingDisable();	// Prevent the item from being editable.  This is important otherwise Qt will not send the signal itemChanged() if the user attempts to edit the same item again.
+		ITreeItem * piTreeItem = ((CTreeItemW *)pItemEdited)->m_piTreeItem;
 		Assert (piTreeItem != NULL);
 		Assert(piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
 		piTreeItem->m_strNameDisplayTyped =  pItemEdited->text(iColumn);
@@ -225,7 +225,7 @@ WNavigationTree::NavigationTree_DisplayTreeItemsContainingText(const QString & s
 		// Show the entire tree
 		while (TRUE)
 			{
-			CTreeWidgetItem * pTreeWidgetItem = (CTreeWidgetItem *)*oIterator++;
+			CTreeItemW * pTreeWidgetItem = (CTreeItemW *)*oIterator++;
 			if (pTreeWidgetItem == NULL)
 				return;
 			pTreeWidgetItem->setHidden(false);
@@ -237,7 +237,7 @@ WNavigationTree::NavigationTree_DisplayTreeItemsContainingText(const QString & s
 		strSearch.TransformContentToLowercaseSearch();
 		while (TRUE)
 			{
-			CTreeWidgetItem * pTreeWidgetItem = (CTreeWidgetItem *)*oIterator++;
+			CTreeItemW * pTreeWidgetItem = (CTreeItemW *)*oIterator++;
 			if (pTreeWidgetItem == NULL)
 				return;
 			ITreeItem * piItem = pTreeWidgetItem->m_piTreeItem;
@@ -313,7 +313,7 @@ void
 WNavigationTree::SL_TreeCustomContextMenuRequested(const QPoint & ptPos)
 	{
 	WMenu oMenu;
-	CTreeWidgetItem * pTreeItemWidget = (CTreeWidgetItem *)m_pwTreeView->itemAt(ptPos);
+	CTreeItemW * pTreeItemWidget = (CTreeItemW *)m_pwTreeView->itemAt(ptPos);
 	if (pTreeItemWidget != NULL)
 		{
 		Assert(pTreeItemWidget->m_piTreeItem != NULL);
@@ -334,7 +334,7 @@ WNavigationTree::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn)
 	{
 	Assert(pItemClicked != NULL);
 	UNUSED_PARAMETER(iColumn);
-	ITreeItem * pTreeItem = ((CTreeWidgetItem *)pItemClicked)->m_piTreeItem;
+	ITreeItem * pTreeItem = ((CTreeItemW *)pItemClicked)->m_piTreeItem;
 	Assert(pTreeItem != NULL);	// This is a rare case when an object was added to the navigation tree, but no associated ITreeItem
 	if (pTreeItem != NULL)
 		{
@@ -344,63 +344,63 @@ WNavigationTree::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn)
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CTreeWidgetItem *
-ITreeItem::TreeItemWidget_PAllocate()
+CTreeItemW *
+ITreeItem::TreeItemW_PAllocate()
 	{
-	Assert(m_paTreeWidgetItem_YZ == NULL && "Memory leak!");
-	m_paTreeWidgetItem_YZ = new CTreeWidgetItem;
-	m_paTreeWidgetItem_YZ->m_piTreeItem = this;
-	m_paTreeWidgetItem_YZ->setText(0, (CString)TreeItem_PszGetNameDisplay());
-	return m_paTreeWidgetItem_YZ;
+	Assert(m_paTreeItemW_YZ == NULL && "Memory leak!");
+	m_paTreeItemW_YZ = new CTreeItemW;
+	m_paTreeItemW_YZ->m_piTreeItem = this;
+	m_paTreeItemW_YZ->setText(0, (CString)TreeItem_PszGetNameDisplay());
+	return m_paTreeItemW_YZ;
 	}
 
 //	This method will NOT add the Tree Item to the Navigation Tree if the 'before' is not present
 void
-ITreeItem::TreeItem_DisplayWithinNavigationTreeBefore(ITreeItem * pTreeItemBefore)
+ITreeItem::TreeItemW_DisplayWithinNavigationTreeBefore(ITreeItem * pTreeItemBefore)
 	{
 	Assert(pTreeItemBefore->PGetRuntimeInterface(RTI(ITreeItem)) == pTreeItemBefore);
-	CTreeWidgetItem * poTreeWidgetItem = pTreeItemBefore->m_paTreeWidgetItem_YZ;
+	CTreeItemW * poTreeWidgetItem = pTreeItemBefore->m_paTreeItemW_YZ;
 	if (poTreeWidgetItem != NULL)
 		{
 		QTreeWidgetItem * poParent = poTreeWidgetItem->parent();
 		Assert(poParent != NULL);
 		int iChild = poParent->indexOfChild(poTreeWidgetItem);
-		poParent->insertChild(iChild, TreeItemWidget_PAllocate());
+		poParent->insertChild(iChild, TreeItemW_PAllocate());
 		}
 	}
 
 void
-ITreeItem::TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent_YZ)
+ITreeItem::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ)
 	{
 	Assert(g_pwNavigationTree != NULL);
-	TreeItemWidget_PAllocate();
-	Assert(m_paTreeWidgetItem_YZ != NULL);
+	(void)TreeItemW_PAllocate();
+	Assert(m_paTreeItemW_YZ != NULL);
 	if (pParent_YZ != NULL)
 		{
-		if (pParent_YZ->m_paTreeWidgetItem_YZ != NULL)
-			pParent_YZ->m_paTreeWidgetItem_YZ->addChild(PA_CHILD m_paTreeWidgetItem_YZ);
+		if (pParent_YZ->m_paTreeItemW_YZ != NULL)
+			pParent_YZ->m_paTreeItemW_YZ->addChild(PA_CHILD m_paTreeItemW_YZ);
 		}
 	else
 		{
 		// No parent, so add the Tree Item at the root
-		g_pwNavigationTree->m_pwTreeView->addTopLevelItem(PA_CHILD m_paTreeWidgetItem_YZ);
+		g_pwNavigationTree->m_pwTreeView->addTopLevelItem(PA_CHILD m_paTreeItemW_YZ);
 		}
 	}
 
 void
-ITreeItem::TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon)
+ITreeItem::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon)
 	{
-	TreeItem_DisplayWithinNavigationTree(pParent_YZ);
-	TreeItem_SetIcon(eMenuActionIcon);
+	TreeItemW_DisplayWithinNavigationTree(pParent_YZ);
+	TreeItemW_SetIcon(eMenuActionIcon);
 	}
 
 //	This method is used mostly to do a prototype and populate the Navigation Tree quickly
 void
-ITreeItem::TreeItem_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuAction eMenuActionIcon)
+ITreeItem::TreeItemW_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuAction eMenuActionIcon)
 	{
 	m_strNameDisplayTyped.BinInitFromStringWithNullTerminator(pszName);
-	TreeItem_DisplayWithinNavigationTree(pParent_YZ, eMenuActionIcon);
-	TreeItemWidget_Expand();
+	TreeItemW_DisplayWithinNavigationTree(pParent_YZ, eMenuActionIcon);
+	TreeItemW_Expand();
 	}
 
 class WLayoutDemo : public WLayout
@@ -431,7 +431,7 @@ TTreeItemDemo::TTreeItemDemo()
 TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon)
 	{
 	m_pawLayoutDemo = NULL;
-	TreeItem_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuActionIcon);
+	TreeItemW_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuActionIcon);
 	}
 
 TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch)
@@ -439,7 +439,7 @@ TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMe
 	m_pawLayoutDemo = NULL;
 	m_strDescription = (PSZUC)pszDescription;
 	m_strSearch = (PSZUC)pszSearch;
-	TreeItem_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuActionIcon);
+	TreeItemW_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuActionIcon);
 	}
 
 
@@ -458,30 +458,30 @@ TTreeItemDemo::TreeItem_GotFocus()
 	}
 
 TTreeItemDemo *
-ITreeItem::TreeItem_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon)
+ITreeItem::TreeItemW_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon)
 	{
 	TTreeItemDemo * pChild = new TTreeItemDemo;
-	pChild->TreeItem_DisplayWithinNavigationTreeExpand(this, pszName, eMenuActionIcon);
+	pChild->TreeItemW_DisplayWithinNavigationTreeExpand(this, pszName, eMenuActionIcon);
 	return pChild;
 	}
 
 TTreeItemDemo *
-ITreeItem::TreeItem_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch)
+ITreeItem::TreeItemW_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch)
 	{
-	TTreeItemDemo * pChild = TreeItem_PAllocateChild(pszName, eMenuActionIcon);
+	TTreeItemDemo * pChild = TreeItemW_PAllocateChild(pszName, eMenuActionIcon);
 	pChild->m_strDescription = (PSZUC)pszDescription;
 	pChild->m_strSearch = (PSZUC)pszSearch;
 	return pChild;
 	}
 
 void
-ITreeItem::TreeItem_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC pszName, ...)
+ITreeItem::TreeItemW_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC pszName, ...)
 	{
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszName);
 	while (TRUE)
 		{
-		TreeItem_PAllocateChild(pszName, eMenuActionIcon);
+		TreeItemW_PAllocateChild(pszName, eMenuActionIcon);
 		pszName = va_arg(vlArgs, PSZAC);
 		if (pszName == NULL)
 			break;
@@ -489,26 +489,26 @@ ITreeItem::TreeItem_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC pszN
 	}
 
 void
-ITreeItem::TreeItem_SelectWithinNavigationTree()
+ITreeItem::TreeItemW_SelectWithinNavigationTree()
 	{
-	Report(m_paTreeWidgetItem_YZ != NULL && "No Tree Item to select");
-	g_pwNavigationTree->NavigationTree_SelectTreeItemWidget(m_paTreeWidgetItem_YZ);
+	Report(m_paTreeItemW_YZ != NULL && "No Tree Item to select");
+	g_pwNavigationTree->NavigationTree_SelectTreeItemWidget(m_paTreeItemW_YZ);
 	}
 
 //	Select the Tree Item and make sure it is expanded
 void
-ITreeItem::TreeItem_SelectWithinNavigationTreeExpanded()
+ITreeItem::TreeItemW_SelectWithinNavigationTreeExpanded()
 	{
-	TreeItem_SelectWithinNavigationTree();
-	TreeItemWidget_Expand();
+	TreeItemW_SelectWithinNavigationTree();
+	TreeItemW_Expand();
 	}
 
 //	Remove the Tree Item from the Navigation Tree
 void
-ITreeItem::TreeItem_RemoveFromNavigationTree()
+ITreeItem::TreeItemW_RemoveFromNavigationTree()
 	{
-	delete m_paTreeWidgetItem_YZ;	// Delete the CTreeWidgetItem (if any).  The destructor will automatically remove the CTreeWidgetItem from the GUI.
-	m_paTreeWidgetItem_YZ = NULL;
+	delete m_paTreeItemW_YZ;	// Delete the CTreeItemW (if any).  The destructor will automatically remove the CTreeItemW from the GUI.
+	m_paTreeItemW_YZ = NULL;
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -524,7 +524,7 @@ NavigationTree_SelectTreeItem(ITreeItem * pTreeItem)
 	if (pTreeItem != NULL)
 		{
 		Assert(pTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
-		pTreeItem->TreeItem_SelectWithinNavigationTree();
+		pTreeItem->TreeItemW_SelectWithinNavigationTree();
 		}
 	}
 
@@ -532,7 +532,7 @@ NavigationTree_SelectTreeItem(ITreeItem * pTreeItem)
 ITreeItem *
 NavigationTree_PGetSelectedTreeItem()
 	{
-	CTreeWidgetItem * pwTreeItem = (CTreeWidgetItem *)g_pwNavigationTree->m_pwTreeView->currentItem();
+	CTreeItemW * pwTreeItem = (CTreeItemW *)g_pwNavigationTree->m_pwTreeView->currentItem();
 	if (pwTreeItem != NULL)
 		{
 		Assert(pwTreeItem->m_piTreeItem != NULL);
@@ -597,5 +597,5 @@ NavigationTree_PGetSelectedTreeItemMatchingContractOrGroup()
 void
 NavigationTree_RenameSelectedItem()
 	{
-	g_pwNavigationTree->NavigationTree_RenameTreeItemWidget((CTreeWidgetItem *)g_pwNavigationTree->m_pwTreeView->currentItem());
+	g_pwNavigationTree->NavigationTree_RenameTreeItemWidget((CTreeItemW *)g_pwNavigationTree->m_pwTreeView->currentItem());
 	}

@@ -559,7 +559,7 @@ CXmlNode::RemoveEmptyElements()
 		pXmlElement->RemoveEmptyElements();
 		if (pXmlElement->FIsEmptyElement())
 			{
-			MessageLog_AppendTextFormatCo(d_coRed, "XML element 0x$p <$s/> is empty\n", pXmlElement, pXmlElement->m_pszuTagName);
+			//MessageLog_AppendTextFormatCo(d_coRed, "XML element 0x$p <$s/> is empty\n", pXmlElement, pXmlElement->m_pszuTagName);
 			if (pXmlElementPrev == NULL)
 				m_pElementsList = pXmlElementNext;
 			else

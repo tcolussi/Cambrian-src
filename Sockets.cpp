@@ -118,7 +118,7 @@ CSocketXmpp::Socket_WriteData(PCVOID pvData, int cbData)
 //		^C	- Append the full JID of the contact
 //		^s	- Append the name of the server of the socket
 void
-CBinXcpStanzaType::BinXmlInitStanzaWithXmlRaw(PSZUC pszMessageXml)
+CBinXcpStanza::BinXmlInitStanzaWithXmlRaw(PSZUC pszMessageXml)
 	{
 	Assert(pszMessageXml != NULL);
 	Assert(pszMessageXml[0] == '<');
@@ -1236,7 +1236,7 @@ CSocketXmpp::DisplayErrorMessageToUser(EDisplayExtraError eDisplayExtraError, PS
 	ITreeItem * pTreeItemError = PFindContactFromStanza();	// Try to determine if the error is related to a contact or related to the account
 	if (pTreeItemError == NULL)
 		pTreeItemError = m_pAccount;
-	pTreeItemError->TreeItem_SetIconError(pszMessageError, (eDisplayExtraError & eDisplayExtraError_kfSetIconOffline) ? eMenuAction_PresenceAccountOffline : eMenuIconFailure);
+	pTreeItemError->TreeItemW_SetIconError(pszMessageError, (eDisplayExtraError & eDisplayExtraError_kfSetIconOffline) ? eMenuAction_PresenceAccountOffline : eMenuIconFailure);
 	NoticeListRoaming_RefreshDisplay();	// If an error occurs, perhaps there may be notices which must be updated and/or no longer relevant
 	} // DisplayErrorMessageToUser()
 

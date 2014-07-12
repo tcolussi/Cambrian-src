@@ -28,8 +28,8 @@ TBrowser::SetIconNameAndUrl(EMenuAction eMenuActionIcon, PSZAC pszName, PSZAC ps
 void
 TBrowser::TreeItemBrowser_DisplayWithinNavigationTree()
 	{
-	TreeItem_DisplayWithinNavigationTree(NULL);
-	TreeItem_SetIcon(m_uFlags ? eMenuIconMarketplace : eMenuAction_DisplaySecureWebBrowsing);
+	TreeItemW_DisplayWithinNavigationTree(NULL);
+	TreeItemW_SetIcon(m_uFlags ? eMenuIconMarketplace : eMenuAction_DisplaySecureWebBrowsing);
 	}
 
 //	TBrowser::IXmlExchange::XmlExchange()

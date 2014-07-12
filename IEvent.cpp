@@ -186,14 +186,14 @@ IEvent::EGetEventClassForXCP() const
 //	serialized as multiple attributes.  Later, an event may be serialized as an XML element (TBD).
 //
 //	Originally this method was using a CBin object to store the XML information, however the Cambrian Protocol requires to know
-//	the destination contact.  As a result, the CBinXcpStanzaType is used to store the XML info as well as providing additional information for the XCP.
+//	the destination contact.  As a result, the CBinXcpStanza is used to store the XML info as well as providing additional information for the XCP.
 //
 //
 //	IMPLEMENTATION NOTES
 //	Most implementations of XmlSerializeCore() will use a single letter of the alphabet to designe an attribute name.
 //	Using a single character makes the comparison faster to find an attribute, while reducing the storage requirement of the XML file.
 void
-IEvent::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+IEvent::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	Assert(pbinXmlAttributes != NULL);
 	Endorse(pbinXmlAttributes->m_pContact == NULL);	// NULL => Serialize to disk
@@ -211,14 +211,14 @@ IEvent::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	}
 
 void
-IEvent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
+IEvent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	Assert(pXmlNodeExtraData != NULL);
 	Assert(pbinXcpStanzaReply != NULL);
 	}
 
 void
-IEvent::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
+IEvent::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	Assert(pXmlNodeExtraData != NULL);
 	Assert(pbinXcpStanzaReply != NULL);
@@ -665,7 +665,7 @@ IEventMessageText::IEventMessageText(const TIMESTAMP * ptsEventID) : IEvent(ptsE
 
 //	IEventMessageText::IEvent::XmlSerializeCore()
 void
-IEventMessageText::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+IEventMessageText::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{	
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strText, m_strMessageText);
 	pbinXmlAttributes->BinAppendXmlAttributeUInt(d_chAttribute_uFlags, m_uFlagsMessage);
@@ -701,7 +701,7 @@ CEventMessageXmlRawSent::CEventMessageXmlRawSent(PSZUC pszXmlStanza) : IEventMes
 	}
 
 void
-CEventMessageXmlRawSent::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventMessageXmlRawSent::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinXmlInitStanzaWithXmlRaw(m_strMessageText);
 	pbinXmlAttributes->XmppWriteStanzaToSocket();
@@ -824,7 +824,7 @@ IEventFile::_FileClose()
 
 //	IEventFile::IEvent::XmlSerializeCore()
 void
-IEventFile::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+IEventFile::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	PSZUC pszFileNameOnly = m_strFileName.PathFile_PszGetFileNameOnly_NZ();
 	const BOOL fSerializingEventToDisk = pbinXmlAttributes->FSerializingEventToDisk();
@@ -1066,7 +1066,7 @@ CEventFileReceived::~CEventFileReceived()
 /*
 //	CEventFileReceived::IEvent::XmlSerializeCore()
 void
-CEventFileReceived::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventFileReceived::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	IEventFile::XmlSerializeCore(IOUT pbinXmlAttributes, pContactToSerializeFor);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strxStanzaID, m_strxStanzaID);
@@ -1712,13 +1712,13 @@ CEventPing::CEventPing()
 //	CEventPing::IEvent::XmlSerializeCore()
 //	Send a ping request, both in XMPP and XCP.  Since the ping contains no 'data', the XCP ping is automaticaly handled by the core XCP routines handling the protocol.
 void
-CEventPing::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventPing::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><ping xmlns='urn:xmpp:ping'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
 	}
 
 void
-CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType *)
+CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza *)
 	{
 	if (m_tsContact == d_ts_zNULL)
 		m_tsContact = pXmlNodeExtraData->TsGetAttributeValueTimestamp_ML(d_chXCPa_PingTime);
@@ -1750,13 +1750,13 @@ CEventVersion::CEventVersion()
 	}
 
 void
-CEventVersion::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventVersion::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><query xmlns='jabber:iq:version'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
 	}
 
 void
-CEventVersion::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply)
+CEventVersion::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	Assert(pbinXcpStanzaReply != NULL);	// There is no reply to CEventVersion
 	m_strVersion = pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Version);

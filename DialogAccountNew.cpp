@@ -116,9 +116,9 @@ DDialogInvitationCore::AddContactInvitationToNavigationTree_MB(TAccountXmpp * pA
 			}
 		else
 			EMessageBoxInformation("The contact <b>^s</b> is already in your list", pszContact);
-		pContactInvitation->TreeItem_SelectWithinNavigationTree();		// Make the new contact has the focus and/or is visible to the user
+		pContactInvitation->TreeItemW_SelectWithinNavigationTree();		// Make the new contact has the focus and/or is visible to the user
 		}
-	pAccount->TreeItemWidget_Expand();
+	pAccount->TreeItemW_Expand();
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -342,11 +342,11 @@ DDialogAccountAdd::SL_ButtonOK_clicked()
 	if (fAddAccountToNavigationTree)
 		{
 		(void)m_paAccount->TreeItemAccount_DisplayWithinNavigationTree();	// Add the new account to the GUI.  This is important to do it before connecting to the socket because the socket will determine which icon to display if the account is valid
-		m_paAccount->TreeItem_SelectWithinNavigationTree();
+		m_paAccount->TreeItemW_SelectWithinNavigationTree();
 		}
 	else
 		{
-		m_paAccount->TreeItem_SetTextToDisplayNameTyped();  // Update the display text
+		m_paAccount->TreeItemW_UpdateText();  // Update the display text
 		}
 	m_paAccount->Socket_ConnectUI(this, TRUE);
 	} // SL_ButtonOK_clicked()

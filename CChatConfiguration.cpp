@@ -78,10 +78,10 @@ CChatConfiguration::PCertificateRegister(TCertificate * pCertificateParent, cons
 	parraypaCertificates->Add(PA_CHILD pCertificate);
 	pCertificate->m_binDataBinary = arraybCertificate;
 	oCertificateSsl.GetCertificateName(OUT &pCertificate->m_strCertificateName);
-	if (m_oTreeItemCertificates.m_paTreeWidgetItem_YZ != NULL)
+	if (m_oTreeItemCertificates.m_paTreeItemW_YZ != NULL)
 		{
 		pCertificate->NavigationTree_DisplayCertificates(piCertificateParent);	// If the Tree Item "Certificates" is visible within the Navigation Tree, then display also the newly added certificate.
-		pCertificate->TreeItemWidget_EnsureVisible();
+		pCertificate->TreeItemW_EnsureVisible();
 		}
 	Done:
 	return pCertificate;
@@ -126,13 +126,13 @@ CChatConfiguration::NavigationTree_DisplayWallet()
 	}
 
 void
-ITreeItem::TreeItem_DisplayTransactionsBitcoin()
+ITreeItem::TreeItemW_DisplayTransactionsBitcoin()
 	{
-	if (m_paTreeWidgetItem_YZ->childCount() == 0)
+	if (m_paTreeItemW_YZ->childCount() == 0)
 		{
 		new TWalletView(this, "Bitcoins Sent", eWalletViewFlag_kfDisplayTransactionsSent);
 		new TWalletView(this, "Bitcoins Received", eWalletViewFlag_kfDisplayTransactionsReceived);
-		m_paTreeWidgetItem_YZ->setExpanded(true);
+		m_paTreeItemW_YZ->setExpanded(true);
 		}
 	}
 
@@ -141,7 +141,7 @@ ITreeItem::TreeItem_DisplayTransactionsBitcoin()
 void
 CChatConfiguration::NavigationTree_AddCertificates()
 	{
-	CTreeWidgetItem * poTreeItemRoot = m_oTreeItemCertificates.m_paTreeWidgetItem;
+	CTreeItemW * poTreeItemRoot = m_oTreeItemCertificates.m_paTreeWidgetItem;
 	if (poTreeItemRoot != NULL)
 		{
 		// The certificates are already visible

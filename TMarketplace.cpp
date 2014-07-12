@@ -11,7 +11,7 @@ NavigationTree_NewBrowser()
 	g_oConfiguration.m_arraypaBrowsers.Add(PA_CHILD pBrowser);
 	pBrowser->SetIconNameAndUrl(eMenuAction_DisplaySecureWebBrowsing, "Web Browsing");
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
-	pBrowser->TreeItem_SelectWithinNavigationTree();
+	pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}
 
 void
@@ -21,7 +21,7 @@ NavigationTree_NewBrowserMarketplace()
 	g_oConfiguration.m_arraypaBrowsers.Add(PA_CHILD pBrowser);
 	pBrowser->SetIconNameAndUrl(eMenuIconMarketplace, "Marketplace", "http://marketplace.metropipe.net:9001");
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
-	pBrowser->TreeItem_SelectWithinNavigationTree();
+	pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}
 
 TTreeItemDemo * g_pBanking;
@@ -102,7 +102,7 @@ TMarketplace::TMarketplace()
 	new TTreeItemDemo(pJurisdictions, "Seasteading", eMenuIconJurisdiction);
 	TTreeItemDemo * pStartupCities = new TTreeItemDemo(pJurisdictions, "Startup Cities", eMenuIconJurisdiction);
 		new TTreeItemDemo(pStartupCities, "Elevator", eMenuIconJurisdiction);
-	pJurisdictions->TreeItem_AllocateChildren_VEZ(eMenuIconJurisdiction, "Intentional Communities", "Personality Based", "Interest Based", "Traditional Cities", "Traditional Countries", NULL);
+	pJurisdictions->TreeItemW_AllocateChildren_VEZ(eMenuIconJurisdiction, "Intentional Communities", "Personality Based", "Interest Based", "Traditional Cities", "Traditional Countries", NULL);
 
 	g_pSecurity = new TTreeItemDemo(NULL, "Security", eMenuIconSecurityOptions, "Placeholder for various options to enhance the security of the application");
 	g_oConfiguration.NavigationTree_DisplayAllCertificates();

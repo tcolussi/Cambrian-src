@@ -10,39 +10,29 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	class CTreeWidgetItem
+//	class CTreeItemW
 //
-//	The class CTreeWidgetItem provides a layer of abstraction between the QTreeWidget and the CChatConfiguration.
-//	This way, if for some reason, it is better to use a different control, such as a QTreeView, then the impact on the code is minimal.
+//	The class CTreeItemW displays a ITreeItem into the Navigation Tree.
+//	Since the Navigation Tree may display only one profile at the time, a ITreeItem may exist without having a corresponding CTreeItemW,
+//	however every CTreeItemW has a corresponding ITreeItem.
 //
-//	Every Tree Item in the navigation tree must inherit CTreeWidgetItem so we can easily determine
-//	which ITReeItem is selected in the navigation tree.
+//	Every Tree Item in the Navigation Tree must inherit CTreeItemW so we can easily determine which ITreeItem is selected in the Navigation Tree.
+//
 //	Of course, the m_piTreeItem could be stored in the 'type' (aka member variable rtti) of the QTreeWidgetItem,
 //	however since the member variable rtti is declared as an 'int', I feel it is quite risky to store a pointer on a 64-bit architecture.
 //	Anyways, if there is a need for such optimization, we may do it later.
 //
-//	INTERFACE NOTES
-//	Although the class CTreeWidgetItem contains the word 'Widget', its parent class QTreeWidgetItem is NOT inheriting from QWidget nor from QObject.
-class CTreeWidgetItem : public QTreeWidgetItem
+//	NAMING CONVENTION
+//	The class name CTreeItemW was carefully chosen to be meaningful and distinguishable from CTreeWidgetItem.
+//	The word 'Widget' is not part of the class name because, its parent class QTreeWidgetItem is NOT inheriting from QWidget nor from QObject.
+//
+class CTreeItemW : public CTreeWidgetItem
 {
 public:
 	ITreeItem * m_piTreeItem;	// Interface of the object containing the data of the Tree Item.  The data is stored and allocated by the CChatConfiguration object.
 
 public:
-	inline void setVisible(bool fVisible) { setHidden(!fVisible); }
-	void SetItemVisibleAlongWithItsParents(BOOL fVisible);
-	void ItemFlagsAdd(Qt::ItemFlag efItemFlagsAdd);
-	void ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove);
-	void ItemFlagsEditingEnable() { ItemFlagsAdd(Qt::ItemIsEditable); }
-	void ItemFlagsEditingDisable() { ItemFlagsRemove(Qt::ItemIsEditable); }
 	ITreeItem * PFindChildItemMatchingRuntimeClass(RTI_ENUM rti) const;
-};
-
-class WTreeWidget : public QTreeWidget
-{
-public:
-	BOOL FIsEditingTreeWidgetItem() const { return (state() == EditingState); }	// This wrapper is necessary because the method state() is protected
-	void DisableEditingTreeWidgetItem() { setState(NoState); }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,8 +58,8 @@ public:
 class ITreeItem : public IXmlExchangeObjectID
 {
 public:
-	CStr m_strNameDisplayTyped;					// Text to display in the Navigation Tree.  This text may be anything the user typed when renaming the Tree Item.
-	CTreeWidgetItem * m_paTreeWidgetItem_YZ;	// Corresponding widget to appear in the Navigation Tree.  The text of this Tree Item is initialized with TreeItem_PszGetNameDisplay() which by default uses m_strNameDisplayTyped.  This pointer may be NULL if the Tree Item exists, however not visible in the Navigation Tree.
+	CStr m_strNameDisplayTyped;			// Text to display in the Navigation Tree.  This text may be anything the user typed when renaming the Tree Item.
+	CTreeItemW * m_paTreeItemW_YZ;		// Corresponding object to appear in the Navigation Tree.  The text of this Tree Item is initialized with TreeItem_PszGetNameDisplay() which by default uses m_strNameDisplayTyped.  This pointer may be NULL if the Tree Item exists, however not visible in the Navigation Tree.
 
 	enum // Values for m_uFlagsTreeItem
 		{
@@ -112,37 +102,38 @@ public:
 
 	void TreeItemLayout_SetFocus();
 
-	void TreeItem_SelectWithinNavigationTree();
-	void TreeItem_SelectWithinNavigationTreeExpanded();
-	void TreeItem_RemoveFromNavigationTree();
-	void TreeItem_DisplayWithinNavigationTreeBefore(ITreeItem * pTreeItemBefore);
-	void TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent_YZ);
-	void TreeItem_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon);
-	void TreeItem_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuAction eMenuActionIcon);
-	TTreeItemDemo * TreeItem_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon);
-	TTreeItemDemo * TreeItem_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch = NULL);
-	void TreeItem_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC pszName, ...);
-	void TreeItem_Rename();
-	void TreeItem_SetTextColor(QRGB coTextColor);
-	void TreeItem_SetIconWithToolTip(EMenuAction eMenuIcon, const QString & sToolTip = c_sEmpty);
-	void TreeItem_SetIcon(EMenuAction eMenuIcon);
-	void TreeItem_SetTextColorAndIcon(QRGB coTextColor, EMenuAction eMenuIcon);
-	void TreeItem_SetTextToDisplayNameTyped();
-	void TreeItem_SetTextToDisplayNameIfGenerated();
-	void TreeItem_SetTextToDisplayMessagesUnread(int cMessagesUnread);
-	void TreeItem_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon = eMenuIconFailure);
-	ITreeItem * TreeItem_PGetParent() const;
+	// Methods interacting with the CTreeItemW
+	void TreeItemW_SelectWithinNavigationTree();
+	void TreeItemW_SelectWithinNavigationTreeExpanded();
+	void TreeItemW_RemoveFromNavigationTree();
+	void TreeItemW_DisplayWithinNavigationTreeBefore(ITreeItem * pTreeItemBefore);
+	void TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ);
+	void TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon);
+	void TreeItemW_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuAction eMenuActionIcon);
+	TTreeItemDemo * TreeItemW_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon);
+	TTreeItemDemo * TreeItemW_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch = NULL);
+	void TreeItemW_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC pszName, ...);
+	void TreeItemW_Rename();
+	void TreeItemW_SetTextColor(QRGB coTextColor);
+	void TreeItemW_SetIconWithToolTip(EMenuAction eMenuIcon, const QString & sToolTip = c_sEmpty);
+	void TreeItemW_SetIcon(EMenuAction eMenuIcon);
+	void TreeItemW_SetTextColorAndIcon(QRGB coTextColor, EMenuAction eMenuIcon);
+	void TreeItemW_UpdateText();
+	void TreeItemW_SetTextToDisplayNameIfGenerated();
+	void TreeItemW_SetTextToDisplayMessagesUnread(int cMessagesUnread);
+	void TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon = eMenuIconFailure);
+	ITreeItem * TreeItemW_PGetParent() const;
 
-	CTreeWidgetItem * TreeItemWidget_PAllocate();
-	BOOL TreeItemWidget_FIsExpanded() const;
-	void TreeItemWidget_Expand();
-	void TreeItemWidget_ExpandAccordingToSavedState();
-	void TreeItemWidget_Collapse();
-	void TreeItemWidget_EnsureVisible();
-	void TreeItemWidget_ToggleVisibility();
-	void TreeItemWidget_Hide();
+	CTreeItemW * TreeItemW_PAllocate();
+	BOOL TreeItemW_FIsExpanded() const;
+	void TreeItemW_Expand();
+	void TreeItemW_ExpandAccordingToSavedState();
+	void TreeItemW_Collapse();
+	void TreeItemW_EnsureVisible();
+	void TreeItemW_ToggleVisibility();
+	void TreeItemW_Hide();
 
-	void TreeItem_DisplayTransactionsBitcoin();
+	void TreeItemW_DisplayTransactionsBitcoin();
 protected:
 	PSZUC _PszGetDisplayNameOr(const CStr & strName) const;
 	void _FlushDisplayNameIfGenerated();

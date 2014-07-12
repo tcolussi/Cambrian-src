@@ -62,7 +62,7 @@ public:
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);	// From ITreeItem
 	virtual void TreeItem_GotFocus();										// From ITreeItem
 
-	void XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const;
+	void XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
 	void GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypaContactsRecommended) const;
 	void GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecommended) const;
 	void GetRecommendations_Links() const;	// NYI

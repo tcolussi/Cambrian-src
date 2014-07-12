@@ -180,7 +180,7 @@ TContact::TreeItem_IconUpdate()
 		}
 	if (m_uFlagsContact & FC_kfContactUnsolicited)
 		coText = d_coGray;
-	TreeItem_SetTextColorAndIcon(coText, eMenuIconDisplay);
+	TreeItemW_SetTextColorAndIcon(coText, eMenuIconDisplay);
 
 	// Update the icon for every alias
 	IContactAlias * pAlias = m_plistAliases;
@@ -277,7 +277,7 @@ TContact::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		DisplayDialogProperties();
 		return ezMenuActionNone;
 	case eMenuAction_ContactTransactions:
-		TreeItem_DisplayTransactionsBitcoin();
+		TreeItemW_DisplayTransactionsBitcoin();
 		return ezMenuActionNone;
 	case eMenuSpecialAction_ITreeItemRenamed:
 		TreeItemContact_GenerateDisplayNameFromJid();
@@ -334,7 +334,7 @@ TContact::TreeItemContact_UpdateNameDisplayOfAliases()
 	IContactAlias * pAlias = m_plistAliases;
 	while (pAlias != NULL)
 		{
-		pAlias->TreeItem_SetTextToDisplayNameTyped();
+		pAlias->TreeItemW_UpdateText();
 		if (pAlias->EGetRuntimeClass() == RTI(TGroupMember))
 			{
 			TGroupMember * pMember = (TGroupMember *)pAlias;
@@ -374,7 +374,7 @@ void
 TContact::TreeItemContact_DisplayWithinNavigationTree()
 	{
 	Assert(m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
-	TreeItem_DisplayWithinNavigationTree(m_pAccount);
+	TreeItemW_DisplayWithinNavigationTree(m_pAccount);
 	TreeItemChatLog_UpdateTextAndIcon();
 
 	if (!m_binXmlRecommendations.FIsEmptyBinary())
@@ -384,7 +384,7 @@ TContact::TreeItemContact_DisplayWithinNavigationTree()
 void
 ITreeItemChatLogEvents::TreeItemChatLog_UpdateTextToDisplayMessagesUnread()
 	{
-	TreeItem_SetTextToDisplayMessagesUnread(m_cMessagesUnread);
+	TreeItemW_SetTextToDisplayMessagesUnread(m_cMessagesUnread);
 	}
 
 void
@@ -789,8 +789,8 @@ CArrayPtrContacts::ForEach_ChatLogResetNickNameAndRepopulateAllEvents()
 TContactNew::TContactNew(TAccountXmpp * pAccount)
 	{
 	m_pAccount = pAccount;
-	TreeItem_DisplayWithinNavigationTree(m_pAccount);
-	TreeItem_SetTextColorAndIcon(d_coGray, eMenuAction_ContactAdd);
+	TreeItemW_DisplayWithinNavigationTree(m_pAccount);
+	TreeItemW_SetTextColorAndIcon(d_coGray, eMenuAction_ContactAdd);
 	}
 
 //	TContactNew::IRuntimeObject::PGetRuntimeInterface()

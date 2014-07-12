@@ -153,7 +153,7 @@ TWallet::S_FileOpen_MB(PSZUC pszPassword)
 		{
 		if (pWallet->m_sPathFileSave == sPathFileName)
 			{
-			pWallet->TreeItem_SelectWithinNavigationTree();	// Select the wallet so the user may see it
+			pWallet->TreeItemW_SelectWithinNavigationTree();	// Select the wallet so the user may see it
 			return;
 			}
 		pWallet = pWallet->m_pNext;
@@ -163,7 +163,7 @@ TWallet::S_FileOpen_MB(PSZUC pszPassword)
 	binWallet.BinFileReadE(sPathFileName);	// Attempt to read the file.  If the file is not found, create a new wallet
 	pWallet = new TWallet(pszPassword, sPathFileName, INOUT &binWallet);	// Create a wallet object and let it decrypt and unserialize the transactions
 	pWallet->EUnserializeFromXml(INOUT &binWallet);
-	pWallet->TreeItem_DisplayTransactionsBitcoin();
+	pWallet->TreeItemW_DisplayTransactionsBitcoin();
 //	pWallet->TreeItem_SelectWithinNavigationTree();
 	/*
 	EMessageBoxInformation("Unable to open wallet $Q", &sPathFileName);
@@ -183,7 +183,7 @@ IEventWalletTransaction::IEventWalletTransaction(const TIMESTAMP * ptsEventID) :
 
 //	IEventWalletTransaction::IEvent::XmlSerializeCore()
 void
-IEventWalletTransaction::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+IEventWalletTransaction::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeL64(d_chAttribute_nAmount, m_amtQuantity);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strValue, m_strValue);
@@ -532,7 +532,7 @@ TWallet::TWallet(PSZUC pszPassword, const QString & sPathFileWallet, INOUT CBin 
 
 	if (!pbinWalletEncrypted->FIsEmptyBinary())
 		pbinWalletEncrypted->DataDecryptAES256(IN &m_hashKey);
-	TreeItem_DisplayWithinNavigationTreeExpand(g_pBanking, (PSZAC)pszPassword, eMenuIconBitcoin);	// Display the wallet in the navigation tree using the password as the name (in the future the name will be stored elsewhere)
+	TreeItemW_DisplayWithinNavigationTreeExpand(g_pBanking, (PSZAC)pszPassword, eMenuIconBitcoin);	// Display the wallet in the navigation tree using the password as the name (in the future the name will be stored elsewhere)
 	}
 
 TWallet::~TWallet()
@@ -696,7 +696,7 @@ TWalletView::TWalletView(ITreeItem * pParentFilterBy, PSZAC pszName, EWalletView
 	{
 	m_pTreeItemFilterBy = pParentFilterBy;
 	m_eWalletViewFlags = eWalletViewFlags;
-	TreeItem_DisplayWithinNavigationTreeExpand(pParentFilterBy, pszName, eMenuIconBitcoin);
+	TreeItemW_DisplayWithinNavigationTreeExpand(pParentFilterBy, pszName, eMenuIconBitcoin);
 	}
 
 TWalletView::~TWalletView()

@@ -29,16 +29,6 @@ public:
 };
 
 
-//	Each recommendation has a corresponding Tree Item
-class CTreeWidgetItemRecommendation : public CTreeWidgetItem
-{
-public:
-	CArrayPtrContacts m_arraypRecommendedBy;	// Other contacts who also made the same recommendation
-
-public:
-};
-
-
 class CRecommendation
 {
 public:
@@ -49,7 +39,17 @@ public:
 		TGroup * pGroup;
 		} mu_existing;			// If already in the contact list
 	CStr m_strIdentifier;
+	CArrayPtrContacts m_arraypRecommendedBy;	// Other contacts who also made the same recommendation
+};
 
+//	Each recommendation has a corresponding Tree Item
+class CTreeWidgetItemRecommendation : public CTreeWidgetItem
+{
+public:
+	CRecommendation * m_pRecommendation_YZ;		// If the pointer is NULL, it means there no recommendation because the 'widget' is a category
+
+public:
+	CTreeWidgetItemRecommendation() { m_pRecommendation_YZ = NULL; }
 };
 
 class CArrayPtrRecommendations : public CArray
@@ -100,10 +100,8 @@ protected:
 public:
 	WLayoutRecommendations(TContact * pContact);
 	virtual ~WLayoutRecommendations() { delete m_paRecommendations; }
-	QTreeWidgetItem * _PTreeWidgetItemAdd(EMenuAction eMenuIcon, PSZAC pszName, PSZAC pszDescription, QTreeWidgetItem * pParent);
-	QTreeWidgetItem * _PTreeWidgetItemAddRecommendation(EMenuAction eMenuIcon, CRecommendation * pRecommendation, QTreeWidgetItem * pParent);
-	void _RecommendationAddContact(PSZAC pszName, PSZAC pszDescription);
-	void _RecommendationAddGroup(PSZAC pszName, PSZAC pszDescription);
+	CTreeWidgetItemRecommendation * _PTreeWidgetItemAdd(EMenuAction eMenuIcon, PSZAC pszName, PSZAC pszDescription, QTreeWidgetItem * pParent);
+	CTreeWidgetItemRecommendation * _PTreeWidgetItemAddRecommendation(EMenuAction eMenuIcon, CRecommendation * pRecommendation, QTreeWidgetItem * pParent);
 
 protected slots:
 	void SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn);

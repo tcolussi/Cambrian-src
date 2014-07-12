@@ -41,8 +41,8 @@ ICertificate::~ICertificate()
 void
 ICertificate::NavigationTree_DisplayCertificates(ICertificate * pCertificateParent)
 	{
-	TreeItem_DisplayWithinNavigationTree(IN pCertificateParent);
-	TreeItem_SetIcon(eMenuIconCertificate);
+	TreeItemW_DisplayWithinNavigationTree(IN pCertificateParent);
+	TreeItemW_SetIcon(eMenuIconCertificate);
 	TCertificate ** ppCertificateStop;
 	TCertificate ** ppCertificate = m_arraypaCertificates.PrgpGetCertificatesStop(OUT &ppCertificateStop);
 	while (ppCertificate != ppCertificateStop)
@@ -104,7 +104,7 @@ TCertificate::PFindServerOrAllocate(const CStr & strServerName)
 	pServer = new TCertificateServerName(this);
 	m_arraypaServers.Add(PA_CHILD pServer);
 	pServer->m_strServerName = strServerName;
-	if (m_paTreeWidgetItem_YZ != NULL)
+	if (m_paTreeItemW_YZ != NULL)
 		pServer->NavigationTree_DisplayServer();	// The certificate is already visible in the Navigation Tree, therefore add the Server as well
 	Done:
 	return pServer;
@@ -294,7 +294,7 @@ TCertificateServerName::TreeItem_GotFocus()
 void
 TCertificateServerName::NavigationTree_DisplayServer()
 	{
-	TreeItem_DisplayWithinNavigationTree(m_pCertificateParent);
+	TreeItemW_DisplayWithinNavigationTree(m_pCertificateParent);
 	NavigationTree_IconUpdate();
 	}
 
@@ -306,7 +306,7 @@ TCertificateServerName::NavigationTree_IconUpdate()
 		{
 		eMenuActionIcon = m_dtuCertificateRevoked.isValid() ? eMenuIconServerDeny : eMenuIconServerSecure;
 		}
-	TreeItem_SetIcon(eMenuActionIcon);
+	TreeItemW_SetIcon(eMenuActionIcon);
 	}
 
 IXmlExchange *
@@ -328,7 +328,7 @@ TCertificates::~TCertificates()
 void
 TCertificates::FlushDataAndCauseMemoryLeak()
 	{
-	m_paTreeWidgetItem_YZ = NULL;
+	m_paTreeItemW_YZ = NULL;
 	m_arraypaCertificates.RemoveAllElements();
 	}
 

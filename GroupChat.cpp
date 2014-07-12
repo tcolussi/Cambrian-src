@@ -31,7 +31,7 @@ CEventGroupMemberJoin::CEventGroupMemberJoin(TContact * pMember) : IEvent(NULL)
 
 //	CEventGroupMemberJoin::IEvent::XmlSerializeCore()
 void
-CEventGroupMemberJoin::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventGroupMemberJoin::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeOfContactIdentifier(d_chAttribute_strMemberJID, m_pMember);
 	}
@@ -61,7 +61,7 @@ CEventGroupMemberJoin::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock)
 //	PERFORMANCE NOTES
 //	Considering a single contact may have multiple identifier, such as having multiple JIDs, it will be wise in the future to use a hash table to cache the identifiers.
 TContact *
-TAccountXmpp::Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest) CONST_MCC
+TAccountXmpp::Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest) CONST_MCC
 	{
 	PSZUC pszContactIdentifier = pXmlNodeEvent->PszuFindAttributeValue(chAttributeName);
 	if (pszContactIdentifier != NULL)
@@ -123,7 +123,7 @@ TContact::BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttri
 */
 
 void
-CBinXcpStanzaType::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent)
+CBinXcpStanza::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent)
 	{
 	AssertValidEvent(pEvent);
 	Endorse(m_pContact == NULL);	// Saving to disk
@@ -143,7 +143,7 @@ CBinXcpStanzaType::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent
 	}
 
 void
-CBinXcpStanzaType::BinXmlAppendAttributeUIntHexadecimalExcludeForXcp(CHS chAttributeName, UINT uAttributeValueHexadecimal, UINT kmFlagsExcludeForXcp)
+CBinXcpStanza::BinXmlAppendAttributeUIntHexadecimalExcludeForXcp(CHS chAttributeName, UINT uAttributeValueHexadecimal, UINT kmFlagsExcludeForXcp)
 	{
 	if (FSerializingEventForXcp())
 		uAttributeValueHexadecimal &= ~kmFlagsExcludeForXcp;	// Exclude some flags

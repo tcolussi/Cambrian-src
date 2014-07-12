@@ -29,7 +29,7 @@ singleton WNavigationTree : public QDockWidget
 public:
 	WTreeWidget * m_pwTreeView;				// Object displaying the profile(s) to the user
 protected:
-	CTreeWidgetItem * m_pTreeWidgetItemEditing;	// Current widget being edited (if any).  This variable is important because the Qt sends a signal itemChanged() evertime an tree item is being modified, and we need a reliable mechanism to determine which tree item is actually being edited.
+	CTreeItemW * m_pTreeWidgetItemEditing;	// Current widget being edited (if any).  This variable is important because the Qt sends a signal itemChanged() evertime an tree item is being modified, and we need a reliable mechanism to determine which tree item is actually being edited.
 
 public:
 	explicit WNavigationTree();
@@ -38,8 +38,8 @@ public:
 
 	void NavigationTree_ExpandAllRootTreeItems();
 
-	void NavigationTree_SelectTreeItemWidget(CTreeWidgetItem * poTreeItem);
-	void NavigationTree_RenameTreeItemWidget(CTreeWidgetItem * poTreeItem);
+	void NavigationTree_SelectTreeItemWidget(CTreeItemW * poTreeItem);
+	void NavigationTree_RenameTreeItemWidget(CTreeItemW * poTreeItem);
 	void NavigationTree_DisplayTreeItemsContainingText(const QString & sSearch);
 
 public slots:

@@ -156,14 +156,14 @@ enum EStanzaType
 
 //	Object to store information necessary to send an XCP stanza.
 //	An XCP Stanza is an XML within a XMPP message.
-class CBinXcpStanzaType : public CBin	// TODO: Rename to CBinXcpStanza
+class CBinXcpStanza : public CBin
 {
 public:
 	EStanzaType m_eStanzaType;	// How to send the XCP stanza.
 	TContact * m_pContact;		// Contact to send the XCP stanza
 	int m_ibXmlApiReply;		// Offset where the XML of the API reply is (this field is useful to append errors to the object)
 protected:
-	CBinXcpStanzaType(EStanzaType eStanzaType);
+	CBinXcpStanza(EStanzaType eStanzaType);
 public:
 	inline BOOL FSerializingEventToDisk() const { return (m_pContact == NULL); }
 	inline BOOL FSerializingEventForXcp() const { return (m_pContact != NULL); }
@@ -211,20 +211,20 @@ public:
 	static const int c_cbStanzaMaxSize		= 10000;	// Hard limit on the stanza size
 	static const int c_cbStanzaMaxPayload	= 8000;		// Split any stanza having a payload larger than 8000 bytes, as Cambrian reserved 2000 bytes for the XMPP header. Sure some XMPP clients may have JIDs of 3071 bytes, however those clients won't be able to communicate with the Cambrian Protocol.
 	static const int c_cbStanzaMaxBinary	= 6400;		// Since binary data is transmitted in Base85, the encoding of 6400 bytes requires 25% more space (6400 * 1.25 = 8000)
-}; // CBinXcpStanzaType
+}; // CBinXcpStanza
 
 
-class CBinXcpStanzaTypeInfo : public CBinXcpStanzaType
+class CBinXcpStanzaTypeInfo : public CBinXcpStanza
 {
 public:
 	CBinXcpStanzaTypeInfo();
 	CBinXcpStanzaTypeInfo(IEvent * pEvent);
 };
 
-class CBinXcpStanzaTypeMessage : public CBinXcpStanzaType
+class CBinXcpStanzaTypeMessage : public CBinXcpStanza
 {
 public:
-	CBinXcpStanzaTypeMessage() : CBinXcpStanzaType(eStanzaType_eMessage) { }
+	CBinXcpStanzaTypeMessage() : CBinXcpStanza(eStanzaType_eMessage) { }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -304,10 +304,10 @@ public:
 
 	virtual EEventClass EGetEventClass() const  = 0;
 	virtual EEventClass EGetEventClassForXCP() const;
-	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
-	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
-	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
 	void XcpRequesExtraData();
 
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
@@ -355,7 +355,7 @@ protected:
 	void _XmlUnserializeAttributeOfContactIdentifier(CHS chAttributeName, OUT TContact ** ppContact, const CXmlNode * pXmlNodeElement) const;
 
 public:
-	static EEventClass S_EGetEventClassFromXmlStanzaXCP(IN const CXmlNode * pXmlNodeEventsStanza, INOUT TContact * pContact, INOUT ITreeItemChatLogEvents * pChatLogEvents, INOUT CBinXcpStanzaType * pbinXmlStanzaReply);
+	static EEventClass S_EGetEventClassFromXmlStanzaXCP(IN const CXmlNode * pXmlNodeEventsStanza, INOUT TContact * pContact, INOUT ITreeItemChatLogEvents * pChatLogEvents, INOUT CBinXcpStanza * pbinXmlStanzaReply);
 	static IEvent * S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEventID);
 	static IEvent * S_PaAllocateEvent_YZ(const CXmlNode * pXmlNodeEvent, const TIMESTAMP * ptsEventID);
 	static int S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort = d_zNA);
@@ -385,7 +385,7 @@ public:
 	TIMESTAMP TsEventOtherLast() const;
 	TIMESTAMP TsEventIdLast() const;
 
-	void EventsSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlEvents) const;
+	void EventsSerializeForDisk(INOUT CBinXcpStanza * pbinXmlEvents) const;
 	void EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITreeItemChatLogEvents * pParent);
 	CEventMessageTextReceived * PFindEventMessageReceivedByTimestamp(TIMESTAMP tsOther) const;
 	IEvent * PFindEventByID(TIMESTAMP tsEventID) const;
@@ -429,7 +429,7 @@ public:
 	UINT m_uFlagsMessage;		// Flags related to the message, such as HTML and formatting.
 public:
 	IEventMessageText(const TIMESTAMP * ptsEventID);
-	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	void _BinHtmlInitWithTimeAndMessage(OUT CBin * pbinTextHtml) CONST_VIRTUAL;
 }; // IEventMessageText
@@ -439,7 +439,7 @@ class CEventMessageXmlRawSent : public IEventMessageText	// This class is mostly
 public:
 	CEventMessageXmlRawSent(PSZUC pszXmlStanza);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eMessageXmlRaw_class; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
 
@@ -490,7 +490,7 @@ protected:
 public:
 	IEventFile(const TIMESTAMP * ptsEventID);
 	virtual ~IEventFile();
-	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -512,7 +512,7 @@ public:
 	virtual ~CEventFileSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const;
-	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 
 	void XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact);
@@ -544,7 +544,7 @@ public:
 	virtual ~CEventFileReceived();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const { return CEventFileSent::c_eEventClass; }
-	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
@@ -564,7 +564,7 @@ public:
 	CEventFileReceived(TContact * pContactSendingFile, const CXmlNode * pXmlNodeStreamInitiation);
 	virtual ~CEventFileReceived();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -586,7 +586,7 @@ public:
 
 public:
 	IEventWalletTransaction(const TIMESTAMP * ptsEventID);
-	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	BOOL FuIsTransactionMatchingViewFlags(EWalletViewFlags eWalletViewFlags) const;
@@ -630,8 +630,8 @@ public:
 public:
 	CEventPing();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
-	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 }; // CEventPing
 
@@ -646,8 +646,8 @@ public:
 public:
 	CEventVersion();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
-	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 
 	void XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza);
@@ -683,19 +683,19 @@ public:
 	virtual ~CEventDownloader();
 	virtual EEventClass EGetEventClass() const;
 	virtual EEventClass EGetEventClassForXCP() const;
-	virtual void XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const;
+	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
-	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply);
-	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply);
+	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
+	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 
-	void XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply, QTextEdit * pwEditChatLog);
+	void XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXcpStanzaReply, QTextEdit * pwEditChatLog);
 	inline BOOL FIsDownloaderMatchingEvent(const IEvent * pEvent) const { return (pEvent == m_paEvent); }
 
 	static const EEventClass c_eEventClass = eEventClass_eDownloader_class;
-	friend class CBinXcpStanzaType;
+	friend class CBinXcpStanza;
 }; // CEventDownloader
 
 class CDataXmlLargeEvent;	// Object holding the data to send to CEventDownloader

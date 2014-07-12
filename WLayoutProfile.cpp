@@ -263,7 +263,7 @@ WLayoutProfile::SL_SearchTextChanged(const QString & sSearch)
 		// Show the entire tree
 		while (TRUE)
 			{
-			CTreeWidgetItem * pTreeWidgetItem = (CTreeWidgetItem *)*oIterator++;
+			CTreeItemW * pTreeWidgetItem = (CTreeItemW *)*oIterator++;
 			if (pTreeWidgetItem == NULL)
 				return;
 			pTreeWidgetItem->setHidden(false);
@@ -273,7 +273,7 @@ WLayoutProfile::SL_SearchTextChanged(const QString & sSearch)
 		{
 		while (TRUE)
 			{
-			CTreeWidgetItem * pTreeWidgetItem = (CTreeWidgetItem *)*oIterator++;
+			CTreeItemW * pTreeWidgetItem = (CTreeItemW *)*oIterator++;
 			if (pTreeWidgetItem == NULL)
 				return;
 			BOOL fShowRow = (pTreeWidgetItem->text(0).contains(sSearch, Qt::CaseInsensitive) ||

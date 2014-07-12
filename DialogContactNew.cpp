@@ -123,7 +123,7 @@ DialogContactNew::SL_ButtonOK_clicked()
 		pContactSelect = pContactDuplicate;
 		}
 	if (pContactSelect != NULL)
-		pContactSelect->TreeItem_SelectWithinNavigationTree();
+		pContactSelect->TreeItemW_SelectWithinNavigationTree();
 	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
 //	m_pAccount->Contacts_RosterDisplayDebug("DialogContactNew::SL_ButtonOK_clicked() end");
 	} // SL_ButtonOK_clicked()
@@ -327,7 +327,7 @@ WLayoutContactNew::SL_ButtonAddContacts()
 	if (pContactSelect == NULL)
 		pContactSelect = pContactDuplicate;	// No contact were added, so select one of the duplicate contact (if any).  This feature may be used to find a contact.
 	if (pContactSelect != NULL)
-		pContactSelect->TreeItem_SelectWithinNavigationTree();
+		pContactSelect->TreeItemW_SelectWithinNavigationTree();
 	} // SL_ButtonAddContacts()
 
 //	TContactNew::ITreeItem::TreeItem_GotFocus()

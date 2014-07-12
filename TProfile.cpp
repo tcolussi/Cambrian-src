@@ -44,6 +44,7 @@ IApplication::S_PaAllocateApplication_YZ(POBJECT poProfileParent, const CXmlNode
 		Assert(pApplicationAllocator->pfnAllocator != NULL);
 		if (FCompareStrings(pApplicationAllocator->pszName, pszName))
 			return pApplicationAllocator->pfnAllocator(pProfileParent);
+		pApplicationAllocator++;	// Search the next application
 		} // while
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find application of type '$s'\n", pszName);
 	return NULL;

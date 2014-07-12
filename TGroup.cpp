@@ -17,7 +17,7 @@ TGroupMember::TGroupMember(TGroup * pGroup, TContact * pContact) : IContactAlias
 void
 TGroupMember::TreeItemGroupMember_DisplayWithinNavigationTree()
 	{
-	TreeItem_DisplayWithinNavigationTree(m_pGroup, eMenuAction_Contact);
+	TreeItemW_DisplayWithinNavigationTree(m_pGroup, eMenuAction_Contact);
 	}
 
 //	TGroupMember::IXmlExchange::XmlExchange()
@@ -80,9 +80,9 @@ void
 TGroupMember::TreeItem_IconUpdate()
 	{
 	if (m_cMessagesUnread <= 0)
-		TreeItem_SetTextColorAndIcon(d_coTreeItem_Default, m_pContact->Contact_EGetMenuActionPresence());
+		TreeItemW_SetTextColorAndIcon(d_coTreeItem_Default, m_pContact->Contact_EGetMenuActionPresence());
 	else
-		TreeItem_SetTextColorAndIcon(d_coTreeItem_UnreadMessages, eMenuAction_MessageNew);
+		TreeItemW_SetTextColorAndIcon(d_coTreeItem_UnreadMessages, eMenuAction_MessageNew);
 	}
 
 //	TGroupMember::IContactAlias::ContactAlias_IconChanged()
@@ -97,7 +97,7 @@ TGroupMember::ContactAlias_IconChanged(EMenuAction eMenuIconDisplay, EMenuAction
 		}
 	else if (eMenuIconDisplay == eMenuAction_MessageNew)
 		eMenuIconDisplay = eMenuIconPresence;
-	TreeItem_SetTextColorAndIcon(coText, eMenuIconDisplay);
+	TreeItemW_SetTextColorAndIcon(coText, eMenuIconDisplay);
 	}
 
 //	The allocation of a group member requires two parameters: the parent group and the contact.
@@ -153,7 +153,7 @@ TGroup::Member_PFindOrAddContact_NZ(TContact * pContact)
 		pMember = new TGroupMember(this, pContact);
 		m_arraypaMembers.Add(pMember);
 		pMember->TreeItemGroupMember_DisplayWithinNavigationTree();
-		TreeItem_SetTextToDisplayNameIfGenerated();
+		TreeItemW_SetTextToDisplayNameIfGenerated();
 		}
 	Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
 	return pMember;
@@ -169,7 +169,7 @@ TGroup::Member_Add_UI(TContact * pContact)
 		TGroupMember * pMember = new TGroupMember(this, pContact);
 		m_arraypaMembers.Add(pMember);
 		pMember->TreeItemGroupMember_DisplayWithinNavigationTree();
-		TreeItem_SetTextToDisplayNameIfGenerated();
+		TreeItemW_SetTextToDisplayNameIfGenerated();
 		//pMember->TreeItemWidget_EnsureVisible();	// The contact was added to the array, therefore display it on the GUI as well
 		// Create an event in the Chat Log
 		/*
@@ -177,14 +177,14 @@ TGroup::Member_Add_UI(TContact * pContact)
 		Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEvent);
 		*/
 		}
-	TreeItem_SelectWithinNavigationTreeExpanded();
+	TreeItemW_SelectWithinNavigationTreeExpanded();
 	}
 
 void
 TGroup::Member_Remove_UI(PA_DELETING TGroupMember * paMember)
 	{
 	m_arraypaMembers.DeleteTreeItem(PA_DELETING paMember);
-	TreeItem_SetTextToDisplayNameIfGenerated();
+	TreeItemW_SetTextToDisplayNameIfGenerated();
 	}
 
 
@@ -209,7 +209,7 @@ TGroup::Member_PFindOrAllocate_NZ(PSZUC pszMemberJID)
 	TGroupMember * pMember = new TGroupMember(this, pContact);
 	m_arraypaMembers.Add(pMember);
 	pMember->TreeItemGroupMember_DisplayWithinNavigationTree();
-	TreeItem_SetTextToDisplayNameIfGenerated();
+	TreeItemW_SetTextToDisplayNameIfGenerated();
 	return pMember;
 	} // Member_PFindOrAllocate_NZ()
 
@@ -330,7 +330,7 @@ WLayoutGroup::WLayoutGroup(TGroup * pGroup)
 void
 TGroup::TreeItemGroup_DisplayWithinNavigationTree()
 	{
-	TreeItem_DisplayWithinNavigationTree(m_pAccount);
+	TreeItemW_DisplayWithinNavigationTree(m_pAccount);
 
 	// Display the contacts which are members of the group
 	int cMessagesUnreadTotal = 0;
@@ -345,7 +345,7 @@ TGroup::TreeItemGroup_DisplayWithinNavigationTree()
 		const int cMessagesUnread = pMember->m_cMessagesUnread;
 		cMessagesUnreadTotal += cMessagesUnread;
 		if (cMessagesUnread > 0)
-			pMember->TreeItem_SetTextToDisplayMessagesUnread(cMessagesUnread);
+			pMember->TreeItemW_SetTextToDisplayMessagesUnread(cMessagesUnread);
 		pMember->TreeItem_IconUpdate();
 		}
 	if (cMessagesUnreadTotal > m_cMessagesUnread)
@@ -355,7 +355,7 @@ TGroup::TreeItemGroup_DisplayWithinNavigationTree()
 		}
 	TreeItemChatLog_UpdateTextToDisplayMessagesUnread();
 	TreeItem_IconUpdate();
-	TreeItemWidget_ExpandAccordingToSavedState();
+	TreeItemW_ExpandAccordingToSavedState();
 	} // TreeItemGroup_DisplayWithinNavigationTree()
 
 //	TGroup::ITreeItem::TreeItem_PszGetNameDisplay()
@@ -399,9 +399,9 @@ void
 TGroup::TreeItem_IconUpdate()
 	{
 	if (m_cMessagesUnread <= 0)
-		TreeItem_SetTextColorAndIcon(d_coTreeItem_Default, eMenuAction_Group);
+		TreeItemW_SetTextColorAndIcon(d_coTreeItem_Default, eMenuAction_Group);
 	else
-		TreeItem_SetTextColorAndIcon(d_coTreeItem_UnreadMessages, eMenuAction_MessageNew);
+		TreeItemW_SetTextColorAndIcon(d_coTreeItem_UnreadMessages, eMenuAction_MessageNew);
 	}
 
 //	TGroup::ITreeItemChatLogEvents::Vault_GetHashFileName()
@@ -431,7 +431,7 @@ TAccountXmpp::Group_AddNewMember_UI(TContact * pContact, int iGroup)
 		iGroup = m_arraypaGroups.Add(PA_CHILD pGroup);
 		pGroup->m_strNameDisplayTyped.Format("Group #$i", iGroup + 1);
 		pGroup->GroupInitNewIdentifier();
-		pGroup->TreeItem_DisplayWithinNavigationTree(this, eMenuAction_Group);
+		pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
 		}
 	// Check if the contact is not already in the group
 	pGroup->Member_Add_UI(pContact);
@@ -460,7 +460,7 @@ TAccountXmpp::Group_Delete(PA_DELETING TGroup * paGroup)
 //	Find the group matching the identifier, and if not found and eFindGroupCreate then allocate a new group.
 //	This method may return NULL despite eFindGroupCreate if the identifier is not valid.
 TGroup *
-TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest, EFindGroup eFindGroup)
+TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanza * pbinXcpApiExtraRequest, EFindGroup eFindGroup)
 	{
 	Report(pszGroupIdentifier != NULL);	// This is not a bug, however unsual
 	Assert(pbinXcpApiExtraRequest != NULL);
@@ -489,7 +489,7 @@ TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcp
 		pGroup = new TGroup(this);
 		m_arraypaGroups.Add(PA_CHILD pGroup);
 		pGroup->m_hashGroupIdentifier = shaGroupIdentifier;
-		pGroup->TreeItem_DisplayWithinNavigationTree(this, eMenuAction_Group);
+		pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
 		pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_ProfileGet(pszGroupIdentifier);	// If the group does not exist, then query the contact who sent the stanza to get more information about the group
 		return pGroup;
 		}

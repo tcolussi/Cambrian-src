@@ -166,19 +166,19 @@ TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(PSZUC pszCo
 	Assert(pszContactJID != NULL);
 	Endorse(pszContactNameDisplay == NULL);	// Automatically generate a display name
 	Assert(Contact_PFindByJID(pszContactJID) == NULL && "Contact already in the account");
-	Assert(m_paTreeWidgetItem_YZ != NULL && "No Tree Item to attach to");	// This line of code has to be revised
+	Assert(m_paTreeItemW_YZ != NULL && "No Tree Item to attach to");	// This line of code has to be revised
 	TContact * pContact = new TContact(this);
 	pContact->m_strRessource = pContact->m_strJidBare.AppendTextUntilCharacterPszr(pszContactJID, '/');
 	pContact->m_strNameDisplayTyped = pszContactNameDisplay;
 	pContact->TreeItemContact_GenerateDisplayNameFromJid();
 	m_arraypaContacts.Add(PA_CHILD pContact);
 	#ifdef WANT_TREE_NODE_NEW_CONTACT
-	pContact->TreeItem_DisplayWithinNavigationTreeBefore(m_pTreeItemContactNew);
+	pContact->TreeItemW_DisplayWithinNavigationTreeBefore(m_pTreeItemContactNew);
 	#else
-	pContact->TreeItem_DisplayWithinNavigationTree(this);
+	pContact->TreeItemW_DisplayWithinNavigationTree(this);
 	#endif
 	pContact->TreeItemContact_UpdateIcon();
-	pContact->TreeItemWidget_EnsureVisible();	// Make sure the new contact is visible in the Navigation Tree
+	pContact->TreeItemW_EnsureVisible();	// Make sure the new contact is visible in the Navigation Tree
 	pContact->m_tsCreated = Timestamp_GetCurrentDateTime();
 	if (m_paSocket != NULL)
 		Contact_RosterSubscribe(pContact);
@@ -539,7 +539,7 @@ TAccountXmpp::Contact_DeleteSafely(PA_DELETING TContact * paContactDelete)
 	Assert(paContactDelete != NULL);
 	Assert(paContactDelete->EGetRuntimeClass() == RTI(TContact));
 	paContactDelete->m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
-	TreeItem_SelectWithinNavigationTree();	// Select the parent deleting the contact (without this line of code, the application will crash if the contact was selected in the GUI because the contact is no longer there)
+	TreeItemW_SelectWithinNavigationTree();	// Select the parent deleting the contact (without this line of code, the application will crash if the contact was selected in the GUI because the contact is no longer there)
 	if (m_paSocket != NULL && m_paSocket->Socket_FuIsReadyToSendMessages())
 		{
 		if (paContactDelete->XmppRoster_PszGetSubscription() != NULL)
@@ -578,8 +578,8 @@ TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTreeInit(PSZUC pszServerNam
 		m_strNameDisplay = m_strUsername;	// Make the display name as short as possible, unless there is already a similar account displaying the username
 	*/
 	TreeItemAccount_DisplayWithinNavigationTree();
-	TreeItemWidget_Expand();
-	TreeItemWidget_EnsureVisible();	// Make sure the account is visible under the 'Inbox' node
+	TreeItemW_Expand();
+	TreeItemW_EnsureVisible();	// Make sure the account is visible under the 'Inbox' node
 	}
 
 void
@@ -603,7 +603,7 @@ TAccountXmpp::TreeItemAccount_DeleteFromNavigationTree_MB(PA_DELETING)
 void
 TAccountXmpp::TreeItemAccount_UpdateIcon()
 	{
-	if (m_paTreeWidgetItem_YZ == NULL)
+	if (m_paTreeItemW_YZ == NULL)
 		return;	// The account is not yet in the Navigation Tree.  This happens when Cambrian starts and is loading the accounts from the configuration
 	QRGB coText = d_coTreeItem_Default;
 	EMenuAction eMenuAction = eMenuAction_PresenceAccountOffline;
@@ -635,7 +635,7 @@ TAccountXmpp::TreeItemAccount_UpdateIcon()
 				eMenuAction = eMenuAction_PresenceAccountConnecting;
 			}
 		}
-	TreeItem_SetTextColor(coText);
+	TreeItemW_SetTextColor(coText);
 	if (g_fIsConnectedToInternet)
 		{
 		if ((m_uFlagsTreeItem & FTI_kemIconMask) != 0)
@@ -643,7 +643,7 @@ TAccountXmpp::TreeItemAccount_UpdateIcon()
 		}
 	else
 		eMenuAction = eMenuAction_PresenceAccountDisconnected;	// Always display the disconnect icon if the device is disconnected
-	TreeItem_SetIcon(eMenuAction);
+	TreeItemW_SetIcon(eMenuAction);
 	} // TreeItemAccount_UpdateIcon()
 
 void
@@ -748,7 +748,7 @@ PSZUC
 TAccountXmpp::TreeItemAccount_SetIconConnectingToServer_Gsb()
 	{
 	PSZUC pszMessage = g_strScratchBufferStatusBar.Format("Connecting to server $S...", &m_strServerName);
-	TreeItem_SetIconWithToolTip(eMenuAction_PresenceAccountConnecting, g_strScratchBufferStatusBar);
+	TreeItemW_SetIconWithToolTip(eMenuAction_PresenceAccountConnecting, g_strScratchBufferStatusBar);
 	return pszMessage;
 	}
 
@@ -774,7 +774,7 @@ TAccountXmpp::TreeItemAccount_SetIconDisconnected()
 	{
 	// Set the disconnected icon only if there is no error
 	if ((m_uFlagsTreeItem & FTI_kemIconMask) == 0)
-		TreeItem_SetIcon(eMenuAction_PresenceAccountDisconnected);
+		TreeItemW_SetIcon(eMenuAction_PresenceAccountDisconnected);
 	TreeItemAccount_UpdateIconOfAllContacts();
 	}
 

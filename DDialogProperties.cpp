@@ -172,7 +172,7 @@ DDialogPropertiesGroup::DDialogPropertiesGroup(TGroup * pGroup)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Very similar as CTreeWidgetItem
+//	Very similar as CTreeItemW
 class CListWidgetTreeItem :  public QListWidgetItem
 {
 public:
@@ -420,7 +420,7 @@ DDialogBallotSend::~DDialogBallotSend()
 	{
 	}
 
-class CBinXcpStanzaEventPreview : public CBinXcpStanzaType
+class CBinXcpStanzaEventPreview : public CBinXcpStanza
 {
 protected:
 	TContact * m_paContact;		// We need a contact to serialize to XCP, so use an empty contact so there is no interference with existing data
@@ -432,7 +432,7 @@ public:
 	void TransformEvents_PA(PA_DELETING IEvent * paEventSent, INOUT PA_CHILD IEvent ** ppaEventReceived);
 };
 
-CBinXcpStanzaEventPreview::CBinXcpStanzaEventPreview(ITreeItemChatLogEvents * pContactOrGroup) : CBinXcpStanzaType(eStanzaType_zInformation)
+CBinXcpStanzaEventPreview::CBinXcpStanzaEventPreview(ITreeItemChatLogEvents * pContactOrGroup) : CBinXcpStanza(eStanzaType_zInformation)
 	{
 	TAccountXmpp * pAccount = pContactOrGroup->m_pAccount;
 	m_pContact = m_paContact = new TContact(pAccount);	// We will serialize using a dummy contact

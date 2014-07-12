@@ -41,7 +41,7 @@ const CHU c_szaApi_Contact_Recommendations_Get[] = "Contact.Recommendations.Get"
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core method to serialize the data for an XCP API request.
 void
-CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters)
+CBinXcpStanza::BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters)
 	{
 	Assert(pszApiName != NULL);
 	Assert(pXmlNodeApiParameters != NULL);
@@ -72,10 +72,10 @@ CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PS
 
 
 //	Method to unserialize the data from BinXmlAppendXcpElementForApiRequest_AppendApiParameterData().
-//	Although the reply typically does not need the object CBinXcpStanzaType, the reply may necessitate the CBinXcpStanzaType to make additional request.
+//	Although the reply typically does not need the object CBinXcpStanza, the reply may necessitate the CBinXcpStanza to make additional request.
 //	For instance, when unserializing a group, the method may need to query information about new group members to fetch the contact profile.
 void
-CBinXcpStanzaType::BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters)
+CBinXcpStanza::BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters)
 	{
 	Assert(pszApiName != NULL);
 	Assert(pXmlNodeApiParameters != NULL);
@@ -108,7 +108,7 @@ CBinXcpStanzaType::BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXm
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void
-CBinXcpStanzaType::BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier)
+CBinXcpStanza::BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier)
 	{
 	BinXmlAppendXcpApiRequest((PSZAC)c_szaApi_Group_Profile_Get, pszGroupIdentifier);
 	}
@@ -121,14 +121,14 @@ ITreeItemChatLogEvents::XcpApi_Invoke_RecommendationsGet()
 	}
 
 void
-TContact::XcpApiContact_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const
+TContact::XcpApiContact_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const
 	{
 
 	}
 
 //	Serialize a group for the XCP API.
 void
-TGroup::XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const
+TGroup::XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const
 	{
 	pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_TGroup_h_str ">", &m_hashGroupIdentifier, (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated) ? NULL : &m_strNameDisplayTyped);
 	TGroupMember ** ppMemberStop;
@@ -150,7 +150,7 @@ TGroup::XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaRepl
 	}
 
 void
-TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest)
+TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * pbinXcpApiExtraRequest)
 	{
 	// Fill in any missing group info from the data in pXmlNodeApiParameters
 	if (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated)

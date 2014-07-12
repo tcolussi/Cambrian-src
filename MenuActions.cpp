@@ -50,7 +50,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Sign Up..."  _ "s=Register (create) a new XMPP account" _ "i=XMPP" _,		// eMenuAction_AccountRegister
 	"Login..." _ "s=Login to an existing XMPP account" _ "i=XMPP" _, // eMenuAction_AccountLogin
 	"Rename Account..." _ "i=ContactEdit" _ "s=Change the display name of the selected account" _,				// eMenuAction_AccountRename
-	"Remove Account..." _ "i=Remove" _ "s=Remove the selected account from the Navigation Tree (this action does NOT delete tha account on the server)" _, // "-i=list-remove.png" _, // eMenuAction_AccountDelete
+	"Remove Account..." _ "i=Remove" _ "s=Remove the selected account from the Navigation Tree (this action does NOT delete the account on the server)" _, // "-i=list-remove.png" _, // eMenuAction_AccountDelete
 	"Account Properties..." _ "i=Properties" _ "s=Display the properties of the selected account" _, // eMenuAction_AccountProperties
 	"Reconnect" _ "i=ServerConnect" _ "s=Reconnect to the server" _, // eMenuAction_AccountReconnect
 

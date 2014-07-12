@@ -1584,6 +1584,44 @@ WTable::AdjustHeightToFitRows()
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Make sure the Tree Item is visible and so its parent
+void
+CTreeWidgetItem::SetItemVisibleAlongWithItsParents(BOOL fVisible)
+	{
+	setVisible(fVisible);
+	if (fVisible)
+		{
+		CTreeWidgetItem * pParent = (CTreeWidgetItem *)parent();
+		if (pParent != NULL)
+			{
+			// Recursively expand and make the parent visible
+			pParent->setExpanded(true);
+			pParent->SetItemVisibleAlongWithItsParents(TRUE);
+			}
+		}
+	}
+
+//	We need this method, otherwise the Qt framework will blindly send the signal QTreeWidget::itemChanged() regardless if the flags have been changed, and
+//	this will cause a stack overflow in slot SL_TreeItemEdited().
+void
+CTreeWidgetItem::ItemFlagsAdd(Qt::ItemFlag efItemFlagsAdd)
+	{
+	const Qt::ItemFlags eFlags = flags();
+	const Qt::ItemFlags eFlagsNew = (eFlags | efItemFlagsAdd);
+	if (eFlagsNew != eFlags)
+		setFlags(eFlagsNew);
+	}
+
+void
+CTreeWidgetItem::ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove)
+	{
+	const Qt::ItemFlags eFlags = flags();
+	const Qt::ItemFlags eFlagsNew = (eFlags & ~efItemFlagsRemove);
+	if (eFlagsNew != eFlags)
+		setFlags(eFlagsNew);
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void
 Widget_SetText(INOUT QWidget * pwWidget, PSZAC pszText)
 	{

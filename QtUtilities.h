@@ -491,6 +491,26 @@ public:
 	LPARAM LParamGetFromRowSelected();
 };
 
+class WTreeWidget : public QTreeWidget
+{
+public:
+	BOOL FIsEditingTreeWidgetItem() const { return (state() == EditingState); }	// This wrapper is necessary because the method state() is protected
+	void DisableEditingTreeWidgetItem() { setState(NoState); }
+};
+
+
+//	This class is named CTreeWidgetItem because it is a wrapper to QTreeWidgetItem, however QTreeWidgetItem is NOT inheriting from QWidget nor from QObject.
+class CTreeWidgetItem : public QTreeWidgetItem
+{
+public:
+	inline void setVisible(bool fVisible) { setHidden(!fVisible); }
+	void SetItemVisibleAlongWithItsParents(BOOL fVisible);
+	void ItemFlagsAdd(Qt::ItemFlag efItemFlagsAdd);
+	void ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove);
+	void ItemFlagsEditingEnable() { ItemFlagsAdd(Qt::ItemIsEditable); }
+	void ItemFlagsEditingDisable() { ItemFlagsRemove(Qt::ItemIsEditable); }
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	The class CSslCertificate adds friendly wrappers to the class QSslCertificate.
 class CSslCertificate : public QSslCertificate

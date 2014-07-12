@@ -85,7 +85,7 @@
 
 
 void
-CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_ElementOpen(PSZUC pszApiName)
+CBinXcpStanza::BinXmlAppendXcpElementForApiRequest_ElementOpen(PSZUC pszApiName)
 	{
 	Assert(m_ibXmlApiReply == d_zNA);
 	BinAppendTextSzv_VE("<" d_szXCPe_ApiReply_s ">", pszApiName);	// Open the XML tag
@@ -94,7 +94,7 @@ CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_ElementOpen(PSZUC pszApiN
 	}
 
 void
-CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_ElementClose()
+CBinXcpStanza::BinXmlAppendXcpElementForApiRequest_ElementClose()
 	{
 	if (m_ibXmlApiReply <= 0)
 		return;
@@ -103,7 +103,7 @@ CBinXcpStanzaType::BinXmlAppendXcpElementForApiRequest_ElementClose()
 	}
 
 void
-CBinXcpStanzaType::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData)
+CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData)
 	{
 	Assert(eErrorXcpApi != eErrorXcpApi_zSuccess);
 	if (m_ibXmlApiReply <= 0)
@@ -377,10 +377,10 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 				int cbDataRemaining;
 				#if 1
 					int cbStanzaMaxBinary = 1 + pDataXmlLargeEvent->m_binXmlData.CbGetData() / 4;	// At the moment, send only 1 byte + 25% at the time (rather than c_cbStanzaMaxBinary), so we can test the code transmitting large events
-					if (cbStanzaMaxBinary > CBinXcpStanzaType::c_cbStanzaMaxBinary)
-						cbStanzaMaxBinary = CBinXcpStanzaType::c_cbStanzaMaxBinary;
+					if (cbStanzaMaxBinary > CBinXcpStanza::c_cbStanzaMaxBinary)
+						cbStanzaMaxBinary = CBinXcpStanza::c_cbStanzaMaxBinary;
 				#else
-					#define cbStanzaMaxBinary	CBinXcpStanzaType::c_cbStanzaMaxBinary
+					#define cbStanzaMaxBinary	CBinXcpStanza::c_cbStanzaMaxBinary
 				#endif
 				int cbData = pDataXmlLargeEvent->m_binXmlData.CbGetDataAfterOffset(ibDataSource, cbStanzaMaxBinary, OUT &cbDataRemaining);
 				MessageLog_AppendTextFormatCo(d_coOrange, "Sending $i/$i bytes data from offset $i for tsEventID $t, cbDataRemaining = $i\n", cbData, cbStanzaMaxBinary, ibDataSource, tsEventID, cbDataRemaining);
@@ -630,7 +630,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 	} // Xcp_ProcessStanzasAndUnserializeEvents()
 
 void
-CBinXcpStanzaType::BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters)
+CBinXcpStanza::BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters)
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "BinXmlAppendXcpApiRequest($s, $s)\n", pszApiName, pszXmlApiParameters);
 	BinAppendTextSzv_VE("<" d_szXCPe_ApiRequest_s ">$s</" d_szXCPe_ApiRequest_close ">", pszApiName, pszXmlApiParameters);
@@ -648,7 +648,7 @@ ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNod
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Method to serialize the event to be saved on disk.
 void
-CBinXcpStanzaType::BinXmlSerializeEventForDisk(const IEvent * pEvent)
+CBinXcpStanza::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 	{
 	EEventClass eEventClass = pEvent->EGetEventClass();
 	if (eEventClass == CEventDownloader::c_eEventClass)
@@ -690,7 +690,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 //	The parameter tsOther is either zero or the value of pEvent->m_tsOther.  The reason tsOther is a parameter is because
 //	the downloader does not serialize this value, so the cached data is always the same.
 void
-CBinXcpStanzaType::BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTAMP tsOther)
+CBinXcpStanza::BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTAMP tsOther)
 	{
 	Assert(pEvent != NULL);
 	Assert(tsOther == d_ts_zNULL || tsOther == pEvent->m_tsOther);
@@ -725,7 +725,7 @@ CBinXcpStanzaType::BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTA
 //
 //	Also, this method ensures a large event will be sent in smaller chunks, so it may be transmitted through the XMPP protocol.
 void
-CBinXcpStanzaType::BinXmlSerializeEventForXcp(const IEvent * pEvent)
+CBinXcpStanza::BinXmlSerializeEventForXcp(const IEvent * pEvent)
 	{
 	Assert(pEvent != NULL);
 	Assert(pEvent->m_pVaultParent_NZ != NULL);
@@ -847,7 +847,7 @@ IEvent::Event_WriteToSocketIfReady()
 	}
 
 void
-CArrayPtrEvents::EventsSerializeForDisk(INOUT CBinXcpStanzaType * pbinXmlEvents) const
+CArrayPtrEvents::EventsSerializeForDisk(INOUT CBinXcpStanza * pbinXmlEvents) const
 	{
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = PrgpGetEventsStop(OUT &ppEventStop);
@@ -962,7 +962,7 @@ ITreeItemChatLogEvents::XcpStanza_AppendServiceDiscovery(IOUT CBinXcpStanza * pb
 	}
 */
 
-CBinXcpStanzaType::CBinXcpStanzaType(EStanzaType eStanzaType)
+CBinXcpStanza::CBinXcpStanza(EStanzaType eStanzaType)
 	{
 	m_eStanzaType = eStanzaType;
 	m_pContact = NULL;
@@ -970,11 +970,11 @@ CBinXcpStanzaType::CBinXcpStanzaType(EStanzaType eStanzaType)
 	PvSizeAlloc(300);	// Pre-allocate 300 bytes, which should be enough for a small stanza
 	}
 
-CBinXcpStanzaTypeInfo::CBinXcpStanzaTypeInfo() : CBinXcpStanzaType(eStanzaType_zInformation)
+CBinXcpStanzaTypeInfo::CBinXcpStanzaTypeInfo() : CBinXcpStanza(eStanzaType_zInformation)
 	{
 	}
 
-CBinXcpStanzaTypeInfo::CBinXcpStanzaTypeInfo(IEvent * pEvent) : CBinXcpStanzaType(eStanzaType_zInformation)
+CBinXcpStanzaTypeInfo::CBinXcpStanzaTypeInfo(IEvent * pEvent) : CBinXcpStanza(eStanzaType_zInformation)
 	{
 	Assert(pEvent != NULL);
 	Assert(pEvent->m_pVaultParent_NZ != NULL);
@@ -992,7 +992,7 @@ CBinXcpStanzaTypeInfo::CBinXcpStanzaTypeInfo(IEvent * pEvent) : CBinXcpStanzaTyp
 	}
 
 void
-CBinXcpStanzaType::BinXmlInitStanzaWithGroupSelector(TGroup * pGroup)
+CBinXcpStanza::BinXmlInitStanzaWithGroupSelector(TGroup * pGroup)
 	{
 	Assert(pGroup != NULL);
 	Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
@@ -1000,7 +1000,7 @@ CBinXcpStanzaType::BinXmlInitStanzaWithGroupSelector(TGroup * pGroup)
 	}
 
 void
-CBinXcpStanzaType::XmppWriteStanzaToSocket()
+CBinXcpStanza::XmppWriteStanzaToSocket()
 	{
 	if (m_pContact == NULL)
 		return;
@@ -1013,7 +1013,7 @@ CBinXcpStanzaType::XmppWriteStanzaToSocket()
 	}
 
 void
-CBinXcpStanzaType::XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE(PSZAC pszFmtTemplate, ...)
+CBinXcpStanza::XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE(PSZAC pszFmtTemplate, ...)
 	{
 	Assert(pszFmtTemplate != NULL);
 	if (m_pContact == NULL)
@@ -1026,7 +1026,7 @@ CBinXcpStanzaType::XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaX
 		va_list vlArgs;
 		va_start(OUT vlArgs, pszFmtTemplate);
 		pSocket->Socket_WriteXmlFormatted_VL(pszFmtTemplate, vlArgs);
-		m_pContact = NULL;	// Don't send the stanza via XMPP.  Of course this NULL pointer may be confused with serialized to disk, however since the whole CBinXcpStanzaType will be discarded, who cares?
+		m_pContact = NULL;	// Don't send the stanza via XMPP.  Of course this NULL pointer may be confused with serialized to disk, however since the whole CBinXcpStanza will be discarded, who cares?
 		}
 	}
 
@@ -1034,7 +1034,7 @@ CBinXcpStanzaType::XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaX
 //	This is important because if we are sending a message to a group, then the same CDataXmlLargeEvent is reused, otherwise
 //	there will be a copy of CDataXmlLargeEvent for each group member.  Just imagine sending a large stanza of 100 KiB to a group of 1000 people.
 CDataXmlLargeEvent *
-CVaultEvents::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanzaType * pbinXcpStanza)
+CVaultEvents::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanza * pbinXcpStanza)
 	{
 	Assert(tsEventID > d_ts_zNULL);
 	Assert(pbinXcpStanza != NULL);
@@ -1076,7 +1076,7 @@ CVaultEvents::PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TM
 		pbinXcpStanza->BinXmlSerializeEventForXcpCore(pEvent, d_ts_zNULL);
 		Assert(pbinXcpStanza->m_pContact != NULL);	// Sometimes XmlSerializeCore() may modify m_pContact, however it should be only for contacts not supporting XCP (which should not be the case here!)
 		int cbXmlData = pbinXcpStanza->CbGetData() - ibXmlDataStart;
-		pDataXmlLargeEvent->m_binXmlData.BinInitFromBinaryData(pbinXcpStanza->TruncateDataPv(ibXmlDataStart), cbXmlData);	// Make a copy of the serialized data, and restore CBinXcpStanzaType to its original state
+		pDataXmlLargeEvent->m_binXmlData.BinInitFromBinaryData(pbinXcpStanza->TruncateDataPv(ibXmlDataStart), cbXmlData);	// Make a copy of the serialized data, and restore CBinXcpStanza to its original state
 		MessageLog_AppendTextFormatSev(eSeverityComment, "PFindOrAllocateDataXmlLargeEvent_NZ() - Initializing cache by serializing tsEventID $t (tsOther $t) -> $I bytes of data:\n$B\n", tsEventID, pEvent->m_tsOther, cbXmlData, &pDataXmlLargeEvent->m_binXmlData);
 		}
 	else
@@ -1158,7 +1158,7 @@ CEventDownloader::EGetEventClassForXCP() const
 
 //	CEventDownloader::IEvent::XmlSerializeCore()
 void
-CEventDownloader::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventDownloader::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	if (m_paEvent != NULL)
 		{
@@ -1185,14 +1185,14 @@ CEventDownloader::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	}
 
 void
-CEventDownloader::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
+CEventDownloader::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	if (m_paEvent != NULL)
 		m_paEvent->XcpExtraDataRequest(pXmlNodeExtraData, pbinXcpStanzaReply);
 	}
 
 void
-CEventDownloader::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply)
+CEventDownloader::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	if (m_paEvent != NULL)
 		m_paEvent->XcpExtraDataArrived(pXmlNodeExtraData, pbinXcpStanzaReply);
@@ -1278,7 +1278,7 @@ CEventDownloader::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONS
 	} // ChatLogUpdateTextBlock()
 
 void
-CEventDownloader::XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply, QTextEdit * pwEditChatLog)
+CEventDownloader::XcpDownloadedDataArrived(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXcpStanzaReply, QTextEdit * pwEditChatLog)
 	{
 	const int ibDataNew = pXmlNodeData->LFindAttributeXcpOffset();
 	const int ibDataRequested = m_binDataDownloaded.CbGetData();
@@ -1367,7 +1367,7 @@ CVaultEvents::PFindEventDownloaderMatchingEvent(const IEvent * pEvent) const
 	}
 
 void
-CBinXcpStanzaType::XcpSendStanzaToContactOrGroup(const ITreeItemChatLogEvents * pContactOrGroup) CONST_MCC
+CBinXcpStanza::XcpSendStanzaToContactOrGroup(const ITreeItemChatLogEvents * pContactOrGroup) CONST_MCC
 	{
 	Assert(pContactOrGroup != NULL);
 	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
@@ -1393,7 +1393,7 @@ CBinXcpStanzaType::XcpSendStanzaToContactOrGroup(const ITreeItemChatLogEvents * 
 //	Core routine sending a stanza to a contact.
 //	This routine takes care of encrypting the data and digitally signing the message.
 void
-CBinXcpStanzaType::XcpSendStanzaToContact(TContact * pContact) CONST_MCC
+CBinXcpStanza::XcpSendStanzaToContact(TContact * pContact) CONST_MCC
 	{
 	Assert(m_eStanzaType != eStanzaType_eBroadcast && "Not yet supported");
 	Assert(m_paData != NULL && m_paData->cbData > 0);	// There should be some data into the stanza to send
@@ -1430,19 +1430,19 @@ CBinXcpStanzaType::XcpSendStanzaToContact(TContact * pContact) CONST_MCC
 	} // XcpSendStanzaToContact()
 
 void
-CBinXcpStanzaType::XcpSendStanza() CONST_MCC
+CBinXcpStanza::XcpSendStanza() CONST_MCC
 	{
 	XcpSendStanzaToContact(m_pContact);
 	}
 
 void
-CBinXcpStanzaType::BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact)
+CBinXcpStanza::BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact)
 	{
 	BinAppendTextSzv_VE("<" d_szXCPe_EventPrevious_tsO_tsI "/>", pContact->m_tsEventIdLastSentCached, pContact->m_tsOtherLastSynchronized);
 	}
 
 void
-CBinXcpStanzaType::BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember)
+CBinXcpStanza::BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember)
 	{
 	Assert(pMember != NULL);
 	Assert(pMember->m_pContact == m_pContact || m_pContact == NULL);
@@ -1595,10 +1595,10 @@ CEventFileSent::XmppProcessStanzaVerb(const CXmlNode * pXmlNodeStanza, PSZAC psz
 	} // XmppProcessStanzaVerb()
 
 void
-CEventFileSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply)
+CEventFileSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	Assert(pXmlNodeExtraData != NULL);
-	BYTE rgbBuffer[CBinXcpStanzaType::c_cbStanzaMaxBinary];
+	BYTE rgbBuffer[CBinXcpStanza::c_cbStanzaMaxBinary];
 	L64 iblDataSource = pXmlNodeExtraData->LFindAttributeXcpOffset();
 	int cbDataRead = _PFileOpenReadOnly_NZ()->CbDataReadAtOffset(iblDataSource, sizeof(rgbBuffer), OUT rgbBuffer);
 	m_cblDataTransferred = iblDataSource + cbDataRead;
@@ -1612,7 +1612,7 @@ CEventFileSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, CBinXcpS
 	}
 
 void
-CEventFileReceived::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
+CEventFileReceived::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	CFile * pFile = _PFileOpenWriteOnly_NZ();
 	pFile->seek(pXmlNodeExtraData->LFindAttributeXcpOffset());

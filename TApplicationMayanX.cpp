@@ -35,7 +35,7 @@ TApplicationMayanX::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	switch (eMenuAction)
 		{
 	case eMenuAction_ApplicationDelete:
-		m_pProfileParent->TreeItem_SelectWithinNavigationTree();	// Select the parent profile so the Navigation Tree does not attempt to select a deleted Tree Item.
+		m_pProfileParent->TreeItemW_SelectWithinNavigationTree();	// Select the parent profile so the Navigation Tree does not attempt to select a deleted Tree Item.
 		m_pProfileParent->m_arraypaApplications.DeleteTreeItem(PA_DELETING this);
 		return ezMenuActionNone;
 	default:
@@ -56,7 +56,7 @@ TProfile::PAllocateApplicationMayanX()
 	{
 	TApplicationMayanX * pApplication = (TApplicationMayanX *)PaAllocateApplicationMayanX(this);
 	m_arraypaApplications.Add(PA_CHILD pApplication);
-	pApplication->TreeItem_DisplayWithinNavigationTreeExpand(this, "MayanX", eMenuIconCoffeeExchange);
+	pApplication->TreeItemW_DisplayWithinNavigationTreeExpand(this, "MayanX", eMenuIconCoffeeExchange);
 	return pApplication;
 	}
 

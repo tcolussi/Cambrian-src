@@ -62,7 +62,7 @@ public:
 	IEvent * PFindEventNextReceivedByOtherGroupMembers(TIMESTAMP tsEventID, TContact * pContactExclude, OUT int * pcEventsRemaining) CONST_MCC;
 	CEventDownloader * PFindEventDownloaderMatchingEvent(const IEvent * pEvent) const;
 
-	CDataXmlLargeEvent * PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanzaType * pbinXcpStanza);
+	CDataXmlLargeEvent * PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanza * pbinXcpStanza);
 }; // CVaultEvents
 
 enum EChatState

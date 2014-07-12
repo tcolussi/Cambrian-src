@@ -122,16 +122,16 @@ TContact::TreeItemContact_UpdateIconComposingStarted(ITreeItemChatLogEvents * pC
 
 	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
 		{
-		pContactOrGroup->TreeItem_SetIcon(eMenuIconPencil_16x16);
+		pContactOrGroup->TreeItemW_SetIcon(eMenuIconPencil_16x16);
 		// Find the member to set its icon
 		TGroupMember * pMember = ((TGroup *)pContactOrGroup)->Member_PFindOrAddContact_NZ(this);
-		pMember->TreeItem_SetIcon(eMenuIconPencil_10x10);
+		pMember->TreeItemW_SetIcon(eMenuIconPencil_10x10);
 		}
 	else
 		{
 		Assert(pContactOrGroup->EGetRuntimeClass() == RTI(TContact));
 		Assert(pContactOrGroup == this);
-		TreeItem_SetIcon(eMenuIconPencil_10x10);	// Use a smaller icon for a contact
+		TreeItemW_SetIcon(eMenuIconPencil_10x10);	// Use a smaller icon for a contact
 		}
 
 	/*
@@ -186,7 +186,7 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 	{
 	Assert(pXmlNodeXmppXcp != NULL);
 	Assert(m_pAccount != NULL);
-	Endorse(m_paTreeWidgetItem_YZ == NULL);	// We may process stanzas (receive XMPP messages) for a contact not in the Navigation Tree
+	Endorse(m_paTreeItemW_YZ == NULL);	// We may process stanzas (receive XMPP messages) for a contact not in the Navigation Tree
 	m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;
 //	m_uFlagsContact &= ~FC_kfNoCambrianProtocol;		// Any stanza received containing <xcp> is assumed the client software of the contact understands the Cambrian Protocol
 
@@ -212,7 +212,7 @@ TContact::ChatLogContact_DisplayStanzaToUI(const CXmlNode * pXmlNodeMessageStanz
 	{
 	Assert(pXmlNodeMessageStanza != NULL);
 	Assert(m_pAccount != NULL);
-	Endorse(m_paTreeWidgetItem_YZ == NULL);
+	Endorse(m_paTreeItemW_YZ == NULL);
 	m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;
 
 	#if 0
@@ -279,11 +279,11 @@ ITreeItemChatLogEvents::TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact
 			{
 			Assert(pMember->m_pGroup == this);
 			Assert(pMember->m_pContact == pContact);
-			pMember->TreeItem_SetTextToDisplayMessagesUnread(++pMember->m_cMessagesUnread);	// The group member has unread messages as well as its parent group
+			pMember->TreeItemW_SetTextToDisplayMessagesUnread(++pMember->m_cMessagesUnread);	// The group member has unread messages as well as its parent group
 			}
 		}
 	TreeItemChatLog_UpdateTextAndIcon();	// Always update the text and icon when a new message arrives.  This is important because before a message arrive, there is usually the 'composing' icon, and after the message arrives, this icon must be changed by either the online presence, or an icon indicating there is a new unread message.
-	if (!m_pAccount->TreeItemWidget_FIsExpanded())
+	if (!m_pAccount->TreeItemW_FIsExpanded())
 		{
 		// The account node is collapsed, therefore the contact is not visible in the GUI.
 		// To let know the user there is a new message, the GUI displays the 'chat icon' to Tree Item of the account.
@@ -344,7 +344,7 @@ TGroup::TreeItem_IconUpdateOnMessagesRead()
 		if (pMember->m_cMessagesUnread > 0)
 			{
 			pMember->m_cMessagesUnread = 0;
-			pMember->TreeItem_SetTextToDisplayNameTyped();
+			pMember->TreeItemW_UpdateText();
 			pMember->TreeItem_IconUpdate();
 			MainWindow_SystemTrayMessageReadForContact(pMember->m_pContact);
 			}

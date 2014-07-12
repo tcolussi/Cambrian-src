@@ -151,7 +151,7 @@ public:
 		};
 	TContact * Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact = eFindContactOnly);
 	TContact * Contact_PFindByIdentifierGroupSender_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC;
-	TContact * Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest) CONST_MCC;
+	TContact * Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest) CONST_MCC;
 
 	static const int c_iGroupNew = -1;
 	void Group_AddNewMember_UI(TContact * pContact, int iGroup);
@@ -161,7 +161,7 @@ public:
 		eFindGroupOnly,		// Return NULL if there is no group matchng the identifier
 		eFindGroupCreate,		// Create a new group if not present
 		};
-	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanzaType * pbinXcpApiExtraRequest, EFindGroup eFindGroup);
+	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanza * pbinXcpApiExtraRequest, EFindGroup eFindGroup);
 
 	void DisplayDialogProperties();
 public:

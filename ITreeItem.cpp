@@ -8,51 +8,14 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-//	Make sure the Tree Item is visible and so its parent
-void
-CTreeWidgetItem::SetItemVisibleAlongWithItsParents(BOOL fVisible)
-	{
-	setVisible(fVisible);
-	if (fVisible)
-		{
-		CTreeWidgetItem * pParent = (CTreeWidgetItem *)parent();
-		if (pParent != NULL)
-			{
-			// Recursively expand and make the parent visible
-			pParent->setExpanded(true);
-			pParent->SetItemVisibleAlongWithItsParents(TRUE);
-			}
-		}
-	}
-
-//	We need this method, otherwise the Qt framework will blindly send the signal QTreeWidget::itemChanged() regardless if the flags have been changed, and
-//	this will cause a stack overflow in slot SL_TreeItemEdited().
-void
-CTreeWidgetItem::ItemFlagsAdd(Qt::ItemFlag efItemFlagsAdd)
-	{
-	const Qt::ItemFlags eFlags = flags();
-	const Qt::ItemFlags eFlagsNew = (eFlags | efItemFlagsAdd);
-	if (eFlagsNew != eFlags)
-		setFlags(eFlagsNew);
-	}
-
-void
-CTreeWidgetItem::ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove)
-	{
-	const Qt::ItemFlags eFlags = flags();
-	const Qt::ItemFlags eFlagsNew = (eFlags & ~efItemFlagsRemove);
-	if (eFlagsNew != eFlags)
-		setFlags(eFlagsNew);
-	}
-
 ITreeItem *
-CTreeWidgetItem::PFindChildItemMatchingRuntimeClass(RTI_ENUM rti) const
+CTreeItemW::PFindChildItemMatchingRuntimeClass(RTI_ENUM rti) const
 	{
 	// Search if there is already a node recommendations
 	int cChildren = childCount();
 	while (--cChildren >= 0)
 		{
-		CTreeWidgetItem * pChild = (CTreeWidgetItem *)child(cChildren);
+		CTreeItemW * pChild = (CTreeItemW *)child(cChildren);
 		Assert(pChild->m_piTreeItem != NULL);
 		Assert(pChild->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
 		if (pChild->m_piTreeItem->EGetRuntimeClass() == rti)
@@ -64,7 +27,7 @@ CTreeWidgetItem::PFindChildItemMatchingRuntimeClass(RTI_ENUM rti) const
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ITreeItem::ITreeItem()
 	{
-	m_paTreeWidgetItem_YZ = NULL;
+	m_paTreeItemW_YZ = NULL;
 	m_uFlagsTreeItem = 0;
 	}
 
@@ -72,7 +35,7 @@ ITreeItem::~ITreeItem()
 	{
 	NoticeListAuxiliary_DeleteAllNoticesRelatedToTreeItem(IN this);
 	NoticeListRoaming_TreeItemDeleting(IN this);
-	delete m_paTreeWidgetItem_YZ;	// This will remove the widget from the Navigation Tree.  Of course, this is not the most elegant mechanism, but it is the safest to avoid bugs
+	delete m_paTreeItemW_YZ;	// This will remove the widget from the Navigation Tree.  Of course, this is not the most elegant mechanism, but it is the safest to avoid bugs
 	}
 
 //	ITreeItem::IRuntimeObject::PGetRuntimeInterface()
@@ -89,10 +52,10 @@ void
 ITreeItem::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	IXmlExchangeObjectID::XmlExchange(pXmlExchanger);
-	if (pXmlExchanger->m_fSerializing && m_paTreeWidgetItem_YZ != NULL)
+	if (pXmlExchanger->m_fSerializing && m_paTreeItemW_YZ != NULL)
 		{
 		// Remember the state of the Tree Item is expanded or collapsed
-		if (m_paTreeWidgetItem_YZ->isExpanded())
+		if (m_paTreeItemW_YZ->isExpanded())
 			m_uFlagsTreeItem |= FTI_kfTreeItem_IsExpanded;
 		else
 			m_uFlagsTreeItem &= ~FTI_kfTreeItem_IsExpanded;
@@ -222,82 +185,83 @@ ITreeItem::TreeItem_GotFocus()
 void
 ITreeItem::TreeItemLayout_SetFocus()
 	{
-	TreeItem_SelectWithinNavigationTree();	// Make sure the Tree Item of the layout is visible and selected
+	TreeItemW_SelectWithinNavigationTree();	// Make sure the Tree Item of the layout is visible and selected
 	MainWindow_SetFocusToCurrentLayout();
 	}
 
 #define d_coGreenLime		MAKE_QRGB(0, 255, 0)
 
 void
-ITreeItem::TreeItem_SetIconWithToolTip(EMenuAction eMenuIcon, const QString & sToolTip)
+ITreeItem::TreeItemW_SetIconWithToolTip(EMenuAction eMenuIcon, const QString & sToolTip)
 	{
-	if (m_paTreeWidgetItem_YZ == NULL)
+	if (m_paTreeItemW_YZ == NULL)
 		return;	// Sometimes the Tree Item is not visible in the Navigation Tree, so there is no need to update its icon or tool tip
 	QAction * pAction = PGetMenuAction(eMenuIcon);
 	Assert(pAction != NULL);
 	if (pAction != NULL)
-		m_paTreeWidgetItem_YZ->setIcon(0, pAction->icon());
-	m_paTreeWidgetItem_YZ->setToolTip(0, sToolTip);
+		m_paTreeItemW_YZ->setIcon(0, pAction->icon());
+	m_paTreeItemW_YZ->setToolTip(0, sToolTip);
 	}
 
 //	Set the icon of the QTreeWidgetItem from a menu action.
 void
-ITreeItem::TreeItem_SetIcon(EMenuAction eMenuIcon)
+ITreeItem::TreeItemW_SetIcon(EMenuAction eMenuIcon)
 	{
-	TreeItem_SetIconWithToolTip(eMenuIcon);
+	TreeItemW_SetIconWithToolTip(eMenuIcon);
 	}
 
 void
-ITreeItem::TreeItem_SetTextColorAndIcon(QRGB coTextColor, EMenuAction eMenuIcon)
+ITreeItem::TreeItemW_SetTextColorAndIcon(QRGB coTextColor, EMenuAction eMenuIcon)
 	{
-	if (m_paTreeWidgetItem_YZ == NULL)
+	if (m_paTreeItemW_YZ == NULL)
 		return;	// Sometimes the Tree Item is not visible in the Navigation Tree, so there is no need to update its icon or tool tip
-	m_paTreeWidgetItem_YZ->setTextColor(0, coTextColor);
-	TreeItem_SetIcon(eMenuIcon);
+	m_paTreeItemW_YZ->setTextColor(0, coTextColor);
+	TreeItemW_SetIcon(eMenuIcon);
 	}
 
 void
-ITreeItem::TreeItem_SetTextColor(QRGB coTextColor)
+ITreeItem::TreeItemW_SetTextColor(QRGB coTextColor)
 	{
-	if (m_paTreeWidgetItem_YZ != NULL)
-		m_paTreeWidgetItem_YZ->setTextColor(0, coTextColor);
+	if (m_paTreeItemW_YZ != NULL)
+		m_paTreeItemW_YZ->setTextColor(0, coTextColor);
 	}
 
 void
-ITreeItem::TreeItem_SetTextToDisplayNameIfGenerated()
+ITreeItem::TreeItemW_SetTextToDisplayNameIfGenerated()
 	{
 	if (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated)
 		{
 		m_strNameDisplayTyped.Empty();
-		TreeItem_SetTextToDisplayNameTyped();
+		TreeItemW_UpdateText();
 		}
 	}
 
+//	Update the text in the Navigation Tree to the default value
 void
-ITreeItem::TreeItem_SetTextToDisplayNameTyped()	// TODO: Rename to TreeItemWidget_UpdateText()
+ITreeItem::TreeItemW_UpdateText()
 	{
-	if (m_paTreeWidgetItem_YZ != NULL)
-		m_paTreeWidgetItem_YZ->setText(0, CString(TreeItem_PszGetNameDisplay()));
+	if (m_paTreeItemW_YZ != NULL)
+		m_paTreeItemW_YZ->setText(0, CString(TreeItem_PszGetNameDisplay()));
 	}
 
 void
-ITreeItem::TreeItem_SetTextToDisplayMessagesUnread(int cMessagesUnread)
+ITreeItem::TreeItemW_SetTextToDisplayMessagesUnread(int cMessagesUnread)
 	{
 	if (cMessagesUnread <= 0)
 		{
-		TreeItem_SetTextToDisplayNameTyped();
+		TreeItemW_UpdateText();
 		return;
 		}
-	else if (m_paTreeWidgetItem_YZ != NULL)
+	else if (m_paTreeItemW_YZ != NULL)
 		{
 		CStr str;
 		str.Format("$s ($i)", TreeItem_PszGetNameDisplay(), cMessagesUnread);
-		m_paTreeWidgetItem_YZ->setText(0, str);
+		m_paTreeItemW_YZ->setText(0, str);
 		}
 	}
 
 void
-ITreeItem::TreeItem_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
+ITreeItem::TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
 	{
 	Assert(pszuErrorMessage != NULL);
 	CString sError(pszuErrorMessage);
@@ -305,9 +269,9 @@ ITreeItem::TreeItem_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
 		{
 		// There is already an error, so concatenate both, unless this is the same error.
 		// Sometimes a server may send two stanzas with the same identical error.  I have no idea what is the motivation (or if it is a bug), however the same error should be displayed only once
-		if (m_paTreeWidgetItem_YZ != NULL)
+		if (m_paTreeItemW_YZ != NULL)
 			{
-			QString sErrorPrevious = m_paTreeWidgetItem_YZ->toolTip(0);
+			QString sErrorPrevious = m_paTreeItemW_YZ->toolTip(0);
 			if (!sErrorPrevious.contains(sError))
 				{
 				if (!sErrorPrevious.endsWith("</ol>"))
@@ -324,66 +288,66 @@ ITreeItem::TreeItem_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
 		}
 	//qApp->setStyleSheet("QToolTip { background-color: red }");
 	//qApp->setStyleSheet("QToolTip { indent: 3 }");
-	TreeItem_SetIconWithToolTip(eMenuIcon, sError);
+	TreeItemW_SetIconWithToolTip(eMenuIcon, sError);
 	m_uFlagsTreeItem = (m_uFlagsTreeItem & ~FTI_kemIconMask) | FTI_kefIconError;
-	} // TreeItem_SetIconError()
+	} // TreeItemW_SetIconError()
 
 BOOL
-ITreeItem::TreeItemWidget_FIsExpanded() const
+ITreeItem::TreeItemW_FIsExpanded() const
 	{
-	if (m_paTreeWidgetItem_YZ != NULL)
-		return m_paTreeWidgetItem_YZ->isExpanded();
+	if (m_paTreeItemW_YZ != NULL)
+		return m_paTreeItemW_YZ->isExpanded();
 	return FALSE;
 	}
 
 void
-ITreeItem::TreeItemWidget_Expand()
+ITreeItem::TreeItemW_Expand()
 	{
-	if (m_paTreeWidgetItem_YZ != NULL)
-		m_paTreeWidgetItem_YZ->setExpanded(true);
+	if (m_paTreeItemW_YZ != NULL)
+		m_paTreeItemW_YZ->setExpanded(true);
 	}
 
 void
-ITreeItem::TreeItemWidget_ExpandAccordingToSavedState()
+ITreeItem::TreeItemW_ExpandAccordingToSavedState()
 	{
-	if ((m_uFlagsTreeItem & FTI_kfTreeItem_IsExpanded) && m_paTreeWidgetItem_YZ != NULL)
-		m_paTreeWidgetItem_YZ->setExpanded(true);
+	if ((m_uFlagsTreeItem & FTI_kfTreeItem_IsExpanded) && m_paTreeItemW_YZ != NULL)
+		m_paTreeItemW_YZ->setExpanded(true);
 	}
 
 void
-ITreeItem::TreeItemWidget_Collapse()
+ITreeItem::TreeItemW_Collapse()
 	{
-	if (m_paTreeWidgetItem_YZ != NULL)
-		m_paTreeWidgetItem_YZ->setExpanded(false);
+	if (m_paTreeItemW_YZ != NULL)
+		m_paTreeItemW_YZ->setExpanded(false);
 	}
 
 void
-ITreeItem::TreeItemWidget_EnsureVisible()
+ITreeItem::TreeItemW_EnsureVisible()
 	{
-	if (m_paTreeWidgetItem_YZ != NULL)
-		m_paTreeWidgetItem_YZ->SetItemVisibleAlongWithItsParents(TRUE);
+	if (m_paTreeItemW_YZ != NULL)
+		m_paTreeItemW_YZ->SetItemVisibleAlongWithItsParents(TRUE);
 	}
 
 void
-ITreeItem::TreeItemWidget_ToggleVisibility()
+ITreeItem::TreeItemW_ToggleVisibility()
 	{
-	if (m_paTreeWidgetItem_YZ != NULL)
-		m_paTreeWidgetItem_YZ->setVisible(m_paTreeWidgetItem_YZ->isHidden());
+	if (m_paTreeItemW_YZ != NULL)
+		m_paTreeItemW_YZ->setVisible(m_paTreeItemW_YZ->isHidden());
 	}
 
 void
-ITreeItem::TreeItemWidget_Hide()
+ITreeItem::TreeItemW_Hide()
 	{
-	if (m_paTreeWidgetItem_YZ != NULL)
-		m_paTreeWidgetItem_YZ->setVisible(false);
+	if (m_paTreeItemW_YZ != NULL)
+		m_paTreeItemW_YZ->setVisible(false);
 	}
 
 ITreeItem *
-ITreeItem::TreeItem_PGetParent() const
+ITreeItem::TreeItemW_PGetParent() const
 	{
-	if (m_paTreeWidgetItem_YZ != NULL)
+	if (m_paTreeItemW_YZ != NULL)
 		{
-		CTreeWidgetItem * poParent = (CTreeWidgetItem *)m_paTreeWidgetItem_YZ->parent();
+		CTreeItemW * poParent = (CTreeItemW *)m_paTreeItemW_YZ->parent();
 		if (poParent != NULL)
 			{
 			Assert(poParent->m_piTreeItem != NULL);

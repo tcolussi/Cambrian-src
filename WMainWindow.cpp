@@ -281,7 +281,7 @@ WNavigationTree::SL_TreeItemSelectionChanged(QTreeWidgetItem * pItemCurrent, QTr
 	UNUSED_PARAMETER(pItemPrevious);
 	if (pItemCurrent == NULL)
 		return;	// Just in case
-	ITreeItem * pTreeItem = ((CTreeWidgetItem *)pItemCurrent)->m_piTreeItem;
+	ITreeItem * pTreeItem = ((CTreeItemW *)pItemCurrent)->m_piTreeItem;
 	if (pTreeItem == NULL)
 		{
 		MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "SL_TreeItemSelectionChanged() - No associated ITreeItem with selected item from the Navigation Tree!\n");

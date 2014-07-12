@@ -74,7 +74,7 @@ OProfile::CreateNew(const QString & sNameProfile)
 	pProfile->m_strNameProfile = sNameProfile;
 	pProfile->GenerateKeys();
 	pProfile->TreeItemProfile_DisplayProfileWithinNavigationTree();
-	pProfile->TreeItemWidget_EnsureVisible();
+	pProfile->TreeItemW_EnsureVisible();
 	return sNameProfile;	// Until we have the keys generated, return the name fo the profile as its identifier (this is good enough for proof of concept)
 	}
 

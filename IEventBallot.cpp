@@ -64,7 +64,7 @@ CArrayPtrBallotVotes::DeleteAllVotes()
 
 //	IEventBallot::IEvent::XmlUnserializeCore()
 void
-IEventBallot::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+IEventBallot::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_IEventBallot_strTitle, m_strTitle);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_IEventBallot_strDescription, m_strDescription);
@@ -133,13 +133,13 @@ IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	} // XmlUnserializeCore()
 
 void
-IEventBallot::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
+IEventBallot::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	MessageLog_AppendTextFormatCo(d_coRed, "IEventBallot::XcpExtraDataRequest()\n");
 	}
 
 void
-IEventBallot::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanzaType * pbinXcpStanzaReply)
+IEventBallot::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	MessageLog_AppendTextFormatCo(d_coRed, "IEventBallot::XcpExtraDataArrived()\n");
 	}
@@ -315,7 +315,7 @@ CEventBallotSent::CEventBallotSent(const TIMESTAMP * ptsEventID) : IEventBallot(
 	}
 
 void
-CEventBallotSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanzaType * pbinXcpStanzaReply)
+CEventBallotSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
 	{
 	const UINT_BALLOT_CHOICES ukmChoices = pXmlNodeExtraData->UFindAttributeValueHexadecimal_ZZR(d_chAPIa_CEventBallotReceived_uxVotedChoice);
 	CStr strComment = pXmlNodeExtraData->PszuFindAttributeValue(d_chAPIa_CEventBallotReceived_strNote);
@@ -356,7 +356,7 @@ CEventBallotReceived::CEventBallotReceived(const TIMESTAMP * ptsEventID) : IEven
 	}
 
 void
-CEventBallotReceived::XmlSerializeCore(IOUT CBinXcpStanzaType * pbinXmlAttributes) const
+CEventBallotReceived::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chAPIa_CEventBallotReceived_uxVotedChoice, m_ukmChoices);	// Save the attribute before the rest of the ballot, because the ballot includes XML elements
 	pbinXmlAttributes->BinAppendXmlAttributeTimestamp(d_chAPIa_CEventBallotReceived_tsConfirmationReceipt, m_tsConfirmationReceipt);

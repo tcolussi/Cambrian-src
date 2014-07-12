@@ -106,7 +106,7 @@ public:
 	void Xcp_ServiceDiscovery();
 	void Xcp_Synchronize();
 
-	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanzaType * pbinXcpStanzaReply) const;
+	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
 	void XcpApiContact_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters);
 
 	void Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParameters);
