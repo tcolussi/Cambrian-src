@@ -8,8 +8,8 @@
 #define d_szApplicationName				"Cambrian"
 #define d_szwApplicationName		   L"Cambrian"
 #define d_szwApplicationNameSetup	   L"Cambrian Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.0.8.6"
-#define d_szwApplicationVersion		   L"0.0.8.6"
+#define d_szApplicationVersion			"0.0.8.7"
+#define d_szwApplicationVersion		   L"0.0.8.7"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -182,6 +182,9 @@ class CChatConfiguration;
 class CInvitation;
 class CInvitationFromUrlQueryString;
 
+class CHashTableIdentifiersOfContacts;
+class CHashTableIdentifiersOfGroups;
+
 class WLayoutChatLog;
 class DDialogAccountAdd;
 
@@ -237,6 +240,7 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "CArray.h"
 #include "CMemoryAccumulator.h"
 #include "CMemoryHeap.h"
+#include "CHashTable.h"
 #include "IRuntimeObject.h"
 #include "ErrorMessages.h"
 #include "Xml.h"

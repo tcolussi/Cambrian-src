@@ -3,39 +3,6 @@
 #endif
 #include "TRecommendations.h"
 
-CHashTable * PInitHashTableWithAllIdentifiers();
-TAccountXmpp * PFindContactByIdentifier(PSZUC pszContactIdentifier);
-TGroup * PFindGroupByIdentifier(PSZUC pszContactIdentifier);
-
-CHashTableContactIdentities::CHashTableContactIdentities() : CHashTable((PFn_PszGetHashKey)S_PszGetHashKeyContactIdentity, eHashFunctionStringNoCase)
-	{
-	SetHashElementSize(sizeof(CHashElementContactIdentifier));
-	}
-
-TContact *
-CHashTableContactIdentities::PFindContactByIdentifier(PSZUC pszContactIdentifier) const
-	{
-	CHashElementContactIdentifier * pHashElement = (CHashElementContactIdentifier *)PFindHashElement(pszContactIdentifier);
-	if (pHashElement != NULL)
-		{
-		Assert(pHashElement->m_pContact->EGetRuntimeClass() == RTI(TContact));
-		return pHashElement->m_pContact;
-		}
-	return NULL;
-	}
-
-void
-CHashTableContactIdentities::AddAllIdentifiersOfContact(TContact * pContact)
-	{
-	PSZUC pszContactIdentifier = pContact->m_strJidBare;
-	BOOL fElementNewlyAllocated = FALSE;
-	CHashElementContactIdentifier * pHashElement = (CHashElementContactIdentifier *)PFindHashElementAllocate(pszContactIdentifier, INOUT &fElementNewlyAllocated);
-	Assert(pHashElement != NULL);
-	Assert(IS_ALIGNED_32(pHashElement));
-	pHashElement->m_pContact = pContact;
-	Assert(PFindContactByIdentifier(pszContactIdentifier) == pContact);
-	}
-
 #if 0
 	/*
 	A suggestion is an idea or plan by someone that is  put forward for certain considerations. While
@@ -51,23 +18,25 @@ CHashTableContactIdentities::AddAllIdentifiersOfContact(TContact * pContact)
 
 #endif
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Serialize all recommendations related to a profile
 
 #define d_chAPIe_Recommendations_					'R'
 #define d_szAPIe_Recommendations_					"R"
-#define d_chAPIe_Recommendations_TContacts			'C'
-#define d_szAPIe_Recommendations_TContacts			"C"
-#define d_chAPIe_Recommendations_TGroups			'G'
-#define d_szAPIe_Recommendations_TGroups			"G"
+#define d_chAPIe_Recommendations_TContacts				'C'
+#define d_szAPIe_Recommendations_TContacts				"C"
+#define d_szAPIe_Recommendation_TContact_p_str			"C i='^i' n='^S'"
+#define d_chAPIa_Recommendation_TContact_strIdentifier	'i'					// At the moment use the JID as the identifier
+#define d_chAPIa_Recommendation_TContact_strName		'n'
 
-#define d_chAPIa_RecommendationContact_strIdentifier	'i'					// At the moment use the JID as the identifier
-#define d_szAPIe_RecommendationContact_p_str			"C i='^i' n='^S'"
-#define d_chAPIa_RecommendationGroup_shaIdentifier		'i'
-#define d_szAPIe_RecommendationGroup_h_str				"G i='{h|}' n='^S'"
-#define d_chAPIa_Recommendation_strName					'n'
-#define d_chAPIa_Recommendation_strDescription			'd'	// NYI
+#define d_chAPIe_Recommendations_TGroups				'G'
+#define d_szAPIe_Recommendations_TGroups				"G"
+#define d_szAPIe_Recommendation_TGroup_h_str_i			"G i='{h|}' n='^S' c='$i'"
+#define d_chAPIa_Recommendation_TGroup_shaIdentifier	'i'
+#define d_chAPIa_Recommendation_TGroup_strName			'n'
+#define d_chAPIa_Recommendation_TGroup_cMembers			'c'		// Number of members in the group
+
+#define d_chAPIa_Recommendation_TGroup_strDescription	'd'	// NYI
 
 void
 TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const
@@ -81,7 +50,7 @@ TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpSt
 	while (ppContact != ppContactStop)
 		{
 		TContact * pContact = *ppContact++;
-		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_RecommendationContact_p_str "/>", pContact, &pContact->m_strNameDisplayTyped);	// Need to fix this for a real name of the contact (not what was typed for the Navigation Tree)
+		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_Recommendation_TContact_p_str "/>", pContact, &pContact->m_strNameDisplayTyped);	// Need to fix this for a real name of the contact (not what was typed for the Navigation Tree)
 		}
 	pbinXcpStanzaReply->BinAppendText("</" d_szAPIe_Recommendations_TContacts "><" d_szAPIe_Recommendations_TGroups ">");
 	CArrayPtrGroups arraypaGroupsRecommended;
@@ -93,11 +62,56 @@ TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpSt
 		TGroup * pGroup = *ppGroup++;
 		Assert(pGroup != NULL);
 		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_RecommendationGroup_h_str "/>", &pGroup->m_hashGroupIdentifier, &pGroup->m_strNameDisplayTyped);
+		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_Recommendation_TGroup_h_str_i "/>", &pGroup->m_hashGroupIdentifier, &pGroup->m_strNameDisplayTyped, pGroup->m_arraypaMembers.GetSize());
 		}
 	pbinXcpStanzaReply->BinAppendText( "</" d_szAPIe_Recommendations_TGroups "></" d_szAPIe_Recommendations_ ">");
 	} // XcpApiProfile_RecommendationsSerialize()
 
+
+CRecommendationContact::CRecommendationContact(PA_PARENT CArrayPtrRecommendationsWithHashTables * parraypaParent, const CXmlNode * pXmlNodeContact) : IRecommendation(c_eMenuIcon)
+	{
+	EMenuAction eMenuIcon = c_eMenuIcon;
+	PSZUC pszName = pXmlNodeContact->PszuFindAttributeValue(d_chAPIa_Recommendation_TContact_strName);
+	PSZUC pszContactIdentifier = pXmlNodeContact->PszuFindAttributeValue(d_chAPIa_Recommendation_TContact_strIdentifier);
+	TContact * pContact;
+	m_pTreeItemExisting = pContact = parraypaParent->m_oHashTableContactsProfile.PFindContactByIdentifier(IN pszContactIdentifier);
+	if (m_pTreeItemExisting == NULL)
+		{
+		// The contact is not present, therefore allocate one so it may be added to the profile
+		m_paTreeItemNew = pContact = new TContact(parraypaParent->m_pAccount);
+		pContact->m_strJidBare = pszContactIdentifier;
+		pContact->TreeItem_SetNameDisplaySuggested(pszName);
+		}
+	else
+		{
+		eMenuIcon = ((TContact *)m_pTreeItemExisting)->Contact_EGetMenuActionPresence();
+		}
+	InitIconAndText(eMenuIcon, pszName, NULL, pszContactIdentifier);
+	parraypaParent->Add(PA_CHILD this);
+	parraypaParent->m_oHashTableContactsRecommended.AddIdentifiersOfContact(pContact);
+	}
+
+CRecommendationGroup::CRecommendationGroup(PA_PARENT CArrayPtrRecommendationsWithHashTables * parraypaParent, const CXmlNode * pXmlNodeGroup) : IRecommendation(c_eMenuIcon)
+	{
+	PSZUC pszName = pXmlNodeGroup->PszuFindAttributeValue(d_chAPIa_Recommendation_TGroup_strName);
+	SHashSha1 shaGroupIdentifier;
+	if (!HashSha1_FInitFromStringBase85_ZZR_ML(OUT &shaGroupIdentifier, IN pXmlNodeGroup->PszuFindAttributeValue(d_chAPIa_Recommendation_TGroup_shaIdentifier)))
+		return;	// Ignore any recommendation with an invalid SHA-1
+	m_pTreeItemExisting = parraypaParent->m_oHashTableGroupsProfile.PFindGroupByIdentifier(IN &shaGroupIdentifier);
+	if (m_pTreeItemExisting == NULL)
+		{
+		// The group is not present, therefore allocate one so it may be added to the profile
+		TGroup * pGroup;
+		m_paTreeItemNew = pGroup = new TGroup(parraypaParent->m_pAccount);
+		pGroup->m_hashGroupIdentifier = shaGroupIdentifier;
+		pGroup->m_pContactWhoRecommended = parraypaParent->m_pContact;
+		pGroup->TreeItem_SetNameDisplaySuggested(pszName);
+		}
+	InitIconAndText(c_eMenuIcon, pszName, pXmlNodeGroup->PszuFindAttributeValue(d_chAPIa_Recommendation_TGroup_cMembers));
+	parraypaParent->Add(PA_CHILD this);
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void
 TContact::Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParameters)
 	{
@@ -119,17 +133,64 @@ TContact::Contact_RecommendationsDisplayWithinNavigationTree()
 	if (pRecommendation == NULL)
 		{
 		pRecommendation = new TRecommendations(this);
-		pRecommendation->TreeItemW_DisplayWithinNavigationTreeExpand(this,  "Recommendations", eMenuAction_TreeItemRecommended);
+		pRecommendation->TreeItemW_DisplayWithinNavigationTreeExpand(this, "Recommendations", eMenuAction_TreeItemRecommended);
 		}
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CRecommendations::CRecommendations(TProfile * pProfile)
+IRecommendation::IRecommendation(EMenuAction eMenuIconRecommendationType)
 	{
-	m_pProfile = pProfile;
-	// Build the hash table
+	m_eMenuIconRecommendationType = eMenuIconRecommendationType;
+	m_paTreeItemNew = NULL;
+	m_pTreeItemExisting = NULL;
+	}
+
+IRecommendation::~IRecommendation()
+	{
+	delete m_paTreeItemNew;
+	}
+
+CArrayPtrRecommendationsWithHashTables::CArrayPtrRecommendationsWithHashTables(TContact * pContact)
+	{
+	m_pContact = pContact;
+	m_pAccount = pContact->m_pAccount;
+	m_pProfile = m_pAccount->m_pProfileParent;
+	m_pProfile->InitHashTablesOfIdentifiers(IOUT &m_oHashTableContactsProfile, IOUT &m_oHashTableGroupsProfile);
+	}
+
+//	The recommendations are dynamically allocated by the method and therefore must be deleted by the caller
+void
+CArrayPtrRecommendationsWithHashTables::AddRecommendationsAllocateNew(const CBin & binXmlRecommendations)
+	{
+	//MessageLog_AppendTextFormatCo(d_coRed, "AddRecommendationsNew(): $B\n", &binXmlRecommendations);
+	(void)m_oXmlTreeCache.EParseFileDataToXmlNodesCopy_ML(IN binXmlRecommendations);
+	CXmlNode * pXmlNodeContacts = m_oXmlTreeCache.PFindElement(d_chAPIe_Recommendations_TContacts);
+	if (pXmlNodeContacts != NULL)
+		{
+		const CXmlNode * pXmlNodeContact = pXmlNodeContacts->m_pElementsList;
+		while (pXmlNodeContact != NULL)
+			{
+			(void)new CRecommendationContact(PA_PARENT this, IN pXmlNodeContact);
+			pXmlNodeContact = pXmlNodeContact->m_pNextSibling;
+			} // while
+		} // if
+	CXmlNode * pXmlNodeGroups = m_oXmlTreeCache.PFindElement(d_chAPIe_Recommendations_TGroups);
+	if (pXmlNodeGroups != NULL)
+		{
+		const CXmlNode * pXmlNodeGroup = pXmlNodeGroups->m_pElementsList;
+		while (pXmlNodeGroup != NULL)
+			{
+			(void)new CRecommendationGroup(PA_PARENT this, IN pXmlNodeGroup);
+			pXmlNodeGroup = pXmlNodeGroup->m_pNextSibling;
+			} // while
+		} // if
+	}
+
+void
+CArrayPtrRecommendationsWithHashTables::AddRecommendationsOfOtherContacts()
+	{
 	TAccountXmpp ** ppAccountStop;
-	TAccountXmpp ** ppAccount = pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	TAccountXmpp ** ppAccount = m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
@@ -138,54 +199,20 @@ CRecommendations::CRecommendations(TProfile * pProfile)
 		while (ppContact != ppContactStop)
 			{
 			TContact * pContact = *ppContact++;
-			m_oHashTableContacts.AddAllIdentifiersOfContact(pContact);
-			}
+			(void)m_oXmlTreeCache.EParseFileDataToXmlNodesCopy_ML(IN pContact->m_binXmlRecommendations);
+			CXmlNode * pXmlNodeContacts = m_oXmlTreeCache.PFindElement(d_chAPIe_Recommendations_TContacts);
+			if (pXmlNodeContacts != NULL)
+				{
+				const CXmlNode * pXmlNodeContact = pXmlNodeContacts->m_pElementsList;
+				while (pXmlNodeContact != NULL)
+					{
+					// Search if this contact is not already recommended
 
-		TGroup ** ppGroupStop;
-		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
-		while (ppGroup != ppGroupStop)
-			{
-			TGroup * pGroup = *ppGroup++;
-			Assert(pGroup != NULL);
-			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-			// TBD
+					pXmlNodeContact = pXmlNodeContact->m_pNextSibling;
+					} // while
+				} // if
 			}
-		}
-	}
-
-void
-CRecommendations::RecommendationsAddNew(const TContact * pContact)
-	{
-	CXmlTree oXmlTree;
-	(void)oXmlTree.EParseFileDataToXmlNodesCopy_ML(IN pContact->m_binXmlRecommendations);
-	CXmlNode * pXmlNodeContacts = oXmlTree.PFindElement(d_chAPIe_Recommendations_TContacts);
-	if (pXmlNodeContacts != NULL)
-		{
-		CXmlNode * pXmlNodeContact = pXmlNodeContacts->m_pElementsList;
-		while (pXmlNodeContact != NULL)
-			{
-			PSZUC pszIdentifierJID = pXmlNodeContact->PszuFindAttributeValue(d_chAPIa_RecommendationContact_strIdentifier);
-			CRecommendation * pRecommendation = new CRecommendation;
-			m_arraypRecommendationsContacts.Add(pRecommendation);
-			pRecommendation->m_strIdentifier = pszIdentifierJID;
-			pRecommendation->mu_existing.pContact = m_oHashTableContacts.PFindContactByIdentifier(pszIdentifierJID);
-			pXmlNodeContact = pXmlNodeContact->m_pNextSibling;
-			} // while
-		} // if
-	CXmlNode * pXmlNodeGroups = oXmlTree.PFindElement(d_chAPIe_Recommendations_TGroups);
-	if (pXmlNodeGroups != NULL)
-		{
-		CXmlNode * pXmlNodeGroup = pXmlNodeGroups->m_pElementsList;
-		while (pXmlNodeGroup != NULL)
-			{
-			PSZUC pszIdentifierGroup = pXmlNodeGroups->PszuFindAttributeValue(d_chAPIa_RecommendationGroup_shaIdentifier);
-			CRecommendation * pRecommendation = new CRecommendation;
-			m_arraypRecommendationsGroups.Add(pRecommendation);
-			pRecommendation->m_strIdentifier = pXmlNodeGroup->PszuFindAttributeValue(d_chAPIa_Recommendation_strName);
-			pRecommendation->mu_existing.pGroup = NULL;
-			pXmlNodeGroup = pXmlNodeGroup->m_pNextSibling;
-			} // while
-		} // if
+		} // while
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -193,91 +220,167 @@ WLayoutRecommendations::WLayoutRecommendations(TContact * pContact)
 	{
 	Assert(pContact != NULL);
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-	m_paRecommendations = new CRecommendations(pContact->m_pAccount->m_pProfileParent);
-	m_paRecommendations->RecommendationsAddNew(pContact);
-
-	m_poTreeItemRecommendedContacts = NULL;
-	m_poTreeItemRecommendedGroups = NULL;
+	m_pContact = pContact;
 
 	OLayoutVerticalAlignTop * m_poLayoutApplications = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Recommendations made by '$s'", pContact->TreeItem_PszGetNameDisplay());
 
-	WEdit * m_pwEditSearchApplications = new WEdit;
+	WEdit * pwEditSearchRecommendations = new WEdit;
 	//pwEdit->setMaximumHeight(20);
-	m_pwEditSearchApplications->Edit_SetWatermark("Search Recommendations");
-	m_poLayoutApplications->addWidget(m_pwEditSearchApplications);
-	m_pwEditSearchApplications->setFocus();
-	//connect(m_pwEditSearchApplications, SIGNAL(textEdited(QString)), this, SLOT(SL_SearchTextChanged(QString)));
+	pwEditSearchRecommendations->Edit_SetWatermark("Search Recommendations");
+	m_poLayoutApplications->addWidget(pwEditSearchRecommendations);
+	pwEditSearchRecommendations->setFocus();
+	connect(pwEditSearchRecommendations, SIGNAL(textEdited(QString)), this, SLOT(SL_SearchTextChanged(QString)));
 
-	m_pwTreeViewApplications = new QTreeWidget(this);
-	m_poLayoutApplications->addWidget(m_pwTreeViewApplications, 100);
-	m_pwTreeViewApplications->setColumnCount(2);
-	QHeaderView * pwHeader = m_pwTreeViewApplications->header();
-	pwHeader->hide();
+
+	m_pwTreeRecommendations = new WTreeWidget;
+	m_poLayoutApplications->addWidget(m_pwTreeRecommendations, 100);
+	m_pwTreeRecommendations->setColumnCount(2);
+	m_pwTreeRecommendations->setHeaderLabels((QStringList) "Name" << "#" << "Description" << "Also Recommended By (TBD)");
+	QHeaderView * pwHeader = m_pwTreeRecommendations->header();
 	pwHeader->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-	pwHeader->setSectionResizeMode(1, QHeaderView::Stretch);
+	pwHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+	//pwHeader->setSectionResizeMode(1, QHeaderView::Stretch);
+	//pwHeader->setSectionResizeMode(QHeaderView::Interactive);
 
-	// Populate the table
-	CRecommendation ** ppRecommendationStop;
-	CRecommendation ** ppRecommendation = m_paRecommendations->m_arraypRecommendationsContacts.PrgpGetRecommendationsStop(OUT &ppRecommendationStop);
+	PopulateTreeWidget();
+	}
+
+void
+WLayoutRecommendations::PopulateTreeWidget()
+	{
+	CRecommendationCategory * pRecommendationCategoryContactsNew = _PAllocateRecommendationCategory(CRecommendationContact::c_eMenuIcon, "Contacts recommended by '$s'");
+	CRecommendationCategory * pRecommendationCategoryGroupsNew = _PAllocateRecommendationCategory(CRecommendationGroup::c_eMenuIcon, "Groups recommended by '$s'");
+	CRecommendationCategory * pRecommendationCategoryContactsExisting = _PAllocateRecommendationCategory(CRecommendationContact::c_eMenuIcon, "Contacts recommended by '$s' already in your contact list");
+	CRecommendationCategory * pRecommendationCategoryGroupsExisting = _PAllocateRecommendationCategory(CRecommendationGroup::c_eMenuIcon, "Groups recommended by '$s' you already subscribed");
+	CRecommendationCategory * pCategoryParent;
+
+	CArrayPtrRecommendationsWithHashTables arraypaRecommendations(m_pContact);
+	arraypaRecommendations.AddRecommendationsAllocateNew(IN m_pContact->m_binXmlRecommendations);
+	IRecommendation ** ppRecommendationStop;
+	IRecommendation ** ppRecommendation = arraypaRecommendations.PrgpGetRecommendationsStop(OUT &ppRecommendationStop);
 	while (ppRecommendation != ppRecommendationStop)
 		{
-		CRecommendation * pRecommendation = *ppRecommendation++;
-		if (m_poTreeItemRecommendedContacts == NULL)
-			m_poTreeItemRecommendedContacts = _PTreeWidgetItemAdd(eMenuAction_Contact, "Contacts", "Recommended contacts", NULL);
-		TContact * pContactExisting = pRecommendation->mu_existing.pContact;
-		_PTreeWidgetItemAddRecommendation((pContactExisting != NULL) ? pContactExisting->Contact_EGetMenuActionPresence() : eMenuAction_Contact, pRecommendation, m_poTreeItemRecommendedContacts);
-		}
-
-	ppRecommendation = m_paRecommendations->m_arraypRecommendationsGroups.PrgpGetRecommendationsStop(OUT &ppRecommendationStop);
-	while (ppRecommendation != ppRecommendationStop)
-		{
-		CRecommendation * pRecommendation = *ppRecommendation++;
-		if (m_poTreeItemRecommendedGroups == NULL)
-			m_poTreeItemRecommendedGroups = _PTreeWidgetItemAdd(eMenuAction_Group, "Groups", "Recommended groups", NULL);
-		_PTreeWidgetItemAddRecommendation(eMenuAction_Group, pRecommendation, m_poTreeItemRecommendedGroups);
-		}
-	m_pwTreeViewApplications->expandAll();
-	connect(m_pwTreeViewApplications, SIGNAL(itemChanged(QTreeWidgetItem*,int)), this, SLOT(SL_TreeItemClicked(QTreeWidgetItem*,int)));
+		IRecommendation * paRecommendation = *ppRecommendation++;
+		ITreeItem * pTreeItemExisting = paRecommendation->m_pTreeItemExisting;
+		switch (paRecommendation->m_eMenuIconRecommendationType)
+			{
+		case CRecommendationContact::c_eMenuIcon:
+			pCategoryParent = (pTreeItemExisting == NULL) ? pRecommendationCategoryContactsNew : pRecommendationCategoryContactsExisting;
+			break;
+		case CRecommendationGroup::c_eMenuIcon:
+			pCategoryParent = (pTreeItemExisting == NULL) ? pRecommendationCategoryGroupsNew : pRecommendationCategoryGroupsExisting;
+			break;
+		default:
+			Assert(FALSE);
+			return;
+			} // switch
+		const Qt::CheckState eCheckState = (paRecommendation->m_pTreeItemExisting == NULL) ? Qt::Unchecked : Qt::Checked;
+		paRecommendation->setCheckState(0, eCheckState);
+		if (eCheckState != Qt::Unchecked)
+			paRecommendation->ItemFlagsRemove(Qt::ItemIsUserCheckable);
+		pCategoryParent->addChild(PA_CHILD paRecommendation);
+		} // while
+	m_pwTreeRecommendations->DeleteAllRootNodesWhichAreEmpty();
+	connect(m_pwTreeRecommendations, SIGNAL(itemChanged(QTreeWidgetItem*,int)), this, SLOT(SL_TreeItemClicked(QTreeWidgetItem*,int)));
 	}
 
 void
 WLayoutRecommendations::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn)
 	{
 	MessageLog_AppendTextFormatCo(d_coBlack, "SL_TreeItemClicked($p, $i) \n", pItemClicked, iColumn);
-	CRecommendation * pRecommendation = ((CTreeWidgetItemRecommendation *)pItemClicked)->m_pRecommendation_YZ;
-	Assert(pRecommendation != NULL);
-	if (pRecommendation->mu_existing.pContact == NULL)
+	TAccountXmpp * pAccount = m_pContact->m_pAccount;
+	IRecommendation * pRecommendation = (IRecommendation *)pItemClicked;
+	ITreeItem * paTreeItemNew = pRecommendation->m_paTreeItemNew;
+	if (paTreeItemNew != NULL)
 		{
-
+		Assert(pRecommendation->m_pTreeItemExisting == NULL);	// Those two pointers are mutually exclusive
+		// Display the recommendation within the Navigation Tree
+		pAccount->TreeItemAccount_RecommendationAdd(PA_CHILD paTreeItemNew);
+		pRecommendation->m_pTreeItemExisting = paTreeItemNew;
+		pRecommendation->m_paTreeItemNew = NULL;
+		}
+	else
+		{
+		Assert(pRecommendation->m_pTreeItemExisting != NULL);
+		Assert(pRecommendation->m_paTreeItemNew == NULL && "Memory leak!");
+		pAccount->TreeItemAccount_RecommendationRemove(INOUT PA_CAST_FROM_P pRecommendation->m_pTreeItemExisting);
+		pRecommendation->m_paTreeItemNew = pRecommendation->m_pTreeItemExisting;
+		pRecommendation->m_pTreeItemExisting = NULL;
 		}
 	}
 
-
-CTreeWidgetItemRecommendation *
-WLayoutRecommendations::_PTreeWidgetItemAdd(EMenuAction eMenuIcon, PSZAC pszName, PSZAC pszDescription, QTreeWidgetItem * pParent)
+CRecommendationCategory *
+WLayoutRecommendations::_PAllocateRecommendationCategory(EMenuAction eMenuIconRecommendationType, PSZAC pszFmtTemplate0)
 	{
-	CTreeWidgetItemRecommendation * poTreeItem = new CTreeWidgetItemRecommendation;
-	poTreeItem->setIcon(0, PGetMenuAction(eMenuIcon)->icon());
-	poTreeItem->setText(0, pszName);
-	poTreeItem->setText(1, pszDescription);
-	if (pParent != NULL)
-		pParent->addChild(poTreeItem);
-	else
-		m_pwTreeViewApplications->addTopLevelItem(poTreeItem);
-	return poTreeItem;
+	CRecommendationCategory * paCategory = new CRecommendationCategory(eMenuIconRecommendationType);
+	paCategory->InitIconAndText(eMenuIconRecommendationType, g_strScratchBufferStatusBar.Format(pszFmtTemplate0, m_pContact->TreeItem_PszGetNameDisplay()));
+	paCategory->setTextColor(0, d_coGrayDark);
+	m_pwTreeRecommendations->addTopLevelItem(PA_CHILD paCategory);
+	paCategory->setFirstColumnSpanned(true);
+	paCategory->setExpanded(true);
+	return paCategory;
 	}
 
-CTreeWidgetItemRecommendation *
-WLayoutRecommendations::_PTreeWidgetItemAddRecommendation(EMenuAction eMenuIcon, CRecommendation * pRecommendation, QTreeWidgetItem * pParent)
+void
+WLayoutRecommendations::SL_SearchTextChanged(const QString & sText)
 	{
-	CTreeWidgetItemRecommendation * poTreeItem = _PTreeWidgetItemAdd(eMenuIcon, pRecommendation->m_strIdentifier, NULL, pParent);
-	poTreeItem->m_pRecommendation_YZ = pRecommendation;
-	const Qt::CheckState eCheckState = (pRecommendation->mu_existing.pTreeItem == NULL) ? Qt::Unchecked : Qt::Checked;
-	poTreeItem->setCheckState(0, eCheckState);
-	if (eCheckState != Qt::Unchecked)
-		poTreeItem->setFlags(poTreeItem->flags() & ~ Qt::ItemIsUserCheckable);
-	return poTreeItem;
+	m_pwTreeRecommendations->ShowAllTreeItemsContainingText(sText);
 	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void
+TAccountXmpp::TreeItemAccount_RecommendationAdd(PA_CHILD ITreeItem * paTreeItemRecommendationAdd)
+	{
+	Assert(paTreeItemRecommendationAdd != NULL);
+	switch (paTreeItemRecommendationAdd->EGetRuntimeClass())
+		{
+	case RTI(TContact):
+		Contact_AddToNavigationTree(PA_CHILD (TContact *)paTreeItemRecommendationAdd);
+		break;
+	case RTI(TGroup):
+		Group_AddToNavigationTree(PA_CHILD (TGroup *)paTreeItemRecommendationAdd);
+		break;
+	default:
+		Assert(FALSE && "Unknown object");
+		} // switch
+	}
+
+void
+TAccountXmpp::Contact_AddToNavigationTree(PA_CHILD TContact * paContact)
+	{
+	m_arraypaContacts.Add(PA_CHILD paContact);
+	paContact->TreeItemContact_DisplayWithinNavigationTree();
+	Contact_RosterSubscribe(IN paContact);
+	}
+
+void
+TAccountXmpp::Group_AddToNavigationTree(PA_CHILD TGroup * paGroup)
+	{
+	m_arraypaGroups.Add(PA_CHILD paGroup);
+	paGroup->TreeItemGroup_DisplayWithinNavigationTree();
+	if (paGroup->m_arraypaMembers.FIsEmpty() && paGroup->m_pContactWhoRecommended != NULL)
+		paGroup->XcpApiGroup_Profile_GetFromContact(paGroup->m_pContactWhoRecommended);
+	}
+
+//	This method does NOT delete the Tree Item; it just remove it from the account the the Navigation Tree.
+void
+TAccountXmpp::TreeItemAccount_RecommendationRemove(ITreeItem * pTreeItemRecommendationRemove)
+	{
+	switch (pTreeItemRecommendationRemove->EGetRuntimeClass())
+		{
+	case RTI(TContact):
+		m_arraypaContacts.RemoveElementAssertI(pTreeItemRecommendationRemove);
+		break;
+	case RTI(TGroup):
+		m_arraypaGroups.RemoveElementAssertI(pTreeItemRecommendationRemove);
+		((TGroup *)pTreeItemRecommendationRemove)->TreeItemGroup_RemoveFromNavigationTree();
+		return;
+	default:
+		Assert(FALSE && "Unknown object");
+		} // switch
+	pTreeItemRecommendationRemove->TreeItemW_RemoveFromNavigationTree();
+	}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 TRecommendations::TRecommendations(TContact * pContact)

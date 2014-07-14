@@ -79,7 +79,9 @@ SOURCES += \
     XcpApi.cpp \
     Xml.cpp \
     ProfileSwitching.cpp \
-    TRecommendations.cpp
+    TRecommendations.cpp \
+    ApiWebSockets.cpp \
+    Identities.cpp
 
 
 HEADERS += \
@@ -145,7 +147,9 @@ HEADERS += \
     XcpApi.h \
     Xml.h \
     ProfileSwitching.h \
-    TRecommendations.h
+    TRecommendations.h \
+    ApiWebSockets.h \
+    Identities.h
 
 
 FORMS +=

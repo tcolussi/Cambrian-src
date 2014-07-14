@@ -67,8 +67,8 @@ public:
 		FTI_kfTreeItem_NameDisplayedSuggested	= 0x00000002,	// The content of member variable m_strNameDisplayTyped was suggested by another contact, typically when querying a group for its name and list of contacts.
 		FTI_kfRecommended						= 0x00000010,	// The Tree Item (typically a contact or a group) was recommended by the user.  This flag is used for /api Contact.Recommendations.Get
 		FTI_kfFavorites							= 0x00000020,	// NYI: The Tree Item is among the user's favorites.  A favorite is private to the user, while a recommendation is public.
-
 		FTI_kmTreeItem_FlagsSerializeMask		= 0x0000FFFF,	// Bits to save to disk
+
 		FTI_kezIconNone							= 0x00000000,
 		FTI_kefIconWarning						= 0x00010000,
 		FTI_kefIconError						= 0x00020000,
@@ -89,12 +89,13 @@ public:
 
 	inline UINT TreeItemFlags_FuIsRecommended() const { return (m_uFlagsTreeItem & FTI_kfRecommended); }
 
+	void TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay);
+
 	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);	// From IXmlExchange
 	virtual BOOL TreeItem_FContainsMatchingText(PSZUC pszTextSearchLowercase) CONST_MCC;
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;
 	virtual void TreeItem_IconUpdate();
-	//virtual void TreeItem_IconUpdateOnNewMessageArrived(PSZUC pszMessage);
 	virtual void TreeItem_IconUpdateOnMessagesRead();
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenuContext);
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);

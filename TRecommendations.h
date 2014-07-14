@@ -7,75 +7,82 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "CHashTable.h"
+#include "Identities.h"
 
-class CHashElementContactIdentifier : public CHashElement
+
+class IRecommendation : public CTreeWidgetItem
 {
 public:
-	TContact * m_pContact;
+	EMenuAction m_eMenuIconRecommendationType;	// Use the menu action/icon to classify the recommendation type (each type of recommendation will have a different icon)
+	ITreeItem * m_paTreeItemNew;				// Newly allocated recommendation
+	ITreeItem * m_pTreeItemExisting;			// Existing recommendation in the Navigation Tree
+	CArrayPtrContacts m_arraypContactsAlsoRecommending;	// Other contacts also recommending this recommendation
+public:
+	IRecommendation(EMenuAction eMenuIconRecommendationType);
+	virtual ~IRecommendation();
 };
 
-//	Hash table to quickly find a TContact given an identifier.
-//	Since contacts may have multiple identifiers, and there may be thousands of contacts, it make sense to have a hash table.
-class CHashTableContactIdentities : public CHashTable
+class CHashElementRecommendation : public CHashElement
 {
 public:
-	CHashTableContactIdentities();
-	TContact * PFindContactByIdentifier(PSZUC pszContactIdentifier) const;
-	void AddAllIdentifiersOfContact(TContact * pContact);
-public:
-	// At the moment, return the JID as the contact identity
-	static PSZUC S_PszGetHashKeyContactIdentity(const CHashElementContactIdentifier * pHashElement) { return pHashElement->m_pContact->m_strJidBare; }		// This routine must have a compatible interface as PFn_PszGetHashKey()
+	IRecommendation * m_pRecommendation;
 };
 
-
-class CRecommendation
+class CHashTableRecommendations : public CHashTable
 {
 public:
-	union
-		{
-		ITreeItem * pTreeItem;
-		TContact * pContact;
-		TGroup * pGroup;
-		} mu_existing;			// If already in the contact list
-	CStr m_strIdentifier;
-	CArrayPtrContacts m_arraypRecommendedBy;	// Other contacts who also made the same recommendation
-};
 
-//	Each recommendation has a corresponding Tree Item
-class CTreeWidgetItemRecommendation : public CTreeWidgetItem
-{
-public:
-	CRecommendation * m_pRecommendation_YZ;		// If the pointer is NULL, it means there no recommendation because the 'widget' is a category
-
-public:
-	CTreeWidgetItemRecommendation() { m_pRecommendation_YZ = NULL; }
 };
 
 class CArrayPtrRecommendations : public CArray
 {
 public:
-	inline CRecommendation ** PrgpGetRecommendationsStop(OUT CRecommendation *** pppRecommendationStop) const { return (CRecommendation **)PrgpvGetElementsStop(OUT (void ***)pppRecommendationStop); }
+	inline IRecommendation ** PrgpGetRecommendationsStop(OUT IRecommendation *** pppRecommendationStop) const { return (IRecommendation **)PrgpvGetElementsStop(OUT (void ***)pppRecommendationStop); }
 };
 
-class CRecommendations
+class CArrayPtrRecommendationsWithHashTables : public CArrayPtrRecommendations
 {
 public:
-	TProfile * m_pProfile;	// Profile to find duplicate recommendations
-	CArrayPtrRecommendations m_arraypRecommendationsContacts;	// Recommended contacts to display in the layout
-	CArrayPtrRecommendations m_arraypRecommendationsGroups;
-
-private:
-	CHashTableContactIdentities m_oHashTableContacts;
+	TContact * m_pContact;
+	TAccountXmpp * m_pAccount;
+	TProfile * m_pProfile;
+	CHashTableIdentifiersOfContacts m_oHashTableContactsProfile;
+	CHashTableIdentifiersOfGroups m_oHashTableGroupsProfile;
+	CHashTableIdentifiersOfContacts m_oHashTableContactsRecommended;
+protected:
+	CXmlTree m_oXmlTreeCache;	// For performance, cache the XML tree so it is not re-created for each contact having a recommendation
 
 public:
-	CRecommendations(TProfile * pProfile);
-	void RecommendationsAddNew(const TContact * pContact);
-	void RecommendationsAddDuplicates(const TContact * pContact);
-	CRecommendation * _PAllocateRecommendation(PSZUC pszIdentifier);
+	CArrayPtrRecommendationsWithHashTables(TContact * pContact);
+	void AddRecommendationsAllocateNew(const CBin & binXmlRecommendations);
+	void AddRecommendationsOfOtherContacts();
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class CRecommendationCategory : public IRecommendation
+{
+public:
+	inline CRecommendationCategory(EMenuAction eMenuIconRecommendationType) : IRecommendation(eMenuIconRecommendationType) { }
+};
+
+class CRecommendationContact : public IRecommendation
+{
+public:
+	CRecommendationContact(PA_PARENT CArrayPtrRecommendationsWithHashTables * parraypaParent, const CXmlNode * pXmlNodeContact);
+public:
+	static const EMenuAction c_eMenuIcon = eMenuAction_Contact;
+};
+
+class CRecommendationGroup : public IRecommendation
+{
+public:
+	CRecommendationGroup(PA_PARENT CArrayPtrRecommendationsWithHashTables * parraypaParent, const CXmlNode * pXmlNodeGroup);
+public:
+	static const EMenuAction c_eMenuIcon = eMenuAction_Group;
 };
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class TRecommendations : public ITreeItem
 {
 public:
@@ -91,20 +98,17 @@ public:
 class WLayoutRecommendations : public WLayout
 {
 protected:
-	CRecommendations * m_paRecommendations;	// What are the recommendations to display in the layout
-
-	QTreeWidget * m_pwTreeViewApplications;
-	QTreeWidgetItem * m_poTreeItemRecommendedContacts;
-	QTreeWidgetItem * m_poTreeItemRecommendedGroups;
+	TContact * m_pContact;
+	WTreeWidget * m_pwTreeRecommendations;
 
 public:
 	WLayoutRecommendations(TContact * pContact);
-	virtual ~WLayoutRecommendations() { delete m_paRecommendations; }
-	CTreeWidgetItemRecommendation * _PTreeWidgetItemAdd(EMenuAction eMenuIcon, PSZAC pszName, PSZAC pszDescription, QTreeWidgetItem * pParent);
-	CTreeWidgetItemRecommendation * _PTreeWidgetItemAddRecommendation(EMenuAction eMenuIcon, CRecommendation * pRecommendation, QTreeWidgetItem * pParent);
+	void PopulateTreeWidget();
+	CRecommendationCategory * _PAllocateRecommendationCategory(EMenuAction eMenuIconRecommendationType, PSZAC pszFmtTemplate0);
 
 protected slots:
 	void SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn);
+	void SL_SearchTextChanged(const QString & sText);
 public:
 	Q_OBJECT
 };

@@ -553,7 +553,7 @@ TAccountXmpp::Contact_DeleteSafely(PA_DELETING TContact * paContactDelete)
 		Assert(pGroup != NULL);
 		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 		Assert(pGroup->m_pAccount == this);
-		pGroup->DeleteAllAliasesRelatedToContactsAboutBeingDeleted();
+		pGroup->RemoveAllReferencesToContactsAboutBeingDeleted();
 		}
 	m_arraypContactsComposing.RemoveAllTreeItemsAboutBeingDeleted();
 	m_arraypContactsMessagesUnread.RemoveAllTreeItemsAboutBeingDeleted();

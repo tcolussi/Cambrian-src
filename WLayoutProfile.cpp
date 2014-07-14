@@ -257,13 +257,14 @@ WLayoutProfile::SocketUI_OnSuccess()
 void
 WLayoutProfile::SL_SearchTextChanged(const QString & sSearch)
 	{
+	// TODO: Replace with ShowAllTreeItemsContainingText()
 	QTreeWidgetItemIterator oIterator(m_pwTreeViewApplications);
 	if (sSearch.isEmpty())
 		{
 		// Show the entire tree
 		while (TRUE)
 			{
-			CTreeItemW * pTreeWidgetItem = (CTreeItemW *)*oIterator++;
+			CTreeWidgetItem * pTreeWidgetItem = (CTreeWidgetItem *)*oIterator++;
 			if (pTreeWidgetItem == NULL)
 				return;
 			pTreeWidgetItem->setHidden(false);
@@ -273,7 +274,7 @@ WLayoutProfile::SL_SearchTextChanged(const QString & sSearch)
 		{
 		while (TRUE)
 			{
-			CTreeItemW * pTreeWidgetItem = (CTreeItemW *)*oIterator++;
+			CTreeWidgetItem * pTreeWidgetItem = (CTreeWidgetItem *)*oIterator++;
 			if (pTreeWidgetItem == NULL)
 				return;
 			BOOL fShowRow = (pTreeWidgetItem->text(0).contains(sSearch, Qt::CaseInsensitive) ||

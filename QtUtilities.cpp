@@ -1584,6 +1584,58 @@ WTable::AdjustHeightToFitRows()
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+void
+WTreeWidget::DeleteAllRootNodesWhichAreEmpty()
+	{
+	QTreeWidgetItemIterator oIterator(this);
+	while (TRUE)
+		{
+		CTreeItemW * pTreeWidgetItem = (CTreeItemW *)*oIterator++;
+		if (pTreeWidgetItem == NULL)
+			return;
+		if (pTreeWidgetItem->parent() == NULL && pTreeWidgetItem->childCount() == 0)
+			delete pTreeWidgetItem;	// Delete any empty root node
+		}
+	}
+
+void
+WTreeWidget::ShowAllTreeItems()
+	{
+	// Show every tree item
+	QTreeWidgetItemIterator oIterator(this);
+	while (TRUE)
+		{
+		CTreeWidgetItem * pTreeWidgetItem = (CTreeWidgetItem *)*oIterator++;
+		if (pTreeWidgetItem == NULL)
+			return;
+		pTreeWidgetItem->setHidden(false);
+		}
+	}
+
+//	Search text only in the first three (3) columns
+void
+WTreeWidget::ShowAllTreeItemsContainingText(const QString & sTextSearch)
+	{
+	if (sTextSearch.isEmpty())
+		{
+		ShowAllTreeItems();
+		return;
+		}
+	QTreeWidgetItemIterator oIterator(this);
+	while (TRUE)
+		{
+		CTreeWidgetItem * pTreeWidgetItem = (CTreeWidgetItem *)*oIterator++;
+		if (pTreeWidgetItem == NULL)
+			return;
+		BOOL fShowRow = (pTreeWidgetItem->text(0).contains(sTextSearch, Qt::CaseInsensitive) ||
+						 pTreeWidgetItem->text(1).contains(sTextSearch, Qt::CaseInsensitive) ||
+						 pTreeWidgetItem->text(2).contains(sTextSearch, Qt::CaseInsensitive));
+		pTreeWidgetItem->SetItemVisibleAlongWithItsParents(fShowRow);
+		}
+	}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Make sure the Tree Item is visible and so its parent
 void
 CTreeWidgetItem::SetItemVisibleAlongWithItsParents(BOOL fVisible)
@@ -1619,6 +1671,16 @@ CTreeWidgetItem::ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove)
 	const Qt::ItemFlags eFlagsNew = (eFlags & ~efItemFlagsRemove);
 	if (eFlagsNew != eFlags)
 		setFlags(eFlagsNew);
+	}
+
+void
+CTreeWidgetItem::InitIconAndText(EMenuAction eMenuIcon, PSZUC pszTextColumn1, PSZUC pszTextColumn2, PSZUC pszTextColumn3, PSZUC pszTextColumn4)
+	{
+	setIcon(0, PGetMenuAction(eMenuIcon)->icon());
+	setText(0, CString(pszTextColumn1));
+	setText(1, CString(pszTextColumn2));
+	setText(2, CString(pszTextColumn3));
+	setText(3, CString(pszTextColumn4));
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

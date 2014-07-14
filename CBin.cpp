@@ -1847,7 +1847,7 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chSourcePQString				'Q'
 #define d_chSourcePQByteArray			'Y'
 #define d_chSourceHashGuid				'g'	// GUID, MD5 or any 128-bit value
-#define d_chSourceHash160				'h'	// SHA1 or RIPEMD-160
+#define d_chSourceHash160				'h'	// SHA-1 or RIPEMD-160
 #define d_chSourceHash256				'H'	// Any 256-bit value, such as SHA-256
 #define d_chSourcePvCb					'p'	// A pointer and byte count representing a binary value.  This one contains two arguments: a pointer pvData followed by cbData
 #define d_chSourcePvPv					'P'	// Two pointers (one is the beginning and the other is the end).  The nummber of bytes representing the source is the difference between the pointers.

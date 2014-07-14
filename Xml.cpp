@@ -2713,8 +2713,6 @@ CXmlTree::_AppendNodeTagValue(INOUT CXmlNode * pNode, INOUT PSZU pszuTagValue, B
 	} // _AppendNodeTagValue()
 
 /*
-#include "CHashTable.h"
-
 class CHashElementPointerSerializer : public CHashElement
 {
 public:

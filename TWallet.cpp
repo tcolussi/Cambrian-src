@@ -1,7 +1,6 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "CHashTable.h"
 
 const char c_szaWallet[] = "w";
 

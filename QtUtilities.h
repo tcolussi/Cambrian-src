@@ -496,6 +496,9 @@ class WTreeWidget : public QTreeWidget
 public:
 	BOOL FIsEditingTreeWidgetItem() const { return (state() == EditingState); }	// This wrapper is necessary because the method state() is protected
 	void DisableEditingTreeWidgetItem() { setState(NoState); }
+	void DeleteAllRootNodesWhichAreEmpty();
+	void ShowAllTreeItems();
+	void ShowAllTreeItemsContainingText(const QString & sTextSearch);
 };
 
 
@@ -509,6 +512,7 @@ public:
 	void ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove);
 	void ItemFlagsEditingEnable() { ItemFlagsAdd(Qt::ItemIsEditable); }
 	void ItemFlagsEditingDisable() { ItemFlagsRemove(Qt::ItemIsEditable); }
+	void InitIconAndText(EMenuAction eMenuIcon, PSZUC pszTextColumn1, PSZUC pszTextColumn2 = NULL, PSZUC pszTextColumn3 = NULL, PSZUC pszTextColumn4 = NULL);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

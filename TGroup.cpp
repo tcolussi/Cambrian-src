@@ -128,11 +128,20 @@ TGroup::S_PaAllocateGroup(POBJECT pAccountParent)
 TGroup::TGroup(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	{
 	HashSha1_InitEmpty(OUT &m_hashGroupIdentifier);
+	m_pContactWhoRecommended = NULL;
 	}
 
 TGroup::~TGroup()
 	{
 	m_arraypaMembers.DeleteAllTreeItems();
+	}
+
+void
+TGroup::RemoveAllReferencesToContactsAboutBeingDeleted()
+	{
+	if (m_pContactWhoRecommended != NULL && (m_pContactWhoRecommended->m_uFlagsTreeItem & FTI_kfTreeItem_AboutBeingDeleted))
+		m_pContactWhoRecommended = NULL;	// The user decided to remove the contact form his list, however to keep the group referred by the contact
+	m_arraypaMembers.DeleteAllAliasesRelatedToContactsAboutBeingDeleted();
 	}
 
 void
@@ -259,6 +268,7 @@ TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		Vault_WriteEventsToDiskIfModified();		// This line is important to be first because saving the events may modify some variables which may be serialized by ITreeItemChatLogEvents::XmlExchange()
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
 	pXmlExchanger->XmlExchangeSha1("ID", INOUT_F_UNCH_S &m_hashGroupIdentifier);
+	pXmlExchanger->XmlExchangePointer('Y', PPX &m_pContactWhoRecommended, IN &m_pAccount->m_arraypaContacts);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Members, INOUT_F_UNCH_S &m_arraypaMembers, TGroupMember::S_PaAllocateGroupMember, this);
 	} // XmlExchange()
 
@@ -357,6 +367,22 @@ TGroup::TreeItemGroup_DisplayWithinNavigationTree()
 	TreeItem_IconUpdate();
 	TreeItemW_ExpandAccordingToSavedState();
 	} // TreeItemGroup_DisplayWithinNavigationTree()
+
+//	Remove the group and its member(s) from the Navigation Tree
+void
+TGroup::TreeItemGroup_RemoveFromNavigationTree()
+	{
+	TGroupMember ** ppMemberStop;
+	TGroupMember ** ppMember = m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);
+	while (ppMember != ppMemberStop)
+		{
+		TGroupMember * pMember = *ppMember++;
+		Assert(pMember != NULL);
+		Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
+		pMember->TreeItemW_RemoveFromNavigationTree();
+		}
+	TreeItemW_RemoveFromNavigationTree();
+	}
 
 //	TGroup::ITreeItem::TreeItem_PszGetNameDisplay()
 PSZUC
@@ -490,7 +516,7 @@ TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcp
 		m_arraypaGroups.Add(PA_CHILD pGroup);
 		pGroup->m_hashGroupIdentifier = shaGroupIdentifier;
 		pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
-		pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_ProfileGet(pszGroupIdentifier);	// If the group does not exist, then query the contact who sent the stanza to get more information about the group
+		pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_Group_Profile_Get(pszGroupIdentifier);	// If the group does not exist, then query the contact who sent the stanza to get more information about the group
 		return pGroup;
 		}
 	pbinXcpApiExtraRequest->BinXmlAppendXcpAttributesForApiRequestError(eErrorXcpApi_IdentifierNotFound, pszGroupIdentifier);

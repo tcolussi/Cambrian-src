@@ -66,6 +66,7 @@ public:
 	void GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypaContactsRecommended) const;
 	void GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecommended) const;
 	void GetRecommendations_Links() const;	// NYI
+	void InitHashTablesOfIdentifiers(IOUT CHashTableIdentifiersOfContacts * pHashTableContacts, IOUT CHashTableIdentifiersOfGroups * pHashTableGroups) const;
 
 	TApplicationMayanX * PAllocateApplicationMayanX();
 public:

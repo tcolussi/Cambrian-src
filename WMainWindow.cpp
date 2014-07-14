@@ -415,6 +415,8 @@ WMainWindow::SettingsRestore()
 		g_pwNavigationTree->setFloating(false);		// Dock the Navigation Tree within the main window to ensure it is visible to the user.
 		}
 
+	void ApiWebSocket_Init(UINT uPort);
+	ApiWebSocket_Init(oSettings.value("Port").toUInt());
 	#ifdef DEBUG
 	return;		// Don't save the path if running a debug build
 	#endif

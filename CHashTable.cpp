@@ -17,7 +17,6 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "CHashTable.h"
 
 #ifdef DEBUG_WANT_ASSERT
 	//#define TRACE_HASH_PERFORMANCE	// Display statistics about the performance of a hash table

@@ -92,6 +92,8 @@ public:
 	void TreeItemAccount_SetIconDisconnected();
 	TContact * TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(PSZUC pszContactJID, PSZUC pszContactNameDisplay = NULL);
 	TContact * TreeItemAccount_PContactAllocateNewToNavigationTreeInvited_NZ(PSZUC pszContactJID);
+	void TreeItemAccount_RecommendationAdd(PA_CHILD ITreeItem * paTreeItemRecommendationAdd);
+	void TreeItemAccount_RecommendationRemove(ITreeItem * pTreeItemRecommendationRemove);
 
 	void IconUpdate_MessageArrivedFromContact(TContact * pContact);
 	void IconUpdate_MessagesReadForContact(TContact * pContact);
@@ -152,6 +154,7 @@ public:
 	TContact * Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact = eFindContactOnly);
 	TContact * Contact_PFindByIdentifierGroupSender_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC;
 	TContact * Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest) CONST_MCC;
+	void Contact_AddToNavigationTree(PA_CHILD TContact * paContact);
 
 	static const int c_iGroupNew = -1;
 	void Group_AddNewMember_UI(TContact * pContact, int iGroup);
@@ -162,6 +165,7 @@ public:
 		eFindGroupCreate,		// Create a new group if not present
 		};
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanza * pbinXcpApiExtraRequest, EFindGroup eFindGroup);
+	void Group_AddToNavigationTree(PA_CHILD TGroup * paGroup);
 
 	void DisplayDialogProperties();
 public:

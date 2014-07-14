@@ -163,4 +163,72 @@ protected slots:
 
 PSZAC PszaGetSocketState(QAbstractSocket::SocketState eState);
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+enum ESocketState
+{
+	eSocketState_WaitingForHandshake,
+	eSocketState_WaitingForFrameHeader,
+	eSocketState_WaitingForFrameHeaderPayload16,
+	eSocketState_WaitingForFrameHeaderPayload64,
+	eSocketState_WaitingForFrameHeaderMask,
+	eSocketState_WaitingForFrameDataPayload
+};
+
+enum EOpcode
+{
+	eOpcode_zContinue	= 0x0,
+	eOpcode_DataText	= 0x1,
+	eOpcode_DataBinary	= 0x2,
+	eOpcode_Reserved3	= 0x3,
+	eOpcode_Reserved4	= 0x4,
+	eOpcode_Reserved5	= 0x5,
+	eOpcode_Reserved6	= 0x6,
+	eOpcode_Reserved7	= 0x7,
+	eOpcode_Close		= 0x8,
+	eOpcode_Ping		= 0x9,
+	eOpcode_Pong		= 0xA,
+	eOpcode_ReservedB	= 0xB,
+	eOpcode_ReservedC	= 0xC,
+	eOpcode_ReservedD	= 0xD,
+	eOpcode_ReservedE	= 0xE,
+	eOpcode_ReservedF	= 0xF,
+};
+
+#define d_bFrameHeader0_kmFragmentOpcode	0x0F	// Mask to extract the opcode from the header
+#define d_bFrameHeader0_kfFragmentFinal		0x80	// Bit indicating that this is the final fragment in a message
+#define d_bFrameHeader1_kmPayloadLength		0x7F
+#define d_bFrameHeader1_kePayloadLength64	0x7F
+#define d_bFrameHeader1_kePayloadLength16	0x7E
+#define d_bFrameHeader1_kfPayloadMasked		0x80	// Bit indicating that the payload is masked
+
+class OSocketWeb : public QTcpSocket
+{
+	Q_OBJECT
+public:
+	ESocketState m_eSocketState;
+	BYTE m_bFrameHeader0_eOpcode;
+	BYTE m_bFrameHeader0_kfFragmentFinal;
+	BYTE m_bFrameHeader1_kfPayloadMasked;
+	BYTE m_rgbFrameMask[4];	// Mask (if any) of the frame
+	qint64 m_cblFrameData;	// Payload (in bytes) of the frame
+	CBin m_binFrameData;	// Actual data of the payload
+
+public:
+	OSocketWeb();
+	EOpcode EGetOpcode() const { return (EOpcode)m_bFrameHeader0_eOpcode; }
+	void DataWrite(IN_MOD_INV void * pvData, int cbData, EOpcode eOpcode = eOpcode_DataText);
+	void DataWrite(IN_MOD_INV CBin & binData, EOpcode eOpcode = eOpcode_DataText);
+
+protected:
+	//inline BOOL _FuIsPayloadMasked() { return (m_rgbFrameHeader[1] & d_bFrameHeader1_kfPayloadMasked); }
+	void _DataMask(INOUT BYTE * prgbData, int cbData) const;
+
+protected slots:
+	void SL_Connected();
+	void SL_DataAvailable();
+
+signals:
+	void SI_MessageAvailable(CBin &);
+}; // OSocketWeb
+
 #endif // SOCKETS_H

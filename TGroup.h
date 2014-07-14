@@ -41,17 +41,18 @@ class TGroup : public ITreeItemChatLogEvents	// (group)
 {
 	RTI_IMPLEMENTATION(TGroup)
 public:
-	SHashSha1 m_hashGroupIdentifier;	// Unique identifier for the group
+	SHashSha1 m_hashGroupIdentifier;		// Unique identifier for the group
+	TContact * m_pContactWhoRecommended;	// Contact who recommended the group
 	CArrayPtrGroupMembers m_arraypaMembers;
 public:
 	TGroup(TAccountXmpp * pAccount);
 	~TGroup();
-	inline void DeleteAllAliasesRelatedToContactsAboutBeingDeleted() { m_arraypaMembers.DeleteAllAliasesRelatedToContactsAboutBeingDeleted(); }
+	void RemoveAllReferencesToContactsAboutBeingDeleted();
 	void GroupInitNewIdentifier();
-	void DisplayDialogProperties();
-	void DisplayDialogAddContacts();
+
 	void XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
 	void XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * pbinXcpApiExtraRequest);
+	void XcpApiGroup_Profile_GetFromContact(TContact * pContact);
 
 	void Member_Add_UI(TContact * pContact);
 	void Member_Remove_UI(PA_DELETING TGroupMember * pMember);
@@ -70,7 +71,10 @@ public:
 	virtual void Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const;	// From ITreeItemChatLogEvents
 
 	void TreeItemGroup_DisplayWithinNavigationTree();
-	void TreeItemGroup_NewMessageArrived(PSZUC pszMessage, TContact * pContact);
+	void TreeItemGroup_RemoveFromNavigationTree();
+
+	void DisplayDialogProperties();
+	void DisplayDialogAddContacts();
 
 public:
 	static IXmlExchange * S_PaAllocateGroup(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()

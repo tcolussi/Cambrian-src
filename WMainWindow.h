@@ -44,6 +44,7 @@ public slots:
 	void SL_SystemTrayActivated(QSystemTrayIcon::ActivationReason eActivationReason);
 
 	void SL_NetworkOnlineStateChanged(bool fIsOnline);
+	void SL_WebSocketMessage(CBin & binszvFrameData);
 }; // WMainWindow
 
 extern WMainWindow * g_pwMainWindow;

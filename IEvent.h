@@ -184,7 +184,7 @@ public:
 	void BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters);
 
 	void BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters);
-	void BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier);
+	void BinXmlAppendXcpApiRequest_Group_Profile_Get(PSZUC pszGroupIdentifier);
 
 	void BinXmlSerializeEventForDisk(const IEvent * pEvent);
 	void BinXmlSerializeEventForXcp(const IEvent * pEvent);

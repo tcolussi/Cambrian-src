@@ -108,9 +108,21 @@ CBinXcpStanza::BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNod
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void
-CBinXcpStanza::BinXmlAppendXcpApiRequest_ProfileGet(PSZUC pszGroupIdentifier)
+CBinXcpStanza::BinXmlAppendXcpApiRequest_Group_Profile_Get(PSZUC pszGroupIdentifier)
 	{
 	BinXmlAppendXcpApiRequest((PSZAC)c_szaApi_Group_Profile_Get, pszGroupIdentifier);
+	}
+
+//	Ask a contact to return the profile of a group
+void
+TGroup::XcpApiGroup_Profile_GetFromContact(TContact * pContact)
+	{
+	CHU szGroupIdentifier[30];
+	InitToGarbage(OUT szGroupIdentifier, sizeof(szGroupIdentifier));
+	HashSha1_ToStringBase85(OUT szGroupIdentifier, IN &m_hashGroupIdentifier);
+	CBinXcpStanzaTypeInfo binXcpStanza;
+	binXcpStanza.BinXmlAppendXcpApiRequest_Group_Profile_Get(szGroupIdentifier);
+	binXcpStanza.XcpSendStanzaToContact(pContact);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -150,6 +162,13 @@ TGroup::XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) c
 	}
 
 void
+ITreeItem::TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay)
+	{
+	m_strNameDisplayTyped = pszNameDisplay;
+	m_uFlagsTreeItem = (m_uFlagsTreeItem & ~FTI_kfTreeItem_NameDisplayedGenerated) | FTI_kfTreeItem_NameDisplayedSuggested;
+	}
+
+void
 TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * pbinXcpApiExtraRequest)
 	{
 	// Fill in any missing group info from the data in pXmlNodeApiParameters
@@ -157,10 +176,7 @@ TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, I
 		{
 		PSZUC pszName = pXmlNodeApiParameters->PszuFindAttributeValue_NZ(d_chAPIa_TGroup_strName);
 		if (pszName[0] != '\0')
-			{
-			m_strNameDisplayTyped = pszName;	// Assign the group name
-			m_uFlagsTreeItem &= ~FTI_kfTreeItem_NameDisplayedGenerated;
-			}
+			TreeItem_SetNameDisplaySuggested(pszName);	// Assign the group name
 		}
 	const CXmlNode * pXmlNodeMembers = pXmlNodeApiParameters->PFindElement(d_chAPIe_TGroupMember_);
 	while (pXmlNodeMembers != NULL)
