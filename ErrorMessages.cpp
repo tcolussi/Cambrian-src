@@ -757,6 +757,7 @@ void
 MessageLog_ModuleShutdown()
 	{
 	g_oMessageLog.Destroy();
+	g_oErrorLog.Destroy();
 	}
 
 void

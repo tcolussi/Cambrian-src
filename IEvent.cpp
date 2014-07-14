@@ -525,7 +525,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	{
 	Assert(pbinTextHtml != NULL);
 	Assert(m_pVaultParent_NZ != NULL);
-	ITreeItemChatLog * pTreeItemNickname;		// This pointer should be a TContact, however if there is a 'bug' where a group message has m_pContactGroupSender_YZ == NULL, then this will point to a group (which is no big deal)
+	ITreeItemChatLog * pTreeItemNickname = NULL;		// This pointer should be a TContact, however if there is a 'bug' where a group message has m_pContactGroupSender_YZ == NULL, then this will point to a group (which is no big deal)
 	const QDateTime dtlMessage = QDateTime::fromMSecsSinceEpoch(m_tsEventID).toLocalTime();
 	const QString sTime = dtlMessage.toString("hh:mm");
 	const QString sDateTime = dtlMessage.toString(Qt::SystemLocaleLongDate); // DefaultLocaleLongDate);

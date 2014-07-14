@@ -158,10 +158,10 @@ DDialogPropertiyPageGroupGeneral::DDialogPropertiyPageGroupGeneral(TGroup * pGro
 	poLayout->Layout_AddLabelAndWidgetH_PA("Group ID", new WEditReadOnly(g_strScratchBufferStatusBar.Format("{h|}", &pGroup->m_hashGroupIdentifier)));
 	poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
 	poLayout->Layout_AddLabelAndWidgetH_PA("File Name", new WEditReadOnly(QDir::toNativeSeparators(pGroup->Vault_SGetPath())));
-	if (pGroup->m_pContactWhoRecommended != NULL)
+	if (pGroup->m_pContactWhoRecommended_YZ != NULL)
 		{
 		poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
-		poLayout->Layout_AddLabelAndWidgetH_PA("Recommended By", new WEditReadOnly(pGroup->m_pContactWhoRecommended->TreeItem_PszGetNameDisplay()));
+		poLayout->Layout_AddLabelAndWidgetH_PA("Recommended By", new WEditReadOnly(pGroup->m_pContactWhoRecommended_YZ->TreeItem_PszGetNameDisplay()));
 		}
 	//poLayout->addWidget(PA_CHILD new QWidget, 1);
 	}

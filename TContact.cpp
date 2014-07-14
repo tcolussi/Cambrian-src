@@ -198,12 +198,18 @@ const EMenuActionByte c_rgzeActionsMenuContact[] =
 	eMenuAction_ContactRename,
 	eMenuAction_ContactRemove,
 	eMenuAction_ContactInvite,
-	eMenuAction_ContactTransactions,
 	eMenuAction_ContactPing,
-	eMenuIconOutOfSync,			// Synchronize
+	eMenuAction_Synchronize,			// Synchronize
 	eMenuActionSeparator,
 	eMenuAction_TreeItemRecommended,
 	eMenuAction_ContactProperties,
+	ezMenuActionNone
+	};
+
+const EMenuActionByte c_rgzeActionsMenuContactView[] =
+	{
+	eMenuAction_Contact_SubMenuView_Recommendations,
+	eMenuAction_Contact_SubMenuView_Transactions,
 	ezMenuActionNone
 	};
 
@@ -218,6 +224,10 @@ TContact::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	pMenu->ActionAdd(eMenuAction_ContactSubscribe);
 	pMenu->ActionAdd(eMenuAction_ContactUnsubscribe);
 	*/
+
+	WMenu * pMenuView = pMenu->PMenuAdd("View", eMenuAction_Contact_SubMenuView);
+	pMenuView->ActionsAdd(c_rgzeActionsMenuContactView);
+
 	WMenu * pMenuGroup = pMenu->PMenuAdd("Add Contact to Group", eMenuAction_ContactAddToGroup);
 	int eMenuActionGroup = eMenuSpecialAction_GroupFirst;
 	TGroup ** ppGroupStop;
@@ -228,7 +238,9 @@ TContact::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 		pMenuGroup->ActionAddFromText(pGroup->TreeItem_PszGetNameDisplay(), eMenuActionGroup++, eMenuAction_Group);
 		}
 	pMenuGroup->ActionAddFromText((PSZUC)"<New Group...>", eMenuAction_GroupNew, eMenuAction_GroupNew);
+
 	pMenu->ActionsAdd(c_rgzeActionsMenuContact);
+	pMenu->ActionSetCheck(eMenuAction_TreeItemRecommended, m_uFlagsTreeItem & FTI_kfRecommended);
 	} // TreeItem_MenuAppendActions()
 
 
@@ -270,14 +282,19 @@ TContact::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	case eMenuAction_ContactPing:
 		Xmpp_Ping();
 		return ezMenuActionNone;
-	case eMenuIconOutOfSync:
+	case eMenuAction_Synchronize:
 		Xcp_Synchronize();
 		return ezMenuActionNone;
 	case eMenuAction_ContactProperties:
 		DisplayDialogProperties();
 		return ezMenuActionNone;
-	case eMenuAction_ContactTransactions:
+	case eMenuAction_Contact_SubMenuView_Transactions:
 		TreeItemW_DisplayTransactionsBitcoin();
+		return ezMenuActionNone;
+	case eMenuAction_Contact_SubMenuView_Recommendations:
+		XcpApi_Invoke_RecommendationsGet();
+		if (!m_binXmlRecommendations.FIsEmptyBinary())
+			Contact_RecommendationsDisplayWithinNavigationTree(TRUE);
 		return ezMenuActionNone;
 	case eMenuSpecialAction_ITreeItemRenamed:
 		TreeItemContact_GenerateDisplayNameFromJid();
@@ -769,6 +786,23 @@ void
 CArrayPtrContacts::SortByNameDisplay()
 	{
 	Sort((PFn_NCompareSortElements)TContact::S_NCompareSortContactsByNameDisplay);
+	}
+
+PSZUC
+CArrayPtrContacts::PszFormatDisplayNames(OUT CStr * pstrScratchBuffer) const
+	{
+	pstrScratchBuffer->Empty();
+	TContact ** ppContactStop;
+	TContact ** ppContact = PrgpGetContactsStop(OUT &ppContactStop);
+	while (ppContact != ppContactStop)
+		{
+		TContact * pContact = *ppContact++;
+		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+		if (!pstrScratchBuffer->FIsEmptyBinary())
+			pstrScratchBuffer->BinAppendText(", ");
+		pstrScratchBuffer->BinAppendText((PSZAC)pContact->TreeItem_PszGetNameDisplay());
+		}
+	return pstrScratchBuffer->BinAppendNullTerminatorSz();
 	}
 
 void

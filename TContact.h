@@ -110,7 +110,7 @@ public:
 	void XcpApiContact_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters);
 
 	void Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParameters);
-	void Contact_RecommendationsDisplayWithinNavigationTree();
+	void Contact_RecommendationsDisplayWithinNavigationTree(BOOL fSetFocus = FALSE);
 
 	//void BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const;
 	void Contact_AddToGroup(int iGroup);
@@ -188,6 +188,7 @@ public:
 	void ForEach_ChatLogResetNickNameAndRepopulateAllEvents();
 
 	void SortByNameDisplay();
+	PSZUC PszFormatDisplayNames(OUT CStr * pstrScratchBuffer) const;
 }; // CArrayPtrContacts
 
 #define d_szInvitation				"Invitation"

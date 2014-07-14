@@ -27,6 +27,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 
 	eMenuAction_ProfileDelete,
 	eMenuAction_ProfileProperties,
+	eMenuAction_ProfileMyRecommendations,	// Display all the recommendations I made
 
 	eMenuAction_ApplicationDelete,
 	eMenuAction_ApplicationProperties,
@@ -50,9 +51,13 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_ContactSubscribe,
 	eMenuAction_ContactUnsubscribe,
 	eMenuAction_ContactProperties,		// Display the properties of the selected contact
-	eMenuAction_ContactTransactions,	// Display the Bitcoin transactions related to the contact
 	eMenuAction_ContactPing,			// Ping to the contact
-	eMenuIconOutOfSync,
+
+	eMenuAction_Contact_SubMenuView,
+	eMenuAction_Contact_SubMenuView_Recommendations,	// View the recommendations made by the contact
+	eMenuAction_Contact_SubMenuView_Transactions,		// Display the (Bitcoin) transactions related to the contact
+
+	eMenuAction_Synchronize,
 
 	eMenuAction_Group,
 	eMenuAction_GroupNew,
@@ -180,10 +185,12 @@ public:
 	WMenu(PSZAC pszName);
 	~WMenu();
 	void ActionAdd(EMenuAction eMenuAction);
+	void ActionAdd(EMenuAction eMenuAction, PSZAC pszText);
 	void ActionAddWithSeparator(EMenuAction eMenuAction);
 	void ActionsAdd(const EMenuActionByte rgzeMenuActions[]);
 	void ActionsAddSubMenu(EMenuAction eMenuActionSubMenuName, const EMenuActionByte rgzeActionsSubMenuItems[]);
 	void ActionAddFromText(PSZUC pszText, int idAction, EMenuAction eMenuIcon);
+	void ActionSetCheck(EMenuAction eMenuAction, BOOL fuChecked);
 	WMenu * PMenuAdd(PSZAC pszText, EMenuAction eMenuIcon);
 
 	void InitAsDymanicMenu();

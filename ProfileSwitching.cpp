@@ -13,6 +13,7 @@
 #endif
 #include "ProfileSwitching.h"
 #include "WNavigationTree.h"
+#include "TRecommendations.h"
 
 const CHU c_szContacts[]	= "Contacts";	// Display name fo rthe 'Inbox' node
 
@@ -175,13 +176,16 @@ TProfile::TreeItemProfile_DisplayProfileWithinNavigationTree()
 	{
 	Endorse(g_pTreeItemProfiles == NULL); // Display the profile at the root rather than under "Profiles"
 	TreeItemW_DisplayWithinNavigationTree(g_pTreeItemProfiles, eMenuIconIdentities);
+	TAccountXmpp * pAccount = NULL;
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
 		{
-		TAccountXmpp * pAccount = *ppAccount++;
+		pAccount = *ppAccount++;
 		pAccount->PGetAlias_NZ()->TreeItemW_DisplayWithinNavigationTreeExpand(this, pAccount->m_strJID, eMenuIconXmpp);
 		}
+	if (pAccount != NULL)
+		new TMyRecommendations(this);	// Dislay the recommendations if there is at least one account
 	TreeItemW_ExpandAccordingToSavedState();
 	}
 

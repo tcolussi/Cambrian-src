@@ -128,7 +128,7 @@ TGroup::S_PaAllocateGroup(POBJECT pAccountParent)
 TGroup::TGroup(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	{
 	HashSha1_InitEmpty(OUT &m_hashGroupIdentifier);
-	m_pContactWhoRecommended = NULL;
+	m_pContactWhoRecommended_YZ = NULL;
 	}
 
 TGroup::~TGroup()
@@ -139,8 +139,8 @@ TGroup::~TGroup()
 void
 TGroup::RemoveAllReferencesToContactsAboutBeingDeleted()
 	{
-	if (m_pContactWhoRecommended != NULL && (m_pContactWhoRecommended->m_uFlagsTreeItem & FTI_kfTreeItem_AboutBeingDeleted))
-		m_pContactWhoRecommended = NULL;	// The user decided to remove the contact form his list, however to keep the group referred by the contact
+	if (m_pContactWhoRecommended_YZ != NULL && (m_pContactWhoRecommended_YZ->m_uFlagsTreeItem & FTI_kfTreeItem_AboutBeingDeleted))
+		m_pContactWhoRecommended_YZ = NULL;	// The user decided to remove the contact form his list, however to keep the group referred by the contact
 	m_arraypaMembers.DeleteAllAliasesRelatedToContactsAboutBeingDeleted();
 	}
 
@@ -268,7 +268,7 @@ TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		Vault_WriteEventsToDiskIfModified();		// This line is important to be first because saving the events may modify some variables which may be serialized by ITreeItemChatLogEvents::XmlExchange()
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
 	pXmlExchanger->XmlExchangeSha1("ID", INOUT_F_UNCH_S &m_hashGroupIdentifier);
-	pXmlExchanger->XmlExchangePointer('Y', PPX &m_pContactWhoRecommended, IN &m_pAccount->m_arraypaContacts);
+	pXmlExchanger->XmlExchangePointer('Y', PPX &m_pContactWhoRecommended_YZ, IN &m_pAccount->m_arraypaContacts);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Members, INOUT_F_UNCH_S &m_arraypaMembers, TGroupMember::S_PaAllocateGroupMember, this);
 	} // XmlExchange()
 
@@ -291,6 +291,7 @@ void
 TGroup::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	{
 	pMenu->ActionsAdd(c_rgzeActionsMenuContactGroup);
+	pMenu->ActionSetCheck(eMenuAction_TreeItemRecommended, m_uFlagsTreeItem & FTI_kfRecommended);
 	}
 
 

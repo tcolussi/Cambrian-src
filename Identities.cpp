@@ -39,7 +39,7 @@ CHashTableIdentifiersOfContacts::CHashTableIdentifiersOfContacts() : CHashTable(
 	}
 
 void
-CHashTableIdentifiersOfContacts::AddIdentifiersOfContact(TContact * pContact)
+CHashTableIdentifiersOfContacts::AddIdentifiersOfContact(TContact * pContact, PVPARAM pvParamIdentifier)
 	{
 	PSZUC pszContactIdentifier = pContact->m_strJidBare;	// At the moment, a contact has only one identifier (its JID)
 	BOOL fElementNewlyAllocated = FALSE;
@@ -47,6 +47,7 @@ CHashTableIdentifiersOfContacts::AddIdentifiersOfContact(TContact * pContact)
 	Assert(pHashElement != NULL);
 	Assert(IS_ALIGNED_32(pHashElement));
 	pHashElement->m_pContact = pContact;
+	pHashElement->m_pvParamIdentifier = pvParamIdentifier;
 	Assert(PFindContactByIdentifier(pszContactIdentifier) == pContact);
 	}
 

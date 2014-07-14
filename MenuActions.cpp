@@ -40,7 +40,8 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"New Message" _ "i=ChatMessage3" _,	// eMenuAction_MessageNew
 
 	"Delete Profile" _ "i=Remove" _, // eMenuAction_ProfileDelete
-	"Profile Properties" _, // eMenuAction_ProfileProperties
+	"Profile Properties" _ "s=Display the properties of my profile" _, // eMenuAction_ProfileProperties
+	"My Recommendations" _ "s=Display all the recommendations I made" _ "i=Reputation",  // eMenuAction_ProfileMyRecommendations
 
 	"Delete Application" _ "i=Remove" _, // eMenuAction_ApplicationDelete
 	"Application Properties" _, // eMenuAction_ApplicationProperties
@@ -58,16 +59,20 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Add Contact..." _ /*"a=Ctrl+Shift+C" _*/ "i=ContactAdd" _ "s=Add a new contact for the selected account" _,	// eMenuAction_ContactAdd
 	"Add Contact to Group" _ "i=ContactAdd" _ "s=Add the selected contact to a group" _,	// eMenuAction_ContactAddToGroup
 	"Rename Contact..." _ "i=ContactEdit" _ "s=Change the display name of the selected contact" _,	// eMenuAction_ContactRename
-	"Remove Contact..." _ "i=ContactRemove" _ "s=Remove the selected contact from your list of approved contacts" _,	// eMenuAction_ContactRemove
+	"Remove Contact..." _ "i=ContactRemove" _ "s=Remove the selected contact from my list of approved contacts" _,	// eMenuAction_ContactRemove
 	"Send File to Contact..." _ "i=FileUpload" _ "s=Upload a file to the selected contact" _, // eMenuAction_ContactSendFile	("a=Ctrl+Shift+F" does not work because it is not connected to the main menu)
-	"Create Invitation..." _ "i=Forward" _ "s=Create a one-click invitation to send to your contact" _, // eMenuAction_ContactInvite
-	"Approve Contact" _ "i=Accept" _ "s=Add the unsolicited contact to your list of approved contacts" _, // eMenuAction_ContactApprove
+	"Create Invitation..." _ "i=Forward" _ "s=Create a one-click invitation to send to my contact" _, // eMenuAction_ContactInvite
+	"Approve Contact" _ "i=Accept" _ "s=Add the unsolicited contact to my list of approved contacts" _, // eMenuAction_ContactApprove
 	"Subscribe" _ , // eMenuAction_ContactSubscribe
 	"Unsubscribe" _ , // eMenuAction_ContactUnsubscribe
 	"Contact Properties..." _ "i=Properties" _ "s=Display the properties of the selected contact" _, // eMenuAction_ContactProperties
-	"Bitcoin Transactions" _ "i=Bitcoin" _, // eMenuAction_ContactTransactions
 	"Ping Contact" _ "i=Ping" _ "s=Send a network packet to the contact and calculate how long it take to receive a response" _, // eMenuAction_ContactPing
-	"Synchronize with Contact" _ "i=OutOfSync" _ "s=Make sure you and your contact are up-to-date with the messages sent to each other" _, // eMenuIconOutOfSync
+
+	"View" _ "s=Display extra information related to the contact" _ "i=Find" _, // eMenuAction_Contact_SubMenuView
+	"Recommendations" _ "s=View the recommendations made by the contact" _ "i=Reputation" _,	// eMenuAction_Contact_SubMenuView_Recommendations
+	"Bitcoin Transactions" _ "s=Display the Bitcoin transactions related to the contact" _ "i=Bitcoin" _, // eMenuAction_Contact_SubMenuView_Transactions
+
+	"Synchronize with Contact" _ "i=OutOfSync" _ "s=Make sure me and my contact are up-to-date with the messages sent to each other" _, // eMenuAction_Synchronize
 
 	"Group" _ "i=Group" _, // eMenuAction_Group
 	"<New Group...>" _ "i=GroupAdd" _, // eMenuAction_GroupNew
@@ -77,7 +82,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Remove Contact from Group" _ "i=ContactRemove" _, // eMenuAction_GroupRemoveContact
 	"Group Properties..." _ "i=Properties" _, // eMenuAction_GroupProperties
 
-	"Recommend..." _ "s=Recommend the selected item to your contacts" _ "i=Reputation" _,	// eMenuAction_TreeItemRecommended
+	"Recommend" _ "s=Recommend the selected item to my contacts" _ "i=Reputation" _,	// eMenuAction_TreeItemRecommended
 	"Rename..." _, // eMenuAction_TreeItemRename
 	"Edit Message..." _ "i=Pencil" _, // eMenuAction_MessageEdit
 	"Copy" _ "i=Copy" _, // eMenuAction_Copy
@@ -93,7 +98,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Send Ballot..." _ "s=Send a ballot to poll votes from the group" _ "i=Vote" _, // eMenuAction_BallotSend
 	"Resend Ballot..." _ "s=Resend an existing ballot" _ "i=Vote" _, // eMenuAction_BallotReSend
 
-	"Message Log..." _ "a=Ctrl+Shift+L" _ "i=LogMessages" _,	// eMenuAction_ShowLogMessages (BTW: Ctrl+Shift+L does not respond, and so Ctrl+Shift+M, however others such as Ctrl+Shift+K or Ctrl+Shift+B work)
+	"Message Log..." _ "a=Ctrl+Shift+L" _ "i=LogMessages" _,	// eMenuAction_ShowLogMessages
 	"Recent Error..." _ "a=Ctrl+Shift+E" _ "i=LogErrors" _,	// eMenuAction_ShowLogErrors
 	"Find Text..." _ "a=Ctrl+F" _ "i=Find" _,	// eMenuAction_FindText
 	"[Debug] Send Chat Log to Cambrian" _ "s=Send the entire chat history to chatlogs@xmpp.cambrian.org for analysis" _ "i=Forward" _,	// eMenuAction_DebugSendChatLog
@@ -372,7 +377,7 @@ EFindMenuAction(const QAction * pActionSearch)
 			return eMenuAction;
 		}
 	QString sAction = pActionSearch->text();
-	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "EFindMenuAction() is unable to find the identifier for action '$Q'\n", &sAction);
+	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "EFindMenuAction() is unable to find the identifier '$i' for action '$Q'\n", eMenuAction, &sAction);
 	return ezMenuActionNone;
 	}
 
@@ -487,6 +492,40 @@ WMenu::ActionAddFromText(PSZUC pszText, int idAction, EMenuAction eMenuIcon)
 	{
 	QAction * pAction = addAction(GetMenuIcon(eMenuIcon), (CString)pszText);
 	pAction->setData(idAction);
+	}
+
+void
+WMenu::ActionAdd(EMenuAction eMenuAction, PSZAC pszText)
+	{
+	ActionAddFromText((PSZUC)pszText, eMenuAction, eMenuAction);
+	}
+
+void
+WMenu::ActionSetCheck(EMenuAction eMenuAction, BOOL fuChecked)
+	{
+	if (!fuChecked)
+		return;
+	QAction * pActionOld = PGetMenuAction(eMenuAction);
+	Assert(pActionOld != NULL);
+	if (pActionOld == NULL)
+		return;
+	QAction * pActionNew = addAction(pActionOld->text());
+	//pActionNew->setStatusTip(pActionOld->statusTip());	// This code does not work because the parent of the action is the menu
+	pActionNew->setData(eMenuAction);
+	pActionNew->setCheckable(true);
+	pActionNew->setChecked(true);
+	insertAction(pActionOld, pActionNew);	// Insert the new action next to the old one
+	removeAction(pActionOld);				// Remove the old action (those two methods essentially replace the old action with the new one)
+		/*
+		QAction * pActionNew = PaAllocateMenuAction(eMenuAction);
+		//pActionNew->setParent(this);
+		pActionNew->setCheckable(true);
+		pActionNew->setChecked(true);
+		pActionNew->setIcon(QIcon());	// Remove the icon, so the checkbox may be visible
+		pActionNew->setData(eMenuAction);
+		insertAction(pAction, pActionNew);
+		removeAction(pAction);
+		*/
 	}
 
 WMenu *

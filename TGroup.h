@@ -42,7 +42,7 @@ class TGroup : public ITreeItemChatLogEvents	// (group)
 	RTI_IMPLEMENTATION(TGroup)
 public:
 	SHashSha1 m_hashGroupIdentifier;		// Unique identifier for the group
-	TContact * m_pContactWhoRecommended;	// Contact who recommended the group
+	TContact * m_pContactWhoRecommended_YZ;	// Contact who recommended the group
 	CArrayPtrGroupMembers m_arraypaMembers;
 public:
 	TGroup(TAccountXmpp * pAccount);

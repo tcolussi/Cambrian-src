@@ -5,7 +5,13 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-class CHashElementIdentifierOfContact : public CHashElement
+class CHashElementIdentifier : public CHashElement
+{
+public:
+	PVPARAM m_pvParamIdentifier;		// User-defined parameter to associate witht the identifier hash element
+};
+
+class CHashElementIdentifierOfContact : public CHashElementIdentifier
 {
 public:
 	TContact * m_pContact;
@@ -17,7 +23,7 @@ class CHashTableIdentifiersOfContacts : public CHashTable
 {
 public:
 	CHashTableIdentifiersOfContacts();
-	void AddIdentifiersOfContact(TContact * pContact);
+	void AddIdentifiersOfContact(TContact * pContact, PVPARAM pvParamIdentifier = NULL);
 	TContact * PFindContactByIdentifier(PSZUC pszContactIdentifier) const;
 
 public:
@@ -27,7 +33,7 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class CHashElementIdentifierOfGroup : public CHashElement
+class CHashElementIdentifierOfGroup : public CHashElementIdentifier
 {
 public:
 	TGroup * m_pGroup;

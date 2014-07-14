@@ -22,18 +22,6 @@ public:
 	virtual ~IRecommendation();
 };
 
-class CHashElementRecommendation : public CHashElement
-{
-public:
-	IRecommendation * m_pRecommendation;
-};
-
-class CHashTableRecommendations : public CHashTable
-{
-public:
-
-};
-
 class CArrayPtrRecommendations : public CArray
 {
 public:
@@ -43,9 +31,9 @@ public:
 class CArrayPtrRecommendationsWithHashTables : public CArrayPtrRecommendations
 {
 public:
-	TContact * m_pContact;
-	TAccountXmpp * m_pAccount;
 	TProfile * m_pProfile;
+	TAccountXmpp * m_pAccount;
+	TContact * m_pContact_YZ;
 	CHashTableIdentifiersOfContacts m_oHashTableContactsProfile;
 	CHashTableIdentifiersOfGroups m_oHashTableGroupsProfile;
 	CHashTableIdentifiersOfContacts m_oHashTableContactsRecommended;
@@ -53,7 +41,7 @@ protected:
 	CXmlTree m_oXmlTreeCache;	// For performance, cache the XML tree so it is not re-created for each contact having a recommendation
 
 public:
-	CArrayPtrRecommendationsWithHashTables(TContact * pContact);
+	CArrayPtrRecommendationsWithHashTables(TProfile * pProfile, TContact * pContact = NULL);
 	void AddRecommendationsAllocateNew(const CBin & binXmlRecommendations);
 	void AddRecommendationsOfOtherContacts();
 };
@@ -94,15 +82,28 @@ public:
 	RTI_IMPLEMENTATION(TRecommendations)
 };
 
+class TMyRecommendations : public ITreeItem
+{
+public:
+	TProfile * m_pProfile;
+public:
+	TMyRecommendations(TProfile * pProfile);
+	virtual void TreeItem_GotFocus();		// From ITreeItem
+
+	RTI_IMPLEMENTATION(TMyRecommendations)
+};
+
 
 class WLayoutRecommendations : public WLayout
 {
 protected:
-	TContact * m_pContact;
+	TProfile * m_pProfile;
+	TContact * m_pContact_YZ;
+	PSZUC m_pszNameDisplayContact;
 	WTreeWidget * m_pwTreeRecommendations;
 
 public:
-	WLayoutRecommendations(TContact * pContact);
+	WLayoutRecommendations(TProfile * pProfile, TContact * pContact = NULL);
 	void PopulateTreeWidget();
 	CRecommendationCategory * _PAllocateRecommendationCategory(EMenuAction eMenuIconRecommendationType, PSZAC pszFmtTemplate0);
 
