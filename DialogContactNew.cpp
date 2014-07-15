@@ -10,7 +10,7 @@ DisplayDialogContactNew()
 		return;
 //	pAccount->Contacts_RosterDisplayDebug("DisplayDialogContactNew() before");
 	DialogContactNew dlg(pAccount);
-	dlg.exec();
+	dlg.FuExec();
 	}
 
 #define	SL_DialogContactNew(_pfmName)		SL_DDialog(_pfmName, DialogContactNew)

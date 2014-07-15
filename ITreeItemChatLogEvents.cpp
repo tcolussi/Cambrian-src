@@ -226,7 +226,7 @@ ITreeItemChatLog::ChatLog_PszGetNickname() CONST_MCC
 	if (pszNickName[0] != '\0')
 		return pszNickName;
 	// The nickname is empty, so attempt to find the best shortest nickname
-	PSZUC pszNameDisplay = TreeItem_PszGetNameDisplay();
+	PSZUC pszNameDisplay = (EGetRuntimeClass() == RTI(TAccountXmpp)) ? ((TAccountXmpp *)this)->TreeItemAccount_PszGetNameDisplay() : TreeItem_PszGetNameDisplay();
 	PCHUC pchAt = pszNameDisplay;
 	while (TRUE)
 		{

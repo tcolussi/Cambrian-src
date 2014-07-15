@@ -862,7 +862,7 @@ WLayoutChatLog::SL_ButtonSendFile()
 void
 WLayoutChatLog::SL_ButtonAddContacts()
 	{
-	PGetContactOrGroup_NZ()->DisplayDialogAddContactsToGroup();
+	PGetContactOrGroup_NZ()->DisplayDialogAddContactsToGroupFu();
 	}
 
 void

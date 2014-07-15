@@ -23,13 +23,13 @@ WLayoutMyProfiles::WLayoutMyProfiles()
 	m_pAccountNew = NULL;
 	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Welcome to Cambrian");
 	WLabelSelectableWrap * pwLabel = new WLabelSelectableWrap(g_oConfiguration.m_arraypaProfiles.FIsEmpty() ?
-		"To get started, you need to create a profile.\n"
-		"Your profile contains information about you or your business for communicating with others.\n\n"
-		"Creating a profile is easy; you pick a name you wish other people will recognize you." :
-		"You already have a profile, however you are welcome to have multiple profiles.");
+		"To get started, you need to create a "d_sza_profile".\n"
+		"Your "d_sza_profile" contains information about you or your business for communicating with others.\n\n"
+		"Creating a "d_sza_profile" is easy; you pick a name you wish other people will recognize you." :
+		"You already have a "d_sza_profile", however you are welcome to 'play' multiple "d_sza_profile"s.");
 	poLayoutVertical->addWidget(pwLabel);
 	m_pwEditProfile = new WEdit;
-	m_pwEditProfile->Edit_SetWatermark("Enter name, nickname or business name of your new profile");
+	m_pwEditProfile->Edit_SetWatermark("Enter name, nickname or business name of your new "d_sza_profile);
 	m_pwEditProfile->Edit_SetToolTip((PSZUC)"Examples:\n\tJoe Smith\n\tSuperman\n\tACME Widgets, Inc.");
 //	m_pwEditProfile->setFocus();
 
@@ -65,7 +65,7 @@ WLayoutMyProfiles::SL_ButtonCreateNewProfile()
 	CStr strProfileName = *m_pwEditProfile;
 	if (strProfileName.FIsEmptyString())
 		{
-		EMessageBoxWarning("Please enter a valid name for your profile.");
+		EMessageBoxWarning("Please enter a valid name for your "d_sza_profile".");
 		m_pwEditProfile->setFocus();
 		return;
 		}
@@ -78,7 +78,7 @@ WLayoutMyProfiles::SL_ButtonCreateNewProfile()
 		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
 		if (pProfile->m_strNameProfile.FCompareStringsNoCase(strProfileName))
 			{
-			EMessageBoxWarning("There is already a profile named '$S'.  Please pick another profile name.", &strProfileName);
+			EMessageBoxWarning("There is already a "d_sza_profile" named '$S'.  Please pick another "d_sza_profile" name.", &strProfileName);
 			m_pwEditProfile->setFocus();
 			return;
 			}
@@ -87,7 +87,8 @@ WLayoutMyProfiles::SL_ButtonCreateNewProfile()
 	g_oConfiguration.m_arraypaProfiles.Add(PA_CHILD pProfile);
 	pProfile->m_strNameProfile = strProfileName;
 	pProfile->GenerateKeys();
-	pProfile->TreeItemProfile_DisplayProfileWithinNavigationTree();
+	NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfile);
+	//pProfile->TreeItemProfile_DisplayProfileWithinNavigationTree();
 	//pProfile->m_paTreeWidgetItem->setExpanded(true);
 
 	#ifdef DEBUG_IMPORT_OLD_CONFIG_XML
@@ -106,7 +107,9 @@ WLayoutMyProfiles::SL_ButtonCreateNewProfile()
 	if (m_pwCheckboxAutomatic->isChecked())
 		pProfile->PAllocateAccountAutomaticCreationUI(this);
 	else
+		{
 		pProfile->TreeItemLayout_SetFocus();
+		}
 	} // SL_ButtonCreateNewProfile()
 
 //	WLayoutMyProfiles::WLayout::Layout_SetFocus()
@@ -134,7 +137,7 @@ WLayoutProfile::WLayoutProfile(TProfile * pProfile)
 	m_pwEditSearchApplications = NULL;
 	if (pProfile->m_arraypaAccountsXmpp.FIsEmpty())
 		{
-		m_pwGroupBoxAccountNew = Splitter_PwAddGroupBox_VE("Please assign an XMPP account for your profile '$S'", &pProfile->m_strNameProfile);
+		m_pwGroupBoxAccountNew = Splitter_PwAddGroupBox_VE("Please assign an XMPP account for your "d_sza_profile" '$S'", &pProfile->m_strNameProfile);
 		OLayoutVerticalAlignTop * poLayout = new OLayoutVerticalAlignTop(m_pwGroupBoxAccountNew);
 		poLayout->Layout_PwAddRowLabelWrap("Cambrian needs an XMPP account to send and receive messages with others:");
 		WButtonTextWithIcon * pwButtonAccountNewAutomatic = poLayout->Layout_PwAddRowButtonAndLabel("Automatic!", eMenuIconXmpp, "Automatically and instantly create an XMPP account");
@@ -308,7 +311,7 @@ WLayoutProfile::DisplayApplications()
 	m_pwGroupBoxAccountNew = NULL;
 	if (m_poLayoutApplications != NULL)
 		return;	// We are already displaying the actions
-	m_poLayoutApplications = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Double-click on the aplication you would like to use with your profile '$S'", &m_pProfile->m_strNameProfile);
+	m_poLayoutApplications = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Double-click on the aplication you would like to use with your "d_sza_profile" '$S'", &m_pProfile->m_strNameProfile);
 
 	m_pwEditSearchApplications = new WEdit;
 	//pwEdit->setMaximumHeight(20);

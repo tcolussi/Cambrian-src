@@ -352,11 +352,24 @@ DDialogGroupAddContacts::SL_ContactInGroupDoubleClicked(QListWidgetItem * paItem
 	m_pwListContactsAvailable->ContactAddTransfer(PA_DELETING paItem);
 	}
 
-void
-ITreeItemChatLogEvents::DisplayDialogAddContactsToGroup()
+BOOL
+ITreeItemChatLogEvents::DisplayDialogAddContactsToGroupFu()
 	{
 	DDialogGroupAddContacts dialog(this);
-	dialog.FuExec();
+	return dialog.FuExec();
+	}
+
+void
+DisplayDialogGroupCreate()
+	{
+	TAccountXmpp * pAccount = Configuration_PGetAccountSelectedOrFirstAccount();
+	if (pAccount == NULL)
+		return;
+	TGroup * pGroup = pAccount->Group_PAllocate();	// Create a new empty group
+	pGroup->TreeItemW_EnsureVisible();
+	pGroup->TreeItemW_SelectWithinNavigationTreeExpanded();
+	if (!pGroup->DisplayDialogAddContactsToGroupFu())
+		pAccount->Group_Delete(PA_DELETING pGroup);	// The user clicked on Cancel, therefore delete the group
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

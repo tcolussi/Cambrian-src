@@ -162,7 +162,7 @@ public:
 
 	void DisplayDialogBallotSend(CEventBallotSent * pEventBallotInit = NULL);
 	void DisplayDialogSendFile();
-	void DisplayDialogAddContactsToGroup();
+	BOOL DisplayDialogAddContactsToGroupFu();
 	friend class CVaultEvents;
 }; // ITreeItemChatLogEvents
 

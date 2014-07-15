@@ -200,7 +200,7 @@ TProfile::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	case eMenuAction_ProfileDelete:
 		if (m_arraypaAccountsXmpp.GetSize() | m_arraypaApplications.GetSize())
 			{
-			EMessageBoxInformation("Before deleting your profile '$S', you must manually delete all its accounts.", &m_strNameProfile);
+			EMessageBoxInformation("Before deleting your "d_sza_profile" '$S', you must manually delete all its accounts.", &m_strNameProfile);
 			}
 		else
 			{
@@ -256,4 +256,15 @@ TProfile::GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecomme
 				parraypaGroupsRecommended->Add(pGroup);
 			} // while
 		} // while
+	}
+
+void
+Profile_DisplayBallotMaster()
+	{
+	CStr strPathApplication = "file:///" + g_oConfiguration.SGetPathOfFileName("Apps/Ballotmaster/default.htm");
+	TBrowser * pBrowser = new TBrowser(&g_oConfiguration);
+	g_oConfiguration.m_arraypaBrowsers.Add(PA_CHILD pBrowser);
+	pBrowser->SetIconNameAndUrl(eMenuAction_DisplayBallotMaster, "Ballotmaster", strPathApplication);
+	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
+	pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}

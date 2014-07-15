@@ -117,7 +117,7 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 	pLayout->addWidget(g_pwButtonStatusOfNavigationTree);
 	pLayout->addStretch();
 	//WButtonTextWithIcon * pwButtonAddContact = new WButtonTextWithIcon("Add Contact |Add a new contact to your profile", eMenuAction_ContactAdd);
-	WButtonIconForToolbar * pwButtonAddContact = new WButtonIconForToolbar(eMenuAction_ContactAdd, "Add a new contact to your profile");
+	WButtonIconForToolbar * pwButtonAddContact = new WButtonIconForToolbar(eMenuAction_ContactAdd, "Add a new contact to your "d_sza_profile);
 	pLayout->addWidget(pwButtonAddContact, Qt::AlignBottom);
 	connect(pwButtonAddContact, SIGNAL(clicked()), this, SLOT(SL_ContactNew()));
 
@@ -284,8 +284,8 @@ WNavigationTree::SL_MenuProfilesShow()
 		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIconIdentities);
 		}
 	if (cProfiles > 1)
-		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All Profiles>", d_iProfile_DisplayAll, eMenuIconIdentities);
-	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Create New Profile...>", d_iProfile_CreateNew, eMenuIconIdentities);
+		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All "d_sza_Profile"s>", d_iProfile_DisplayAll, eMenuIconIdentities);
+	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Create New "d_sza_Profile"...>", d_iProfile_CreateNew, eMenuIconIdentities);
 	}
 
 void

@@ -156,7 +156,9 @@ public:
 	TContact * Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest) CONST_MCC;
 	void Contact_AddToNavigationTree(PA_CHILD TContact * paContact);
 
+
 	static const int c_iGroupNew = -1;
+	TGroup * Group_PAllocate();
 	void Group_AddNewMember_UI(TContact * pContact, int iGroup);
 	void Group_Delete(PA_DELETING TGroup * pGroup);
 	enum EFindGroup

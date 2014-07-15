@@ -203,7 +203,25 @@ WMainWindow::WMainWindow() : QMainWindow()
 	MessageLog_ModuleInitialize();	// Initialize/create the MessageLog/ErrorLog as early as possible in case there is an error/assert during the creation of the other widgets
 
 	g_pwMenuCambrian = new WMenu("Cambrian");
-	g_pwMenuAdvanced = new WMenu("Advanced");
+	g_pwMenuContacts = new WMenu("Contacts");
+	g_pwMenuTools = new WMenu("Tools");
+	#if 0
+	g_pwMenuAdvanced = new WMenu("test");
+	//g_pwMenuAdvanced->setTitle("test");
+	g_pwMenuAdvanced->setIcon(PGetMenuAction(eMenuAction_FindText)->icon());
+	g_pwMenuBar->setCornerWidget(g_pwMenuAdvanced);
+	#else
+	//g_pwMenuAdvanced = new WMenu("Advanced");
+	g_pwMenuAdvanced = new WMenu;
+	g_pwMenuAdvanced->InitAsDymanicMenu();
+	WButtonIconForToolbar * pwButtonTest = new WButtonIconForToolbar(eMenuIconMenu);
+	pwButtonTest->setStyleSheet("QToolButton { border: none;  padding: 1 } QToolButton::menu-indicator { image: none; }");
+	pwButtonTest->setPopupMode(QToolButton::InstantPopup);
+	pwButtonTest->setMenu(g_pwMenuAdvanced);
+
+	//pwButtonTest->setMenu(g_pwMenuAdvanced);
+	g_pwMenuBar->setCornerWidget(pwButtonTest);
+	#endif
 	setMenuBar(PA_CHILD g_pwMenuBar);
 	setStatusBar(PA_CHILD g_pwStatusBar);
 	void Menu_InitializeAllMenuActionsHavingAccelerators();

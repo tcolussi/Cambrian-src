@@ -8,8 +8,8 @@
 #define d_szApplicationName				"Cambrian"
 #define d_szwApplicationName		   L"Cambrian"
 #define d_szwApplicationNameSetup	   L"Cambrian Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.0.8.8"
-#define d_szwApplicationVersion		   L"0.0.8.8"
+#define d_szApplicationVersion			"0.0.8.9"
+#define d_szwApplicationVersion		   L"0.0.8.9"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -273,5 +273,9 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "CChatConfiguration.h"
 
 #include "WLayoutChatLog.h"
+
+//	The word 'Profile' was renamed to 'Role'
+#define d_sza_Profile	"Role"
+#define d_sza_profile	"role"
 
 #endif // PRECOMPILEDHEADERS_H

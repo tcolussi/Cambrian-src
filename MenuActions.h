@@ -61,6 +61,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 
 	eMenuAction_Group,
 	eMenuAction_GroupNew,
+	eMenuAction_GroupCreate,
 	eMenuAction_GroupDelete,
 	eMenuAction_GroupRename,
 	eMenuAction_GroupAddContacts,
@@ -74,7 +75,9 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_CopyHyperlink,
 	eMenuAction_SelectAll,
 
-	eMenuAction_DisplayCertificates,
+	eMenuAction_DisplayProfileInfo,		// Show the node displaying the profile(s) info
+	eMenuAction_DisplayCertificates,	// Display the certificates securing (encrypting) the communication
+	eMenuAction_DisplayBallotMaster,	// Manage ballots to create polls
 	eMenuAction_DisplayWallet,		// Ccreate a new wallet
 	eMenuAction_DisplaySecureWebBrowsing,	// New instance of a web browser
 
@@ -120,6 +123,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuIconCorporations,
 	eMenuIconIdentities,
 
+	eMenuIconMenu,
 	eMenuIconSettings,
 	eMenuIconCommunicate,
 	eMenuIconBanking,
@@ -207,6 +211,8 @@ public:
 extern QMenuBar * g_pwMenuBar;
 extern WMenu * g_pwMenuStatus;
 extern WMenu * g_pwMenuCambrian;
+extern WMenu * g_pwMenuContacts;
+extern WMenu * g_pwMenuTools;
 extern WMenu * g_pwMenuAdvanced;
 
 void ConnectMenuActions(WMenu * pMenuSignal, QObject * pObjectSlots);

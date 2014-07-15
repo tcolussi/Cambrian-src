@@ -167,7 +167,7 @@ TTreeItemInbox::TreeItem_GotFocus()
 
 TProfiles::TProfiles()
 	{
-	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, "Profiles", eMenuIconSettings);
+	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, d_sza_Profile"s", eMenuIconSettings);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -301,9 +301,9 @@ NavigationTree_UpdateNameOfSelectedProfile()
 	if (pProfileSelected == NULL)
 		pProfileSelected = (TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementUnique_YZ();
 	if (pProfileSelected != NULL && g_pTreeItemProfiles == NULL)
-		g_strScratchBufferStatusBar.Format("Profile: $S", &pProfileSelected->m_strNameProfile);
+		g_strScratchBufferStatusBar.Format(d_sza_Profile": $S", &pProfileSelected->m_strNameProfile);
 	else
-		g_strScratchBufferStatusBar.Format("Switch Profile");
+		g_strScratchBufferStatusBar.Format("Switch "d_sza_Profile);
 	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
 	}
 

@@ -39,8 +39,8 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 
 	"New Message" _ "i=ChatMessage3" _,	// eMenuAction_MessageNew
 
-	"Delete Profile" _ "i=Remove" _, // eMenuAction_ProfileDelete
-	"Profile Properties" _ "s=Display the properties of my profile" _, // eMenuAction_ProfileProperties
+	"Delete "d_sza_Profile _ "i=Remove" _, // eMenuAction_ProfileDelete
+	d_sza_Profile" Properties" _ "s=Display the properties of my "d_sza_profile _, // eMenuAction_ProfileProperties
 	"My Recommendations" _ "s=Display all the recommendations I made" _ "i=Reputation",  // eMenuAction_ProfileMyRecommendations
 
 	"Delete Application" _ "i=Remove" _, // eMenuAction_ApplicationDelete
@@ -76,6 +76,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 
 	"Group" _ "i=Group" _, // eMenuAction_Group
 	"<New Group...>" _ "i=GroupAdd" _, // eMenuAction_GroupNew
+	"Create Group..." _ "s=Create a new group" _ "i=GroupAdd" _, // eMenuAction_GroupCreate (this is essentially the same as new group, except the text is different)
 	"Delete Group" _ "i=GroupDelete" _, // eMenuAction_GroupDelete
 	"Rename Group" _ "i=GroupEdit" _, // eMenuAction_GroupRename
 	"Add Contacts to Group..." _ "i=ContactAdd" _ "s=Add people to the group" _, // eMenuAction_GroupAddContacts
@@ -89,7 +90,10 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Copy Link Location..." _ "i=Copy" _, // eMenuAction_CopyHyperlink
 	"Select All" _ "i=EditSelectAll" _, // eMenuAction_SelectAll
 
-	"Display Certificates..." _ "i=Certificate" _, // eMenuAction_DisplayCertificates
+	"Display "d_sza_Profile _ "s=Display details about a role" _ "i=Identity" _, // eMenuAction_DisplayProfileIno
+	"Display Certificates" _ "s=Display the certificates securing (encrypting) the communication" _ "i=Certificate" _, // eMenuAction_DisplayCertificates
+	"BallotMaster" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
+
 	"New Wallet" _ "i=Bitcoin" _, // eMenuAction_DisplayWallet
 	"New Web Browser" _ "i=Browser" _, // eMenuAction_DisplaySecureWebBrowsing
 
@@ -134,6 +138,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Corporations" _ "i=Corporation" _, // eMenuIconCorporations
 	"Identities" _ "i=Identities" _, // eMenuIconIdentities
 
+	"Menu" _ "i=Menu" _, // eMenuIconMenu
 	"Settings" _ "i=Settings" _, // eMenuIconSettings
 	"Communicate" _ "i=Chat" _, // eMenuIconCommunicate
 	"Banking" _ "i=Banking" _, // eMenuIconBanking
@@ -622,8 +627,8 @@ WMenu::EDisplayContextMenu()
 QMenuBar * g_pwMenuBar;
 WMenu * g_pwMenuStatus;	// Menu in the Navigation Tree displaying the online status
 WMenu * g_pwMenuCambrian;
-WMenu * g_pwMenuView;
-WMenu * g_pwMenuSecurity;
+WMenu * g_pwMenuContacts;
+WMenu * g_pwMenuTools;
 WMenu * g_pwMenuAdvanced;
 
 const EMenuActionByte c_rgzeActionsMenuStatus[] =	// This menu is displayed next to the "Search" of the Navigation Tree
@@ -645,23 +650,24 @@ const EMenuActionByte c_rgzeActionsMenuCambrian[] =
 	eMenuAction_DisplayWallet,
 	*/
 	eMenuAction_DisplaySecureWebBrowsing,
-	eMenuIconMarketplace,
+	//eMenuIconMarketplace,
 	eMenuActionSeparator,
 	eMenuAction_Quit,
 	ezMenuActionNone
 	};
 
-const EMenuActionByte c_rgzeActionsMenuView[] =	// Contacts
+const EMenuActionByte c_rgzeActionsMenuContacts[] =
 	{
 	eMenuAction_ContactAdd,
-	//eMenuAction_ContactInvite,
-	eMenuAction_AccountAcceptInvitation,
+	eMenuAction_GroupCreate,
+	//eMenuAction_AccountAcceptInvitation,
+	eMenuAction_ContactInvite,
 	ezMenuActionNone
 	};
 
-const EMenuActionByte c_rgzeActionsMenuSecurity[] =
+const EMenuActionByte c_rgzeActionsMenuTools[] =
 	{
-	eMenuAction_DisplayCertificates,
+	eMenuAction_DisplayBallotMaster,
 	ezMenuActionNone
 	};
 
@@ -689,10 +695,10 @@ MenuBarInitialize(WMenu * pMenu)
 	const EMenuActionByte * prgzeActions = NULL;
 	if (pMenu == g_pwMenuCambrian)
 		prgzeActions = c_rgzeActionsMenuCambrian; // Configuration_FIsWithoutAccounts() ? c_rgzeActionsMenuChatWithoutAccounts : c_rgzeActionsMenuChatWithAccounts;
-	else if (pMenu == g_pwMenuView)
-		prgzeActions = c_rgzeActionsMenuView;
-	else if (pMenu == g_pwMenuSecurity)
-		prgzeActions = c_rgzeActionsMenuSecurity;
+	else if (pMenu == g_pwMenuContacts)
+		prgzeActions = c_rgzeActionsMenuContacts;
+	else if (pMenu == g_pwMenuTools)
+		prgzeActions = c_rgzeActionsMenuTools;
 	else if (pMenu == g_pwMenuAdvanced)
 		prgzeActions = c_rgzeActionsMenuAdvanced;
 	else if (pMenu == g_pwMenuStatus)
@@ -793,6 +799,10 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		void DisplayDialogContactNew();
 		DisplayDialogContactNew();
 		return;
+	case eMenuAction_GroupCreate:
+		void DisplayDialogGroupCreate();
+		DisplayDialogGroupCreate();
+		return;
 
 	case eMenuAction_TreeItemRename:
 	case eMenuAction_AccountRename:
@@ -825,6 +835,10 @@ MainWindow_MenuActionExecute(QAction * pAction)
 	case eMenuAction_DisplaySecureWebBrowsing:
 		void NavigationTree_NewBrowser();
 		NavigationTree_NewBrowser();
+		return;
+	case eMenuAction_DisplayBallotMaster:
+		void Profile_DisplayBallotMaster();
+		Profile_DisplayBallotMaster();
 		return;
 	case eMenuIconMarketplace:
 		void NavigationTree_NewBrowserMarketplace();

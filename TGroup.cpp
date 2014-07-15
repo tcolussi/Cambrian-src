@@ -302,7 +302,7 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	switch (eMenuAction)
 		{
 	case eMenuAction_GroupAddContacts:
-		DisplayDialogAddContactsToGroup();
+		DisplayDialogAddContactsToGroupFu();
 		return ezMenuActionNone;
 	case eMenuAction_GroupDelete:
 		m_pAccount->Group_Delete(PA_DELETING this);
@@ -444,6 +444,17 @@ TGroup::Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const
 	HashSha1_CalculateFromCBin(OUT pHashFileNameVault, IN g_strScratchBufferStatusBar);
 	}
 
+TGroup *
+TAccountXmpp::Group_PAllocate()
+	{
+	TGroup * pGroup = new TGroup(this);
+	int iGroup = m_arraypaGroups.Add(PA_CHILD pGroup);
+	pGroup->m_strNameDisplayTyped.Format("Group #$i", iGroup + 1);
+	pGroup->GroupInitNewIdentifier();
+	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
+	return pGroup;
+	}
+
 void
 TAccountXmpp::Group_AddNewMember_UI(TContact * pContact, int iGroup)
 	{
@@ -453,13 +464,7 @@ TAccountXmpp::Group_AddNewMember_UI(TContact * pContact, int iGroup)
 	// Create a new group if not present
 	TGroup * pGroup = (TGroup *)m_arraypaGroups.PvGetElementAtSafe_YZ(iGroup);
 	if (pGroup == NULL)
-		{
-		pGroup = new TGroup(this);
-		iGroup = m_arraypaGroups.Add(PA_CHILD pGroup);
-		pGroup->m_strNameDisplayTyped.Format("Group #$i", iGroup + 1);
-		pGroup->GroupInitNewIdentifier();
-		pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
-		}
+		pGroup = Group_PAllocate();
 	// Check if the contact is not already in the group
 	pGroup->Member_Add_UI(pContact);
 	/*
@@ -523,3 +528,5 @@ TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcp
 	pbinXcpApiExtraRequest->BinXmlAppendXcpAttributesForApiRequestError(eErrorXcpApi_IdentifierNotFound, pszGroupIdentifier);
 	return NULL;
 	} // Group_PFindByIdentifier_YZ()
+
+
