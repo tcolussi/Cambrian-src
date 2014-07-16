@@ -206,10 +206,10 @@ OCambrian::set()
 */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-WLayoutBrowser::WLayoutBrowser(TBrowser * pBrowser)
+WLayoutBrowser::WLayoutBrowser(CStr * pstrUrlAddress_NZ)
 	{
-	Assert(pBrowser != NULL);
-	m_pBrowser = pBrowser;
+	Assert(pstrUrlAddress_NZ != NULL);
+	m_pstrUrlAddress_NZ = pstrUrlAddress_NZ;
 	m_pwEdit = NULL;
 	m_pwButtonBack = NULL;
 	m_pwButtonForward = NULL;
@@ -224,7 +224,7 @@ WLayoutBrowser::WLayoutBrowser(TBrowser * pBrowser)
 	poLayout->addWidget(m_pwButtonBack);
 	poLayout->addWidget(m_pwButtonForward);
 
-	m_pwEdit = new WEdit(pBrowser->m_strUrl);
+	m_pwEdit = new WEdit(*pstrUrlAddress_NZ);
 	m_pwEdit->Edit_SetWatermark("Enter web address");
 	m_pwEdit->setParent(this);
 	poLayout->addWidget(m_pwEdit);
@@ -235,7 +235,7 @@ WLayoutBrowser::WLayoutBrowser(TBrowser * pBrowser)
 
 	m_pwWebView = new QWebView(this);
 	connect(m_pwWebView, SIGNAL(urlChanged(QUrl)), this, SLOT(SL_UrlChanged(QUrl)));
-	NavigateToAddress(pBrowser->m_strUrl);
+	NavigateToAddress(*pstrUrlAddress_NZ);
 
 //	QScriptEngine
 
@@ -245,6 +245,7 @@ WLayoutBrowser::WLayoutBrowser(TBrowser * pBrowser)
 	m_poFrame = poPage->mainFrame();
 	SL_InitJavaScript();
 	connect(m_poFrame, SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(SL_InitJavaScript()));
+	poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 
 	#if 0
 	QAxObject o(poPage);
@@ -297,7 +298,7 @@ WLayoutBrowser::SL_UrlChanged(QUrl url)
 		{
 		QString sUrl = url.toString();
 		m_pwEdit->setText(sUrl);
-		m_pBrowser->m_strUrl = sUrl;	// Remember the last URL
+		*m_pstrUrlAddress_NZ = sUrl;	// Remember the last URL
 		}
 	}
 
@@ -308,7 +309,7 @@ void
 TBrowser::TreeItem_GotFocus()
 	{
 	if (m_pawLayoutBrowser == NULL)
-		m_pawLayoutBrowser = new WLayoutBrowser(this);
+		m_pawLayoutBrowser = new WLayoutBrowser(INOUT_LATER &m_strUrl);
 	MainWindow_SetCurrentLayout(IN m_pawLayoutBrowser);
 	}
 TBrowser::~TBrowser()

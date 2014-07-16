@@ -3,7 +3,7 @@
 #endif
 #include "TApplicationMayanX.h"
 
-TApplicationMayanX::TApplicationMayanX(TProfile * pProfileParent) : IApplication(pProfileParent)
+TApplicationMayanX::TApplicationMayanX(TProfile * pProfileParent) : IApplication(pProfileParent, eMenuIconCoffeeExchange)
 	{
 	m_pawLayout = NULL;
 	}

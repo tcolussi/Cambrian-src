@@ -12,9 +12,14 @@ class IApplication : public ITreeItem	// (application)
 {
 public:
 	TProfile * m_pProfileParent;
-//	SHashSha1 m_hashApplicationID;		// Value to
+	EMenuAction m_eMenuIcon;			// Icon to display in the Navigation Tree
+//	SHashSha1 m_hashApplicationID;		// Value to identify the application (I think this is no longer needed)
 public:
-	IApplication(TProfile * pProfileParent);
+	IApplication(TProfile * pProfileParent, EMenuAction eMenuIcon);
+	virtual PSZAC PszGetClassNameApplication() = 0;		// Return the class name of the application to be serialized to disk
+	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);			// From IXmlExchange
+
+	void TreeItemApplication_DisplayWithinNavigationTree();
 public:
 	static IXmlExchange * S_PaAllocateApplication_YZ(POBJECT poProfileParent, const CXmlNode * pXmlNodeElement);	// This static method must be compatible with interface PFn_PaAllocateXmlObject2_YZ()
 };
@@ -46,7 +51,6 @@ public:
 	void GenerateKeys();
 	void TreeItemProfile_DisplayProfileWithinNavigationTree();
 	void TreeItemProfile_DisplayAccountsWithinNavigationTree();
-	void TreeItemProfile_DisplayApplicationsWithinNavigationTree(ITreeItem * pTreeItemParent);
 	void DeleteAccount(PA_DELETING TAccountXmpp * paAccount);
 
 	TAccountXmpp * PAllocateAccount();
@@ -69,6 +73,7 @@ public:
 	void InitHashTablesOfIdentifiers(IOUT CHashTableIdentifiersOfContacts * pHashTableContacts, IOUT CHashTableIdentifiersOfGroups * pHashTableGroups) const;
 
 	TApplicationMayanX * PAllocateApplicationMayanX();
+	TApplicationBallotmaster * PGetApplicationBallotmaster_NZ();
 public:
 	static IXmlExchange * S_PaAllocateProfile(PVOID pConfigurationParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
 	friend class CArrayPtrProfiles;

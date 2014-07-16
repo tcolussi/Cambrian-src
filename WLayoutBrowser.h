@@ -72,7 +72,7 @@ class WLayoutBrowser  : public WLayout
 {
 	Q_OBJECT
 protected:
-	TBrowser * m_pBrowser;
+	CStr * m_pstrUrlAddress_NZ;	// INOUT: Address to initialize the browsing.
 	WEdit * m_pwEdit;
 	WButtonIconForToolbar * m_pwButtonBack;
 	WButtonIconForToolbar * m_pwButtonForward;
@@ -82,7 +82,7 @@ protected:
 	QWebView * m_pwWebView;
 	QWebFrame * m_poFrame;
 public:
-	WLayoutBrowser(TBrowser * pBrowser);
+	WLayoutBrowser(CStr * pstrUrlAddress_NZ);
 	void NavigateToAddress(const CStr & strAddress);
 public slots:
 	void SL_InitJavaScript();

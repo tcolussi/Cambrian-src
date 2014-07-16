@@ -186,7 +186,22 @@ TProfile::TreeItemProfile_DisplayProfileWithinNavigationTree()
 		}
 	if (pAccount != NULL)
 		new TMyRecommendations(this);	// Dislay the recommendations if there is at least one account
+	//	new TTreeItemDemo(this, "My Reputation", eMenuIconReputation, "Display my reputation according to other organizations", "Search Reputation Feedback Comments");
+
+	IApplication ** ppApplicationStop;
+	IApplication ** ppApplication = m_arraypaApplications.PrgpGetApplicationsStop(OUT &ppApplicationStop);
+	while (ppApplication != ppApplicationStop)
+		{
+		IApplication * pApplication = *ppApplication++;
+		pApplication->TreeItemApplication_DisplayWithinNavigationTree();
+		}
 	TreeItemW_ExpandAccordingToSavedState();
+	}
+
+void
+IApplication::TreeItemApplication_DisplayWithinNavigationTree()
+	{
+	TreeItemW_DisplayWithinNavigationTreeExpand(g_pTreeItemProfiles, PszGetClassNameApplication(), m_eMenuIcon);
 	}
 
 void
@@ -199,19 +214,6 @@ TProfile::TreeItemProfile_DisplayAccountsWithinNavigationTree()
 		TAccountXmpp * pAccount = *ppAccount++;
 		pAccount->TreeItemAccount_DisplayWithinNavigationTree();
 		}
-	}
-
-void
-TProfile::TreeItemProfile_DisplayApplicationsWithinNavigationTree(ITreeItem * pTreeItemParent)
-	{
-	IApplication ** ppApplicationStop;
-	IApplication ** ppApplication = m_arraypaApplications.PrgpGetApplicationsStop(OUT &ppApplicationStop);
-	while (ppApplication != ppApplicationStop)
-		{
-		IApplication * pApplication = *ppApplication++;
-		pApplication->TreeItemW_DisplayWithinNavigationTreeExpand(pTreeItemParent, "MayanX", eMenuIconCoffeeExchange);	// Display the applications at the root for debugging
-		}
-//	new TTreeItemDemo(this, "My Reputation", eMenuIconReputation, "Display my reputation according to other organizations", "Search Reputation Feedback Comments");
 	}
 
 //	TAccountXmpp::ITreeItem::TreeItem_PszGetNameDisplay()

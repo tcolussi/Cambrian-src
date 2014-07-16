@@ -29,7 +29,8 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_ProfileProperties,
 	eMenuAction_ProfileMyRecommendations,	// Display all the recommendations I made
 
-	eMenuAction_ApplicationDelete,
+	eMenuAction_ApplicationHide,			// Hide the application from the Navigation Tree (the application will keep running in memory)
+	eMenuAction_ApplicationDelete,			// Permanently delete the application
 	eMenuAction_ApplicationProperties,
 
 	eMenuAction_AccountAcceptInvitation,	// Accept the invitation sent by a friend (the invitation is typically sent by email or by another messaging system)

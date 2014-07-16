@@ -42,6 +42,10 @@ const char c_sza_size[] = "size";
 const char c_sza_state[] = "state";
 const char c_sza_ping[] = "ping";
 
+const char c_szaApplicationClass_[]					= "Class";
+const char c_szaApplicationClass_MayanX[]			= "MayanX";
+const char c_szaApplicationClass_Ballotmaster[]		= "Ballotmaster";
+
 const char c_szaXmlStreamError[] = "stream:error";
 const char c_szaXmlStreamClose[] = "</stream:stream>";
 const char c_szXmlns_jabber_x_data[] = "jabber:x:data";	// ^:xd

@@ -3705,6 +3705,13 @@ CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CAr
 	} // XmlExchangePointers()
 
 void
+CXmlExchanger::XmlExchangeWriteAttribute(PSZAC pszNameAttribute, PSZAC pszAttributeValue)
+	{
+	if (m_fSerializing)
+		AllocateAttributeValuePsz(pszNameAttribute, (PSZUC)pszAttributeValue);
+	}
+
+void
 CXmlExchanger::AllocateAttributeValuePsz(PSZAC pszaAttributeName, PSZUC pszValue)
 	{
 	(void)_PAllocateAttribute(INOUT m_pXmlNodeSerialize, IN pszaAttributeName, IN pszValue);

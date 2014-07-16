@@ -5,25 +5,36 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-IApplication::IApplication(TProfile * pProfileParent)
+IApplication::IApplication(TProfile * pProfileParent, EMenuAction eMenuIcon)
 	{
 	m_pProfileParent = pProfileParent;
+	m_eMenuIcon = eMenuIcon;
 	Assert(pProfileParent->EGetRuntimeClass() == RTI(TProfile));
 	}
 
+//	IApplication::IXmlExchange::XmlExchange()
+void
+IApplication::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
+	{
+	pXmlExchanger->XmlExchangeWriteAttribute(c_szaApplicationClass_, PszGetClassNameApplication());	// We need to serialize the class name because the unserialize need to know what object to allocate
+	}
+
+
 typedef IApplication * (* PFn_PaAllocateApplication)(TProfile * pProfileParent);
 	IApplication * PaAllocateApplicationMayanX(TProfile * pProfileParent);
+	IApplication * PaAllocateApplicationBallotmaster(TProfile * pProfileParent);
 
 
 struct SApplicationAllocator
 	{
-	PSZAC pszName;		// Name of the application (this value is serialized in the configuration)
+	PSZAC pszClass;					// Class name of the application. This name is serialized in the configuration, so when unserializing the configuration, we know which application class to allocate.
 	PFn_PaAllocateApplication pfnAllocator;
 	};
 
 const SApplicationAllocator c_rgzApplicationAllocators[] =
 	{
-	{ "MayanX", PaAllocateApplicationMayanX },
+	{ c_szaApplicationClass_MayanX, PaAllocateApplicationMayanX },
+	{ c_szaApplicationClass_Ballotmaster, PaAllocateApplicationBallotmaster },
 	{ NULL, NULL }	// Must be last
 	};
 
@@ -35,18 +46,18 @@ IApplication::S_PaAllocateApplication_YZ(POBJECT poProfileParent, const CXmlNode
 	TProfile * pProfileParent = (TProfile *)poProfileParent;
 	Assert(pProfileParent->EGetRuntimeClass() == RTI(TProfile));
 	// Find the type of application to allocate
-	PSZUC pszName = pXmlNodeElement->PszuFindAttributeValue_NZ("NameDisplay");	// This needs to be fixed
+	PSZUC pszClass = pXmlNodeElement->PszuFindAttributeValue_NZ(c_szaApplicationClass_);
 	const SApplicationAllocator * pApplicationAllocator = c_rgzApplicationAllocators;
 	while (TRUE)
 		{
-		if (pApplicationAllocator->pszName == NULL)
+		if (pApplicationAllocator->pszClass == NULL)
 			break;
 		Assert(pApplicationAllocator->pfnAllocator != NULL);
-		if (FCompareStrings(pApplicationAllocator->pszName, pszName))
+		if (FCompareStrings(pApplicationAllocator->pszClass, pszClass))
 			return pApplicationAllocator->pfnAllocator(pProfileParent);
 		pApplicationAllocator++;	// Search the next application
 		} // while
-	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find application of type '$s'\n", pszName);
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find application of class '$s'\n", pszClass);
 	return NULL;
 	}
 
@@ -256,15 +267,4 @@ TProfile::GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecomme
 				parraypaGroupsRecommended->Add(pGroup);
 			} // while
 		} // while
-	}
-
-void
-Profile_DisplayBallotMaster()
-	{
-	CStr strPathApplication = "file:///" + g_oConfiguration.SGetPathOfFileName("Apps/Ballotmaster/default.htm");
-	TBrowser * pBrowser = new TBrowser(&g_oConfiguration);
-	g_oConfiguration.m_arraypaBrowsers.Add(PA_CHILD pBrowser);
-	pBrowser->SetIconNameAndUrl(eMenuAction_DisplayBallotMaster, "Ballotmaster", strPathApplication);
-	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
-	pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}

@@ -5,6 +5,7 @@
 #endif
 
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class TApplicationMayanX : public IApplication
 {
@@ -15,10 +16,11 @@ protected:
 public:
 	TApplicationMayanX(TProfile * pProfileParent);
 	~TApplicationMayanX();
-	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);	// From IXmlExchange
+	virtual PSZAC PszGetClassNameApplication() { return c_szaApplicationClass_MayanX; }	// From IApplication
+	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);			// From IXmlExchange
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);			// From ITreeItem
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);	// From ITreeItem
-	virtual void TreeItem_GotFocus();									// From ITreeItem
+	virtual void TreeItem_GotFocus();										// From ITreeItem
 	RTI_IMPLEMENTATION(TApplicationMayanX)
 };
 

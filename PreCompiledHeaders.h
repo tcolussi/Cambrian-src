@@ -8,8 +8,8 @@
 #define d_szApplicationName				"Cambrian"
 #define d_szwApplicationName		   L"Cambrian"
 #define d_szwApplicationNameSetup	   L"Cambrian Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.0.8.9"
-#define d_szwApplicationVersion		   L"0.0.8.9"
+#define d_szApplicationVersion			"0.0.9.0"
+#define d_szwApplicationVersion		   L"0.0.9.0"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -72,6 +72,7 @@ enum RTI_ENUM	// rti
 	eRTI_TProfile,
 	eRTI_IApplication,
 		eRTI_TApplicationMayanX,
+		eRTI_TApplicationBallotmaster,
 
 	eRTI_TBrowser,
 	eRTI_TWallet,
@@ -167,6 +168,7 @@ class IRuntimeObject;
 				class TProfile;
 				class IApplication;
 					class TApplicationMayanX;
+					class TApplicationBallotmaster;
 				class TWallet;
 				class TWalletView;
 				class TRecommendations;

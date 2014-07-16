@@ -81,7 +81,8 @@ SOURCES += \
     ProfileSwitching.cpp \
     TRecommendations.cpp \
     ApiWebSockets.cpp \
-    Identities.cpp
+    Identities.cpp \
+    TApplicationBallotmaster.cpp
 
 
 HEADERS += \
@@ -149,7 +150,8 @@ HEADERS += \
     ProfileSwitching.h \
     TRecommendations.h \
     ApiWebSockets.h \
-    Identities.h
+    Identities.h \
+    TApplicationBallotmaster.h
 
 
 FORMS +=

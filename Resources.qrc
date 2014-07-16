@@ -103,6 +103,7 @@
         <file alias="EditSelectAll">Icons/EditSelectAll.png</file>
         <file alias="OutOfSync">Icons/OutOfSync.png</file>
         <file alias="Menu">Icons/menu.png</file>
+        <file alias="Role">Icons/hat.png</file>
     </qresource>
     <qresource prefix="/snd">
         <file alias="NewMessage">Sounds/msg.wav</file>

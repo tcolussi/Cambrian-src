@@ -44,6 +44,20 @@ IRuntimeObject::PGetRuntimeInterface(const RTI_ENUM rti) const
 	return NULL;	// The interface requested is not supported, so return NULL.
 	}
 
+IRuntimeObject *
+CArrayPtrRuntimeObjects::PFindRuntimeObject(RTI_ENUM rti) const
+	{
+	IRuntimeObject ** ppRuntimeObjectStop;
+	IRuntimeObject ** ppRuntimeObject = PrgpGetRuntimeObjectsStop(OUT &ppRuntimeObjectStop);
+	while (ppRuntimeObject != ppRuntimeObjectStop)
+		{
+		IRuntimeObject * pObject = *ppRuntimeObject++;
+		if (pObject->EGetRuntimeClass() == rti)
+			return pObject;
+		}
+	return NULL;
+	}
+
 void
 CArrayPtrRuntimeObjects::DeleteRuntimeObject(PA_DELETING IRuntimeObject * paRuntimeObject)
 	{

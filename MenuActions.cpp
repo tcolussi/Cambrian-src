@@ -13,6 +13,8 @@
 
 #define _			d_sz0	// Use the underscore as a separator between menu actions (this is much simpler to read than d_sz0)
 
+#define d_sza_IconProfile	"i=Role"	// Use the icon 'hat' to indicate a role (If someone wears many hats, they have different roles or tasks to perform.)
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Array mapping an eMenuAction to a pszmActionDescription.
 //	This array must be in sync with the values of EMenuAction.
@@ -43,6 +45,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	d_sza_Profile" Properties" _ "s=Display the properties of my "d_sza_profile _, // eMenuAction_ProfileProperties
 	"My Recommendations" _ "s=Display all the recommendations I made" _ "i=Reputation",  // eMenuAction_ProfileMyRecommendations
 
+	"Hide" _ "s=Hide the application from the Navigation Tree (the application will keep running in memory)" _ "i=Remove" _, // eMenuAction_ApplicationHide
 	"Delete Application" _ "i=Remove" _, // eMenuAction_ApplicationDelete
 	"Application Properties" _, // eMenuAction_ApplicationProperties
 
@@ -90,7 +93,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Copy Link Location..." _ "i=Copy" _, // eMenuAction_CopyHyperlink
 	"Select All" _ "i=EditSelectAll" _, // eMenuAction_SelectAll
 
-	"Display "d_sza_Profile _ "s=Display details about a role" _ "i=Identity" _, // eMenuAction_DisplayProfileIno
+	"Display "d_sza_Profile _ "s=Display details about a role" _ d_sza_IconProfile _, // eMenuAction_DisplayProfileInfo
 	"Display Certificates" _ "s=Display the certificates securing (encrypting) the communication" _ "i=Certificate" _, // eMenuAction_DisplayCertificates
 	"BallotMaster" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
 
@@ -136,7 +139,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Lawyer" _ "i=Lawyer" _, // eMenuIconMarketplaceLawyers
 	"Jurisdiction" _ "i=Arbitration" _, // eMenuIconJurisdiction
 	"Corporations" _ "i=Corporation" _, // eMenuIconCorporations
-	"Identities" _ "i=Identities" _, // eMenuIconIdentities
+	"Identities" _ d_sza_IconProfile _, // eMenuIconIdentities
 
 	"Menu" _ "i=Menu" _, // eMenuIconMenu
 	"Settings" _ "i=Settings" _, // eMenuIconSettings
@@ -837,8 +840,8 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		NavigationTree_NewBrowser();
 		return;
 	case eMenuAction_DisplayBallotMaster:
-		void Profile_DisplayBallotMaster();
-		Profile_DisplayBallotMaster();
+		void DisplayApplicationBallotMaster();
+		DisplayApplicationBallotMaster();
 		return;
 	case eMenuIconMarketplace:
 		void NavigationTree_NewBrowserMarketplace();

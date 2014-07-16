@@ -327,6 +327,7 @@ public:
 	void XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject2_YZ pfnPaAllocatorObject2_YZ, PVOID pvContextAllocate = d_zNA);
 	void XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S IXmlExchangeObjectID ** ppObject, const CArrayPtrXmlSerializableObjects * parraypObjectsLookup);
 	void XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CArrayPtrXmlSerializableObjects * parraypObjects, const CArrayPtrXmlSerializableObjects & arraypObjectsLookup);
+	void XmlExchangeWriteAttribute(PSZAC pszNameAttribute, PSZAC pszAttributeValue);
 
 protected:
 	void AllocateAttributeValuePsz(PSZAC pszaAttributeName, PSZUC pszValue);

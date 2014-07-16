@@ -30,6 +30,7 @@ class CArrayPtrRuntimeObjects : public CArray
 {
 public:
 	inline IRuntimeObject ** PrgpGetRuntimeObjectsStop(OUT IRuntimeObject *** pppRuntimeObjectStop) const { return (IRuntimeObject **)PrgpvGetElementsStop(OUT (void ***)pppRuntimeObjectStop); }
+	IRuntimeObject * PFindRuntimeObject(RTI_ENUM rti) const;
 	void DeleteRuntimeObject(PA_DELETING IRuntimeObject * paRuntimeObject);
 	void DeleteAllRuntimeObjects();
 };
@@ -61,7 +62,7 @@ public:
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);
 }; // IXmlExchangeObjectID
 
-class CArrayPtrXmlSerializable : public CArray
+class CArrayPtrXmlSerializable : public CArrayPtrRuntimeObjects
 {
 public:
 	inline IXmlExchange ** PrgpGetObjectsStop(OUT IXmlExchange *** pppXmlObjectStop) const { return (IXmlExchange **)PrgpvGetElementsStop((void ***)pppXmlObjectStop); }

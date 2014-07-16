@@ -64,6 +64,9 @@ extern const char c_sza_size[];
 extern const char c_sza_state[];
 extern const char c_sza_ping[];
 
+extern const char c_szaApplicationClass_[];
+extern const char c_szaApplicationClass_MayanX[];
+extern const char c_szaApplicationClass_Ballotmaster[];
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Stanza XML namespaces
