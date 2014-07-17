@@ -3145,6 +3145,12 @@ CXmlExchanger::StackPopNode()
 	m_pXmlNodeSerialize = (CXmlNode *)m_arraypStack.PvStackPopElement();
 	}
 
+PSZUC
+CXmlExchanger::XmlExchange_PszGetValue(PSZAC pszuTagName) const
+	{
+	return m_pXmlNodeSerialize->PszuFindElementOrAttributeValue(pszuTagName);
+	}
+
 //	Return FALSE if an error occurred.
 BOOL
 CXmlExchanger::XmlExchangeNodeRootF(PSZAC pszuNameRootNode)

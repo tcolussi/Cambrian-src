@@ -93,17 +93,6 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 	else
 		pwTreeView->setCurrentItem(pwTreeView->topLevelItem(0));	// Select the first item
 
-	#if 0
-	TBrowser ** ppBrowserStop;
-	TBrowser ** ppBrowser = g_oConfiguration.m_arraypaBrowsers.PrgpGetBrowsersStop(OUT &ppBrowserStop);
-	while (ppBrowser != ppBrowserStop)
-		{
-		TBrowser * pBrowser = *ppBrowser++;
-		Assert(pBrowser->EGetRuntimeClass() == RTI(TBrowser));
-		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
-		}
-	g_pwNavigationTree->NavigationTree_ExpandAllRootTreeItems();
-	#endif
 	}
 
 #if 0
@@ -167,7 +156,8 @@ TTreeItemInbox::TreeItem_GotFocus()
 
 TProfiles::TProfiles()
 	{
-	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, d_sza_Profile"s", eMenuIconSettings);
+	//TreeItemW_DisplayWithinNavigationTreeExpand(NULL, d_sza_Profile"s", eMenuIconSettings);
+	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, "Roles", eMenuAction_DisplayProfileInfo);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -195,6 +185,16 @@ TProfile::TreeItemProfile_DisplayProfileWithinNavigationTree()
 		IApplication * pApplication = *ppApplication++;
 		pApplication->TreeItemApplication_DisplayWithinNavigationTree();
 		}
+
+	TBrowser ** ppBrowserStop;
+	TBrowser ** ppBrowser = m_arraypaBrowsers.PrgpGetBrowsersStop(OUT &ppBrowserStop);
+	while (ppBrowser != ppBrowserStop)
+		{
+		TBrowser * pBrowser = *ppBrowser++;
+		Assert(pBrowser->EGetRuntimeClass() == RTI(TBrowser));
+		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
+		}
+
 	TreeItemW_ExpandAccordingToSavedState();
 	}
 

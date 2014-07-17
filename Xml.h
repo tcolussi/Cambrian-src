@@ -304,6 +304,7 @@ public:
 	CXmlNode ** PpStackPushNodes(CXmlNode * pXmlNodeSerialize);
 	void StackPopNodes();
 	void StackPopNode();
+	PSZUC XmlExchange_PszGetValue(PSZAC pszuTagName) const;
 
 	BOOL XmlExchangeNodeRootF(PSZAC pszuNameRootNode);
 	void XmlExchangeElementBegin(PSZAC pszuElementName);

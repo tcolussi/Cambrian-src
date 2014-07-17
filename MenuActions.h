@@ -84,8 +84,9 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 
 	eMenuAction_WalletGenerateDummyTransactions,
 	eMenuAction_WalletClose,
-	eMenuAction_BallotSend,				// Send a ballot to poll votes from the group
-	eMenuAction_BallotReSend,			// Resend an existing ballot
+	eMenuAction_BallotSend,					// Send a ballot to poll votes from the group
+	eMenuAction_BallotReSend,				// Resend an existing ballot
+	eMenuAction_BallotAddToBallotmaster,	// Make a copy of the selected ballot and add it to the Ballotmaster as a future template
 
 	eMenuAction_ShowLogMessages,		// Show the MessageLog
 	eMenuAction_ShowLogErrors,			// Show the ErrorLog (aka Recent Errors)

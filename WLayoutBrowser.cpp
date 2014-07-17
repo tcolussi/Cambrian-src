@@ -124,12 +124,15 @@ OProfile::PFindProfileByID(const QString & sIdProfile) const
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OCambrian::OCambrian(QObject * pParent) : QObject(pParent), m_oSettings(this), m_oProfile(this)
+OCambrian::OCambrian(TProfile * pProfile, QObject * pParent) : QObject(pParent), m_oSettings(this), m_oProfile(this)
 	{
+	m_pProfile = pProfile;
+	m_paPolls = NULL;
 	}
 
 OCambrian::~OCambrian()
 	{
+	delete m_paPolls;
 	}
 
 QVariant
@@ -155,6 +158,16 @@ OCambrian::Profile()
 	//MessageLog_AppendTextFormatCo(d_coRed, "OCambrian::Profile()\n");
 	QVariant v;
 	v.setValue(&m_oProfile);
+	return v;
+	}
+
+QVariant
+OCambrian::Polls()
+	{
+	if (m_paPolls == NULL)
+		m_paPolls = new OPolls(this);
+	QVariant v;
+	v.setValue(m_paPolls);
 	return v;
 	}
 
@@ -206,8 +219,9 @@ OCambrian::set()
 */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-WLayoutBrowser::WLayoutBrowser(CStr * pstrUrlAddress_NZ)
+WLayoutBrowser::WLayoutBrowser(TProfile * pProfile, CStr * pstrUrlAddress_NZ)
 	{
+	m_pProfile = pProfile;
 	Assert(pstrUrlAddress_NZ != NULL);
 	m_pstrUrlAddress_NZ = pstrUrlAddress_NZ;
 	m_pwEdit = NULL;
@@ -239,13 +253,13 @@ WLayoutBrowser::WLayoutBrowser(CStr * pstrUrlAddress_NZ)
 
 //	QScriptEngine
 
-	m_paCambrian = new OCambrian(this);
+	m_paCambrian = new OCambrian(pProfile, this);
 
 	QWebPage * poPage = m_pwWebView->page();
 	m_poFrame = poPage->mainFrame();
 	SL_InitJavaScript();
 	connect(m_poFrame, SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(SL_InitJavaScript()));
-	poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
+	poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);	// Enable the context menu item named "Inspect".  This is useful for debugging web pages.
 
 	#if 0
 	QAxObject o(poPage);
@@ -253,6 +267,11 @@ WLayoutBrowser::WLayoutBrowser(CStr * pstrUrlAddress_NZ)
 	o.queryInterface(IID_IUnknown, OUT (void **)&paDispatch);
 	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "IID_IUnknown=0x$p\n", paDispatch);
 	#endif
+	}
+
+WLayoutBrowser::~WLayoutBrowser()
+	{
+	delete m_paCambrian;	// Maybe use deleteLater()
 	}
 
 void
@@ -309,7 +328,7 @@ void
 TBrowser::TreeItem_GotFocus()
 	{
 	if (m_pawLayoutBrowser == NULL)
-		m_pawLayoutBrowser = new WLayoutBrowser(INOUT_LATER &m_strUrl);
+		m_pawLayoutBrowser = new WLayoutBrowser(m_pProfile, INOUT_LATER &m_strUrl);
 	MainWindow_SetCurrentLayout(IN m_pawLayoutBrowser);
 	}
 TBrowser::~TBrowser()

@@ -1,18 +1,20 @@
+//	TBrowser.cpp
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
 
 IXmlExchange *
-TBrowser::S_PaAllocateBrowser(POBJECT pConfigurationParent)
+TBrowser::S_PaAllocateBrowser(POBJECT pProfileParent)
 	{
-	Assert(pConfigurationParent != NULL);
-	return new TBrowser((CChatConfiguration *)pConfigurationParent);
+	Assert(pProfileParent != NULL);
+	return new TBrowser((TProfile *)pProfileParent);
 	}
 
-TBrowser::TBrowser(CChatConfiguration * pConfigurationParent)
+TBrowser::TBrowser(TProfile * pProfile)
 	{
-	Assert(pConfigurationParent != NULL);
-	m_pConfigurationParent = pConfigurationParent;
+	Assert(pProfile != NULL);
+	Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
+	m_pProfile = pProfile;
 	m_uFlags = 0;
 	m_pawLayoutBrowser = NULL;
 	}
@@ -63,7 +65,7 @@ TBrowser::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		{
 	case eMenuAction_Close:
 		MainWindow_SetCurrentLayout(NULL);
-		m_pConfigurationParent->m_arraypaBrowsers.DeleteTreeItem(PA_DELETING this);
+		m_pProfile->m_arraypaBrowsers.DeleteTreeItem(PA_DELETING this);
 		return ezMenuActionNone;
 	default:
 		return ITreeItem::TreeItem_EDoMenuAction(eMenuAction);

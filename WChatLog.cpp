@@ -241,7 +241,7 @@ WChatLog::event(QEvent * pEvent)
 
 //	WChatLog::QTextEdit::contextMenuEvent()
 void
-WChatLog::contextMenuEvent(QContextMenuEvent * pEvent)
+WChatLog::contextMenuEvent(QContextMenuEvent * pEventContextMenu)
 	{
 	//WTextBrowser::contextMenuEvent(pEvent);
 	IEvent * pEventSelected = NULL;
@@ -249,7 +249,7 @@ WChatLog::contextMenuEvent(QContextMenuEvent * pEvent)
 	WMenu oMenu;
 
 	// Find out which event the context menu is for
-	const QPoint ptEvent = pEvent->pos();
+	const QPoint ptEvent = pEventContextMenu->pos();
 	QTextCursor oCursor = cursorForPosition(ptEvent);
 	OTextBlockUserDataEvent * pUserData = (OTextBlockUserDataEvent *)oCursor.block().userData();
 	if (pUserData != NULL)
@@ -263,6 +263,7 @@ WChatLog::contextMenuEvent(QContextMenuEvent * pEvent)
 			break;
 		case CEventBallotSent::c_eEventClass:
 			oMenu.ActionAdd(eMenuAction_BallotReSend);
+			oMenu.ActionAdd(eMenuAction_BallotAddToBallotmaster);
 			break;
 			}
 		}
@@ -283,6 +284,9 @@ WChatLog::contextMenuEvent(QContextMenuEvent * pEvent)
 		break;
 	case eMenuAction_BallotReSend:
 		m_pContactOrGroup->DisplayDialogBallotSend((CEventBallotSent *)pEventSelected);
+		break;
+	case eMenuAction_BallotAddToBallotmaster:
+		m_pContactOrGroup->m_pAccount->m_pProfileParent->BallotMaster_EventBallotAddAsTemplate((IEventBallot *)pEventSelected);
 		break;
 	case eMenuAction_CopyHyperlink:
 		Clipboard_SetText(strHyperlink);

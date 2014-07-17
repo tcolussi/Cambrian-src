@@ -8,8 +8,8 @@
 #define d_szApplicationName				"Cambrian"
 #define d_szwApplicationName		   L"Cambrian"
 #define d_szwApplicationNameSetup	   L"Cambrian Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.0.9.0"
-#define d_szwApplicationVersion		   L"0.0.9.0"
+#define d_szApplicationVersion			"0.0.9.1"
+#define d_szwApplicationVersion		   L"0.0.9.1"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -205,15 +205,21 @@ class ITask;
 	class CTaskPing;
 
 class IEvent;
-	class CEventMessageXmlRawSent;
-	class CEventMessageTextSent;
-	class CEventMessageTextReceived;
-	class CEventFileSent;
-	class CEventFileReceived;
+	class IEventMessageText;
+		class CEventMessageXmlRawSent;
+		class CEventMessageTextSent;
+		class CEventMessageTextReceived;
+	class IEventFile;
+		class CEventFileSent;
+		class CEventFileReceived;
 	class IEventWalletTransaction;
+		class CEventWalletTransactionSent;
+		class CEventWalletTransactionReceived;
 	class CEventPing;
 	class CEventGroupMemberJoin;
-	class CEventBallotSent;
+	class IEventBallot;
+		class CEventBallotSent;
+		class CEventBallotReceived;
 
 class CVaultEvents;
 
@@ -261,6 +267,8 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 
 #include "IEvent.h"
 #include "SocketTasks.h"
+#include "TBrowser.h"
+#include "CVaultEvents.h"
 #include "ITreeItemChatLogEvents.h"
 #include "GroupChat.h"
 #include "TContact.h"
@@ -270,8 +278,6 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "Sockets.h"
 #include "TCertificate.h"
 #include "TWallet.h"
-#include "TBrowser.h"
-
 #include "CChatConfiguration.h"
 
 #include "WLayoutChatLog.h"

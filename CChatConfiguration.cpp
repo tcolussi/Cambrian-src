@@ -42,7 +42,6 @@ CChatConfiguration::Destroy()
 	{
 	g_arraypAccounts.RemoveAllElements();
 	m_arraypaProfiles.DeleteAllTreeItems();
-	m_arraypaBrowsers.DeleteAllTreeItems();
 	m_oTreeItemCertificates.FlushDataAndCauseMemoryLeak();
 	}
 
@@ -179,7 +178,6 @@ CChatConfiguration::XmlConfigurationExchange(INOUT CXmlExchanger * pXmlExchanger
 	pXmlExchanger->XmlExchangeObjects('P', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);
 	if (!pXmlExchanger->m_fSerializing && m_arraypaProfiles.FIsEmpty())
 		pXmlExchanger->XmlExchangeObjects('I', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);	// Load old 'Identities' <I> which have been <P>
-	pXmlExchanger->XmlExchangeObjects('B', INOUT &m_arraypaBrowsers, TBrowser::S_PaAllocateBrowser, this);
 	m_oTreeItemCertificates.XmlExchange(INOUT pXmlExchanger);
 	m_oTreeItemCertificates.InitializeAsRootCertificates();
 

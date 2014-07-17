@@ -28,7 +28,7 @@ public:
 	inline void ChatLog_ChatStateComposerRemove(TContact * pContact) { m_arraypContactsComposing.RemoveElementI(pContact); }
 
 	virtual bool event(QEvent * pEvent);	// From QObject	
-	virtual void contextMenuEvent(QContextMenuEvent * pEvent); // From QTextEdit
+	virtual void contextMenuEvent(QContextMenuEvent * pEventContextMenu); // From QTextEdit
 
 public slots:
 	void SL_HyperlinkMouseHovering(const QUrl & url);

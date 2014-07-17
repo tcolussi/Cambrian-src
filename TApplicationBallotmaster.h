@@ -7,8 +7,12 @@
 class TApplicationBallotmaster : public IApplication
 {
 protected:
-	CStr m_strUrlAddress;				// Address to start the application (of course, this solution is not 100% portable, because the HTML files for the application are stored into the user folder, however remembering the last URL is better than nothing)
+	CStr m_strUrlAddress;				// Address to start the application (of course, this solution is not 100% portable, because the HTML files for the application are stored into the "user folder", however remembering the last URL is better than nothing)
+	CVaultEvents * m_paVaultBallots;	// Ballots are 'events' because they may be sent to other users, and therefore require a vault for their storage.
 	WLayoutBrowser * m_pawLayoutBrowser;
+private:
+	TContact * m_paContactDummy;		// Temporary hack to have a dummy contact as the 'parent' of the vault.  This is necessary because the vault was designed to have a contact as its parent, and need to be refactored.
+
 public:
 	TApplicationBallotmaster(TProfile * pProfileParent);
 	~TApplicationBallotmaster();
@@ -18,7 +22,30 @@ public:
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);	// From ITreeItem
 	virtual void TreeItem_GotFocus();										// From ITreeItem
 
+	CVaultEvents * PGetVault_NZ();
+	void EventBallotAddAsTemplate(IEventBallot * pEventBallot);
+	void ApiBallotSave(IN PSZUC pszXmlBallot);
+	void ApiBallotsList(OUT CBin * pbinXmlBallots);
 	RTI_IMPLEMENTATION(TApplicationBallotmaster)
+};
+
+//	Generic class to copy the data from an event to another event.
+class CBinXcpStanzaEventCopier : public CBinXcpStanza
+{
+protected:
+	TContact * m_paContact;		// We need a contact to clone the event, so use an empty contact so there is no interference with existing data
+public:
+	CBinXcpStanzaEventCopier(ITreeItemChatLogEvents * pContactOrGroup);
+	~CBinXcpStanzaEventCopier();
+
+	void EventCopy(IN const IEvent * pEventSource, OUT IEvent * pEventDestination);
+};
+
+//	Generic class to clone an event
+class CBinXcpStanzaEventCloner : public CBinXcpStanzaEventCopier
+{
+public:
+	IEvent * PaEventClone(IEvent * pEventToClone);
 };
 
 #endif // TAPPLICATIONBALLOTMASTER_H

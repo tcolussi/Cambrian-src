@@ -43,6 +43,7 @@ public:
 	CStr m_strComment;			// Description of the profile (this is useful for a user having multiple profiles)
 	CArrayPtrAccountsXmpp m_arraypaAccountsXmpp;	// Accounts using the profile
 	CArrayPtrApplications m_arraypaApplications;	// Applications uding the profile
+	CArrayPtrBrowsers m_arraypaBrowsers;			// This is a bit of a hack, however at the moment, it will work
 	CStr m_strData;									// Data of the profile (this variable is used for the JAPI)
 
 public:
@@ -74,6 +75,8 @@ public:
 
 	TApplicationMayanX * PAllocateApplicationMayanX();
 	TApplicationBallotmaster * PGetApplicationBallotmaster_NZ();
+
+	void BallotMaster_EventBallotAddAsTemplate(IEventBallot * pEventBallot);
 public:
 	static IXmlExchange * S_PaAllocateProfile(PVOID pConfigurationParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
 	friend class CArrayPtrProfiles;

@@ -23,7 +23,6 @@ public:
 	TProfile * m_pProfileSelected;				// Which profile was selected by the user.  NULL means to display all profiles in the Navigation Tree.
 	CArrayPtrProfiles m_arraypaProfiles;
 	TCertificates m_oTreeItemCertificates;
-	CArrayPtrBrowsers m_arraypaBrowsers;	// This is a bit of a hack, however at the moment, it will work
 
 protected:
 	QString m_sPathFileSave;			// Full path where to save the configuration.  The motivation is there may be multiple configurations opened simultaneously, and each needs to know where to save itself

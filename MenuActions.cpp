@@ -104,6 +104,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Close Wallet" _ "i=Close" _, // eMenuAction_WalletClose
 	"Send Ballot..." _ "s=Send a ballot to poll votes from the group" _ "i=Vote" _, // eMenuAction_BallotSend
 	"Resend Ballot..." _ "s=Resend an existing ballot" _ "i=Vote" _, // eMenuAction_BallotReSend
+	"Add to Ballotmaster" _ "s=Make a copy of the selected ballot and add it to the Ballotmaster as a future template" _ "i=Vote" _, // eMenuAction_BallotAddToBallotmaster
 
 	"Message Log..." _ "a=Ctrl+Shift+L" _ "i=LogMessages" _,	// eMenuAction_ShowLogMessages
 	"Recent Error..." _ "a=Ctrl+Shift+E" _ "i=LogErrors" _,	// eMenuAction_ShowLogErrors
@@ -843,10 +844,12 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		void DisplayApplicationBallotMaster();
 		DisplayApplicationBallotMaster();
 		return;
+	/*
 	case eMenuIconMarketplace:
 		void NavigationTree_NewBrowserMarketplace();
 		NavigationTree_NewBrowserMarketplace();
 		return;
+	*/
 	case eMenuAction_ShowLogMessages:
 		MessageLog_Show();
 		return;

@@ -45,21 +45,43 @@ protected:
 	TProfile * PFindProfileByID(const QString & sIdProfile) const;
 };
 
+//	Helper for the Ballotmaster
+class OPolls : public QObject
+{
+	Q_OBJECT
+protected:
+	TApplicationBallotmaster * m_pBallotmaster;
+
+public:
+	OPolls(OCambrian * poCambrian);
+	~OPolls();
+
+public slots:
+	QString list() const;
+	void save(QString sXmlPolls);
+
+};
+
 class OCambrian : public QObject
 {
+public:
+	TProfile * m_pProfile;
 protected:
 	OSettings m_oSettings;
 	OProfile m_oProfile;
+	OPolls * m_paPolls;
 
 public:
 	Q_OBJECT
 	Q_PROPERTY(QVariant Settings READ Settings)
 	Q_PROPERTY(QVariant Profile READ Profile)
+	Q_PROPERTY(QVariant Polls READ Polls)
 public:
-	OCambrian(QObject * pParent);
+	OCambrian(TProfile * pProfile, QObject * pParent);
 	virtual ~OCambrian();
 	QVariant Settings();
 	QVariant Profile();
+	QVariant Polls();
 
 public slots:
 	void SendBitcoin(int n);
@@ -72,7 +94,8 @@ class WLayoutBrowser  : public WLayout
 {
 	Q_OBJECT
 protected:
-	CStr * m_pstrUrlAddress_NZ;	// INOUT: Address to initialize the browsing.
+	TProfile * m_pProfile;		// Which profile the browser belongs to (this is important for sandboxing)
+	CStr * m_pstrUrlAddress_NZ;	// INOUT: Address to initialize the browsing, and where to store the last known URL when closing the browsing session.
 	WEdit * m_pwEdit;
 	WButtonIconForToolbar * m_pwButtonBack;
 	WButtonIconForToolbar * m_pwButtonForward;
@@ -82,7 +105,8 @@ protected:
 	QWebView * m_pwWebView;
 	QWebFrame * m_poFrame;
 public:
-	WLayoutBrowser(CStr * pstrUrlAddress_NZ);
+	WLayoutBrowser(TProfile * pProfile, CStr * pstrUrlAddress_NZ);
+	~WLayoutBrowser();
 	void NavigateToAddress(const CStr & strAddress);
 public slots:
 	void SL_InitJavaScript();

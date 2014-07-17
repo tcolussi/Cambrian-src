@@ -7,13 +7,17 @@
 void
 NavigationTree_NewBrowser()
 	{
-	TBrowser * pBrowser = new TBrowser(&g_oConfiguration);
-	g_oConfiguration.m_arraypaBrowsers.Add(PA_CHILD pBrowser);
+	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+	if (pProfile == NULL)
+		return;
+	TBrowser * pBrowser = new TBrowser(pProfile);
+	pProfile->m_arraypaBrowsers.Add(PA_CHILD pBrowser);
 	pBrowser->SetIconNameAndUrl(eMenuAction_DisplaySecureWebBrowsing, "Web Browsing");
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 	pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}
 
+/*
 void
 NavigationTree_NewBrowserMarketplace()
 	{
@@ -23,6 +27,7 @@ NavigationTree_NewBrowserMarketplace()
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 	pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}
+*/
 
 TTreeItemDemo * g_pBanking;
 TTreeItemDemo * g_pSecurity;

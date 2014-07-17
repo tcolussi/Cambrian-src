@@ -23,8 +23,10 @@ WLayoutMyProfiles::WLayoutMyProfiles()
 	m_pAccountNew = NULL;
 	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Welcome to Cambrian");
 	WLabelSelectableWrap * pwLabel = new WLabelSelectableWrap(g_oConfiguration.m_arraypaProfiles.FIsEmpty() ?
-		"To get started, you need to create a "d_sza_profile".\n"
-		"Your "d_sza_profile" contains information about you or your business for communicating with others.\n\n"
+		"To get started, you need to pick a name for your role:<br/><br/>"
+		" - A personal role contains information about your personal life.  With a personal role, you will likely share information with your friends and family, such as pictures and the things you like and/or personally recommend to them.<br/>"
+		" - A professional role contains information about the role you play within an organization.  "
+		"With a professional role, you will likely share information with your business contact to promote your organization.<br/><br/>"
 		"Creating a "d_sza_profile" is easy; you pick a name you wish other people will recognize you." :
 		"You already have a "d_sza_profile", however you are welcome to 'play' multiple "d_sza_profile"s.");
 	poLayoutVertical->addWidget(pwLabel);
@@ -36,11 +38,11 @@ WLayoutMyProfiles::WLayoutMyProfiles()
 	OLayoutHorizontalAlignLeft * poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
 	//poLayout->Layout_AddLabelAndWidgetH_PA("ID:", m_pwEditProfile);
 	poLayout->addWidget(m_pwEditProfile);
-	WButtonTextWithIcon * pwButtonCreateNewID = new WButtonTextWithIcon("Create Profile ", eMenuIconIdentities);
+	WButtonTextWithIcon * pwButtonCreateNewID = new WButtonTextWithIcon("Create "d_sza_Profile" ", eMenuIconIdentities);
 	poLayout->addWidget(pwButtonCreateNewID);
 
-	m_pwCheckboxAutomatic = new QCheckBox("Automatically create an XMPP account for my new profile");
-	m_pwCheckboxAutomatic->setToolTip("Uncheck this option if you wish to manually assign an XMPP account to your new profile");
+	m_pwCheckboxAutomatic = new QCheckBox("Automatically create an XMPP account for my new " d_sza_profile);
+	m_pwCheckboxAutomatic->setToolTip("Uncheck this option if you wish to manually assign an XMPP account to your new "d_sza_profile);
 	m_pwCheckboxAutomatic->setChecked(true);
 	poLayoutVertical->addWidget(m_pwCheckboxAutomatic);
 

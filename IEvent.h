@@ -262,8 +262,8 @@ CHS ChGetCambrianActionFromUrl(PSZUC pszUrl);
 //
 //	Interface to attach an event to the Chat Log.
 //
-//	The motivation for this interface is providing a mechanism for interacting with every entry in the Chat Log.
-//	In a nutshell, every line (text block) in the Chat Log has a corresponding event, and the same event may be shared by multiple Chat Log, or a wallet.
+//	The motivation for this interface is providing a uniform mechanism for interacting with entry in the Chat Log.
+//	In a nutshell, every line (text block) in the Chat Log has a corresponding event, and the same event may be shared by multiple Chat Logs, or other applications such as a wallet or the Ballotmaster.
 //	For instance, a Chat Log may display all events related to a contact, while another Chat Log may display only the files downloaded from the same contact.
 //
 //	Each event has a unique identifier (m_tsEventID) which is useful to detect duplicates, or update the state of an event, such as updating the progress of a download, or correcting a typo in a previously sent message.
@@ -271,7 +271,7 @@ CHS ChGetCambrianActionFromUrl(PSZUC pszUrl);
 //	Likewise, each event has another timestamp to determine when the event completed.  By default this value is initialized to zero, as many events do not have a completion time.
 //
 //	Every event has a parent owner, however may be in the possession by another object.  A good example is the wallet holding the transaction events for a contact.
-//	Finally, every event has a pointer to a task.
+//	The name 'event' was chosen because the Chat Log is 'event driven'.  The word 'message' could be a bit confusing between a message between two Cambrian clients, and a message typed by the user.
 //
 class IEvent	// (event)
 {
@@ -385,6 +385,7 @@ public:
 	TIMESTAMP TsEventOtherLast() const;
 	TIMESTAMP TsEventIdLast() const;
 
+	void EventsSerializeForMemory(INOUT CBinXcpStanza * pbinXmlEvents) const;
 	void EventsSerializeForDisk(INOUT CBinXcpStanza * pbinXmlEvents) const;
 	void EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITreeItemChatLogEvents * pParent);
 	CEventMessageTextReceived * PFindEventMessageReceivedByTimestamp(TIMESTAMP tsOther) const;

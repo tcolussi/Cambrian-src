@@ -82,7 +82,8 @@ SOURCES += \
     TRecommendations.cpp \
     ApiWebSockets.cpp \
     Identities.cpp \
-    TApplicationBallotmaster.cpp
+    TApplicationBallotmaster.cpp \
+    CVaultEvents.cpp
 
 
 HEADERS += \
@@ -151,7 +152,8 @@ HEADERS += \
     TRecommendations.h \
     ApiWebSockets.h \
     Identities.h \
-    TApplicationBallotmaster.h
+    TApplicationBallotmaster.h \
+    CVaultEvents.h
 
 
 FORMS +=

@@ -129,6 +129,7 @@ TProfile::~TProfile()
 	{
 	m_arraypaAccountsXmpp.DeleteAllTreeItems();
 	m_arraypaApplications.DeleteAllTreeItems();
+	m_arraypaBrowsers.DeleteAllTreeItems();
 	}
 
 //	Generate a pair of keys for the profile.
@@ -174,6 +175,7 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeBin("KeyPublic", INOUT_F_UNCH_S &m_binKeyPublic);
 	pXmlExchanger->XmlExchangeObjects(d_chElementName_Accounts, INOUT &m_arraypaAccountsXmpp, TAccountXmpp::S_PaAllocateAccount, this);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Applications, INOUT_F_UNCH_S &m_arraypaApplications, IApplication::S_PaAllocateApplication_YZ, this);
+	pXmlExchanger->XmlExchangeObjects('B', INOUT &m_arraypaBrowsers, TBrowser::S_PaAllocateBrowser, this);
 
 	pXmlExchanger->XmlExchangeStr("Data", INOUT_F_UNCH_S &m_strData);
 	}
