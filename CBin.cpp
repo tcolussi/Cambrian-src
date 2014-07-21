@@ -346,7 +346,7 @@ CBin::CbGetDataAfterOffset(int ibData, int cbDataMax, OUT int * pcbDataRemaining
 	Assert(pcbDataRemaining != NULL);
 	if (m_paData != NULL)
 		{
-		Assert(ibData <= m_paData->cbData);
+		Report(ibData <= m_paData->cbData && "Should not request an offset larger than the data");
 		int cbAvailable = m_paData->cbData - ibData;
 		if (cbAvailable > 0)
 			{

@@ -214,6 +214,7 @@ TProfile::PAllocateAccountAutomaticCreationUI(ISocketUI * piSocketUI)
 	pAccount->m_strUsername.InitWithRandomUsername(m_strNameProfile, *(UINT *)&hashSha1);
 	pAccount->m_strPassword.InitWithRandomPassword(IN hashSha1.rgbData + 4);
 	pAccount->TreeItemAccount_DisplayWithinNavigationTreeInit(c_szXmppServerDefault, d_uPortXmppDefault);
+	pAccount->TreeItemAccount_PContactAllocateNewToNavigationTree_NZ((PSZUC)"cambrian@xmpp.cambrian.org", (PSZUC)"Cambrian Team");
 	pAccount->Socket_ConnectUI(piSocketUI, TRUE);
 	return pAccount;
 	}
@@ -329,6 +330,8 @@ WLayoutProfile::DisplayApplications()
 	pwHeader->hide();
 	pwHeader->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 	pwHeader->setSectionResizeMode(1, QHeaderView::Stretch);
+
+	#if 0
 	connect(m_pwTreeViewApplications, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)), this, SLOT(SL_ActionDoubleClicked(QTreeWidgetItem*,int)));
 
 //	PAddOption(eMenuIconXmpp, "Create an XMPP account", "Associate an additional XMPP account with my profile");
@@ -404,6 +407,7 @@ WLayoutProfile::DisplayApplications()
 			PAddOption(eMenuIconJurisdiction, "Traditional Cities", "", pCountries);
 		*/
 #endif
+	#endif
 
 	m_pwTreeViewApplications->expandAll();
 	}

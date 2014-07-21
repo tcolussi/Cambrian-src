@@ -336,6 +336,14 @@ ITreeItem::TreeItemW_ToggleVisibility()
 	}
 
 void
+ITreeItem::TreeItemW_ToggleVisibilityAndSetFocus()
+	{
+	TreeItemW_ToggleVisibility();
+	TreeItemW_Expand();
+	TreeItemLayout_SetFocus();
+	}
+
+void
 ITreeItem::TreeItemW_Hide()
 	{
 	if (m_paTreeItemW_YZ != NULL)

@@ -21,6 +21,7 @@ WChatLog::WChatLog(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup)
 	Assert(pContactOrGroup != NULL);
 	m_pContactOrGroup = pContactOrGroup;
 	m_fDisplayAllMessages = FALSE;
+	m_tsMidnightNext = d_ts_zNA;
 	setMinimumSize(10, 50);
 	setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 	setTextInteractionFlags((textInteractionFlags() & ~Qt::TextEditable) | Qt::LinksAccessibleByMouse);
@@ -119,10 +120,28 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 				}
 			}
 		}
+
 	while (ppEvent < ppEventStop)
 		{
 		IEvent * pEvent = *ppEvent++;
 		AssertValidEvent(pEvent);
+		if (pEvent->m_tsEventID >= m_tsMidnightNext)
+			{
+			QDateTime dtl = QDateTime::fromMSecsSinceEpoch(pEvent->m_tsEventID).toLocalTime();
+			QDate date = dtl.date();	// Strip the time of the day
+			m_tsMidnightNext = QDateTime(date).toMSecsSinceEpoch() + d_ts_cDays;	// I am sure there is a more elegant way to strip the time from a date, however at the moment I don't have time to investigate a better solution (and this code works)
+
+			QTextBlockFormat oFormatBlock;
+			oFormatBlock.setAlignment(Qt::AlignHCenter);
+			oFormatBlock.setBackground(c_brushSilver);
+			oCursor.setBlockFormat(oFormatBlock);
+			QTextCharFormat oFormatChar; // = oCursor.charFormat();
+			oFormatChar.setFontWeight(QFont::Bold);
+			//oFormatChar.setFontItalic(true);
+			//oCursor.setCharFormat(oFormatChar);
+			oCursor.insertText(date.toString("dddd MMMM d, yyyy"), oFormatChar);
+			oCursor.AppendBlockBlank();
+			}
 		oTextBlockEvent = oCursor.block();	// Get the current block under the cursor
 		Assert(oTextBlockEvent.userData() == NULL);
 		oTextBlockEvent.setUserData(PA_CHILD new OTextBlockUserDataEvent(pEvent));		// Assign an event for each text block

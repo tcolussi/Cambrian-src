@@ -27,13 +27,6 @@ TBrowser::SetIconNameAndUrl(EMenuAction eMenuActionIcon, PSZAC pszName, PSZAC ps
 	m_strUrl.BinInitFromStringWithNullTerminator(pszUrl);
 	}
 
-void
-TBrowser::TreeItemBrowser_DisplayWithinNavigationTree()
-	{
-	TreeItemW_DisplayWithinNavigationTree(NULL);
-	TreeItemW_SetIcon(m_uFlags ? eMenuIconMarketplace : eMenuAction_DisplaySecureWebBrowsing);
-	}
-
 //	TBrowser::IXmlExchange::XmlExchange()
 void
 TBrowser::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)

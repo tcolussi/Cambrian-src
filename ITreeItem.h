@@ -132,6 +132,7 @@ public:
 	void TreeItemW_Collapse();
 	void TreeItemW_EnsureVisible();
 	void TreeItemW_ToggleVisibility();
+	void TreeItemW_ToggleVisibilityAndSetFocus();
 	void TreeItemW_Hide();
 
 	void TreeItemW_DisplayTransactionsBitcoin();

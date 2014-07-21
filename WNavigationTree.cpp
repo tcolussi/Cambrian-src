@@ -489,7 +489,7 @@ ITreeItem::TreeItemW_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC psz
 	}
 
 void
-ITreeItem::TreeItemW_SelectWithinNavigationTree()
+ITreeItem::TreeItemW_SelectWithinNavigationTree()		// TODO: use TreeItemLayout_SetFocus() instead
 	{
 	Report(m_paTreeItemW_YZ != NULL && "No Tree Item to select");
 	g_pwNavigationTree->NavigationTree_SelectTreeItemWidget(m_paTreeItemW_YZ);

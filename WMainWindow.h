@@ -75,5 +75,7 @@ void NavigationTree_RenameSelectedItem();
 void NavigationTree_UpdatePresenceIcon(EMenuAction eMenuAction_Presence);
 void NavigationTree_UpdateNameOfSelectedProfile();
 void NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSelected, BOOL fCreateNewProfile = FALSE);
+void NavigationTree_DisplayProfilesToogle();
+void NavigationTree_DisplayCertificatesToogle();
 
 #endif // MAINWINDOW_H

@@ -66,7 +66,9 @@ TIMESTAMP
 Timestamp_GetCurrentDateTime()
 	{
 	const TIMESTAMP tsPrev = g_tsLast;
-	g_tsLast = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+	TIMESTAMP tsTest = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+	g_tsLast = QDateTime::currentMSecsSinceEpoch();
+	Assert(g_tsLast >= tsTest && g_tsLast <= tsTest + 40);
 	if (g_tsLast <= tsPrev)
 		g_tsLast = tsPrev + 1;
 	return g_tsLast;

@@ -93,7 +93,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Copy Link Location..." _ "i=Copy" _, // eMenuAction_CopyHyperlink
 	"Select All" _ "i=EditSelectAll" _, // eMenuAction_SelectAll
 
-	"Display "d_sza_Profile _ "s=Display details about a role" _ d_sza_IconProfile _, // eMenuAction_DisplayProfileInfo
+	"Display "d_sza_Profile " Details" _ "s=Display details about a role" _ d_sza_IconProfile _, // eMenuAction_DisplayProfileInfo
 	"Display Certificates" _ "s=Display the certificates securing (encrypting) the communication" _ "i=Certificate" _, // eMenuAction_DisplayCertificates
 	"BallotMaster" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
 
@@ -686,6 +686,7 @@ const EMenuActionByte c_rgzeActionsMenuAdvanced[] =
 	eMenuAction_ConfigurationSaveAsXmlFile,
 	eMenuAction_ConfigurationOpenFromXmlFile,
 	eMenuActionSeparator,
+	eMenuAction_DisplayProfileInfo,
 	eMenuAction_DisplayCertificates,
 	ezMenuActionNone
 	};
@@ -830,6 +831,9 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		ChatContact_FindText();
 		return;
 	*/
+	case eMenuAction_DisplayProfileInfo:
+		NavigationTree_DisplayProfilesToogle();
+		return;
 	case eMenuAction_DisplayCertificates:
 		g_oConfiguration.NavigationTree_DisplayAllCertificatesToggle();
 		return;

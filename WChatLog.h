@@ -10,8 +10,9 @@ class WChatLog : public WTextBrowser
 protected:
 	ITreeItemChatLogEvents * m_pContactOrGroup;
 	CArrayPtrContacts m_arraypContactsComposing;	// All the users currently composing text (typically there is only one, however for group chat, there may be several)
-	QTextBlock m_oTextBlockComposing;					// Text block displaying the names of users composing text
+	QTextBlock m_oTextBlockComposing;				// Text block displaying the names of users composing text
 	BOOL m_fDisplayAllMessages;
+	TIMESTAMP m_tsMidnightNext;						// Timestamp to determine when to display the next data in the Chat Log.
 
 public:
 	explicit WChatLog(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup);

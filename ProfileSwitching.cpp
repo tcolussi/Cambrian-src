@@ -66,8 +66,10 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 	if (pProfileSelected != NULL)
 		{
 		// Display a single profile.  This is done by displaying the contacts first, and then the profile at the bottom
-		pProfileSelected->TreeItemProfile_DisplayAccountsWithinNavigationTree();
-		pProfileSelected->TreeItemProfile_DisplayProfileWithinNavigationTree();
+		pProfileSelected->TreeItemProfile_DisplayContactsWithinNavigationTree();
+		if (pProfileSelected->m_arraypaAccountsXmpp.FIsEmpty())
+			pProfileSelected->TreeItemProfile_DisplayProfileInfoWithinNavigationTree();
+		pProfileSelected->TreeItemProfile_DisplayApplicationsWithinNavigationTree();
 		}
 	else
 		{
@@ -79,8 +81,9 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 			{
 			TProfile * pProfile = prgpProfiles[iProfile];
 			Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
-			pProfile->TreeItemProfile_DisplayAccountsWithinNavigationTree();
-			pProfile->TreeItemProfile_DisplayProfileWithinNavigationTree();
+			pProfile->TreeItemProfile_DisplayContactsWithinNavigationTree();
+			pProfile->TreeItemProfile_DisplayProfileInfoWithinNavigationTree();
+			pProfile->TreeItemProfile_DisplayApplicationsWithinNavigationTree();
 			}
 		}
 	NavigationTree_UpdateNameOfSelectedProfile();
@@ -92,8 +95,7 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 		}
 	else
 		pwTreeView->setCurrentItem(pwTreeView->topLevelItem(0));	// Select the first item
-
-	}
+	} // NavigationTree_PopulateTreeItemsAccordingToSelectedProfile()
 
 #if 0
 	// Create the root nodes
@@ -103,9 +105,6 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 	new TTreeItemDemo(NULL, "Marketplace", eMenuIconMarketplace);
 	new TTreeItemDemo(NULL, "Finance", eMenuIconSell);
 	new TTreeItemDemo(NULL, "Registry", eMenuIconCorporations);
-	*/
-	(void)new TProfiles;
-	/*
 	TTreeItemDemo * pIDs = new TTreeItemDemo(NULL, "My Profiles", eMenuIconSettings);
 	TTreeItemDemo * pID = new TTreeItemDemo(pIDs, "Jon Peters", eMenuIconIdentities);
 		TTreeItemDemo * pApplications = new TTreeItemDemo(pID, "Applications", eMenuIconComponent);
@@ -160,9 +159,42 @@ TProfiles::TProfiles()
 	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, "Roles", eMenuAction_DisplayProfileInfo);
 	}
 
+void
+NavigationTree_DisplayProfilesToogle()
+	{
+	TProfile * pProfileSelected = g_oConfiguration.m_pProfileSelected;
+	if (pProfileSelected != NULL)
+		{
+		if (pProfileSelected->m_paTreeItemW_YZ == NULL)
+			{
+			pProfileSelected->TreeItemProfile_DisplayProfileInfoWithinNavigationTree();
+			pProfileSelected->TreeItemW_Expand();
+			pProfileSelected->TreeItemLayout_SetFocus();
+			return;
+			}
+		pProfileSelected->TreeItemW_ToggleVisibilityAndSetFocus();
+		}
+	else if (g_pTreeItemProfiles != NULL)
+		{
+		g_pTreeItemProfiles->TreeItemW_ToggleVisibilityAndSetFocus();
+		}
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void
-TProfile::TreeItemProfile_DisplayProfileWithinNavigationTree()
+TProfile::TreeItemProfile_DisplayContactsWithinNavigationTree()
+	{
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		pAccount->TreeItemAccount_DisplayWithinNavigationTree();
+		}
+	}
+
+void
+TProfile::TreeItemProfile_DisplayProfileInfoWithinNavigationTree()
 	{
 	Endorse(g_pTreeItemProfiles == NULL); // Display the profile at the root rather than under "Profiles"
 	TreeItemW_DisplayWithinNavigationTree(g_pTreeItemProfiles, eMenuIconIdentities);
@@ -174,7 +206,12 @@ TProfile::TreeItemProfile_DisplayProfileWithinNavigationTree()
 		pAccount = *ppAccount++;
 		pAccount->PGetAlias_NZ()->TreeItemW_DisplayWithinNavigationTreeExpand(this, pAccount->m_strJID, eMenuIconXmpp);
 		}
-	if (pAccount != NULL)
+	}
+
+void
+TProfile::TreeItemProfile_DisplayApplicationsWithinNavigationTree()
+	{
+	if (!m_arraypaAccountsXmpp.FIsEmpty())
 		new TMyRecommendations(this);	// Dislay the recommendations if there is at least one account
 	//	new TTreeItemDemo(this, "My Reputation", eMenuIconReputation, "Display my reputation according to other organizations", "Search Reputation Feedback Comments");
 
@@ -201,19 +238,14 @@ TProfile::TreeItemProfile_DisplayProfileWithinNavigationTree()
 void
 IApplication::TreeItemApplication_DisplayWithinNavigationTree()
 	{
-	TreeItemW_DisplayWithinNavigationTreeExpand(g_pTreeItemProfiles, PszGetClassNameApplication(), m_eMenuIcon);
+	TreeItemW_DisplayWithinNavigationTreeExpand((m_pProfileParent->m_paTreeItemW_YZ != NULL) ?  m_pProfileParent : NULL, PszGetClassNameApplication(), m_eMenuIcon);
 	}
 
 void
-TProfile::TreeItemProfile_DisplayAccountsWithinNavigationTree()
+TBrowser::TreeItemBrowser_DisplayWithinNavigationTree()
 	{
-	TAccountXmpp ** ppAccountStop;
-	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
-	while (ppAccount != ppAccountStop)
-		{
-		TAccountXmpp * pAccount = *ppAccount++;
-		pAccount->TreeItemAccount_DisplayWithinNavigationTree();
-		}
+	TreeItemW_DisplayWithinNavigationTree((m_pProfile->m_paTreeItemW_YZ != NULL) ?  m_pProfile : NULL);
+	TreeItemW_SetIcon(m_uFlags ? eMenuIconMarketplace : eMenuAction_DisplaySecureWebBrowsing);
 	}
 
 //	TAccountXmpp::ITreeItem::TreeItem_PszGetNameDisplay()
@@ -267,6 +299,7 @@ TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTree()
 	#endif
 	} // TreeItemAccount_DisplayWithinNavigationTree()
 
+
 extern TTreeItemDemo * g_pSecurity;
 void
 CChatConfiguration::NavigationTree_DisplayAllCertificates()
@@ -278,20 +311,19 @@ CChatConfiguration::NavigationTree_DisplayAllCertificates()
 		return;
 		}
 	m_oTreeItemCertificates.NavigationTree_DisplayCertificates((ICertificate *)g_pSecurity);
-	g_pwNavigationTree->NavigationTree_ExpandAllRootTreeItems();	// Make sure all certificates are visibles
+	//g_pwNavigationTree->NavigationTree_ExpandAllRootTreeItems();	// Make sure all certificates are visibles
 	}
 
 void
 CChatConfiguration::NavigationTree_DisplayAllCertificatesToggle()
 	{
 	if (m_oTreeItemCertificates.m_paTreeItemW_YZ != NULL)
-		{
-		// The certificates are already on the tree, however may be hidden
-		m_oTreeItemCertificates.TreeItemW_ToggleVisibility();
-		return;
-		}
-	NavigationTree_DisplayAllCertificates();
+		m_oTreeItemCertificates.TreeItemW_ToggleVisibility();	// The certificates are already on the tree, however may be hidden
+	else
+		NavigationTree_DisplayAllCertificates();
+	m_oTreeItemCertificates.TreeItemW_SelectWithinNavigationTreeExpanded();
 	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
 

@@ -19,7 +19,7 @@ TContact::S_PaAllocateContact(POBJECT pAccountParent)
 
 TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	{
-	m_uFlagsContact = FC_kfContactNeedsInvitation; // | FC_kfNoCambrianProtocol;	// Until proven otherwise, any new contact needs an invitation and is assumed to not understand the Cambrian Protocol <xcp>
+	m_uFlagsContact = FC_kfContactNeedsInvitation | FC_kfContactRecommendationsNeverReceived; // | FC_kfNoCambrianProtocol;	// Until proven otherwise, any new contact needs an invitation and is assumed to not understand the Cambrian Protocol <xcp>
 //	m_uFlagsContactSerialized = 0;
 	m_plistAliases = NULL;
 	m_tsOtherLastSynchronized = d_ts_zNA;
@@ -536,6 +536,10 @@ TContact::XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence)
 	const CXmlNode * pXmlNodeXCP = pXmlNodeStanzaPresence->PFindElement(c_sza_xcp);
 	if (pXmlNodeXCP == NULL)
 		{
+		if (m_uFlagsContact & FC_kfContactRecommendationsNeverReceived)
+			{
+			XcpApi_Invoke_RecommendationsGet();
+			}
 		//m_uFlagsContact |= FC_kfNoCambrianProtocol;
 		}
 	TreeItemContact_UpdateIcon();

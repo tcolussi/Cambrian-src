@@ -50,8 +50,10 @@ public:
 	TProfile(CChatConfiguration * pConfigurationParent);
 	~TProfile();
 	void GenerateKeys();
-	void TreeItemProfile_DisplayProfileWithinNavigationTree();
-	void TreeItemProfile_DisplayAccountsWithinNavigationTree();
+	void TreeItemProfile_DisplayContactsWithinNavigationTree();
+	void TreeItemProfile_DisplayApplicationsWithinNavigationTree();
+	void TreeItemProfile_DisplayProfileInfoWithinNavigationTree();
+
 	void DeleteAccount(PA_DELETING TAccountXmpp * paAccount);
 
 	TAccountXmpp * PAllocateAccount();

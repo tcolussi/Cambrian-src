@@ -117,6 +117,7 @@ void
 TContact::Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParameters)
 	{
 	Assert(pXmlNodeApiParameters != NULL);
+	m_uFlagsContact &= ~FC_kfContactRecommendationsNeverReceived;
 	m_binXmlRecommendations.Empty();
 	if (!pXmlNodeApiParameters->FIsEmptyElement())
 		m_binXmlRecommendations.BinAppendXmlNodeNoWhiteSpaces(pXmlNodeApiParameters);
@@ -165,7 +166,7 @@ CArrayPtrRecommendationsWithHashTables::CArrayPtrRecommendationsWithHashTables(T
 		{
 		// If no contact is specified, use the first account of the profile.  We need an account to temporary add contacts to display them in the GUI
 		m_pAccount = (TAccountXmpp *)pProfile->m_arraypaAccountsXmpp.PvGetElementFirst_YZ();
-		Assert(m_pAccount != NULL && "Do not display the node TMyRecommendations if there is no account present!");
+		//Assert(m_pAccount != NULL && "Do not display the node TMyRecommendations if there is no account present!");	// This Assert() appears when deleting the last XMPP account
 		}
 	m_pProfile = pProfile;
 	pProfile->InitHashTablesOfIdentifiers(IOUT &m_oHashTableContactsProfile, IOUT &m_oHashTableGroupsProfile);
@@ -447,7 +448,7 @@ TRecommendations::TreeItem_GotFocus()
 TMyRecommendations::TMyRecommendations(TProfile * pProfile)
 	{
 	m_pProfile = pProfile;
-	TreeItemW_DisplayWithinNavigationTreeExpand(pProfile, "My Recommendations", eMenuAction_TreeItemRecommended);
+	TreeItemW_DisplayWithinNavigationTreeExpand((pProfile->m_paTreeItemW_YZ != NULL) ? pProfile : NULL, "My Recommendations", eMenuAction_TreeItemRecommended);
 	}
 
 //	TMyRecommendations::ITreeItem::TreeItem_GotFocus()

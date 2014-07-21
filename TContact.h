@@ -37,6 +37,7 @@ protected:
 		{
 		FC_kfContactUnsolicited								= 0x00000001,	// The contact was created from an unsolicited message.  Such contact is displayed with the gray color
 		FC_kfContactNeedsInvitation							= 0x00000002,	// The contact was added, however there was never been any communication between the two paties, suggesting an invitation is recommended
+		FC_kfContactRecommendationsNeverReceived			= 0x00000004,	// The recommendations have never been received, therefore download them as soon as the contact becomes online
 //		FC_kfCommentContainsInvitation						= 0x00000004,
 		//FC_kfNoCambrianProtocol								= 0x00000008,	// The contact does NOT understand the Cambrian Protocol, and therefore the application should NOT send stanzas with the element <xcp>.
 		FC_kmFlagsSerializeMask								= 0x000000FF,	// Mask of the flags to serialize
