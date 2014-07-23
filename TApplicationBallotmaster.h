@@ -23,6 +23,7 @@ public:
 	virtual void TreeItem_GotFocus();										// From ITreeItem
 
 	CVaultEvents * PGetVault_NZ();
+	CEventBallotSent * PAllocateBallot();
 	void EventBallotAddAsTemplate(IEventBallot * pEventBallot);
 	void ApiBallotSave(IN PSZUC pszXmlBallot);
 	void ApiBallotsList(OUT CBin * pbinXmlBallots);

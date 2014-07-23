@@ -168,6 +168,16 @@ TApplicationBallotmaster::PGetVault_NZ()
 		m_paVaultBallots = new CVaultEvents(m_paContactDummy, IN &hashFileName);
 		}
 	return m_paVaultBallots;
+
+	}
+CEventBallotSent *
+TApplicationBallotmaster::PAllocateBallot()
+	{
+	CEventBallotSent * paEventBallot = new CEventBallotSent();
+	CVaultEvents * pVault = PGetVault_NZ();
+	paEventBallot->m_pVaultParent_NZ = pVault;
+	pVault->m_arraypaEvents.Add(PA_CHILD paEventBallot);
+	return paEventBallot;
 	}
 
 void
@@ -175,7 +185,7 @@ TApplicationBallotmaster::EventBallotAddAsTemplate(IEventBallot * pEventBallot)
 	{
 	CVaultEvents * pVault = PGetVault_NZ();	// Get the vault first because it will initialize m_paContactDummy
 	CBinXcpStanzaEventCopier binXcpStanzaCopier(m_paContactDummy);
-	CEventBallotSent * paEventBallotTemplate = new CEventBallotSent(NULL);	// When adding a template, always use the 'sent' ballot
+	CEventBallotSent * paEventBallotTemplate = new CEventBallotSent();	// When adding a template, always use the 'sent' ballot
 	binXcpStanzaCopier.EventCopy(IN pEventBallot, OUT paEventBallotTemplate);
 	paEventBallotTemplate->m_pVaultParent_NZ = pVault;
 	pVault->m_arraypaEvents.Add(PA_CHILD paEventBallotTemplate);
@@ -197,11 +207,67 @@ TApplicationBallotmaster::ApiBallotsList(OUT CBin * pbinXmlBallots)
 	pbinXmlBallots->BinInitFromCBinStolen(INOUT &binXmlEvents);
 	}
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+OPoll::OPoll(CEventBallotSent * pBallot)
+	{
+	Assert(pBallot != NULL);
+	Assert(pBallot->EGetEventClass() == CEventBallotSent::c_eEventClass);
+	m_pBallot = pBallot;
+	//m_sTitle = "?";	// For debugging
+	}
+OPoll::~OPoll()
+	{
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "OPoll::~OPoll() 0x$p\n", m_pBallot);
+	}
+
+QString
+Timestamp_ToStringBase85(TIMESTAMP ts)
+	{
+	CHU szTimestamp[16];
+	Timestamp_CchToString(IN ts, OUT szTimestamp);
+	return CString(szTimestamp);
+	}
+
+QString
+OPoll::id() const
+	{
+	return Timestamp_ToStringBase85(m_pBallot->m_tsEventID);
+	}
+
+QString
+OPoll::title() const
+	{
+	return m_pBallot->m_strTitle;
+	}
+void
+OPoll::title(QString & sTitle)
+	{
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::title($Q)\n", &sTitle);
+	m_pBallot->m_strTitle = sTitle;
+	}
+
+QString
+OPoll::description() const
+	{
+	return m_pBallot->m_strDescription;
+	}
+void
+OPoll::description(QString & sDescription)
+	{
+	m_pBallot->m_strDescription = sDescription;
+	}
+
+void
+OPoll::save()
+	{
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($Q)\n", &m_sTitle);
+	}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 OPolls::OPolls(OCambrian * poCambrian)
 	{
-	Assert(poCambrian != NULL);;
+	Assert(poCambrian != NULL);
 	m_pBallotmaster = poCambrian->m_pProfile->PGetApplicationBallotmaster_NZ();
 	Assert(m_pBallotmaster->EGetRuntimeClass() == RTI(TApplicationBallotmaster));
 	}
@@ -210,6 +276,37 @@ OPolls::~OPolls()
 	{
 	}
 
+//	build(), slot
+//
+//	Ideally the name new() should be used, however since new() is a C++ operator (reserved keyword), we cannot use it.
+QVariant
+OPolls::build()
+	{
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::build()\n");
+	return QVariant::fromValue(PA_CHILD new OPoll(IN m_pBallotmaster->PAllocateBallot()));
+	}
+
+
+
+//	list(), slot
+//	I think list() should be a property rather than a method.
+QVariant
+OPolls::list()
+	{
+	QVariantList oList;
+	CVaultEvents * pVaultPolls = m_pBallotmaster->PGetVault_NZ();
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = pVaultPolls->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
+		oList.append(QVariant::fromValue(PA_CHILD new OPoll(pEvent)));
+		}
+	//MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::list() - $i elements\n", oList.size());
+	return QVariant::fromValue(oList);
+	}
+
+/*
 //	list(), slot
 //
 //	Return an XML of all the polls available
@@ -229,3 +326,4 @@ OPolls::save(QString sXmlPolls)
 	CStr strXmlPolls = sXmlPolls;	// Convert to UTF-8
 	m_pBallotmaster->ApiBallotSave(strXmlPolls);
 	}
+*/

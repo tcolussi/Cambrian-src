@@ -166,9 +166,12 @@ OCambrian::Polls()
 	{
 	if (m_paPolls == NULL)
 		m_paPolls = new OPolls(this);
+	return QVariant::fromValue(m_paPolls);
+	/*
 	QVariant v;
 	v.setValue(m_paPolls);
 	return v;
+	*/
 	}
 
 void

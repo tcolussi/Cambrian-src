@@ -90,6 +90,7 @@ WChatInput::event(QEvent * pEvent)
 		{
 		QKeyEvent * pEventKey = static_cast<QKeyEvent *>(pEvent);
 		const Qt::Key eKey = (Qt::Key)pEventKey->key();
+		//MessageLog_AppendTextFormatSev(eSeverityNoise, "WChatInput::event(QEvent::KeyPress, key=0x$p, modifiers=$x)\n", eKey, pEventKey->modifiers());
 		if ((eKey & d_kmKeyboardSpecialKeys) == 0)
 			{
 			// The user typed something other than a special key
@@ -100,7 +101,7 @@ WChatInput::event(QEvent * pEvent)
 				m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_zComposing);
 				}
 			}
-		if (pEventKey->modifiers() == Qt::NoModifier)
+		if ((pEventKey->modifiers() & ~Qt::KeypadModifier) == Qt::NoModifier)
 			{
 			ITreeItemChatLogEvents * pContactOrGroup = m_pwLayoutChatLog->PGetContactOrGroup_NZ();
 			pContactOrGroup->TreeItem_IconUpdateOnMessagesRead();	// Any key pressed in the message input assumes the user read the message history

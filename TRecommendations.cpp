@@ -246,11 +246,14 @@ WLayoutRecommendations::WLayoutRecommendations(TProfile * pProfile, TContact * p
 	{
 	Assert(pProfile != NULL);
 	Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
+	Endorse(pContact == NULL);	// Display all my recommendations
 	m_pProfile = pProfile;
 	m_pContact_YZ = pContact;
 	m_pszNameDisplayContact = (pContact != NULL) ? pContact->TreeItem_PszGetNameDisplay() : (PSZUC)"me";
 
-	OLayoutVerticalAlignTop * m_poLayoutApplications = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Recommendations made by '$s'", m_pszNameDisplayContact);;
+	OLayoutVerticalAlignTop * m_poLayoutApplications = Splitter_PoAddGroupBoxAndLayoutVertical_VE((pContact == NULL) ? "My personal recommendations for my contacts" : "Recommendations made by '$s'", m_pszNameDisplayContact);
+	if (pContact == NULL)
+		m_poLayoutApplications->Layout_PwAddRowLabel("To recommend a contact or a group to your friends, right-click on the contact or group and select the menu item 'Recommend'");
 
 	WEdit * pwEditSearchRecommendations = new WEdit;
 	//pwEdit->setMaximumHeight(20);

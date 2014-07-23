@@ -45,6 +45,36 @@ protected:
 	TProfile * PFindProfileByID(const QString & sIdProfile) const;
 };
 
+//	OPoll
+//
+//	JavaScript interface to interact with a ballot.
+//
+//	A poll and a ballot are the same.  In JavaScript Cambrian uses the word 'poll', and in C++ Cambrian uses the word 'ballot'
+//
+class OPoll : public QObject
+{
+	Q_OBJECT
+protected:
+	CEventBallotSent * m_pBallot;
+	QString m_sTitle;
+	QString m_sDescription;
+
+public:
+	OPoll(CEventBallotSent * pBallot);
+	virtual ~OPoll();
+	QString id() const;
+	QString title() const;
+	void title(QString & sTitle);
+	QString description() const;
+	void description(QString & sDescription);
+
+	Q_PROPERTY(QString id READ id)
+	Q_PROPERTY(QString title READ title WRITE title)
+	Q_PROPERTY(QString description READ description WRITE description)
+public slots:
+	void save();
+};
+
 //	Helper for the Ballotmaster
 class OPolls : public QObject
 {
@@ -57,9 +87,13 @@ public:
 	~OPolls();
 
 public slots:
+	QVariant build();
+	QVariant list();
+
+	/* Old stuff with XML
 	QString list() const;
 	void save(QString sXmlPolls);
-
+	*/
 };
 
 class OCambrian : public QObject
