@@ -56,8 +56,6 @@ class OPoll : public QObject
 	Q_OBJECT
 protected:
 	CEventBallotSent * m_pBallot;
-	QString m_sTitle;
-	QString m_sDescription;
 
 public:
 	OPoll(CEventBallotSent * pBallot);
@@ -77,8 +75,10 @@ public:
 	Q_PROPERTY(QString description READ description WRITE description)
 	Q_PROPERTY(QStringList choices READ choices WRITE choices)
 public slots:
-	void save();
+	bool save();
 	void destroy();
+	void start();
+	void stop();
 };
 
 //	Helper for the Ballotmaster

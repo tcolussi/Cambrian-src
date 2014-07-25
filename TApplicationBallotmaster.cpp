@@ -280,18 +280,31 @@ OPoll::choices(const QStringList & lsChoices)
 	return m_pBallot->SetChoices(lsChoices);
 	}
 
-void
+bool
 OPoll::save()
 	{
-	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($Q)\n", &m_sTitle);
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($S)\n", &m_pBallot->m_strTitle);
 	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventDeleted;
 	m_pBallot->PGetAccount_NZ()->PGetConfiguration()->XmlConfigurationSaveToFile();	// Force a save to make sure if the machine crashes, the poll have been saved
+	return true;
 	}
 
 void
 OPoll::destroy()
 	{
 	m_pBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;
+	}
+
+void
+OPoll::start()
+	{
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::start($S)\n", &m_pBallot->m_strTitle);
+	}
+
+void
+OPoll::stop()
+	{
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::stop($S)\n", &m_pBallot->m_strTitle);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
