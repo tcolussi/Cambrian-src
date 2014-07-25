@@ -69,7 +69,7 @@ CListNotices::Notice_PAddUnique(PA_DELETING INotice * paiwNoticeNew, INOUT ITree
 	Assert(paiwNoticeNew->EGetRuntimeClass() != RTI(Null));
 	Assert(paiwNoticeNew->m_piwNoticeNext == NULL);
 	Assert(paiwNoticeNew->m_plistaParent == NULL);
-	Endorse(piTreeItemSelected == NULL || piTreeItemSelected->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+	Endorse(piTreeItemSelected == NULL || PGetRuntimeInterfaceOf_ITreeItem(piTreeItemSelected) != NULL);
 
 	// Before adding the notice to the global list, query each notice for duplicate
 	BOOL fuDeleteNotice = FALSE;
@@ -180,7 +180,7 @@ void
 CListNotices::Notices_DeleteAllRelatedToTreeItem(const ITreeItem * piTreeItemDeleting)
 	{
 	Assert(piTreeItemDeleting != NULL);
-	Assert(piTreeItemDeleting->PGetRuntimeInterface(RTI(ITreeItem)) == piTreeItemDeleting);	// The vtable of the Tree Item should still be valid
+	Assert(PGetRuntimeInterfaceOf_ITreeItem(piTreeItemDeleting) == piTreeItemDeleting);	// The vtable of the Tree Item should still be valid
 	INotice * piwNoticePrevious = NULL;
 	INotice * piwNotice = m_paiwNoticeList;
 	while (piwNotice != NULL)
@@ -230,7 +230,7 @@ NoticeListRoaming_AddMessageWarning_VE(ITreeItem * pSponsor, PSZAC pszTitle, PSZ
 void
 NoticeListRoaming_TreeItemGotFocus(IN ITreeItem * piTreeItemFocus)
 	{
-	Assert(piTreeItemFocus->PGetRuntimeInterface(RTI(ITreeItem)) == piTreeItemFocus);
+	Assert(PGetRuntimeInterfaceOf_ITreeItem(piTreeItemFocus) == piTreeItemFocus);
 	INotice * piwNoticePrevious = NULL;
 	INotice * piwNotice = g_listaNoticesRoaming.m_paiwNoticeList;
 	while (piwNotice != NULL)
@@ -405,7 +405,7 @@ ENoticeAction
 INotice::ETreeItemGotFocus(IN ITreeItem * piTreeItemFocus)
 	{
 	Assert(piTreeItemFocus != NULL);
-	Assert(piTreeItemFocus->PGetRuntimeInterface(RTI(ITreeItem)) == piTreeItemFocus);
+	Assert(PGetRuntimeInterfaceOf_ITreeItem(piTreeItemFocus) == piTreeItemFocus);
 	return eNoticeActionDisplay;
 	}
 
@@ -417,7 +417,7 @@ BOOL
 INotice::FDeleteNoticeBecauseDeletingTreeItem(const ITreeItem * piTreeItemDeleting)
 	{
 	Assert(piTreeItemDeleting != NULL);
-	Assert(piTreeItemDeleting->PGetRuntimeInterface(RTI(ITreeItem)) == piTreeItemDeleting);
+	Assert(PGetRuntimeInterfaceOf_ITreeItem(piTreeItemDeleting) == piTreeItemDeleting);
 	Endorse(mu_sponsor.piTreeItem == NULL);
 	return (piTreeItemDeleting == mu_sponsor.piTreeItem);
 	}
@@ -614,7 +614,7 @@ ENoticeAction
 WNoticeMessageSponsored::ETreeItemGotFocus(IN ITreeItem * piTreeItemFocus)
 	{
 	Assert(mu_sponsor.piTreeItem != NULL);
-	return (ENoticeAction)(piTreeItemFocus->PGetRuntimeInterface(mu_sponsor.piTreeItem->EGetRuntimeClass()) == mu_sponsor.piTreeItem);
+	return (ENoticeAction)(PGetRuntimeInterfaceOf_(piTreeItemFocus, mu_sponsor.piTreeItem->EGetRuntimeClass()) == mu_sponsor.piTreeItem);
 	}
 
 

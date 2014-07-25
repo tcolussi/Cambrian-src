@@ -17,7 +17,7 @@ CTreeItemW::PFindChildItemMatchingRuntimeClass(RTI_ENUM rti) const
 		{
 		CTreeItemW * pChild = (CTreeItemW *)child(cChildren);
 		Assert(pChild->m_piTreeItem != NULL);
-		Assert(pChild->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(pChild->m_piTreeItem) != NULL);
 		if (pChild->m_piTreeItem->EGetRuntimeClass() == rti)
 			return pChild->m_piTreeItem;
 		}
@@ -39,12 +39,12 @@ ITreeItem::~ITreeItem()
 	}
 
 //	ITreeItem::IRuntimeObject::PGetRuntimeInterface()
-void *
-ITreeItem::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+ITreeItem::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
 	if (rti == RTI(ITreeItem))
 		return (ITreeItem *)this;
-	return IXmlExchangeObjectID::PGetRuntimeInterface(rti);
+	return IXmlExchangeObjectID::PGetRuntimeInterface(rti, piObjectSecondary);
 	}
 
 //	ITreeItem::IXmlExchange::XmlExchange()
@@ -359,7 +359,7 @@ ITreeItem::TreeItemW_PGetParent() const
 		if (poParent != NULL)
 			{
 			Assert(poParent->m_piTreeItem != NULL);
-			Assert(poParent->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+			Assert(PGetRuntimeInterfaceOf_ITreeItem(poParent->m_piTreeItem) != NULL);
 			return poParent->m_piTreeItem;
 			}
 		}
@@ -371,7 +371,7 @@ void
 CArrayPtrTreeItems::DeleteTreeItem(PA_DELETING ITreeItem * paTreeItem)
 	{
 	Assert(paTreeItem != NULL);
-	Assert(paTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) == paTreeItem);
+	Assert(PGetRuntimeInterfaceOf_ITreeItem(paTreeItem) == paTreeItem);
 	(void)RemoveElementAssertI(paTreeItem);
 	delete paTreeItem;
 	}
@@ -396,7 +396,7 @@ CArrayPtrTreeItems::ForEach_ClearFlagTreeItem(UINT kfFlagTreeItem) const
 	while (ppTreeItem != ppTreeItemStop)
 		{
 		ITreeItem * pTreeItem = *ppTreeItem++;
-		Assert(pTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) == pTreeItem);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItem) == pTreeItem);
 		pTreeItem->m_uFlagsTreeItem &= ~kfFlagTreeItem;
 		}
 	}
@@ -409,7 +409,7 @@ CArrayPtrTreeItems::ForEach_SetFlagTreeItem(UINT kfFlagTreeItem) const
 	while (ppTreeItem != ppTreeItemStop)
 		{
 		ITreeItem * pTreeItem = *ppTreeItem++;
-		Assert(pTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) == pTreeItem);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItem) == pTreeItem);
 		pTreeItem->m_uFlagsTreeItem |= kfFlagTreeItem;
 		}
 	}
@@ -426,7 +426,7 @@ CArrayPtrTreeItems::RemoveAllTreeItemsMatchingFlag(UINT kfFlagTreeItem)
 	while (ppTreeItemSrc != ppTreeItemStop)
 		{
 		ITreeItem * pTreeItem = *ppTreeItemSrc++;
-		Assert(pTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) == pTreeItem);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItem) == pTreeItem);
 		if ((pTreeItem->m_uFlagsTreeItem & kfFlagTreeItem) == 0)
 			*ppTreeItemDst++ = pTreeItem;
 		}

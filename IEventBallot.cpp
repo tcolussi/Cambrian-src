@@ -38,6 +38,12 @@ IEventBallot::IEventBallot(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 
 IEventBallot::~IEventBallot()
 	{
+	DeleteChoices();
+	}
+
+void
+IEventBallot::DeleteChoices()
+	{
 	m_arraypaChoices.DeleteAllChoices();
 	m_arraypaVotes.DeleteAllVotes();
 	}
@@ -307,6 +313,30 @@ IEventBallot::PAllocateNewVote()
 	_CEventBallotVote * pVote = new _CEventBallotVote;
 	m_arraypaVotes.Add(PA_CHILD pVote);
 	return pVote;
+	}
+
+void
+IEventBallot::SetChoices(const QStringList & lsChoices)
+	{
+	DeleteChoices();	// Delete any previous choice(s)
+	foreach(const QString & sChoice, lsChoices)
+		{
+		PAllocateNewChoice()->m_strQuestion = sChoice;
+		}
+	}
+
+QStringList
+IEventBallot::LsGetChoices() const
+	{
+	QStringList lsChoices;
+	_CEventBallotChoice ** ppChoiceStop;
+	_CEventBallotChoice ** ppChoice = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
+	while (ppChoice != ppChoiceStop)
+		{
+		_CEventBallotChoice * pChoice = *ppChoice++;
+		lsChoices.append(pChoice->m_strQuestion);
+		}
+	return lsChoices;
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

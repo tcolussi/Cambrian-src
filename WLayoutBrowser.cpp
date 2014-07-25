@@ -11,7 +11,7 @@
 #define d_coBrowserDebug			d_coGreen
 #define d_coBrowserDebugWarning		d_coRed		// Display a warning (typically a minor error)
 
-//#include <QtScript/QScriptEngine>
+#include <QtScript/QScriptEngine>
 //#include <QtScript/QScriptContext>
 //#include <QScriptValue>
 //#include <QtScript/
@@ -162,11 +162,31 @@ OCambrian::Profile()
 	}
 
 QVariant
-OCambrian::Polls()
+OCambrian::polls()
 	{
+	/*
+	OPolls * p = new OPolls(this);
+	p->dumpObjectTree();
+	return QVariant::fromValue(p);
+	*/
+	//QSharedDataPointer<OPolls> oPolls(new OPolls(this));
+	//return QVariant::fromValue(oPolls);
+	/*
+	QSharedPointer<OPolls> oPolls(new OPolls(this));
+	return QVariant::fromValue(oPolls.data());
+	*/
+	//return QVariant::fromValue(new OPolls(this));
 	if (m_paPolls == NULL)
 		m_paPolls = new OPolls(this);
 	return QVariant::fromValue(m_paPolls);
+
+	/*
+	QScopedPointer <OPolls *>p;
+	p.reset(&m_paPolls);
+	//qVariantFromValue
+	return QVariant::fromValue(p);
+	*/
+	//
 	/*
 	QVariant v;
 	v.setValue(m_paPolls);

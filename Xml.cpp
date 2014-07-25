@@ -2998,12 +2998,12 @@ IXmlExchange::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	}
 
 //	IXmlExchangeObjectID::IRuntimeObject::PGetRuntimeInterface()
-void *
-IXmlExchangeObjectID::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+IXmlExchangeObjectID::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
 	if (rti == RTI(IXmlExchangeObjectID))
 		return (void *)this;
-	return IXmlExchange::PGetRuntimeInterface(rti);
+	return IXmlExchange::PGetRuntimeInterface(rti, piObjectSecondary);
 	}
 
 //	IXmlExchangeObjectID::IXmlExchange::XmlExchange()
@@ -3027,7 +3027,7 @@ CArrayPtrXmlSerializableObjects::PFindObjectById(UINT uObjectId) const
 			{
 			IXmlExchangeObjectID * pObject = *ppObject++;
 			Assert(pObject != NULL);
-			Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID)) != NULL);
+			Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID), NULL) == pObject);
 			Assert(pObject->mu_Cookie.uSerializeObjectId != 0);
 			if (pObject->mu_Cookie.uSerializeObjectId == uObjectId)
 				return pObject;
@@ -3055,7 +3055,7 @@ CArrayPtrXmlSerializableObjects::ForEach_UAssignObjectIds(UINT uObjectIdPrevious
 		{
 		IXmlExchangeObjectID * pObject = *ppObject++;
 		Assert(pObject != NULL);
-		Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID)) != NULL);
+		Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID), NULL) == pObject);
 		pObject->mu_Cookie.uSerializeObjectId = ++uObjectIdPrevious;
 		}
 	return uObjectIdPrevious;
@@ -3071,7 +3071,7 @@ CArrayPtrXmlSerializableObjects::ForEach_SetCookieValue(LPARAM lParam) const
 		{
 		IXmlExchangeObjectID * pObject = *ppObject++;
 		Assert(pObject != NULL);
-		Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID)) != NULL);
+		Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID), NULL) == pObject);
 		pObject->mu_Cookie.lParam = lParam;
 		}
 	}
@@ -3086,7 +3086,7 @@ CArrayPtrXmlSerializableObjects::ForEach_SetCookieValueToNULL() const
 		{
 		IXmlExchangeObjectID * pObject = *ppObject++;
 		Assert(pObject != NULL);
-		Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID)) != NULL);
+		Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID), NULL) == pObject);
 		pObject->mu_Cookie.lParam = 0;
 		}
 	}
@@ -3662,7 +3662,7 @@ CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CAr
 			{
 			IXmlExchangeObjectID * pObject = *ppObject++;
 			Assert(pObject != NULL);
-			Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID)) == pObject);
+			Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID), NULL) == pObject);
 			Assert(pObject->UGetObjectId() > 0);
 			if (pObject != NULL)
 				g_strScratchBufferStatusBar.BinAppendTextInteger(pObject->UGetObjectId());
@@ -3692,7 +3692,7 @@ CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CAr
 						IXmlExchangeObjectID * pObject = arraypObjectsLookup.PFindObjectById(stn.u.nData);
 						if (pObject != NULL)
 							{
-							Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID)) == pObject);
+							Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID), NULL) == pObject);
 							parraypObjects->Add(pObject);
 							stn.pszuSrc = stn.pchStop;
 							Assert(stn.pszuSrc != NULL);

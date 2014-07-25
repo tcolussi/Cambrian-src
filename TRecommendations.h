@@ -77,6 +77,7 @@ public:
 	TContact * m_pContact;
 public:
 	TRecommendations(TContact * pContact);
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;			// From IRuntimeObject
 	virtual void TreeItem_GotFocus();		// From ITreeItem
 
 	RTI_IMPLEMENTATION(TRecommendations)
@@ -88,6 +89,7 @@ public:
 	TProfile * m_pProfile;
 public:
 	TMyRecommendations(TProfile * pProfile);
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;			// From IRuntimeObject
 	virtual void TreeItem_GotFocus();		// From ITreeItem
 
 	RTI_IMPLEMENTATION(TMyRecommendations)

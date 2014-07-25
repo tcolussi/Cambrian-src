@@ -63,7 +63,7 @@ CArrayPtrContacts::RemoveAllContactsComposingWhoAreIdle()
 	while (ppContactSrc != ppContactStop)
 		{
 		TContact * pContact = *ppContactSrc++;
-		Assert(pContact->PGetRuntimeInterface(RTI(TContact)) == pContact);
+		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t[$@] $S ($s) is still typing for $i minutes...\n", &pContact->m_strJidBare, pContact->ChatLog_PszGetNickname(), g_tsmMinutesSinceApplicationStarted - pContact->m_tsmLastStanzaReceived);
 		if (g_tsmMinutesSinceApplicationStarted - pContact->m_tsmLastStanzaReceived >= 4)
 			pContact->ChatLogContact_ChatStateIconUpdateComposingStopped();	// If the user has not typed anything during the past 4 minutes, then assume he stopped typing.

@@ -8,7 +8,7 @@
 void
 DisplayApplicationBallotMaster()
 	{
-	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();	// This is a bit of a hack, however this dialog should appear only when a profile is selected
+	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
 	if (pProfile == NULL)
 		return;
 	TApplicationBallotmaster * pApplication = pProfile->PGetApplicationBallotmaster_NZ();
@@ -174,6 +174,7 @@ CEventBallotSent *
 TApplicationBallotmaster::PAllocateBallot()
 	{
 	CEventBallotSent * paEventBallot = new CEventBallotSent();
+	paEventBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;	// When allocating a new ballot, assume it has never been saved
 	CVaultEvents * pVault = PGetVault_NZ();
 	paEventBallot->m_pVaultParent_NZ = pVault;
 	pVault->m_arraypaEvents.Add(PA_CHILD paEventBallot);
@@ -235,12 +236,18 @@ OPoll::id() const
 	}
 
 QString
+OPoll::status() const
+	{
+	return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "deleted" : "unstarted";
+	}
+
+QString
 OPoll::title() const
 	{
 	return m_pBallot->m_strTitle;
 	}
 void
-OPoll::title(QString & sTitle)
+OPoll::title(const QString & sTitle)
 	{
 	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::title($Q)\n", &sTitle);
 	m_pBallot->m_strTitle = sTitle;
@@ -252,17 +259,40 @@ OPoll::description() const
 	return m_pBallot->m_strDescription;
 	}
 void
-OPoll::description(QString & sDescription)
+OPoll::description(const QString & sDescription)
 	{
 	m_pBallot->m_strDescription = sDescription;
+	}
+QStringList
+OPoll::choices() const
+	{
+	return m_pBallot->LsGetChoices();
+	/*
+	QStringList lsChoices;
+	lsChoices << "a" << "b" << "c";
+	return lsChoices;
+	*/
+	}
+
+void
+OPoll::choices(const QStringList & lsChoices)
+	{
+	return m_pBallot->SetChoices(lsChoices);
 	}
 
 void
 OPoll::save()
 	{
 	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($Q)\n", &m_sTitle);
+	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventDeleted;
+	m_pBallot->PGetAccount_NZ()->PGetConfiguration()->XmlConfigurationSaveToFile();	// Force a save to make sure if the machine crashes, the poll have been saved
 	}
 
+void
+OPoll::destroy()
+	{
+	m_pBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 OPolls::OPolls(OCambrian * poCambrian)
@@ -274,6 +304,7 @@ OPolls::OPolls(OCambrian * poCambrian)
 
 OPolls::~OPolls()
 	{
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPolls::~OPolls() 0x$p\n", this);	// Display in the Error Log (to make sure we have not missed it)
 	}
 
 //	build(), slot
@@ -288,13 +319,45 @@ OPolls::build()
 
 
 
-//	list(), slot
-//	I think list() should be a property rather than a method.
+//	getList(), slot
+//	Return a list of polls.
 QVariant
-OPolls::list()
+OPolls::getList()
 	{
-	QVariantList oList;
 	CVaultEvents * pVaultPolls = m_pBallotmaster->PGetVault_NZ();
+	#if 0
+	#define d_cDebugLists		10000
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPolls::getList() [Debug=$I iterations]\n", d_cDebugLists);
+	for (int i = 0; i < d_cDebugLists - 1; i++)
+		{
+		QVariantList oList;
+		IEvent ** ppEventStop;
+		IEvent ** ppEvent = pVaultPolls->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+		//QScopedArrayPointer <OPoll *>oList(new OPoll *[10]);
+		//QScopedPointerArrayDeleter <QObject *>oList;
+		while (ppEvent != ppEventStop)
+			{
+			CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
+			/*
+			QSharedPointer<OPoll> oPoll(new OPoll(pEvent));
+			oList.append(QVariant::fromValue(oPoll));
+			*/
+			/*
+			QScopedPointer<OPoll> p(new OPoll(pEvent));
+			oList.append(p);
+			*/
+			/*
+			QPointer<OPoll> p(new OPoll(pEvent));
+			oList.append(p);
+			*/
+			//oList[0] = new OPoll(pEvent);
+			//oList.append(QVariant::fromValue(PA_CHILD QScopedPointer(new OPoll(pEvent))));
+			oList.append(QVariant::fromValue(PA_CHILD new OPoll(pEvent)));
+			}
+		}
+	#endif
+	//MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::list() - $i elements\n", oList.size());
+	QVariantList oList;
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = pVaultPolls->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
@@ -302,8 +365,34 @@ OPolls::list()
 		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
 		oList.append(QVariant::fromValue(PA_CHILD new OPoll(pEvent)));
 		}
-	//MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::list() - $i elements\n", oList.size());
 	return QVariant::fromValue(oList);
+	}
+
+TIMESTAMP
+Timestamp_FromStringW_ML(const QString & sTimestamp)
+	{
+	CStr str = sTimestamp;
+	return Timestamp_FromString_ML(str);
+	}
+
+
+//	get(), slot
+//	Return the poll matching the ID
+QVariant
+OPolls::get(const QString & sIdPoll)
+	{
+	// Convert the string into a timestamp
+	const TIMESTAMP tsIdPoll = Timestamp_FromStringW_ML(sIdPoll);
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = m_pBallotmaster->PGetVault_NZ()->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
+		//MessageLog_AppendTextFormatCo(d_coRed, "Comparing '$t' and '$t'...\n", pEvent->m_tsEventID, tsIdPoll);
+		if (pEvent->m_tsEventID == tsIdPoll)
+			return QVariant::fromValue(PA_CHILD new OPoll(pEvent));
+		}
+	return QVariant();
 	}
 
 /*

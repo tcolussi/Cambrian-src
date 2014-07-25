@@ -73,7 +73,7 @@ public:
 	CChatConfiguration * PGetConfiguration() const;
 	const SHashSha1 * PGetSaltOfConfiguration() const;
 
-	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;					// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;					// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);				// From IXmlExchange
 	virtual BOOL TreeItem_FContainsMatchingText(PSZUC pszTextSearchLowercase) CONST_MCC;		// From ITreeItem
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;								// From ITreeItem
@@ -196,7 +196,7 @@ public:
 public:
 	TAccountAlias(TAccountXmpp * pAccount);
 
-	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;			// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;			// From IRuntimeObject
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);			// From ITreeItem
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);	// From ITreeItem
 	virtual void TreeItem_GotFocus();										// From ITreeItem

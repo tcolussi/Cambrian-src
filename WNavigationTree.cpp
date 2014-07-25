@@ -148,7 +148,7 @@ WNavigationTree::NavigationTree_SelectTreeItemWidget(CTreeItemW * poTreeItem)
 	if (poTreeItem != NULL)
 		{
 		Assert(poTreeItem->m_piTreeItem != NULL);
-		Assert(poTreeItem->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(poTreeItem->m_piTreeItem) != NULL);
 		m_pwTreeView->setCurrentItem(poTreeItem);
 		}
 	}
@@ -161,7 +161,7 @@ WNavigationTree::NavigationTree_RenameTreeItemWidget(CTreeItemW * poTreeItem)
 //	MessageLog_AppendTextFormatCo(d_coGreenDarker, "NavigationTree_RenameTreeItemWidget(0x$p) m_pTreeWidgetItemEditing=0x$p\n", pwTreeItem, m_pTreeWidgetItemEditing);
 	Assert(poTreeItem != NULL);
 	Assert(poTreeItem->m_piTreeItem != NULL);
-	Assert(poTreeItem->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+	Assert(PGetRuntimeInterfaceOf_ITreeItem(poTreeItem->m_piTreeItem) != NULL);
 
 	if (!m_pwTreeView->FIsEditingTreeWidgetItem())
 		{
@@ -193,7 +193,7 @@ WNavigationTree::SL_TreeItemEdited(QTreeWidgetItem * pItemEdited, int iColumn)
 		((CTreeItemW *)pItemEdited)->ItemFlagsEditingDisable();	// Prevent the item from being editable.  This is important otherwise Qt will not send the signal itemChanged() if the user attempts to edit the same item again.
 		ITreeItem * piTreeItem = ((CTreeItemW *)pItemEdited)->m_piTreeItem;
 		Assert (piTreeItem != NULL);
-		Assert(piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(piTreeItem) == piTreeItem);
 		piTreeItem->m_strNameDisplayTyped =  pItemEdited->text(iColumn);
 		piTreeItem->TreeItem_EDoMenuAction(eMenuSpecialAction_ITreeItemRenamed);	// Notify the Tree Item the display name was changed (the method TreeItem_EDoMenuAction() may change the display text)
 		pItemEdited->setText(iColumn, (CString)piTreeItem->TreeItem_PszGetNameDisplay());		// Make sure the GUI always display the updated text
@@ -242,7 +242,7 @@ WNavigationTree::NavigationTree_DisplayTreeItemsContainingText(const QString & s
 				return;
 			ITreeItem * piItem = pTreeWidgetItem->m_piTreeItem;
 			Assert(piItem != NULL);
-			Assert(piItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+			Assert(PGetRuntimeInterfaceOf_ITreeItem(piItem) == piItem);
 			/*
 			if (piItem->TreeItem_FContainsMatchingText(strSearch))
 				MessageLog_AppendTextFormatCo(d_coBlack, "$S is visible\n", &piItem->m_strNameDisplay);
@@ -338,7 +338,7 @@ WNavigationTree::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn)
 	Assert(pTreeItem != NULL);	// This is a rare case when an object was added to the navigation tree, but no associated ITreeItem
 	if (pTreeItem != NULL)
 		{
-		Assert(pTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItem) == pTreeItem);
 		pTreeItem->TreeItem_IconUpdateOnMessagesRead();	// If the user click on a Tree Item (typically a contact or group), assume all messages related to this Tree Item have been read
 		}
 	}
@@ -358,7 +358,7 @@ ITreeItem::TreeItemW_PAllocate()
 void
 ITreeItem::TreeItemW_DisplayWithinNavigationTreeBefore(ITreeItem * pTreeItemBefore)
 	{
-	Assert(pTreeItemBefore->PGetRuntimeInterface(RTI(ITreeItem)) == pTreeItemBefore);
+	Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItemBefore) == pTreeItemBefore);
 	CTreeItemW * poTreeWidgetItem = pTreeItemBefore->m_paTreeItemW_YZ;
 	if (poTreeWidgetItem != NULL)
 		{
@@ -523,7 +523,7 @@ NavigationTree_SelectTreeItem(ITreeItem * pTreeItem)
 	{
 	if (pTreeItem != NULL)
 		{
-		Assert(pTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItem) == pTreeItem);
 		pTreeItem->TreeItemW_SelectWithinNavigationTree();
 		}
 	}
@@ -536,7 +536,7 @@ NavigationTree_PGetSelectedTreeItem()
 	if (pwTreeItem != NULL)
 		{
 		Assert(pwTreeItem->m_piTreeItem != NULL);
-		Assert(pwTreeItem->m_piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(pwTreeItem->m_piTreeItem) != NULL);
 		return pwTreeItem->m_piTreeItem;
 		}
 	return NULL;
@@ -547,24 +547,22 @@ ITreeItem *
 NavigationTree_PGetSelectedTreeItemMatchingInterface(RTI_ENUM rti)
 	{
 	ITreeItem * piTreeItem = NavigationTree_PGetSelectedTreeItem();
-	if (piTreeItem == NULL && rti == RTI(TAccountXmpp))
+	if (piTreeItem == NULL)
 		{
-		// This is a special exception where there is no selected Tree Item, however there is just one account, so we assume the user wants to access that account
-		return (ITreeItem *)g_arraypAccounts.PvGetElementUnique_YZ(); // May return NULL
+		// Special exception if there is nothing selected in the Navigation Tree: use the profile to query the interface
+		piTreeItem = g_oConfiguration.PGetProfileSelectedUnique_YZ();
+		if (piTreeItem == NULL)
+			return NULL;
 		}
-	if (piTreeItem != NULL)
+	#ifdef DEBUG
+	ITreeItem * piTreeItemMatchingInterface = PGetRuntimeInterfaceOf_ITreeItem(piTreeItem);
+	if (piTreeItemMatchingInterface != NULL)
 		{
-		#ifdef DEBUG
-		ITreeItem * piTreeItemMatchingInterface = (ITreeItem *)piTreeItem->PGetRuntimeInterface(rti);
-		if (piTreeItemMatchingInterface != NULL)
-			{
-			// Make sure the returned pointer matching the interface rti is inherited from ITreeItem, otherwise there could be a big crash.
-			Assert(piTreeItemMatchingInterface->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
-			}
-		#endif
-		return (ITreeItem *)piTreeItem->PGetRuntimeInterface(rti);	// May return NULL if piTreeItem does not have an interface compatible to rti.
+		// Make sure the returned pointer matching the interface rti is inherited from ITreeItem, otherwise there could be a big crash.
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(piTreeItemMatchingInterface) == piTreeItem);
 		}
-	return NULL;
+	#endif
+	return (ITreeItem *)piTreeItem->PGetRuntimeInterface(rti, NULL);	// May return NULL if piTreeItem does not have an interface compatible to rti.
 	}
 
 TProfile *
@@ -572,6 +570,17 @@ NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile()
 	{
 	return (TProfile *)NavigationTree_PGetSelectedTreeItemMatchingInterface(RTI(TProfile));
 	}
+
+/*
+TProfile *
+NavigationTree_PGetSelectedUnique()	// I think this function is redundant and should be deleted
+	{
+	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+	if (pProfile != NULL)
+		return pProfile;
+	return g_oConfiguration.PGetProfileSelectedUnique_YZ();
+	}
+*/
 
 TAccountXmpp *
 NavigationTree_PGetSelectedTreeItemMatchingInterfaceTAccount()

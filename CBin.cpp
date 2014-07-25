@@ -2224,9 +2224,9 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 			case d_chSourceJidBare:		// ^j
 			case d_chSourceJidFull:		// ^J
 				u.piTreeItem = va_arg(vlArgs, ITreeItem *);
+				Assert(PGetRuntimeInterfaceOf_ITreeItem(u.piTreeItem) == u.piTreeItem);
 				if (u.piTreeItem != NULL)
 					{
-					Assert(u.piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) == u.piTreeItem);
 					if (u.piTreeItem->EGetRuntimeClass() == RTI(TAccountXmpp))
 						{
 						TAccountXmpp * pAccount = (TAccountXmpp *)u.piTreeItem;

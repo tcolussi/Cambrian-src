@@ -359,7 +359,7 @@ WCertificateAuthenticator::WCertificateAuthenticator(TCertificate * pCertificate
 	{
 	m_pCertificate = pCertificate;
 	const CBin * pbinFingerprint = &c_strEmpty;
-	TAccountXmpp * pAccount = pCertificate->PGetRuntimeInterface_TAccountXmpp();
+	TAccountXmpp * pAccount = PGetRuntimeInterfaceOf_TAccountXmpp(pCertificate);
 	if (pAccount != NULL)
 		{
 		// The certificate has a single account associated

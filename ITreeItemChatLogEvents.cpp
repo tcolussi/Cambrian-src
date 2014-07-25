@@ -94,12 +94,12 @@ ITreeItemChatLogEvents::PGetConfiguration() const
 	}
 
 //	ITreeItemChatLogEvents::IRuntimeObject::PGetRuntimeInterface()
-void *
-ITreeItemChatLogEvents::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+ITreeItemChatLogEvents::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
 	if (rti == RTI(ITreeItemChatLogEvents))
 		return (ITreeItemChatLogEvents *)this;
-	return ITreeItem::PGetRuntimeInterface(rti);
+	return ITreeItem::PGetRuntimeInterface(rti, piObjectSecondary);
 	}
 
 //	Return the default download folder path to save files when the user clicks on the "[ Save ]" button.

@@ -31,8 +31,8 @@
 #ifndef PCVOID
 	typedef const void * PCVOID;
 #endif
-typedef PVOID POBJECT;	// (po) Generic pointer to an object (rahter than just a void pointer).  This datatype is useful to better document an interface where the parameter is an object, however for technical reasons, the parameter is a a generic void *.
-typedef PVOID PVPARAM;	// Similar as lParam, however points to a data structure (or object).  LPARAM may contain an integer value while PVPARAM is always a pointer to some data.
+typedef PVOID PVPARAM;		// Similar as lParam, however points to a data structure (or object).  LPARAM may contain an integer value while PVPARAM is always a pointer to some data.
+typedef PVOID POBJECT;		// (po) Generic pointer to an object (rahter than just a void pointer).  This datatype is useful to better document an interface where the parameter is an object, however for technical reasons, the parameter is a a generic void *.
 
 typedef long long L64;				// Hungarian prefix: l
 typedef unsigned long long LU64;	// Hungarian prefix: lu

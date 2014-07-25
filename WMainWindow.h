@@ -67,6 +67,7 @@ void NavigationTree_SelectTreeItem(ITreeItem * pTreeItem);
 ITreeItem * NavigationTree_PGetSelectedTreeItem();
 ITreeItem * NavigationTree_PGetSelectedTreeItemMatchingInterface(RTI_ENUM rti);
 TProfile * NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+TProfile * NavigationTree_PGetSelectedUnique();
 TAccountXmpp * NavigationTree_PGetSelectedTreeItemMatchingInterfaceTAccount();
 TContact * NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact();
 ITreeItemChatLogEvents * NavigationTree_PGetSelectedTreeItemMatchingContractOrGroup();

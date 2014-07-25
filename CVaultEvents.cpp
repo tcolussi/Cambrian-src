@@ -24,6 +24,8 @@ CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 	while (ppEvent != ppEventStop)
 		{
 		IEvent * pEvent = *ppEvent++;
+		if (pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted)
+			continue;	// Don't serialize deleted events
 		EEventClass eEventClass = pEvent->EGetEventClass();
 		pbinXmlEvents->BinAppendTextSzv_VE("<$U" _tsI, eEventClass, pEvent->m_tsEventID);
 		pEvent->XmlSerializeCore(IOUT pbinXmlEvents);

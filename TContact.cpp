@@ -48,9 +48,11 @@ TContact::Contact_FuCommunicateViaXcp() const
 //	Enable the TContact object to respond to the interface of its parent, the TAccountXmpp
 //
 //	See also the identical method TGroup::PGetRuntimeInterface()
-void *
-TContact::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+TContact::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
+	Report(piObjectSecondary == NULL);
+	/*
 	switch (rti)
 		{
 	case RTI(TProfile):
@@ -61,6 +63,8 @@ TContact::PGetRuntimeInterface(const RTI_ENUM rti) const
 	default:
 		return ITreeItemChatLogEvents::PGetRuntimeInterface(rti);
 		} // switch
+	*/
+	return ITreeItemChatLogEvents::PGetRuntimeInterface(rti, m_pAccount);
 	} // PGetRuntimeInterface()
 
 
@@ -669,18 +673,24 @@ IContactAlias::~IContactAlias()
 	}
 
 //	IContactAlias::IRuntimeObject::PGetRuntimeInterface()
-void *
-IContactAlias::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+IContactAlias::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
+	Report(piObjectSecondary == NULL);
+	/*
 	switch (rti)
 		{
 	case RTI(TContact):
 		return m_pContact;
+	case RTI(TProfile):
+		return m_pContact->m_pAccount->m_pProfileParent;
 	case RTI(TAccountXmpp):
 		return m_pContact->m_pAccount;
 	default:
 		return ITreeItem::PGetRuntimeInterface(rti);
 		} // switch
+	*/
+	return ITreeItem::PGetRuntimeInterface(rti, m_pContact);
 	}
 
 void
@@ -832,12 +842,16 @@ TContactNew::TContactNew(TAccountXmpp * pAccount)
 	}
 
 //	TContactNew::IRuntimeObject::PGetRuntimeInterface()
-void *
-TContactNew::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+TContactNew::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
+	Report(piObjectSecondary == NULL);
+	/*
 	if (rti == RTI(TAccountXmpp))
 		return m_pAccount;
 	return ITreeItem::PGetRuntimeInterface(rti);
+	*/
+	return ITreeItem::PGetRuntimeInterface(rti, m_pAccount);
 	}
 
 //	TContactNew::ITreeItem::TreeItem_PszGetNameDisplay()

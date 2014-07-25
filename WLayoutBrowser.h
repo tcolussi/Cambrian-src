@@ -63,20 +63,26 @@ public:
 	OPoll(CEventBallotSent * pBallot);
 	virtual ~OPoll();
 	QString id() const;
+	QString status() const;
 	QString title() const;
-	void title(QString & sTitle);
+	void title(const QString & sTitle);
 	QString description() const;
-	void description(QString & sDescription);
+	void description(const QString & sDescription);
+	QStringList choices() const;
+	void choices(const QStringList & lsChoices);
 
 	Q_PROPERTY(QString id READ id)
+	Q_PROPERTY(QString status READ status)
 	Q_PROPERTY(QString title READ title WRITE title)
 	Q_PROPERTY(QString description READ description WRITE description)
+	Q_PROPERTY(QStringList choices READ choices WRITE choices)
 public slots:
 	void save();
+	void destroy();
 };
 
 //	Helper for the Ballotmaster
-class OPolls : public QObject
+class OPolls : public QObject, QSharedData
 {
 	Q_OBJECT
 protected:
@@ -88,13 +94,16 @@ public:
 
 public slots:
 	QVariant build();
-	QVariant list();
+	QVariant getList();
+	QVariant get(const QString & sIdPoll);
 
 	/* Old stuff with XML
 	QString list() const;
 	void save(QString sXmlPolls);
 	*/
 };
+
+//Q_DECLARE_METATYPE(QSharedPointer<OPolls>)
 
 class OCambrian : public QObject
 {
@@ -109,13 +118,13 @@ public:
 	Q_OBJECT
 	Q_PROPERTY(QVariant Settings READ Settings)
 	Q_PROPERTY(QVariant Profile READ Profile)
-	Q_PROPERTY(QVariant Polls READ Polls)
+	Q_PROPERTY(QVariant polls READ polls)
 public:
 	OCambrian(TProfile * pProfile, QObject * pParent);
 	virtual ~OCambrian();
 	QVariant Settings();
 	QVariant Profile();
-	QVariant Polls();
+	QVariant polls();
 
 public slots:
 	void SendBitcoin(int n);

@@ -286,7 +286,8 @@ public:
 		FE_kfEventOutOfSync			= 0x0001,	// The event is out of sync, and therefore display a little icon to show to the user
 		FE_kfEventDeliveryConfirmed	= 0x0002,	// The event was delivered and its checkmark was displayed.  This flag should be eventually removed, however it is a workaround a Qt bug in the QTextEdit
 		FE_kfEventProtocolWarning	= 0x0004,	// Therew was a minor error while transmitting the event.  This bit is set to give a second chance to retry, however to prevent an infinite loop to retry over and over
-		FE_kfEventProtocolError		= 0x0008	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
+		FE_kfEventProtocolError		= 0x0008,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
+		FE_kfEventDeleted			= 0x0010,	// The event was marked as deleted and therefore should not be saved
 		};
 	mutable UINT m_uFlagsEvent;				// Flags related to the event (not serialized)
 	#ifdef d_szEventDebug_strContactSource

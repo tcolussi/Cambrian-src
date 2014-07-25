@@ -198,19 +198,18 @@ TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTreeInvited_NZ(PSZU
 //	TAccountXmpp::IRuntimeObject::PGetRuntimeInterface()
 //
 //	Enable the TAccountXmpp object to respond to the interface of other objects it is related to, such as TCertificate and TCertificateServerName
-void *
-TAccountXmpp::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+TAccountXmpp::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
+	Report(piObjectSecondary == NULL);
 	switch (rti)
 		{
-	case RTI(TProfile):
-		return m_pProfileParent;
 	case RTI(TCertificate):
 		return Certificate_PGet_YZ();
 	case RTI(TCertificateServerName):
 		return Certificate_PGetServerName();
 	default:
-		return TAccountCore::PGetRuntimeInterface(rti);
+		return TAccountCore::PGetRuntimeInterface(rti, m_pProfileParent);
 		}
 	}
 

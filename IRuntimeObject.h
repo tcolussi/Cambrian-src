@@ -11,19 +11,17 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-TAccountXmpp * PGetRuntimeInterfaceOf_TAccountXmpp(IRuntimeObject * piObject);
-TCertificate * PGetRuntimeInterfaceOf_TCertificate(IRuntimeObject * piObject);
+POBJECT PGetRuntimeInterfaceOf_(const IRuntimeObject * piObject, RTI_ENUM rti);
+ITreeItem * PGetRuntimeInterfaceOf_ITreeItem(const IRuntimeObject * piObject);
+TAccountXmpp * PGetRuntimeInterfaceOf_TAccountXmpp(const IRuntimeObject * piObject);
+TCertificate * PGetRuntimeInterfaceOf_TCertificate(const IRuntimeObject * piObject);
 
 class IRuntimeObject
 {
   public:
 	virtual ~IRuntimeObject() { InitToGarbage(OUT this, sizeof(*this));	} // Make sure the vtable is no longer accessible
 	virtual RTI_ENUM EGetRuntimeClass() const = 0;	// Pure virtual - this method may be implemented using macro RTI_IMPLEMENTATION()
-	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;
-
-	// Wrappers
-	TAccountXmpp * PGetRuntimeInterface_TAccountXmpp() { return (TAccountXmpp *)PGetRuntimeInterface(RTI(TAccountXmpp)); }
-	TCertificate * PGetRuntimeInterface_TCertificate() { return (TCertificate *)PGetRuntimeInterface(RTI(TCertificate)); }
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;
 }; // IRuntimeObject
 
 class CArrayPtrRuntimeObjects : public CArray
@@ -33,6 +31,8 @@ public:
 	IRuntimeObject * PFindRuntimeObject(RTI_ENUM rti) const;
 	void DeleteRuntimeObject(PA_DELETING IRuntimeObject * paRuntimeObject);
 	void DeleteAllRuntimeObjects();
+
+	inline IRuntimeObject * PGetObjectUnique_YZ() const { return (IRuntimeObject *)PvGetElementUnique_YZ(); }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ public:
 public:
 	inline IXmlExchangeObjectID() { mu_Cookie.uSerializeObjectId = 0; }
 	inline int UGetObjectId() const { return mu_Cookie.uSerializeObjectId; }
-	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;		// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);
 }; // IXmlExchangeObjectID
 

@@ -67,6 +67,10 @@ public:
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 
+	void DeleteChoices();
+	void SetChoices(const QStringList & lsChoices);
+	QStringList LsGetChoices() const;
+
 	_CEventBallotChoice * PAllocateNewChoice();
 	_CEventBallotVote * PAllocateNewVote();
 };

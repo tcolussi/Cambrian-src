@@ -38,7 +38,7 @@ public:
 	void Approve();
 	BOOL FIsApproved() const;
 
-	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;					// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;					// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);					// From IXmlExchange
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;								// From ITreeItem
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);					// From ITreeItem
@@ -94,7 +94,7 @@ public:
 	void GetSslCertificate(OUT CSslCertificate * pSslCertificate) const;
 	TAccountXmpp * PFindAccountAuthenticating() const;
 
-	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;		// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);		// From IXmlExchange
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;					// From ITreeItem
 //	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);		// From ITreeItem
@@ -117,7 +117,7 @@ public:
 	void FlushDataAndCauseMemoryLeak();
 	void InitializeAsRootCertificates();
 
-	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;		// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;		// From IRuntimeObject
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;					// From ITreeItem
 	virtual void TreeItem_GotFocus();									// From ITreeItem
 

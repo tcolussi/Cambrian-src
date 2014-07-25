@@ -77,7 +77,7 @@ TCertificate::S_PaAllocateCertificate(PVOID pCertificateParentIssuer)
 
 TCertificate::TCertificate(TCertificate * pCertificateParentIssuer)
 	{
-	Assert(pCertificateParentIssuer == NULL || pCertificateParentIssuer->PGetRuntimeInterface(RTI(IRuntimeObject)) != NULL);	// A root certificate allocated by S_PaAllocateCertificate() will have a pointer to an interface ICertificate/TCertificates rather to the class TCertificate.  This is why it is important to call InitializeAsRootCertificates() after loading the root certificates.
+	Assert(PGetRuntimeInterfaceOf_ITreeItem(pCertificateParentIssuer) == pCertificateParentIssuer);	// A root certificate allocated by S_PaAllocateCertificate() will have a pointer to an interface ICertificate/TCertificates rather to the class TCertificate.  This is why it is important to call InitializeAsRootCertificates() after loading the root certificates.
 	m_pCertificateParentIssuer = pCertificateParentIssuer;
 	}
 
@@ -170,12 +170,11 @@ TCertificate::TreeItem_PszGetNameDisplay() CONST_MCC
 //	TCertificate::IRuntimeObject::PGetRuntimeInterface()
 //
 //	Enable the TCertificate object to respond to the interface TAccountXmpp if unique.
-void *
-TCertificate::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+TCertificate::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
-	if (rti == RTI(TAccountXmpp))
-		return PGetRuntimeInterfaceOf_TAccountXmpp((IRuntimeObject *)m_arraypaServers.PvGetElementUnique_YZ());	// May return NULL
-	return ICertificate::PGetRuntimeInterface(rti);
+	Report(piObjectSecondary == NULL);	// There should be no secondary interface for a certificate
+	return ICertificate::PGetRuntimeInterface(rti, (IRuntimeObject *)m_arraypaServers.PvGetElementUnique_YZ());	// Use the first server as the secondary interface
 	}
 
 //	TCertificate::ITreeItem::TreeItem_GotFocus()
@@ -227,14 +226,17 @@ TCertificateServerName::FIsApproved() const
 //
 //	Enable the TCertificateServerName object to respond to the interface of its parent TCertificate as well as
 //	the interface of TAccountXmpp if unique.
-void *
-TCertificateServerName::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+TCertificateServerName::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
+	Report(piObjectSecondary == NULL);
 	if (rti == RTI(TCertificate))
 		return m_pCertificateParent;
+	/*
 	if (rti == RTI(TAccountXmpp))
-		return m_arraypAccounts.PvGetElementUnique_YZ();	// May return NULL
-	return ITreeItem::PGetRuntimeInterface(rti);
+		return m_arraypAccounts.PGetObjectUnique_YZ();	// May return NULL
+	*/
+	return ITreeItem::PGetRuntimeInterface(rti, m_arraypAccounts.PGetObjectUnique_YZ());
 	}
 
 //	TCertificateServerName::IXmlExchange::XmlExchange()
@@ -362,10 +364,13 @@ TCertificates::TreeItem_GotFocus()
 //	TCertificates::IRuntimeObject::PGetRuntimeInterface()
 //
 //	Enable the TCertificates object to respond to the interface of a TAccountXmpp if unique.
-void *
-TCertificates::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+TCertificates::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
+	Report(piObjectSecondary == NULL);
+	/*
 	if (rti == RTI(TAccountXmpp))
 		return g_arraypAccounts.PvGetElementUnique_YZ();	// May return NULL
-	return ITreeItem::PGetRuntimeInterface(rti);
+	*/
+	return ITreeItem::PGetRuntimeInterface(rti, g_arraypAccounts.PGetObjectUnique_YZ());
 	}

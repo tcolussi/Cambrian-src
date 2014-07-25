@@ -91,7 +91,7 @@ public:
 
 	void TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay);
 
-	virtual void * PGetRuntimeInterface(const RTI_ENUM rti) const;		// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);	// From IXmlExchange
 	virtual BOOL TreeItem_FContainsMatchingText(PSZUC pszTextSearchLowercase) CONST_MCC;
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;

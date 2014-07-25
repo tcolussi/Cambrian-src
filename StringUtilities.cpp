@@ -871,7 +871,8 @@ UszuFromPsz(PSZUC pszUszu)
 //	This routine is similar to strcpy() but encodes each Unicode character to UTF-8.
 //	There is no error checking for destination buffer pszuUtf8; it is the responsability of the caller
 //	to make sure the destination buffer has enough room for the entire encoded string.
-//	Each wide character may take up to three UTF-8 bytes.
+//	Each wide character may take up to three UTF-8 bytes.  The best way to determine how much
+//	memory to allocate is to use CbAllocWtoU() or CbAllocCchwToU() if the length is already known.
 //
 //	The routine check for illegal unicode sequence.  In such a case, the pointer ppchwError is set
 //	to the first illegal unicode character, however the conversion continue until the end of the string.
@@ -1901,7 +1902,7 @@ Timestamp_FromString_ZZR(PSZUC pszTimestamp)
 				return ts;
 				}
 			//TRACE1("The timestamp '$s' does not meet the criteria of a valid timestamp", pszTimestampBegin);
-			return 0;
+			return d_ts_zNULL;
 			}
 		}
 	} // Timestamp_FromString_ZZR()

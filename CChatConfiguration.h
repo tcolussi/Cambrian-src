@@ -33,6 +33,8 @@ public:
 	CChatConfiguration();
 	~CChatConfiguration();
 	void Destroy();
+	TProfile * PGetProfileSelectedUnique_YZ() const;
+
 	TCertificate * PCertificateRegister(TCertificate * pCertificateParent, const CSslCertificate & oCertificateSsl);
 	TCertificate * PCertificatesRegister(QSslSocket * pSocket);
 	void NavigationTree_DisplayAllCertificates();

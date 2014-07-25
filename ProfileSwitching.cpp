@@ -44,7 +44,7 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 			break;
 		ITreeItem * piTreeItem = pTreeWidgetItem->m_piTreeItem;
 		Assert(piTreeItem != NULL);
-		Assert(piTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) == piTreeItem);	// Make sure the pointer is valid
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(piTreeItem) == piTreeItem);	// Make sure the pointer is valid
 		Assert(piTreeItem->m_paTreeItemW_YZ != NULL);
 		// Remember the state of each Tree Item before switching profile, so next time the profile is re-selected, then the entire arborescence is restored.
 		if (piTreeItem->m_paTreeItemW_YZ->isExpanded())

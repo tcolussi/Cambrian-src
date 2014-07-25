@@ -243,9 +243,11 @@ TGroup::Members_GetContacts(IOUT CArrayPtrContacts * parraypContacts) const
 //	Enable the TGroup object to respond to the interface of its parent, the TAccountXmpp.
 //
 //	This method is identical to TContact::PGetRuntimeInterface()
-void *
-TGroup::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+TGroup::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
+	Report(piObjectSecondary == NULL);
+	/*
 	switch (rti)
 		{
 	case RTI(TProfile):
@@ -256,6 +258,8 @@ TGroup::PGetRuntimeInterface(const RTI_ENUM rti) const
 	default:
 		return ITreeItemChatLogEvents::PGetRuntimeInterface(rti);
 		}
+	*/
+	return ITreeItemChatLogEvents::PGetRuntimeInterface(rti, m_pAccount);
 	} // PGetRuntimeInterface()
 
 #define d_chElementName_Members		'M'

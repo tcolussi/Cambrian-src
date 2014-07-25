@@ -45,6 +45,13 @@ CChatConfiguration::Destroy()
 	m_oTreeItemCertificates.FlushDataAndCauseMemoryLeak();
 	}
 
+//	May return NULL if there is no profile in the configuration, or there is no profile selected while there is multiple profiles available.
+TProfile *
+CChatConfiguration::PGetProfileSelectedUnique_YZ() const
+	{
+	return (m_pProfileSelected != NULL) ? m_pProfileSelected : (TProfile *)m_arraypaProfiles.PvGetElementUnique_YZ();
+	}
+
 //	Register an encryption certificate.
 //	If the certificate is not already registered, allocate one.
 TCertificate *

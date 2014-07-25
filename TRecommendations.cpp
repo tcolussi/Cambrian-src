@@ -441,6 +441,16 @@ TRecommendations::TRecommendations(TContact * pContact)
 	m_pContact = pContact;
 	}
 
+//	TRecommendations::IRuntimeObject::PGetRuntimeInterface()
+//
+//	Enable the TRecommendations object to respond to the interfaces of its parent contact.
+POBJECT
+TRecommendations::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+	{
+	Report(piObjectSecondary == NULL);
+	return ITreeItem::PGetRuntimeInterface(rti, m_pContact);
+	}
+
 //	TRecommendations::ITreeItem::TreeItem_GotFocus()
 void
 TRecommendations::TreeItem_GotFocus()
@@ -452,6 +462,16 @@ TMyRecommendations::TMyRecommendations(TProfile * pProfile)
 	{
 	m_pProfile = pProfile;
 	TreeItemW_DisplayWithinNavigationTreeExpand((pProfile->m_paTreeItemW_YZ != NULL) ? pProfile : NULL, "My Recommendations", eMenuAction_TreeItemRecommended);
+	}
+
+//	TMyRecommendations::IRuntimeObject::PGetRuntimeInterface()
+//
+//	Enable the TMyRecommendations object to respond to the interfaces of its parent profile.
+POBJECT
+TMyRecommendations::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+	{
+	Report(piObjectSecondary == NULL);
+	return ITreeItem::PGetRuntimeInterface(rti, m_pProfile);
 	}
 
 //	TMyRecommendations::ITreeItem::TreeItem_GotFocus()

@@ -306,7 +306,7 @@ WNavigationTree::SL_TreeItemSelectionChanged(QTreeWidgetItem * pItemCurrent, QTr
 		return;	// In the future, this should not happen, but in the meantime, it is better than having a crash
 		}
 	Assert(pTreeItem != NULL);
-	Assert(pTreeItem->PGetRuntimeInterface(RTI(ITreeItem)) != NULL);
+	Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItem) == pTreeItem);
 	if (g_pwChatLayoutContainer != NULL)
 		{
 		pTreeItem->TreeItem_GotFocus();		// Call the virtual  method which will take care of calling MainWindow_SetCurrentChatLayout() with the proper WLayout

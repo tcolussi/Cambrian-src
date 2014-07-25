@@ -12,6 +12,23 @@ IApplication::IApplication(TProfile * pProfileParent, EMenuAction eMenuIcon)
 	Assert(pProfileParent->EGetRuntimeClass() == RTI(TProfile));
 	}
 
+//	IApplication::IRuntimeObject::PGetRuntimeInterface()
+POBJECT
+IApplication::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+	{
+	Report(piObjectSecondary == NULL);
+	/*
+	switch (rti)
+		{
+	case RTI(TProfile):
+		return m_pProfileParent;
+	default:
+		return ITreeItem::PGetRuntimeInterface(rti);
+		}
+	*/
+	return ITreeItem::PGetRuntimeInterface(rti, m_pProfileParent);
+	}
+
 //	IApplication::IXmlExchange::XmlExchange()
 void
 IApplication::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
@@ -73,9 +90,11 @@ TAccountAlias::TAccountAlias(TAccountXmpp * pAccount)
 //	TAccountAlias::IRuntimeObject::PGetRuntimeInterface()
 //
 //	Enable the TAccountAlias object to respond to the interfaces of its parent TAccountXmpp.
-void *
-TAccountAlias::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+TAccountAlias::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
+	Report(piObjectSecondary == NULL);
+	/*
 	switch (rti)
 		{
 	case RTI(TAccountXmpp):
@@ -85,6 +104,8 @@ TAccountAlias::PGetRuntimeInterface(const RTI_ENUM rti) const
 	default:
 		return ITreeItem::PGetRuntimeInterface(rti);
 		}
+	*/
+	return ITreeItem::PGetRuntimeInterface(rti, m_pAccount);
 	} // PGetRuntimeInterface()
 
 const EMenuActionByte c_rgzeActionsMenuAccountAlias[] =
@@ -151,9 +172,11 @@ TProfile::DeleteAccount(PA_DELETING TAccountXmpp * paAccount)
 */
 
 //	TProfile::IRuntimeObject::PGetRuntimeInterface()
-void *
-TProfile::PGetRuntimeInterface(const RTI_ENUM rti) const
+POBJECT
+TProfile::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
 	{
+	Report(piObjectSecondary == NULL);
+	/*
 	switch (rti)
 		{
 	case RTI(TAccountXmpp):	// If there is only one account, then return the interface of this account
@@ -161,6 +184,8 @@ TProfile::PGetRuntimeInterface(const RTI_ENUM rti) const
 	default:
 		return ITreeItem::PGetRuntimeInterface(rti);
 		}
+	*/
+	return ITreeItem::PGetRuntimeInterface(rti, m_arraypaAccountsXmpp.PGetObjectUnique_YZ());	// If there is only one account, then return the interface of this account
 	}
 
 #define d_chElementName_Accounts			'A'
