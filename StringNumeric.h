@@ -107,10 +107,12 @@ TIMESTAMP Timestamp_GetCurrentDateTime();
 int Timestamp_CchToString(TIMESTAMP ts, OUT CHU pszTimestamp[16]);
 PCHRO Timestamp_PchFromString(OUT_UNTIL_STOP TIMESTAMP * pts, PSZUC pszTimestamp);
 TIMESTAMP Timestamp_FromString_ML(PSZUC pszTimestamp);
+TIMESTAMP Timestamp_FromStringW_ML(const QString & sTimestamp);
 TIMESTAMP Timestamp_FromString_ZZR(PSZUC pszTimestamp);
 int Timestamp_CchEncodeToBase64Url(TIMESTAMP ts, OUT CHU pszTimestamp[16]);
 PCHRO Timestamp_PchDecodeFromBase64Url(OUT_ZZR TIMESTAMP * pts, PSZUC pszTimestamp);
+QString Timestamp_ToStringBase85(TIMESTAMP ts);
+QDateTime Timestamp_ToQDateTime(TIMESTAMP ts);
+
 int TimestampDelta_CchToString(TIMESTAMP_DELTA dts, OUT CHU pszTimestampDelta[32]);
-
-
 #endif // STRINGNUMERIC_H

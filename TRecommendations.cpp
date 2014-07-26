@@ -445,9 +445,9 @@ TRecommendations::TRecommendations(TContact * pContact)
 //
 //	Enable the TRecommendations object to respond to the interfaces of its parent contact.
 POBJECT
-TRecommendations::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+TRecommendations::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	return ITreeItem::PGetRuntimeInterface(rti, m_pContact);
 	}
 
@@ -468,9 +468,9 @@ TMyRecommendations::TMyRecommendations(TProfile * pProfile)
 //
 //	Enable the TMyRecommendations object to respond to the interfaces of its parent profile.
 POBJECT
-TMyRecommendations::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+TMyRecommendations::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	return ITreeItem::PGetRuntimeInterface(rti, m_pProfile);
 	}
 

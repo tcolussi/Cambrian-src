@@ -117,7 +117,7 @@ public:
 	void Contact_AddToGroup(int iGroup);
 	EMenuAction Contact_EGetMenuActionPresence() const;
 
-	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;		// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);							// From IXmlExchange
 	virtual BOOL TreeItem_FContainsMatchingText(PSZUC pszTextSearchLowercase) CONST_MCC;	// From ITreeItem
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;									// From ITreeItem
@@ -160,7 +160,7 @@ public:
 	IContactAlias(TContact * pContact);
 	~IContactAlias();
 	void XmlExchangeContactAlias(INOUT CXmlExchanger * pXmlExchanger, CHS chAttributeContactAlias);
-	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;				// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;				// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);				// From IXmlExchange
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;						// From ITreeItem
 	virtual void ContactAlias_IconChanged(EMenuAction eMenuIconDisplay, EMenuAction eMenuIconPresence);
@@ -205,7 +205,7 @@ public:
 	TAccountXmpp * m_pAccount;
 public:
 	TContactNew(TAccountXmpp * pAccount);
-	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;		// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;				// From ITreeItem
 	virtual void TreeItem_GotFocus();									// From ITreeItem
 

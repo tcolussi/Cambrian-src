@@ -139,6 +139,7 @@ HUNGARIAN PREFIX
 	lista	List where the objects have been allocated, and the owner must delete them when going out of scope.
 	plist	Pointer to a linked list of objects (although the variable is a pointer to an object, it represents the beginning of a linked list of objects)
 	palist	Allocated linked list of objects (the prefix palist indicates the pointer cannot be deleted alone, as it must iterate through the entire list)
+	l		List.  Although it preferable to use the prefix "list", sometimes the code is more readable when using "l".  For instance a QStringList is better expressed as "ls" rather than "lists"
 	vl		Variable list of arguments (example: va_list vlArgs)
 	vla		Variable list of arguments where the pointers are allocated, and therefore the function is ultimately responsible to delete them when no longer needed.
 	tid		Timer ID.  Unique number to identify a timer returned by the method startTimer()
@@ -146,6 +147,7 @@ HUNGARIAN PREFIX
 	ttc		Timer Tick Count.  Number of timer events received.  This value is useful to determine when it is time to perform an action (eg: after 10 timer ticks, do 'x')
 	map		Map one type to another.  At the moment the only mapping done is from byte to byte, therefore you will see only mapbb
 	mv		Map Value.  Since we use only bytes, the type is mvb.
+	v		QVariant
 
 #endif
 

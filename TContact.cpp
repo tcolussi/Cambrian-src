@@ -49,9 +49,9 @@ TContact::Contact_FuCommunicateViaXcp() const
 //
 //	See also the identical method TGroup::PGetRuntimeInterface()
 POBJECT
-TContact::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+TContact::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	/*
 	switch (rti)
 		{
@@ -674,9 +674,9 @@ IContactAlias::~IContactAlias()
 
 //	IContactAlias::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
-IContactAlias::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+IContactAlias::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	/*
 	switch (rti)
 		{
@@ -843,9 +843,9 @@ TContactNew::TContactNew(TAccountXmpp * pAccount)
 
 //	TContactNew::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
-TContactNew::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+TContactNew::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	/*
 	if (rti == RTI(TAccountXmpp))
 		return m_pAccount;

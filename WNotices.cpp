@@ -614,7 +614,7 @@ ENoticeAction
 WNoticeMessageSponsored::ETreeItemGotFocus(IN ITreeItem * piTreeItemFocus)
 	{
 	Assert(mu_sponsor.piTreeItem != NULL);
-	return (ENoticeAction)(PGetRuntimeInterfaceOf_(piTreeItemFocus, mu_sponsor.piTreeItem->EGetRuntimeClass()) == mu_sponsor.piTreeItem);
+	return (ENoticeAction)(PGetRuntimeInterfaceOf_(mu_sponsor.piTreeItem->EGetRuntimeClass(), piTreeItemFocus) == mu_sponsor.piTreeItem);
 	}
 
 

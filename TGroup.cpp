@@ -244,9 +244,9 @@ TGroup::Members_GetContacts(IOUT CArrayPtrContacts * parraypContacts) const
 //
 //	This method is identical to TContact::PGetRuntimeInterface()
 POBJECT
-TGroup::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+TGroup::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	/*
 	switch (rti)
 		{

@@ -222,14 +222,6 @@ OPoll::~OPoll()
 	}
 
 QString
-Timestamp_ToStringBase85(TIMESTAMP ts)
-	{
-	CHU szTimestamp[16];
-	Timestamp_CchToString(IN ts, OUT szTimestamp);
-	return CString(szTimestamp);
-	}
-
-QString
 OPoll::id() const
 	{
 	return Timestamp_ToStringBase85(m_pBallot->m_tsEventID);
@@ -278,6 +270,18 @@ void
 OPoll::choices(const QStringList & lsChoices)
 	{
 	return m_pBallot->SetChoices(lsChoices);
+	}
+
+QDateTime
+OPoll::dateStarted() const
+	{
+	return Timestamp_ToQDateTime(m_pBallot->m_tsEventID);	// At the moment, use the timestamp where the event was created as the start date
+	}
+
+QDateTime
+OPoll::dateStopped() const
+	{
+	return Timestamp_ToQDateTime(d_ts_zNULL);	// At the moment, there is no real implementation of stop
 	}
 
 bool
@@ -376,18 +380,11 @@ OPolls::getList()
 	while (ppEvent != ppEventStop)
 		{
 		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
-		oList.append(QVariant::fromValue(PA_CHILD new OPoll(pEvent)));
+		if ((pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted) == 0)
+			oList.append(QVariant::fromValue(PA_CHILD new OPoll(pEvent)));	// List only non-deleted polls
 		}
 	return QVariant::fromValue(oList);
 	}
-
-TIMESTAMP
-Timestamp_FromStringW_ML(const QString & sTimestamp)
-	{
-	CStr str = sTimestamp;
-	return Timestamp_FromString_ML(str);
-	}
-
 
 //	get(), slot
 //	Return the poll matching the ID
@@ -405,7 +402,7 @@ OPolls::get(const QString & sIdPoll)
 		if (pEvent->m_tsEventID == tsIdPoll)
 			return QVariant::fromValue(PA_CHILD new OPoll(pEvent));
 		}
-	return QVariant();
+	return c_vEmpty;
 	}
 
 /*

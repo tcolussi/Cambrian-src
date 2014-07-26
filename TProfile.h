@@ -18,7 +18,7 @@ public:
 	IApplication(TProfile * pProfileParent, EMenuAction eMenuIcon);
 	virtual PSZAC PszGetClassNameApplication() = 0;		// Return the class name of the application to be serialized to disk
 
-	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;		// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);			// From IXmlExchange
 
 	void TreeItemApplication_DisplayWithinNavigationTree();
@@ -64,7 +64,7 @@ public:
 	void UnserializeContactsFromOldConfigXml();
 	#endif
 
-	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;			// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;			// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);			// From IXmlExchange
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;					// From ITreeItem
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);			// From ITreeItem

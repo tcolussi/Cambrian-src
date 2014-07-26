@@ -10,7 +10,7 @@
 #endif
 
 POBJECT
-PGetRuntimeInterfaceOf_(const IRuntimeObject * piObject, RTI_ENUM rti)
+PGetRuntimeInterfaceOf_(RTI_ENUM rti, const IRuntimeObject * piObject)
 	{
 	if (piObject != NULL)
 		return piObject->PGetRuntimeInterface(rti, NULL);
@@ -20,19 +20,19 @@ PGetRuntimeInterfaceOf_(const IRuntimeObject * piObject, RTI_ENUM rti)
 ITreeItem *
 PGetRuntimeInterfaceOf_ITreeItem(const IRuntimeObject * piObject)
 	{
-	return (ITreeItem *)PGetRuntimeInterfaceOf_(piObject, RTI(ITreeItem));
+	return (ITreeItem *)PGetRuntimeInterfaceOf_(RTI(ITreeItem), piObject);
 	}
 
 TAccountXmpp *
 PGetRuntimeInterfaceOf_TAccountXmpp(const IRuntimeObject * piObject)
 	{
-	return (TAccountXmpp *)PGetRuntimeInterfaceOf_(piObject, RTI(TAccountXmpp));
+	return (TAccountXmpp *)PGetRuntimeInterfaceOf_(RTI(TAccountXmpp), piObject);
 	}
 
 TCertificate *
 PGetRuntimeInterfaceOf_TCertificate(const IRuntimeObject * piObject)
 	{
-	return (TCertificate *)PGetRuntimeInterfaceOf_(piObject, RTI(TCertificate));
+	return (TCertificate *)PGetRuntimeInterfaceOf_(RTI(TCertificate), piObject);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,24 +40,27 @@ PGetRuntimeInterfaceOf_TCertificate(const IRuntimeObject * piObject)
 //
 //	Virtual method querying the object for a supported interface.  The caller is responsible to typecast the returned pointer POBJECT of the requested interface.
 //
-//	Since most object have a parent, the method PGetRuntimeInterface() has a second parameter piObjectSecondary to query an additional object in case the object does not directly support the interface.
+//	Since most object have a parent, the method PGetRuntimeInterface() has a second parameter piParent to query its parent interface.
+//	The way Cambrian is designed is a child object in the Navigation Tree often 'inherits' the interface of its parent.
 //
-//	In some cases, the pointer may be a foreign object if there is a clear relationship between the object and the requested interface.
-//	For instance, an object TContact may return a pointer to a TAccountXmpp if requested, because for every TContact, there is a corresponding TAccountXmpp.
+//	If the object has two parents, such as a group member, then one of the parent is handled manually, and the other one passed as a parent.
+//	In some cases, the pointer may be a child object if there is a one-to-one relationship between the child object and the requested interface.
+//	It is imporant to never substitute a child or sibling object as a 'parent' because there is a risk of recursion (and stack overflow).
+//	When querying the interface of a child or sibling object, use PGetRuntimeInterfaceOf_()
 //
 POBJECT
-IRuntimeObject::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+IRuntimeObject::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Endorse(piObjectSecondary == NULL);
-	Assert(piObjectSecondary != this);
+	Endorse(piParent == NULL);
+	Assert(piParent != this);
 	// Use the virtual method EGetRuntimeClass() to determine if we want a pointer to our own class.  This is not the most efficient code, however the safest, as it does not require every class inheriting IRuntimeObject to implement PGetRuntimeInterface() in order to get a pointer to the interface of their own class.
 	if (rti == EGetRuntimeClass())
 		return (IRuntimeObject *)this;
 	if (rti == RTI(IRuntimeObject))
 		return (IRuntimeObject *)this;
-	if (piObjectSecondary == NULL)
+	if (piParent == NULL)
 		return NULL;	// The interface requested is not supported and there is no secondary object to query, therefore return NULL.
-	return piObjectSecondary->PGetRuntimeInterface(rti, NULL);
+	return piParent->PGetRuntimeInterface(rti, NULL);
 	}
 
 IRuntimeObject *

@@ -1882,6 +1882,14 @@ Timestamp_FromString_ML(PSZUC pszTimestamp)
 		}
 	}
 
+TIMESTAMP
+Timestamp_FromStringW_ML(const QString & sTimestamp)
+	{
+	CStr str = sTimestamp;
+	return Timestamp_FromString_ML(str);
+	}
+
+
 //	Similar routine, however no error is reported, and zero is returned if there is any kind of error and/or overflow.
 TIMESTAMP
 Timestamp_FromString_ZZR(PSZUC pszTimestamp)
@@ -1955,7 +1963,21 @@ Timestamp_PchDecodeFromBase64Url(OUT_ZZR TIMESTAMP * pts, PSZUC pszTimestamp)
 		} // while
 	}
 
+QString
+Timestamp_ToStringBase85(TIMESTAMP ts)
+	{
+	CHU szTimestamp[16];
+	Timestamp_CchToString(IN ts, OUT szTimestamp);
+	return CString(szTimestamp);
+	}
 
+QDateTime
+Timestamp_ToQDateTime(TIMESTAMP ts)
+	{
+	if (ts == d_ts_zNULL)
+		return c_dtEmpty;	// Return a null value
+	return QDateTime::fromMSecsSinceEpoch(ts);
+	}
 
 int
 TimestampDelta_CchToString(TIMESTAMP_DELTA dts, OUT CHU pszTimestampDelta[32])

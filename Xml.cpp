@@ -2999,11 +2999,11 @@ IXmlExchange::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 
 //	IXmlExchangeObjectID::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
-IXmlExchangeObjectID::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+IXmlExchangeObjectID::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
 	if (rti == RTI(IXmlExchangeObjectID))
 		return (void *)this;
-	return IXmlExchange::PGetRuntimeInterface(rti, piObjectSecondary);
+	return IXmlExchange::PGetRuntimeInterface(rti, piParent);
 	}
 
 //	IXmlExchangeObjectID::IXmlExchange::XmlExchange()

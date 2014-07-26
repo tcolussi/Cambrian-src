@@ -14,9 +14,9 @@ IApplication::IApplication(TProfile * pProfileParent, EMenuAction eMenuIcon)
 
 //	IApplication::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
-IApplication::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+IApplication::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	/*
 	switch (rti)
 		{
@@ -91,9 +91,9 @@ TAccountAlias::TAccountAlias(TAccountXmpp * pAccount)
 //
 //	Enable the TAccountAlias object to respond to the interfaces of its parent TAccountXmpp.
 POBJECT
-TAccountAlias::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+TAccountAlias::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	/*
 	switch (rti)
 		{
@@ -173,9 +173,9 @@ TProfile::DeleteAccount(PA_DELETING TAccountXmpp * paAccount)
 
 //	TProfile::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
-TProfile::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+TProfile::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	/*
 	switch (rti)
 		{
@@ -185,7 +185,11 @@ TProfile::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSeco
 		return ITreeItem::PGetRuntimeInterface(rti);
 		}
 	*/
-	return ITreeItem::PGetRuntimeInterface(rti, m_arraypaAccountsXmpp.PGetObjectUnique_YZ());	// If there is only one account, then return the interface of this account
+	//return ITreeItem::PGetRuntimeInterface(rti, m_arraypaAccountsXmpp.PGetObjectUnique_YZ());	// If there is only one account, then return the interface of this account
+	POBJECT pObject = ITreeItem::PGetRuntimeInterface(rti, piParent);
+	if (pObject != NULL)
+		return pObject;
+	return PGetRuntimeInterfaceOf_(rti, m_arraypaAccountsXmpp.PGetObjectUnique_YZ());	// If there is only one account, then return the interface of this account
 	}
 
 #define d_chElementName_Accounts			'A'

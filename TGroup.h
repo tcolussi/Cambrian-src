@@ -61,7 +61,7 @@ public:
 	void Members_BroadcastChatState(EChatState eChatState) const;
 	void Members_GetContacts(IOUT CArrayPtrContacts * parraypContacts) const;
 
-	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const;					// From IRuntimeObject
+	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;					// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);					// From IXmlExchange
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;							// From ITreeItem
 	virtual void TreeItem_IconUpdate();												// From ITreeItem

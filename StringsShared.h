@@ -16,6 +16,8 @@
 extern const CStr c_strEmpty;
 extern const CString c_sEmpty;
 extern const QByteArray c_arraybEmpty;
+extern const QVariant c_vEmpty;		// Empty/null variant
+extern const QDateTime c_dtEmpty;	// Empty/null datetime
 
 extern const CHU c_szXmppServerDefault[];
 

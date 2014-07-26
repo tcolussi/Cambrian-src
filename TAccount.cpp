@@ -199,9 +199,9 @@ TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTreeInvited_NZ(PSZU
 //
 //	Enable the TAccountXmpp object to respond to the interface of other objects it is related to, such as TCertificate and TCertificateServerName
 POBJECT
-TAccountXmpp::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+TAccountXmpp::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
-	Report(piObjectSecondary == NULL);
+	Report(piParent == NULL);
 	switch (rti)
 		{
 	case RTI(TCertificate):

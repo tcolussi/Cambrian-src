@@ -68,12 +68,17 @@ public:
 	void description(const QString & sDescription);
 	QStringList choices() const;
 	void choices(const QStringList & lsChoices);
+	QDateTime dateStarted() const;
+	QDateTime dateStopped() const;
 
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString status READ status)
 	Q_PROPERTY(QString title READ title WRITE title)
 	Q_PROPERTY(QString description READ description WRITE description)
 	Q_PROPERTY(QStringList choices READ choices WRITE choices)
+	Q_PROPERTY(QDateTime dateStarted READ dateStarted)
+	Q_PROPERTY(QDateTime dateStopped READ dateStopped)
+
 public slots:
 	bool save();
 	void destroy();

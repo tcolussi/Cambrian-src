@@ -40,11 +40,11 @@ ITreeItem::~ITreeItem()
 
 //	ITreeItem::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
-ITreeItem::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piObjectSecondary) const
+ITreeItem::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
 	if (rti == RTI(ITreeItem))
 		return (ITreeItem *)this;
-	return IXmlExchangeObjectID::PGetRuntimeInterface(rti, piObjectSecondary);
+	return IXmlExchangeObjectID::PGetRuntimeInterface(rti, piParent);
 	}
 
 //	ITreeItem::IXmlExchange::XmlExchange()

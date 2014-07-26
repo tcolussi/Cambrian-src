@@ -5,6 +5,9 @@
 const CStr c_strEmpty;
 const CString c_sEmpty;
 const QByteArray c_arraybEmpty;
+const QVariant c_vEmpty;
+const QDateTime c_dtEmpty;
+
 
 CStr::operator QString() const
 	{

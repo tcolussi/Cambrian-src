@@ -5,7 +5,8 @@
 void
 DisplayDialogContactNew()
 	{
-	TAccountXmpp * pAccount = Configuration_PGetAccountSelectedOrFirstAccount();
+	//TAccountXmpp * pAccount = Configuration_PGetAccountSelectedOrFirstAccount();
+	TAccountXmpp * pAccount = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTAccount();
 	if (pAccount == NULL)
 		return;
 //	pAccount->Contacts_RosterDisplayDebug("DisplayDialogContactNew() before");
