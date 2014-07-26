@@ -230,7 +230,8 @@ OPoll::id() const
 QString
 OPoll::status() const
 	{
-	return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "deleted" : "unstarted";
+	//return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "deleted" : "unstarted";
+	return "unstarted";
 	}
 
 QString
@@ -381,7 +382,11 @@ OPolls::getList()
 		{
 		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
 		if ((pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted) == 0)
+			{
+			//OPoll oPoll(pEvent);
+			//oList.append(QVariant::fromValue(&oPoll));
 			oList.append(QVariant::fromValue(PA_CHILD new OPoll(pEvent)));	// List only non-deleted polls
+			}
 		}
 	return QVariant::fromValue(oList);
 	}
