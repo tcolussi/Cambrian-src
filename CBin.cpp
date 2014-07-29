@@ -233,6 +233,7 @@ CBin::PvSizeAllocGrowBy(int cbDataGrowBy)
 	Assert(cbDataGrowBy >= 0);
 	if (m_paData != NULL)
 		{
+		Assert(m_paData->cbData <= m_paData->cbAlloc);
 		const int cbDataOld = m_paData->cbData;
 		const int cbDataNew = cbDataOld + cbDataGrowBy;
 		if (cbDataNew > m_paData->cbAlloc)
@@ -822,8 +823,21 @@ CBin::BinAppendCBin(const CBin & binSrc)
 	BinAppendBinaryData(pDataSrc->rgbData, pDataSrc->cbData);
 	}
 
+//	Append the content of the binary from an offset
 void
-CBin::BinAppendCBinLowercase(const CBin & binSrc)	//BinAppendCBinLowercaseAscii()
+CBin::BinAppendCBinFromOffset(const CBin & binSrc, int ibDataBegin)
+	{
+	Assert(&binSrc != NULL);
+	Assert(&binSrc != this);
+	Assert(ibDataBegin >= 0);
+	const SHeaderWithData * pDataSrc = binSrc.m_paData;
+	if (pDataSrc == NULL)
+		return;
+	BinAppendBinaryData(IN pDataSrc->rgbData + ibDataBegin, pDataSrc->cbData - ibDataBegin);
+	}
+
+void
+CBin::BinAppendCBinLowercaseAscii(const CBin & binSrc)
 	{
 	Assert(&binSrc != NULL);
 	Assert(&binSrc != this);
@@ -1844,6 +1858,7 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chSourcePCSZU					's'
 #define d_chSourcePCStr					'S'
 #define d_chSourcePCBin					'B'	// This is very similar to CStr* however different, since CBin returns the size of the binary data rather than the length of the string.
+#define d_chSourcePCBinOffset			'o'	// 32-bit offset of data within a CBin*.  This field has 3 parameters: CBin*, ibDataOffset, cbDataMax
 #define d_chSourcePQString				'Q'
 #define d_chSourcePQByteArray			'Y'
 #define d_chSourceHashGuid				'g'	// GUID, MD5 or any 128-bit value
@@ -2082,6 +2097,23 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 					u.pbin = va_arg(vlArgs, CBin *);
 					if (u.pbin != NULL)
 						BinAppendDataEncoded(u.pbin->PvGetData(), u.pbin->CbGetData(), chEncoding);
+					break;
+				case d_chSourcePCBinOffset:
+					{
+					// Fetch the 3 arguments from the stack
+					u.pbin = va_arg(vlArgs, CBin *);
+					const int ibDataOffset = va_arg(vlArgs, int);
+					const int cbDataMax = va_arg(vlArgs, int);
+					Assert(u.pbin != NULL);
+					Assert(ibDataOffset >= 0);
+					Assert(cbDataMax > 0);
+					if (u.pbin->m_paData != NULL)
+						{
+						const int cbDataAvailable = u.pbin->m_paData->cbData - ibDataOffset;
+						if (cbDataAvailable > 0)
+							BinAppendDataEncoded(u.pbin->m_paData->rgbData + ibDataOffset, (cbDataAvailable < cbDataMax) ? cbDataAvailable : cbDataMax, chEncoding);
+						}
+					}
 					break;
 				case d_chSourcePQByteArray:
 					u.parrayb = va_arg(vlArgs, QByteArray *);
@@ -2750,22 +2782,34 @@ CBin::BinAppendBinaryDataFromBase64Szv(PSZUC pszuBase64)
 	return BinAppendNullTerminatorVirtualSzv();
 	}
 
-PSZUC
-CBin::BinAppendBinaryDataFromBase85Szv_ML(PSZUC pszuBase85)
+//	Decode a Base85 string into binary and return the number of bytes appended.
+int
+CBin::BinAppendBinaryDataFromBase85SCb_ML(PSZUC pszuBase85)
 	{
 	Assert(!FIsPointerAddressWithinBinaryObject(pszuBase85));
 	if (pszuBase85 != NULL)
 		{
 		PCHRO pchroStop;
 		BYTE * pbBinaryData = PbAllocateExtraMemory(Base85_CbDecodeAlloc(pszuBase85, OUT &pchroStop));
-		m_paData->cbData += Base85_CbDecodeToBinary(IN pszuBase85, OUT_F_INV pbBinaryData);
+		const int cbDecoded = Base85_CbDecodeToBinary(IN pszuBase85, OUT_F_INV pbBinaryData);
+		m_paData->cbData += cbDecoded;
+		Assert(m_paData->cbData < m_paData->cbAlloc);	// The function Base85_CbDecodeAlloc() should return a value large for the null-terminator
+		pbBinaryData[cbDecoded] = '\0';	// Insert a virtual null-terminator
 		Assert(pchroStop != NULL);
 		if (*pchroStop != '\0')
 			{
 			// We have a string conaining an illegal Base85 character
 			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "The character '{s1}' at offset $i is not recognized in the Base85 text: $s\n", pchroStop, pchroStop - pszuBase85, pszuBase85);
 			}
+		return cbDecoded;
 		}
+	return 0;
+	}
+
+PSZUC
+CBin::BinAppendBinaryDataFromBase85Szv_ML(PSZUC pszuBase85)
+	{
+	(void)BinAppendBinaryDataFromBase85SCb_ML(pszuBase85);
 	return BinAppendNullTerminatorVirtualSzv();
 	}
 

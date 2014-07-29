@@ -69,7 +69,6 @@ protected:
 	FLAGS_SOCKET_STATE m_uFlagsSocketState;
 	CBin m_binBufferIncomingData;					// Buffer to store incoming data from the socket.  This is necessary because sometimes a stanza may arrive from multiple network packets.
 	const CXmlNode * m_pXmlNodeStanzaCurrent_YZ;	// Current stanza being processed by the method OnEventXmppStanzaArrived() and related OnEventXmppStanza*().  The motivation for using a member variable instead of a parameter to the method is avoiding pushing this parameter to every stack, including the error processing.
-//	CListTasks m_listTasksWaitingForCompletion;
 	ISocketUI * m_piSocketUI;						// Pointer to the interface for the socket to provide feedback to the user.
 	TIMESTAMP_MINUTES m_tsmLastStanzaReceived;		// Timestamp where the last network packet was received. This is useful to determine if a socket timed out and needs to be reconnected.
 public:

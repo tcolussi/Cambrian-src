@@ -78,7 +78,6 @@ public:
 
 public:
 	static IXmlExchange * S_PaAllocateGroup(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
-	friend class CTaskGroupSendText;
 }; // TGroup
 
 class CArrayPtrGroups : public CArrayPtrTreeItems

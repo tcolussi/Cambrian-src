@@ -64,6 +64,10 @@
 #define d_chXCPe_EventSplitDataReply						'S'
 #define d_szXCPe_EventSplitDataReply_tsO_i_pvcb		d_szXCP_"S" _tsO d_szXCPa_EventExtraData_iblOffset_i d_szXCPa_EventExtraData_bin85Payload_pvcb
 
+
+#define d_szXCPe_Api_bs								d_szXCP_"$b n='$s'"	// Generic formatting of an API
+#define d_szXCPe_Api_b								d_szXCP_"$b"
+
 #define d_chXCPe_ApiRequest									'a'
 #define d_szXCPe_ApiRequest_s						d_szXCP_"a n='$s'"
 #define d_szXCPe_ApiRequest_close					d_szXCP_"a"
@@ -75,6 +79,20 @@
 	#define d_chXCPa_Api_strxErrorData							'd'
 	#define d_szXCPa_ErrorCodeAndErrorData_i_s					" e='$i' d='^s'"
 
+//	Tasks have only one identifier (there is no tsOther) for tasks
+#define d_chXCPe_TaskDownloading							't'
+#define d_szXCPe_TaskDownloading_tsI				d_szXCP_"t" _tsI
+#define d_chXCPe_TaskSending								'T'
+#define d_szXCPe_TaskSending_tsI					d_szXCP_"T" _tsI
+
+	#define d_chXCPa_TaskDataSizeTotal							's'			// Total size of the task's data
+	#define d_szXCPa_TaskDataSizeTotal_i							" s='$i'"
+	#define d_chXCPa_TaskDataOffset									'O'
+	#define d_szXCPa_TaskDataOffset_i								" O='$i'"
+	#define d_chXCPa_TaskDataBinary									'b'			// Chunk of data
+	#define d_szXCPa_TaskDataBinary_Bii								" b='{o|}'"
+//	#define d_szXCPa_TaskDataBinary_pvcb							" b='{p|}'"
+
 #if 0
 	// API call
 	<_a r='identifier' n='function'/>parameters</_a>
@@ -83,6 +101,77 @@
 #endif
 #define d_chXCPe_zNA									'\0'	// Not applicable
 
+/*
+XcpApi_OnRequest()
+XcpApi_OnReply()
+*/
+
+//	Core method to execute an XCP API
+void
+CBinXcpStanza::XcpApi_Execute(const CXmlNode * pXmlNodeApiData)
+	{
+	Assert(pXmlNodeApiData != NULL);
+	Assert(pXmlNodeApiData->m_pszuTagName != NULL);
+	Assert(pXmlNodeApiData->m_pszuTagName[0] == d_chXCP_);
+	const int ibXmlApiResponseBegin = (m_paData != NULL) ? m_paData->cbData : 0;	// Offset where the API data is being appended
+
+	PSZUC pszApiName = pXmlNodeApiData->PszuFindAttributeValue_NZ(d_chXCPa_Api_strName);
+	const CHS chXCPe_ApiResponse = Ch_ToOtherCase(pXmlNodeApiData->m_pszuTagName[1]);	// The response is the opposite of what received
+	Assert(chXCPe_ApiResponse == d_chXCPe_ApiRequest || chXCPe_ApiResponse == d_chXCPe_ApiReply);
+
+	BOOL fApiRequest = (chXCPe_ApiResponse != d_chXCPe_ApiRequest);
+	BinAppendTextSzv_VE("<" d_szXCPe_Api_bs ">", chXCPe_ApiResponse, pszApiName);
+	Assert(m_ibXmlApiReply == d_zNA);
+	m_ibXmlApiReply = m_paData->cbData;
+
+	XcpApi_ExecuteCore(fApiRequest, pszApiName, pXmlNodeApiData);
+
+	if (m_ibXmlApiReply > 0)
+		{
+		if (!fApiRequest)
+			{
+			// We have received a reply to our request.  Unless there is real data, there is no need to reply to a reply
+			if (m_paData->cbData <= m_ibXmlApiReply)
+				{
+				m_paData->cbData = ibXmlApiResponseBegin;
+				m_ibXmlApiReply = d_zNA;
+				return;
+				}
+			}
+		BinAppendTextSzv_VE("</" d_szXCPe_Api_b ">", chXCPe_ApiResponse);	// Close the XML request
+		m_ibXmlApiReply = d_zNA;
+		}
+
+	/*
+	if (pXmlNodeApiData->m_pszuTagName[1] == d_chXCPe_ApiRequest)
+		{
+		// Respond to the request for a given API name
+		BinXmlAppendXcpElementForApiRequest_ElementOpen(IN pszApiName);
+		BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(IN pszApiName, IN pXmlNodeApiData);
+		BinXmlAppendXcpElementForApiRequest_ElementClose();
+		}
+	else
+		{
+		Assert(pXmlNodeApiData->m_pszuTagName[1] == d_chXCPe_ApiReply);
+		if (pXmlNodeApiData->m_pElementsList != NULL)
+			BinXmlAppendXcpElementForApiReply(IN pszApiName, IN pXmlNodeApiData->m_pElementsList);
+		}
+	// Check if the response can fit in a single XMPP stanza
+	if (m_paData == NULL)
+		return;	// No data
+	*/
+	if (m_paData->cbData > 100)
+		{
+		// The XAPI data is too large to fit in a single XMPP stanza, therefore create a task to transmit it into smaller chunks
+		CTaskSend * paTask = new CTaskSend;
+		paTask->m_binData.BinAppendCBinFromOffset(IN *this, ibXmlApiResponseBegin);
+		m_paData->cbData = ibXmlApiResponseBegin;	// Remove the data from the object
+		m_pContact->m_listTasksSocket.InsertNodeAtHead(INOUT paTask);
+		MessageLog_AppendTextFormatCo(d_coGreenDarker, "Creating Task ID '$t' of $I bytes:\n$B\n", paTask->m_tsTaskID, paTask->m_binData.CbGetData(), &paTask->m_binData);
+		BinAppendTextSzv_VE("<" d_szXCPe_TaskDownloading_tsI d_szXCPa_TaskDataSizeTotal_i d_szXCPa_TaskDataBinary_Bii "/>",
+			paTask->m_tsTaskID, paTask->m_binData.CbGetData(), &paTask->m_binData, 0, c_cbStanzaMaxBinary / 100);
+		}
+	} // XcpApi_Execute()
 
 void
 CBinXcpStanza::BinXmlAppendXcpElementForApiRequest_ElementOpen(PSZUC pszApiName)
@@ -409,17 +498,12 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unable to find CEventDownloader matching tsOther $t for d_chXCPe_EventSplitDataReply\n", tsOther);
 				break;
 			case d_chXCPe_ApiRequest:
+			case d_chXCPe_ApiReply:
 				Assert(binXcpStanzaReply.m_pContact == this);
 				if (binXcpStanzaReply.m_pContact == this)
-					{
-					// Respond to the request for a given API name
-					PSZUC pszApiName = pXmlNodeXcpEvent->PszuFindAttributeValue_NZ(d_chXCPa_Api_strName);
-					binXcpStanzaReply.BinXmlAppendXcpElementForApiRequest_ElementOpen(IN pszApiName);
-					binXcpStanzaReply.BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(IN pszApiName, IN pXmlNodeXcpEvent);
-					binXcpStanzaReply.BinXmlAppendXcpElementForApiRequest_ElementClose();
-					}
+					binXcpStanzaReply.XcpApi_Execute(IN pXmlNodeXcpEvent);
 				break;
-			case d_chXCPe_ApiReply:
+			/*
 				Assert(binXcpStanzaReply.m_pContact == this);
 				if (binXcpStanzaReply.m_pContact == this)
 					{
@@ -427,6 +511,63 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 					if (pXmlNodeXcpEvent->m_pElementsList != NULL)
 						binXcpStanzaReply.BinXmlAppendXcpElementForApiReply(IN pszApiName, IN pXmlNodeXcpEvent->m_pElementsList);
 					}
+				break;
+			*/
+			case d_chXCPe_TaskDownloading:
+				{
+				// Create a task to download the remaining data
+				CTaskReceive * pTask = (CTaskReceive *)m_listTasksSocket.PFindTaskByID(tsEventID, eTaskClass_CTaskReceive);
+				if (pTask == NULL)
+					{
+					pTask = new CTaskReceive(IN &tsEventID);
+					pTask->m_cbTotal = pXmlNodeXcpEvent->UFindAttributeValueDecimal_ZZR(d_chXCPa_TaskDataSizeTotal);
+					m_listTasksSocket.InsertNodeAtHead(INOUT PA_CHILD pTask);
+					}
+				Assert(pTask->m_cbTotal > 0);
+				const int ibData =  pXmlNodeXcpEvent->UFindAttributeValueDecimal_ZZR(d_chXCPa_TaskDataOffset);
+				Assert(ibData < pTask->m_cbTotal);
+				if (ibData == pTask->m_binData.CbGetData())
+					{
+					const int cbDataNew = pTask->m_binData.BinAppendBinaryDataFromBase85SCb_ML(pXmlNodeXcpEvent->PszuFindAttributeValue(d_chXCPa_TaskDataBinary));
+					const int cbDataReceived = ibData + cbDataNew;
+					Assert(cbDataReceived == pTask->m_binData.CbGetData());
+					if (cbDataReceived == pTask->m_cbTotal)
+						{
+						// We successfully downloaded the task, therefore execute it
+						MessageLog_AppendTextFormatCo(d_coGreenDarker, "Download complete ($I bytes) for Task ID '$t':\n$B\n", pTask->m_binData.CbGetData(), pTask->m_tsTaskID, &pTask->m_binData);
+						CXmlTree oXmlTree;
+						oXmlTree.EParseFileDataToXmlNodesModify_ML(INOUT &pTask->m_binData);
+						binXcpStanzaReply.XcpApi_Execute(IN &oXmlTree);
+						m_listTasksSocket.DeleteTask(PA_DELETING pTask);
+						}
+					binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_TaskSending_tsI d_szXCPa_TaskDataOffset_i "/>", tsEventID, cbDataReceived);	// Send a request to download the remaining data (if any), or to indicate all the data was received and therefore delete the task
+					break;
+					}
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t Ignoring data from Task ID '$t' because its offset ($I) does not match the received data\n", tsEventID, ibData);
+				}
+				break;
+			case d_chXCPe_TaskSending:
+				{
+				// Send the remaining of the data for the task
+				CTaskSend * pTask = (CTaskSend *)m_listTasksSocket.PFindTaskByID(tsEventID, eTaskClass_CTaskSend);
+				if (pTask != NULL)
+					{
+					#if 1
+						int cbStanzaMaxBinary = 1 + pTask->m_binData.CbGetData() / 4;	// At the moment, send only 1 byte + 25% at the time (rather than c_cbStanzaMaxBinary), so we can test the code transmitting large events
+						if (cbStanzaMaxBinary > CBinXcpStanza::c_cbStanzaMaxBinary)
+							cbStanzaMaxBinary = CBinXcpStanza::c_cbStanzaMaxBinary;
+					#else
+						#define cbStanzaMaxBinary	CBinXcpStanza::c_cbStanzaMaxBinary
+					#endif
+					const int ibDataRequest = pXmlNodeXcpEvent->UFindAttributeValueDecimal_ZZR(d_chXCPa_TaskDataOffset);
+					if (ibDataRequest < pTask->m_binData.CbGetData())
+						binXcpStanzaReply.BinAppendTextSzv_VE("<" d_szXCPe_TaskDownloading_tsI d_szXCPa_TaskDataOffset_i d_szXCPa_TaskDataBinary_Bii "/>", tsEventID, ibDataRequest, &pTask->m_binData, ibDataRequest, cbStanzaMaxBinary);
+					else
+						m_listTasksSocket.DeleteTask(PA_DELETING pTask);	// The request is equal (or larger) than the data, meaning all the data was downloaded, therefore the task is no longer needed
+					break;
+					}
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t\t Unable to find CTaskSend matching Task ID '$t'\n", tsEventID);
+				}
 				break;
 			default:
 				MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "\t\t Unknown XCP directive $s: chXCPe = $i ($b)\n", pszEventName, chXCPe, chXCPe);
@@ -630,10 +771,27 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 	} // Xcp_ProcessStanzasAndUnserializeEvents()
 
 void
+CBinXcpStanza::BinXmlAppendXcpApiRequestOpen(PSZAC pszApiName)
+	{
+	Assert(pszApiName != NULL);
+	BinAppendTextSzv_VE("<" d_szXCPe_ApiRequest_s ">", pszApiName);
+	}
+
+void
+CBinXcpStanza::BinXmlAppendXcpApiRequestClose()
+	{
+	BinAppendText("</" d_szXCPe_ApiRequest_close ">");
+	}
+
+void
 CBinXcpStanza::BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters)
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "BinXmlAppendXcpApiRequest($s, $s)\n", pszApiName, pszXmlApiParameters);
-	BinAppendTextSzv_VE("<" d_szXCPe_ApiRequest_s ">$s</" d_szXCPe_ApiRequest_close ">", pszApiName, pszXmlApiParameters);
+	BinXmlAppendXcpApiRequestOpen(pszApiName);
+	if (pszXmlApiParameters != NULL)
+		BinAppendText((PSZAC)pszXmlApiParameters);
+	BinXmlAppendXcpApiRequestClose();
+	//BinAppendTextSzv_VE("<" d_szXCPe_ApiRequest_s ">$s</" d_szXCPe_ApiRequest_close ">", pszApiName, pszXmlApiParameters);
 	}
 
 //	Invoke a function by sending an API request to the contact.  This is essentially invoking a remote procedure call.
@@ -674,14 +832,27 @@ CBinXcpStanza::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 		#ifdef d_szEventDebug_strVersion
 		BinAppendXmlAttributeText(d_szEventDebug_strVersion, pEvent->m_strDebugVersion);
 		#endif
-		pEvent->XmlSerializeCore(IOUT this);
-		if ((eEventClass & eEventClass_kfSerializeDataAsXmlElement) == 0)
+		BinAppendXmlEventCoreDataWithClosingElement(pEvent, eEventClass);
+		/*
+		EXml eXml = pEvent->XmlSerializeCoreE(IOUT this);
+		if (eXml == eXml_zAttributesOnly)
 			BinAppendXmlForSelfClosingElement();
 		else
 			BinAppendTextSzv_VE("</$U>\n", eEventClass);
+		*/
 		}
 	} // BinXmlSerializeEventForDisk()
 
+void
+CBinXcpStanza::BinAppendXmlEventCoreDataWithClosingElement(const IEvent * pEvent, EEventClass eEventClass)
+	{
+	Assert(pEvent != NULL);
+	EXml eXml = pEvent->XmlSerializeCoreE(IOUT this);
+	if (eXml == eXml_zAttributesOnly)
+		BinAppendXmlForSelfClosingElement();
+	else
+		BinAppendTextSzv_VE("</$U>\n", eEventClass);
+	}
 
 //	Core method to serialize an event to be transmitted through the Cambrian Protocol.
 //
@@ -714,8 +885,14 @@ CBinXcpStanza::BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTAMP t
 		}
 	BinAppendTextSzv_VE((tsOther > d_tsOther_kmReserved) ? "<$U" _tsO _tsI : "<$U" _tsO, eEventClassXcp, tsEventID, tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
 	BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
-	pEvent->XmlSerializeCore(IOUT this);
-	BinAppendXmlForSelfClosingElement();
+	BinAppendXmlEventCoreDataWithClosingElement(pEvent, eEventClassXcp);
+	/*
+	EXml eXml = pEvent->XmlSerializeCoreE(IOUT this);
+	if (eXml == eXml_zAttributesOnly)
+		BinAppendXmlForSelfClosingElement();
+	else
+		BinAppendTextSzv_VE("</$U>\n", eEventClassXcp);
+	*/
 	} // BinXmlSerializeEventForXcpCore()
 
 
@@ -948,9 +1125,15 @@ TContact::Xcp_ServiceDiscovery()
 void
 TContact::Xcp_Synchronize()
 	{
+	/*
 	CBinXcpStanzaTypeInfo binXcpStanza;
 	binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithContact(this);
 	binXcpStanza.XcpSendStanzaToContact(IN this);
+	*/
+	CBinXcpStanzaTypeInfo binXcpStanza;
+	binXcpStanza.m_pContact = this;
+	binXcpStanza.BinXmlAppendXcpApiSynchronize_RequestCreate();
+	binXcpStanza.XcpSendStanza();
 	}
 
 /*
@@ -1156,18 +1339,18 @@ CEventDownloader::EGetEventClassForXCP() const
 	return c_eEventClass;	// This value does not serialize via XCP
 	}
 
-//	CEventDownloader::IEvent::XmlSerializeCore()
-void
-CEventDownloader::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+//	CEventDownloader::IEvent::XmlSerializeCoreE()
+EXml
+CEventDownloader::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	if (m_paEvent != NULL)
 		{
-		m_paEvent->XmlSerializeCore(IOUT pbinXmlAttributes);
-		return;
+		return m_paEvent->XmlSerializeCoreE(IOUT pbinXmlAttributes);
 		}
 	pbinXmlAttributes->BinAppendXmlAttributeTimestamp(d_chXCPa_CEventDownloader_tsForwarded, m_tsForwarded);
 	pbinXmlAttributes->BinAppendXmlAttributeInt(d_chXCPa_CEventDownloader_cblDataToDownload, m_cbDataToDownload);
 	pbinXmlAttributes->BinAppendXmlAttributeCBin(d_chXCPa_CEventDownloader_bin85DataReceived, m_binDataDownloaded);
+	return eXml_zAttributesOnly;
 	}
 
 //	CEventDownloader::IEvent::XmlUnserializeCore()

@@ -59,7 +59,7 @@ public:
 public:
 	IEventBallot(const TIMESTAMP * ptsEventID);
 	virtual ~IEventBallot();
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply);
@@ -100,7 +100,7 @@ public:
 	CEventBallotReceived(const TIMESTAMP * ptsEventID);
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const { return CEventBallotSent::c_eEventClass; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 

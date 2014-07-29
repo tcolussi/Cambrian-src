@@ -2489,7 +2489,8 @@ PrematureEndOfFile:
 EError
 CXmlTree::EParseFileDataToXmlNodesModify_ML(INOUT CBin * pbinXmlFileData)
 	{
-	m_binXmlFileData.BinInitFromCBinStolen(INOUT pbinXmlFileData);
+	m_binXmlFileData.BinInitFromCBinStolen(INOUT pbinXmlFileData);	// TODO: BinInitFromCBinStolenWithVirtualNullTerminator()
+	m_binXmlFileData.BinAppendNullTerminatorVirtualSzv();
 	return EParseFileDataToXmlNodes_ML();
 	}
 
@@ -3246,7 +3247,7 @@ CXmlExchanger::XmlExchangeBin(PSZAC pszuTagName, INOUT CBin * pbinValue)
 		int cbDataBinary = pbinValue->CbGetData();
 		if (cbDataBinary > 0)
 			{
-			XmlExchangeBinary(pszuTagName, IN pbinValue->PbGetData(), cbDataBinary);	// Reuse the same method as the encoding fixed binary data
+			XmlExchangeBinary(pszuTagName, IN pbinValue->PbGetData(), cbDataBinary);	// Reuse the same method as the encoding fixed-length binary data
 			/*
 			CStr strBase85;	// Content of the binary is encoded in Base85, which uses less storage than Base64 and does not require any XML/HTML encoding.
 			strBase85.BinAppendStringBase85FromBinaryData(IN pbinValue);
@@ -3281,7 +3282,7 @@ CXmlExchanger::XmlExchangeStrBase85(PSZAC pszuTagName, INOUT CStr * pstrValue)
 		// Serialize only non-empty strings
 		int cchString = pstrValue->CchGetLength();
 		if (cchString > 0)
-			XmlExchangeBinary(pszuTagName, IN pstrValue->PbGetData(), cchString);	// Reuse the same method as the encoding fixed binary data
+			XmlExchangeBinary(pszuTagName, IN pstrValue->PbGetData(), cchString);	// Reuse the same method as the encoding fixed-length binary data
 		}
 	else
 		{

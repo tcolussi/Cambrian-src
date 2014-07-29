@@ -28,11 +28,14 @@ CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 			continue;	// Don't serialize deleted events
 		EEventClass eEventClass = pEvent->EGetEventClass();
 		pbinXmlEvents->BinAppendTextSzv_VE("<$U" _tsI, eEventClass, pEvent->m_tsEventID);
+		pbinXmlEvents->BinAppendXmlEventCoreDataWithClosingElement(pEvent, eEventClass);
+		/*
 		pEvent->XmlSerializeCore(IOUT pbinXmlEvents);
 		if ((eEventClass & eEventClass_kfSerializeDataAsXmlElement) == 0)
 			pbinXmlEvents->BinAppendXmlForSelfClosingElement();
 		else
 			pbinXmlEvents->BinAppendTextSzv_VE("</$U>\n", eEventClass);
+		*/
 		} // while
 	pbinXmlEvents->BinAppendText("</"d_szVault_Event">");
 	}

@@ -86,7 +86,8 @@ public:
 	void BinAppendBinaryDataPvPv(const void * pvDataStart, const void * pvDataStop);
 	void BinAppendCStr(const CStr & strSrc);
 	void BinAppendCBin(const CBin & binSrc);
-	void BinAppendCBinLowercase(const CBin & binSrc);
+	void BinAppendCBinLowercaseAscii(const CBin & binSrc);
+	void BinAppendCBinFromOffset(const CBin & binSrc, int ibDataBegin);
 	void BinAppendByteArray(const QByteArray & arraybData);
 	void BinAppendByte(UINT bData);
 	void BinAppendBytes(UINT bData, int cCount);
@@ -157,6 +158,7 @@ public:
 	void BinAppendStringBase85FromBinaryData(const CBin * pbinData);
 
 	PSZUC BinAppendBinaryDataFromBase64Szv(PSZUC pszuBase64);
+	int   BinAppendBinaryDataFromBase85SCb_ML(PSZUC pszuBase85);
 	PSZUC BinAppendBinaryDataFromBase85Szv_ML(PSZUC pszuBase85);
 	PSZUC BinAppendTextVirtualSzv_VL(OUT int * pcbDataFormatted, IN PSZAC pszFmtTemplate, va_list vlArgs) CONST_TEMPORARY_MODIFIED;
 	PSZUC PszAppendVirtualXmlAttributes(PSZAC pszFmtTemplateAttributes, ...) CONST_TEMPORARY_MODIFIED;

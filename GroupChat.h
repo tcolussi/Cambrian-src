@@ -16,7 +16,7 @@ public:
 	CEventGroupMemberJoin(const TIMESTAMP * ptsEventID);
 	CEventGroupMemberJoin(TContact * pMember);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eGroupMemberJoins; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
@@ -29,7 +29,7 @@ class CEventGroupInfo : public IEvent
 public:
 	CEventGroupInfo();
 	virtual EEventClass EGetEventClass() const { return eEventClass_eGroupInfo; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };

@@ -29,11 +29,12 @@ CEventGroupMemberJoin::CEventGroupMemberJoin(TContact * pMember) : IEvent(NULL)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define d_chAttribute_strMemberJID		'm'
 
-//	CEventGroupMemberJoin::IEvent::XmlSerializeCore()
-void
-CEventGroupMemberJoin::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+//	CEventGroupMemberJoin::IEvent::XmlSerializeCoreE()
+EXml
+CEventGroupMemberJoin::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeOfContactIdentifier(d_chAttribute_strMemberJID, m_pMember);
+	return eXml_zAttributesOnly;
 	}
 
 //	CEventGroupMemberJoin::IEvent::XmlUnserializeCore()

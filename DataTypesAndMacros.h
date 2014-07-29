@@ -128,7 +128,8 @@ typedef int ENUM;					// Generic enumeration type
 #define TRUE			1
 
 
-typedef LU64 TIMESTAMP;		// ts	- Unique value to identify  events in a chronological order.  The timestamp is initialized with QDateTime::toMSecsSinceEpoch().
+typedef LU64 TIMESTAMP;		// ts	- Unique value to identify  events in a chronological order.  The timestamp is typically initialized with QDateTime::currentMSecsSinceEpoch().
+	#define d_ts_pNULL_AssignToNow		NULL	// NULL pointer indicating the timestamp will be initialized with QDateTime::currentMSecsSinceEpoch()
 	#define d_ts_zNULL			(TIMESTAMP)0	// Empty/null timestamp.  This #define is used when pushing a zero timestamp onto the stack when compiling 32-bit executable, otherwise the stack will not be aligned properly.
 	#define d_ts_zNA			(TIMESTAMP)0	// Similar as d_ts_zNULL, however indicates the timestamp is unused, and therefore not applicable.
 	#define d_ts_cSeconds		1000		// Number of seconds in a timestamp

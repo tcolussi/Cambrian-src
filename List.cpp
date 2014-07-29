@@ -206,7 +206,7 @@ List_MoveNodeToHead(INOUT SList * pList, OUT SListNode * pNode)
 	if (pList->pHead == pNode)
 		return;	// The node is already the head of the list
 	List_DetachNode(INOUT pList, INOUT pNode);
-	List_InsertNodeAtHead(INOUT pList, INOUT pNode);
+	List_InsertNodeAtHead(INOUT pList, OUT pNode);
 	}
 
 /////////////////////////////////////////////////////////////////////

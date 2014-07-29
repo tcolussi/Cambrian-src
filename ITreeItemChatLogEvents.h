@@ -104,6 +104,7 @@ public:
 
 	void XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters);
 	void XcpApi_Invoke_RecommendationsGet();
+	void XcpApi_Invoke_Synchronize();
 
 	void DisplayDialogBallotSend(CEventBallotSent * pEventBallotInit = NULL);
 	void DisplayDialogSendFile();

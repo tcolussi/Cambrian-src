@@ -24,7 +24,7 @@ CVariant::CVariant(const QObject * poObject)
 	}
 */
 
-OSettings::OSettings(OCambrian * poCambrian) : QObject(poCambrian)
+OSettings::OSettings(OJapiCambrian * poCambrian) : QObject(poCambrian)
 	{
 	}
 
@@ -56,19 +56,19 @@ OSettings::AudioEnabled(bool fEnable)
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OProfile::OProfile(OCambrian * poCambrian) : QObject(poCambrian)
+OJapiProfile::OJapiProfile(OJapiCambrian * poCambrian) : QObject(poCambrian)
 	{
 	}
 
-OProfile::~OProfile()
+OJapiProfile::~OJapiProfile()
 	{
-	MessageLog_AppendTextFormatCo(d_coYellowDirty, "OProfile::~OProfile()\n");
+	MessageLog_AppendTextFormatCo(d_coYellowDirty, "OJapiProfile::~OJapiProfile()\n");
 	}
 
 QString
-OProfile::CreateNew(const QString & sNameProfile)
+OJapiProfile::CreateNew(const QString & sNameProfile)
 	{
-	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OProfile::CreateNew($Q)\n", &sNameProfile);
+	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OJapiProfile::CreateNew($Q)\n", &sNameProfile);
 	TProfile * pProfile = new TProfile(&g_oConfiguration);	// At the moment, there is only one configuration object, so use the global variable
 	g_oConfiguration.m_arraypaProfiles.Add(PA_CHILD pProfile);
 	pProfile->m_strNameProfile = sNameProfile;
@@ -79,17 +79,17 @@ OProfile::CreateNew(const QString & sNameProfile)
 	}
 
 void
-OProfile::SwitchTo(const QString & sIdProfile)
+OJapiProfile::SwitchTo(const QString & sIdProfile)
 	{
-	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OProfile::SwitchTo($Q)\n", &sIdProfile);
+	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OJapiProfile::SwitchTo($Q)\n", &sIdProfile);
 	}
 
 //	Return the profile data, such as email, telephone, picture and so on.
 //	The profile data is stored in the configuration file.
 QString
-OProfile::DataGet(const QString & sIdProfile)
+OJapiProfile::DataGet(const QString & sIdProfile)
 	{
-	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OProfile::DataGet($Q)\n", &sIdProfile);
+	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OJapiProfile::DataGet($Q)\n", &sIdProfile);
 	TProfile * pProfile = PFindProfileByID(sIdProfile);
 	if (pProfile != NULL)
 		return pProfile->m_strData;
@@ -97,16 +97,16 @@ OProfile::DataGet(const QString & sIdProfile)
 	}
 
 void
-OProfile::DataUpdate(const QString & sIdProfile, const QString & sDataProfile)
+OJapiProfile::DataUpdate(const QString & sIdProfile, const QString & sDataProfile)
 	{
-	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OProfile::DataUpdate($Q): $Q\n", &sIdProfile, &sDataProfile);
+	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OJapiProfile::DataUpdate($Q): $Q\n", &sIdProfile, &sDataProfile);
 	TProfile * pProfile = PFindProfileByID(sIdProfile);
 	if (pProfile != NULL)
 		pProfile->m_strData = sDataProfile;
 	}
 
 TProfile *
-OProfile::PFindProfileByID(const QString & sIdProfile) const
+OJapiProfile::PFindProfileByID(const QString & sIdProfile) const
 	{
 	// At the moment, the profile identifier is the profile name
 	CStr strNameProfile = sIdProfile;
@@ -119,24 +119,24 @@ OProfile::PFindProfileByID(const QString & sIdProfile) const
 		if (pProfile->m_strNameProfile.FCompareStringsNoCase(strNameProfile))
 			return pProfile;
 		}
-	MessageLog_AppendTextFormatCo(d_coBrowserDebugWarning, "OProfile::PFindProfileByID($Q) - Unable to find profile matching identifier!\n", &sIdProfile);
+	MessageLog_AppendTextFormatCo(d_coBrowserDebugWarning, "OJapiProfile::PFindProfileByID($Q) - Unable to find profile matching identifier!\n", &sIdProfile);
 	return NULL;
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OCambrian::OCambrian(TProfile * pProfile, QObject * pParent) : QObject(pParent), m_oSettings(this), m_oProfile(this)
+OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oProfile(this)
 	{
 	m_pProfile = pProfile;
 	m_paPolls = NULL;
 	}
 
-OCambrian::~OCambrian()
+OJapiCambrian::~OJapiCambrian()
 	{
 	delete m_paPolls;
 	}
 
 QVariant
-OCambrian::Settings()
+OJapiCambrian::Settings()
 	{
 	/*
 	QAxObject o(this);
@@ -145,7 +145,7 @@ OCambrian::Settings()
 	*/
 	//QScriptValue qv;
 	//QObject::property()
-	//MessageLog_AppendTextFormatCo(d_coRed, "OCambrian::Settings(paDispatch=0x$p)\n", paDispatch);
+	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiCambrian::Settings(paDispatch=0x$p)\n", paDispatch);
 	QVariant v;
 	//v.setValue(new OSettings(this));
 	v.setValue(&m_oSettings);
@@ -153,16 +153,16 @@ OCambrian::Settings()
 	}
 
 QVariant
-OCambrian::Profile()
+OJapiCambrian::Profile()
 	{
-	//MessageLog_AppendTextFormatCo(d_coRed, "OCambrian::Profile()\n");
+	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiCambrian::Profile()\n");
 	QVariant v;
 	v.setValue(&m_oProfile);
 	return v;
 	}
 
 QVariant
-OCambrian::polls()
+OJapiCambrian::polls()
 	{
 	/*
 	OPolls * p = new OPolls(this);
@@ -177,7 +177,7 @@ OCambrian::polls()
 	*/
 	//return QVariant::fromValue(new OPolls(this));
 	if (m_paPolls == NULL)
-		m_paPolls = new OPolls(this);
+		m_paPolls = new OJapiPolls(this);
 	return QVariant::fromValue(m_paPolls);
 
 	/*
@@ -195,14 +195,14 @@ OCambrian::polls()
 	}
 
 void
-OCambrian::SendBitcoin(int n)
+OJapiCambrian::SendBitcoin(int n)
 	{
 	MessageLog_AppendTextFormatCo(d_coRed, "Send $i Bitcoin\n", n);
 	//EMessageBoxQuestion("Send Bitcoin?");
 	}
 
 void
-OCambrian::MessageSendTo(const QString & sContactTo, const QString & sMessage)
+OJapiCambrian::MessageSendTo(const QString & sContactTo, const QString & sMessage)
 	{
 	MessageLog_AppendTextFormatSev(eSeverityComment, "Sending message to $Q: $Q\n", &sContactTo, &sMessage);
 	CStr strContactTo = sContactTo;	// Typecast
@@ -232,9 +232,9 @@ OCambrian::MessageSendTo(const QString & sContactTo, const QString & sMessage)
 
 /*
 QVariant
-OCambrian::set()
+OJapiCambrian::set()
 	{
-	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OCambrian::set()\n");
+	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OJapiCambrian::set()\n");
 	QVariant v;
 	v.setValue(new OSettings(this));
 	return v;
@@ -276,7 +276,7 @@ WLayoutBrowser::WLayoutBrowser(TProfile * pProfile, CStr * pstrUrlAddress_NZ)
 
 //	QScriptEngine
 
-	m_paCambrian = new OCambrian(pProfile, this);
+	m_paCambrian = new OJapiCambrian(pProfile, this);
 
 	QWebPage * poPage = m_pwWebView->page();
 	m_poFrame = poPage->mainFrame();

@@ -25,6 +25,8 @@
 	Me.Wallet.GetAddress
 #endif
 
+const CHU c_szaApi_Synchronize[] = "Sync";
+
 const CHU c_szaApi_Group_Profile_Get[] = "Group.Profile.Get";
 
 #define d_chAPIe_TGroup_					'G'
@@ -37,6 +39,16 @@ const CHU c_szaApi_Group_Profile_Get[] = "Group.Profile.Get";
 	#define d_chAPIa_TGroupMember_idContact	'c'	// Perhaps rename to 'i'
 
 const CHU c_szaApi_Contact_Recommendations_Get[] = "Contact.Recommendations.Get";
+
+void
+CBinXcpStanza::XcpApi_ExecuteCore(BOOL fApiRequest, PSZUC pszApiName, const CXmlNode * pXmlNodeApiData)
+	{
+	if (FCompareStringsNoCase(pszApiName, c_szaApi_Synchronize))
+		{
+		BinXmlAppendXcpApiSynchronize_Execute(fApiRequest, pXmlNodeApiData);
+		return;
+		}
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core method to serialize the data for an XCP API request.
@@ -51,6 +63,13 @@ CBinXcpStanza::BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PSZUC 
 	Assert(pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
 	MessageLog_AppendTextFormatSev(eSeverityComment, "Processing API '$s' with the following parameters: ^N\n", pszApiName, pXmlNodeApiParameters);
 
+	/*
+	if (FCompareStringsNoCase(pszApiName, c_szaApi_Synchronize))
+		{
+		BinXmlAppendXcpApiSynchronize_OnReply(pXmlNodeApiParameters);
+		return;
+		}
+	*/
 	if (FCompareStringsNoCase(pszApiName, c_szaApi_Group_Profile_Get))
 		{
 		PSZUC pszProfileIdentifier = pXmlNodeApiParameters->m_pszuTagValue;
@@ -68,6 +87,8 @@ CBinXcpStanza::BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PSZUC 
 		pAccount->m_pProfileParent->XcpApiProfile_RecommendationsSerialize(INOUT this); // Return all the recommendations related to the profile
 		return;
 		}
+
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unknown API '$s'\n", pszApiName);
 	} // BinXmlAppendXcpElementForApiRequest_AppendApiParameterData()
 
 
@@ -124,6 +145,113 @@ TGroup::XcpApiGroup_Profile_GetFromContact(TContact * pContact)
 	binXcpStanza.BinXmlAppendXcpApiRequest_Group_Profile_Get(szGroupIdentifier);
 	binXcpStanza.XcpSendStanzaToContact(pContact);
 	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+void
+ITreeItemChatLogEvents::XcpApi_Invoke_Synchronize()
+	{
+	CBinXcpStanzaTypeInfo binXcpStanza;
+	binXcpStanza.m_pContact = this;
+	binXcpStanza.BinXmlAppendXcpApiRequest_Synchronize();
+	binXcpStanza.XcpSendStanzaToContactOrGroup(IN this);
+	}
+*/
+/*
+<_a n="Sync">
+	<s i='3U]`%sv'/>	==> <s
+	<r t='3UXDo]m'/>
+	<o t='3UXDo]m'/>
+</_a>
+*/
+void
+CBinXcpStanza::BinXmlAppendXcpApiSynchronize_RequestCreate(TGroupMember * pMember)
+	{
+	Endorse(pMember == NULL);	// Synchronize only with the contact messages, not a group
+	Assert(m_pContact != NULL);
+	TIMESTAMP tsOtherLastSync = m_pContact->m_tsOtherLastSynchronized;
+	CVaultEvents * pVault = m_pContact->Vault_PGet_NZ();
+
+	// Build a sync request
+	BinXmlAppendXcpApiRequestOpen((PSZAC)c_szaApi_Synchronize);
+
+	BinAppendTextSzv_VE("<s i='$t'/>", tsOtherLastSync);
+
+	BinXmlAppendXcpApiRequestClose();
+	}
+
+void
+CBinXcpStanza::BinXmlAppendXcpApiSynchronize_Execute(BOOL fApiRequest, const CXmlNode * pXmlNodeApiData)
+	{
+	CVaultEvents * pVault = m_pContact->Vault_PGet_NZ();
+	IEvent ** ppEventStop;
+	IEvent ** ppEventFirst = pVault->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+
+	CXmlNode * pXmlNodeSent = pXmlNodeApiData->PFindElement('s');
+	if (pXmlNodeSent != NULL)
+		{
+		TIMESTAMP tsEventID = pXmlNodeSent->TsGetAttributeValueTimestamp_ML('i');
+		tsEventID = 0;
+		if (fApiRequest)
+			{
+			// Return all the timestamps of sent events since tsEventID
+			BinAppendTextSzv_VE("<s o='$t' t='", tsEventID);
+			IEvent ** ppEvent = ppEventFirst;
+			while (ppEvent != ppEventStop)
+				{
+				IEvent * pEvent = *ppEvent++;
+				if (pEvent->m_tsEventID > tsEventID)
+					{
+					BinAppendTimestamp(pEvent->m_tsEventID);
+					m_paData->rgbData[m_paData->cbData++] = ' ';	// Append an extra space
+					}
+				}
+			BinAppendText("'/>");
+			}
+		else
+			{
+			// Loop through all the timestamps to see if there is any missing
+			TIMESTAMP tsOther;
+			PSZUC pszTimestamps = pXmlNodeSent->PszuFindAttributeValue_NZ('t');
+			while (TRUE)
+				{
+				while (Ch_FIsWhiteSpace(*pszTimestamps))
+					pszTimestamps++;
+				if (pszTimestamps[0] == '\0')
+					break;
+				pszTimestamps = Timestamp_PchFromString(OUT &tsOther, IN pszTimestamps);
+				IEvent * pEvent = pVault->PFindEventReceivedByTimestampOther(tsOther, (TContact *)NULL);
+				if (pEvent != NULL)
+					MessageLog_AppendTextFormatSev(eSeverityNoise, "Event ID $t (tsOther = $t) is already present\n", pEvent->m_tsEventID, tsOther);
+				else
+					MessageLog_AppendTextFormatSev(eSeverityComment, "Missing tsOther $t\n", tsOther);
+				}
+			} // if...else
+		}
+	}
+/*
+void
+CBinXcpStanza::BinXmlAppendXcpApiSynchronize_OnRequest(const CXmlNode * pXmlNodeApiParameters)
+	{
+	Assert(m_pContact != NULL);
+	BinXmlAppendXcpElementForApiRequest_ElementOpen(c_szaApi_Synchronize);
+	CVaultEvents * pVault = m_pContact->Vault_PGet_NZ();
+	CXmlNode * pXmlNodeSent = pXmlNodeApiParameters->PFindElement('s');
+	if (pXmlNodeSent != NULL)
+		{
+		TIMESTAMP tsEventID = pXmlNodeSent->TsGetAttributeValueTimestamp_ML('i');
+		// Return all the timestamps of sent events since tsEventID
+		BinAppendTextSzv_VE("<s o='$t'/>", tsEventID);
+		}
+	BinXmlAppendXcpElementForApiRequest_ElementClose();
+	}
+
+void
+CBinXcpStanza::BinXmlAppendXcpApiSynchronize_OnReply(const CXmlNode * pXmlNodeApiParameters)
+	{
+
+	}
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void

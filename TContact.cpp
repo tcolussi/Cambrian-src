@@ -97,8 +97,8 @@ TContact::Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const
 	Assert(pHashFileNameVault != NULL);
 	// Calculate the hash from the following: the bare JID of the contact + the bare JID of the account + the salt of Config.xml
 	g_strScratchBufferStatusBar.Empty();
-	g_strScratchBufferStatusBar.BinAppendCBinLowercase(m_strJidBare);
-	g_strScratchBufferStatusBar.BinAppendCBinLowercase(m_pAccount->m_strJID);
+	g_strScratchBufferStatusBar.BinAppendCBinLowercaseAscii(m_strJidBare);
+	g_strScratchBufferStatusBar.BinAppendCBinLowercaseAscii(m_pAccount->m_strJID);
 	g_strScratchBufferStatusBar.BinAppendBinaryData(m_pAccount->PGetSaltOfConfiguration(), CChatConfiguration::c_cbSalt);
 	HashSha1_CalculateFromCBin(OUT pHashFileNameVault, IN g_strScratchBufferStatusBar);
 	}

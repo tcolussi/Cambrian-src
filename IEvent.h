@@ -13,6 +13,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+
 #define d_szEventDebug_strContactSource					"_CONTACTSOURCE"	// Add an extra field to the base class IEvent to include the contact who transmitted the event.  This field is useful to debug group chat.
 #define d_szEventDebug_strVersion						"_VERSION"			// Add the Cambrian version when the event was created (sent or received).  Again, this is useful to save time by avoiding debugging old events received before a given bugfix.
 
@@ -47,9 +48,6 @@
 //	gives us useful information about what type of event we are dealing.
 enum EEventClass
 	{
-	eEventClass_kzSerializeDataAsXmlAttributes	= 0,			// This is the default as all the data of the event are serialized as XML attributes
-	eEventClass_kfSerializeDataAsXmlElement		= _USZUF(0x01),	// NYI: The event has a lot of data and must be serialized as an XML element containing elements and attributes.  This flag is useful during the serialization to determine if there is a need for a closing XML tag.
-
 	eEventClass_kfNeverSerializeToDisk			= _USZUF(0x02),	// This event is never serialized to disk (example: pinging a remote client, or sending raw XML to the socket)
 	eEventClass_kfNeverSerializeToXCP			= _USZUF(0x04),	// This event is never serialized (sent) via the XCP protocol (example: downloading a large stanza from a contact)
 	eEventClass_mfNeverSerialize				= eEventClass_kfNeverSerializeToDisk | eEventClass_kfNeverSerializeToXCP,
@@ -113,9 +111,9 @@ enum EEventClass
 	eEventClass_eWalletTransactionReceived_class	= eEventClass_eWalletTransactionReceived | eEventClass_kfReceivedByRemoteClient,
 
 	eEventClass_eBallotSent							= _USZU3('B', 'A', 'L'),
-	eEventClass_eBallotSent_class					= eEventClass_eBallotSent | eEventClass_kfSerializeDataAsXmlElement,
+	eEventClass_eBallotSent_class					= eEventClass_eBallotSent,
 	eEventClass_eBallotReceived						= _USZU3('b', 'a', 'l'),
-	eEventClass_eBallotReceived_class				= eEventClass_eBallotReceived | eEventClass_kfReceivedByRemoteClient | eEventClass_kfSerializeDataAsXmlElement,
+	eEventClass_eBallotReceived_class				= eEventClass_eBallotReceived | eEventClass_kfReceivedByRemoteClient,
 
 	// Not used
 	eEventClass_eServiceDiscovery_Query				= _USZU2('S', 'D'),		// There is no 'event' for service discovery, however the "SD"
@@ -132,6 +130,12 @@ enum EEventClass
 inline EEventClass EEventClassFromPsz(PSZUC pszEventClass) { return (EEventClass)UszuFromPsz(pszEventClass); }
 #define FEventClassReceived(chEventClass0)		((chEventClass0) >= 'a')	// All received events begin with a lowercase
 
+//	Enumeration describing serialized XML
+enum EXml
+{
+	eXml_zAttributesOnly = 0x00,
+	eXml_fElementPresent = 0x01,
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 enum EErrorXcpApi
@@ -174,8 +178,12 @@ public:
 	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
 	void BinXmlAppendAttributeUIntHexadecimalExcludeForXcp(CHS chAttributeName, UINT uAttributeValueHexadecimal, UINT kmFlagsExcludeForXcp);
 
+	void BinAppendXmlEventCoreDataWithClosingElement(const IEvent * pEvent, EEventClass eEventClass);
+
 	BOOL XcpApi_FIsXmlElementOpened() const { return (m_ibXmlApiReply > 0); }
 	BOOL XcpApi_FIsXmlElementClosedBecauseOfError() const { return (m_ibXmlApiReply == 0); }
+	void XcpApi_Execute(const CXmlNode * pXmlNodeApiData);
+	void XcpApi_ExecuteCore(BOOL fApiRequest, PSZUC pszApiName, const CXmlNode * pXmlNodeApiData);
 	void BinXmlAppendXcpElementForApiRequest_ElementOpen(PSZUC pszApiName);
 	void BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters);
 	void BinXmlAppendXcpElementForApiRequest_ElementClose();
@@ -183,8 +191,13 @@ public:
 
 	void BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters);
 
+	void BinXmlAppendXcpApiRequestOpen(PSZAC pszApiName);
+	void BinXmlAppendXcpApiRequestClose();
 	void BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters);
 	void BinXmlAppendXcpApiRequest_Group_Profile_Get(PSZUC pszGroupIdentifier);
+
+	void BinXmlAppendXcpApiSynchronize_RequestCreate(TGroupMember * pMember = NULL);
+	void BinXmlAppendXcpApiSynchronize_Execute(BOOL fApiRequest, const CXmlNode * pXmlNodeApiData);
 
 	void BinXmlSerializeEventForDisk(const IEvent * pEvent);
 	void BinXmlSerializeEventForXcp(const IEvent * pEvent);
@@ -298,14 +311,14 @@ public:
 	#endif
 
 public:
-	IEvent(const TIMESTAMP * ptsEventID = NULL);
+	IEvent(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);
 	virtual ~IEvent();
 	void EventAddToVault(PA_PARENT CVaultEvents * pVaultParent);
 	void EventAddToVault(PA_PARENT TContact * pContactParent);
 
 	virtual EEventClass EGetEventClass() const  = 0;
 	virtual EEventClass EGetEventClassForXCP() const;
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
@@ -431,7 +444,7 @@ public:
 	UINT m_uFlagsMessage;		// Flags related to the message, such as HTML and formatting.
 public:
 	IEventMessageText(const TIMESTAMP * ptsEventID);
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	void _BinHtmlInitWithTimeAndMessage(OUT CBin * pbinTextHtml) CONST_VIRTUAL;
 }; // IEventMessageText
@@ -441,7 +454,7 @@ class CEventMessageXmlRawSent : public IEventMessageText	// This class is mostly
 public:
 	CEventMessageXmlRawSent(PSZUC pszXmlStanza);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eMessageXmlRaw_class; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
 
@@ -492,7 +505,7 @@ protected:
 public:
 	IEventFile(const TIMESTAMP * ptsEventID);
 	virtual ~IEventFile();
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -566,7 +579,7 @@ public:
 	CEventFileReceived(TContact * pContactSendingFile, const CXmlNode * pXmlNodeStreamInitiation);
 	virtual ~CEventFileReceived();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -588,7 +601,7 @@ public:
 
 public:
 	IEventWalletTransaction(const TIMESTAMP * ptsEventID);
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	BOOL FuIsTransactionMatchingViewFlags(EWalletViewFlags eWalletViewFlags) const;
@@ -605,7 +618,7 @@ class CEventWalletTransactionSent : public IEventWalletTransaction
 public:
 	static const EEventClass c_eEventClass = eEventClass_eWalletTransactionSent;
 public:
-	CEventWalletTransactionSent(const TIMESTAMP * ptsEventID = NULL) : IEventWalletTransaction(ptsEventID) { }
+	CEventWalletTransactionSent(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow) : IEventWalletTransaction(ptsEventID) { }
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const;
 };
@@ -632,7 +645,7 @@ public:
 public:
 	CEventPing();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 }; // CEventPing
@@ -648,7 +661,7 @@ public:
 public:
 	CEventVersion();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 
@@ -685,7 +698,7 @@ public:
 	virtual ~CEventDownloader();
 	virtual EEventClass EGetEventClass() const;
 	virtual EEventClass EGetEventClassForXCP() const;
-	virtual void XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply);

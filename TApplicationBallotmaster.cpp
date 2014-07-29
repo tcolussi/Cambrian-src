@@ -63,6 +63,7 @@ CBinXcpStanzaEventCopier::EventCopy(IN const IEvent * pEventSource, OUT IEvent *
 	Assert(pEventSource != NULL);
 	Assert(pEventSource->m_pVaultParent_NZ != NULL);
 	BinXmlSerializeEventForXcpCore(pEventSource, d_ts_zNA);	// TODO: Need to use XmlSerializeCore() instead
+	MessageLog_AppendTextFormatCo(d_coOrange, "CBinXcpStanzaEventCopier::EventCopy(): $B\n", this);
 
 	CXmlTree oXmlTree;
 	(void)oXmlTree.EParseFileDataToXmlNodesCopy_ML(IN *this);
@@ -171,25 +172,35 @@ TApplicationBallotmaster::PGetVault_NZ()
 
 	}
 CEventBallotSent *
-TApplicationBallotmaster::PAllocateBallot()
+TApplicationBallotmaster::PAllocateBallot(const IEventBallot * pEventBallotTemplate)
 	{
-	CEventBallotSent * paEventBallot = new CEventBallotSent();
-	paEventBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;	// When allocating a new ballot, assume it has never been saved
-	CVaultEvents * pVault = PGetVault_NZ();
+	CVaultEvents * pVault = PGetVault_NZ();	// Get the vault first because it will initialize m_paContactDummy
+	CEventBallotSent * paEventBallot = new CEventBallotSent;
 	paEventBallot->m_pVaultParent_NZ = pVault;
+	if (pEventBallotTemplate != NULL)
+		{
+		Assert(pEventBallotTemplate->m_pVaultParent_NZ != NULL);
+		CBinXcpStanzaEventCopier binXcpStanzaCopier(m_paContactDummy);
+		binXcpStanzaCopier.EventCopy(IN pEventBallotTemplate, OUT paEventBallot);
+		}
+	Assert(paEventBallot->m_pVaultParent_NZ == pVault);
 	pVault->m_arraypaEvents.Add(PA_CHILD paEventBallot);
 	return paEventBallot;
 	}
 
+//	Make a copy of an existing ballot and add it to the Ballotmaster
 void
 TApplicationBallotmaster::EventBallotAddAsTemplate(IEventBallot * pEventBallot)
 	{
-	CVaultEvents * pVault = PGetVault_NZ();	// Get the vault first because it will initialize m_paContactDummy
+	Assert(pEventBallot != NULL);
+	(void)PAllocateBallot(pEventBallot);
+	/*
 	CBinXcpStanzaEventCopier binXcpStanzaCopier(m_paContactDummy);
 	CEventBallotSent * paEventBallotTemplate = new CEventBallotSent();	// When adding a template, always use the 'sent' ballot
 	binXcpStanzaCopier.EventCopy(IN pEventBallot, OUT paEventBallotTemplate);
 	paEventBallotTemplate->m_pVaultParent_NZ = pVault;
 	pVault->m_arraypaEvents.Add(PA_CHILD paEventBallotTemplate);
+	*/
 	}
 
 void
@@ -208,85 +219,96 @@ TApplicationBallotmaster::ApiBallotsList(OUT CBin * pbinXmlBallots)
 	pbinXmlBallots->BinInitFromCBinStolen(INOUT &binXmlEvents);
 	}
 
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OPoll::OPoll(CEventBallotSent * pBallot)
+OJapiPollCore::OJapiPollCore(CEventBallotSent * pBallot)
 	{
 	Assert(pBallot != NULL);
 	Assert(pBallot->EGetEventClass() == CEventBallotSent::c_eEventClass);
 	m_pBallot = pBallot;
-	//m_sTitle = "?";	// For debugging
-	}
-OPoll::~OPoll()
-	{
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "OPoll::~OPoll() 0x$p\n", m_pBallot);
 	}
 
+/*
+//	This static method causes a memory leak.  Until Qt has a reference counter of QObjects, Cambrian must provide a mechanism to minimize the memory leaks.
+QVariant
+OPoll::S_VariantFromValue(CEventBallotSent * pBallot)
+	{
+	return (pBallot != NULL) ? QVariant::fromValue(new OPoll(pBallot)) : c_vEmpty;
+	}
+*/
+
 QString
-OPoll::id() const
+OJapiPollCore::id() const
 	{
 	return Timestamp_ToStringBase85(m_pBallot->m_tsEventID);
 	}
 
 QString
-OPoll::status() const
+OJapiPollCore::status() const
 	{
 	//return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "deleted" : "unstarted";
-	return "unstarted";
+	return "unsaved";
 	}
 
 QString
-OPoll::title() const
+OJapiPollCore::title() const
 	{
 	return m_pBallot->m_strTitle;
 	}
 void
-OPoll::title(const QString & sTitle)
+OJapiPollCore::title(const QString & sTitle)
 	{
 	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::title($Q)\n", &sTitle);
 	m_pBallot->m_strTitle = sTitle;
 	}
 
 QString
-OPoll::description() const
+OJapiPollCore::description() const
 	{
 	return m_pBallot->m_strDescription;
 	}
 void
-OPoll::description(const QString & sDescription)
+OJapiPollCore::description(const QString & sDescription)
 	{
 	m_pBallot->m_strDescription = sDescription;
 	}
 QStringList
-OPoll::choices() const
+OJapiPollCore::choices() const
 	{
 	return m_pBallot->LsGetChoices();
-	/*
-	QStringList lsChoices;
-	lsChoices << "a" << "b" << "c";
-	return lsChoices;
-	*/
 	}
 
 void
-OPoll::choices(const QStringList & lsChoices)
+OJapiPollCore::choices(const QStringList & lsChoices)
 	{
 	return m_pBallot->SetChoices(lsChoices);
 	}
 
 QDateTime
-OPoll::dateStarted() const
+OJapiPollCore::dateStarted() const
 	{
 	return Timestamp_ToQDateTime(m_pBallot->m_tsEventID);	// At the moment, use the timestamp where the event was created as the start date
 	}
 
 QDateTime
-OPoll::dateStopped() const
+OJapiPollCore::dateStopped() const
 	{
 	return Timestamp_ToQDateTime(d_ts_zNULL);	// At the moment, there is no real implementation of stop
 	}
 
+OJapiPollResults::OJapiPollResults(CEventBallotSent * pBallot) : OJapiPollCore(pBallot)
+	{
+
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+OJapiPoll::OJapiPoll(CEventBallotSent * pBallot) : OJapiPollCore(pBallot), m_oResults(pBallot)
+	{
+	}
+
 bool
-OPoll::save()
+OJapiPoll::save()
 	{
 	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($S)\n", &m_pBallot->m_strTitle);
 	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventDeleted;
@@ -295,52 +317,118 @@ OPoll::save()
 	}
 
 void
-OPoll::destroy()
+OJapiPoll::destroy()
 	{
 	m_pBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;
 	}
 
 void
-OPoll::start()
+OJapiPoll::start()
 	{
 	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::start($S)\n", &m_pBallot->m_strTitle);
 	}
 
 void
-OPoll::stop()
+OJapiPoll::stop()
 	{
 	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::stop($S)\n", &m_pBallot->m_strTitle);
 	}
 
+POJapiPollResults
+OJapiPoll::getResults() CONST_MCC
+	{
+	return &m_oResults;
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OPolls::OPolls(OCambrian * poCambrian)
+OJapiPolls::OJapiPolls(OJapiCambrian * poCambrian)
 	{
 	Assert(poCambrian != NULL);
 	m_pBallotmaster = poCambrian->m_pProfile->PGetApplicationBallotmaster_NZ();
 	Assert(m_pBallotmaster->EGetRuntimeClass() == RTI(TApplicationBallotmaster));
 	}
 
-OPolls::~OPolls()
+OJapiPolls::~OJapiPolls()
 	{
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPolls::~OPolls() 0x$p\n", this);	// Display in the Error Log (to make sure we have not missed it)
 	}
 
-//	build(), slot
-//
-//	Ideally the name new() should be used, however since new() is a C++ operator (reserved keyword), we cannot use it.
-QVariant
-OPolls::build()
+CEventBallotSent *
+OJapiPolls::PFindPollByID(TIMESTAMP tsIdPoll) const
 	{
-	MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::build()\n");
-	return QVariant::fromValue(PA_CHILD new OPoll(IN m_pBallotmaster->PAllocateBallot()));
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = m_pBallotmaster->PGetVault_NZ()->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
+		Assert(pEvent->EGetEventClass() == CEventBallotSent::c_eEventClass);
+		if (pEvent->m_tsEventID == tsIdPoll && (pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted) == 0)
+			return pEvent;
+		}
+	return NULL;
+	}
+
+CEventBallotSent *
+OJapiPolls::PFindPollByID(const QString & sIdPoll) const
+	{
+	return PFindPollByID(Timestamp_FromStringW_ML(sIdPoll));
+	}
+
+POJapiPoll
+OJapiPolls::PGetOJapiPoll(CEventBallotSent * pBallot)
+	{
+	return new OJapiPoll(pBallot);	//	This static method causes a memory leak.  Until Qt has a reference counter of QObjects, Cambrian must provide a mechanism to minimize the memory leaks.
+	}
+
+POJapiPoll
+OJapiPolls::PCreateNewPollFromTemplate(CEventBallotSent * pPollTemplate)
+	{
+	CEventBallotSent * pPollNew = m_pBallotmaster->PAllocateBallot(pPollTemplate);
+	Assert(pPollNew != NULL);
+	pPollNew->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;	// When allocating a new poll, assume it has never been saved
+	return PGetOJapiPoll(pPollNew);
 	}
 
 
+//	build(), slot
+//
+//	Create a new poll
+//
+//	Ideally the name new() should be used, however since new() is a C++ operator (reserved keyword), we cannot use it.
+//	Originally the name build() was chosen, however I think the name create() would be more appropriate.
+POJapiPoll
+OJapiPolls::build()
+	{
+	//MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::build()\n");
+	return PCreateNewPollFromTemplate(NULL);
+	}
+
+//	Create a new poll based on a template
+POJapiPoll
+OJapiPolls::build(QObject * pObjectPollTemplate)
+	{
+	OJapiPoll * pPollTemplate = qobject_cast<OJapiPoll *>(pObjectPollTemplate);	// Make sure we received an object of proper type
+	return PCreateNewPollFromTemplate((pPollTemplate != NULL) ? pPollTemplate->m_pBallot : NULL);
+	}
+
+POJapiPoll
+OJapiPolls::build(const QString & sIdPollTemplate)
+	{
+	return PCreateNewPollFromTemplate(PFindPollByID(sIdPollTemplate));
+	}
+
+//	get(), slot
+//	Return the poll matching the ID
+POJapiPoll
+OJapiPolls::get(const QString & sIdPoll)
+	{
+	return PCreateNewPollFromTemplate(PFindPollByID(sIdPoll));
+	}
 
 //	getList(), slot
 //	Return a list of polls.
 QVariant
-OPolls::getList()
+OJapiPolls::getList()
 	{
 	CVaultEvents * pVaultPolls = m_pBallotmaster->PGetVault_NZ();
 	#if 0
@@ -385,29 +473,10 @@ OPolls::getList()
 			{
 			//OPoll oPoll(pEvent);
 			//oList.append(QVariant::fromValue(&oPoll));
-			oList.append(QVariant::fromValue(PA_CHILD new OPoll(pEvent)));	// List only non-deleted polls
+			oList.append(QVariant::fromValue(PGetOJapiPoll(pEvent)));	// List only non-deleted polls
 			}
 		}
 	return QVariant::fromValue(oList);
-	}
-
-//	get(), slot
-//	Return the poll matching the ID
-QVariant
-OPolls::get(const QString & sIdPoll)
-	{
-	// Convert the string into a timestamp
-	const TIMESTAMP tsIdPoll = Timestamp_FromStringW_ML(sIdPoll);
-	IEvent ** ppEventStop;
-	IEvent ** ppEvent = m_pBallotmaster->PGetVault_NZ()->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
-	while (ppEvent != ppEventStop)
-		{
-		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
-		//MessageLog_AppendTextFormatCo(d_coRed, "Comparing '$t' and '$t'...\n", pEvent->m_tsEventID, tsIdPoll);
-		if (pEvent->m_tsEventID == tsIdPoll)
-			return QVariant::fromValue(PA_CHILD new OPoll(pEvent));
-		}
-	return c_vEmpty;
 	}
 
 /*

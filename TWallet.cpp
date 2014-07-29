@@ -180,13 +180,14 @@ IEventWalletTransaction::IEventWalletTransaction(const TIMESTAMP * ptsEventID) :
 #define d_chAttribute_strValue		'v'
 #define d_chAttribute_strComment	'c'
 
-//	IEventWalletTransaction::IEvent::XmlSerializeCore()
-void
-IEventWalletTransaction::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+//	IEventWalletTransaction::IEvent::XmlSerializeCoreE()
+EXml
+IEventWalletTransaction::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeL64(d_chAttribute_nAmount, m_amtQuantity);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strValue, m_strValue);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strComment, m_strComment);
+	return eXml_zAttributesOnly;
 	}
 
 //	IEventWalletTransaction::IEvent::XmlUnserializeCore()
@@ -294,8 +295,8 @@ TWallet::GetHashOfContact(OUT SHashSha1 * pHashSha1, const TContact * pContact) 
 	CChatConfiguration * pConfiguration = pAccount->m_pProfileParent->m_pConfigurationParent;
 	g_strScratchBufferStatusBar.BinInitFromBinaryData(IN pConfiguration->PGetSalt(), CChatConfiguration::c_cbSalt);
 	g_strScratchBufferStatusBar.BinAppendBinaryData(IN &m_hashSalt, sizeof(m_hashSalt));
-	g_strScratchBufferStatusBar.BinAppendCBinLowercase(pAccount->m_strJID);
-	g_strScratchBufferStatusBar.BinAppendCBinLowercase(pContact->m_strJidBare);
+	g_strScratchBufferStatusBar.BinAppendCBinLowercaseAscii(pAccount->m_strJID);
+	g_strScratchBufferStatusBar.BinAppendCBinLowercaseAscii(pContact->m_strJidBare);
 	HashSha1_CalculateFromCBin(OUT pHashSha1, g_strScratchBufferStatusBar);
 	}
 

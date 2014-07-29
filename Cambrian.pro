@@ -83,7 +83,8 @@ SOURCES += \
     ApiWebSockets.cpp \
     Identities.cpp \
     TApplicationBallotmaster.cpp \
-    CVaultEvents.cpp
+    CVaultEvents.cpp \
+    ApiJavaScript.cpp
 
 
 HEADERS += \
@@ -153,7 +154,8 @@ HEADERS += \
     ApiWebSockets.h \
     Identities.h \
     TApplicationBallotmaster.h \
-    CVaultEvents.h
+    CVaultEvents.h \
+    ApiJavaScript.h
 
 
 FORMS +=

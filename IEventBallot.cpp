@@ -68,9 +68,9 @@ CArrayPtrBallotVotes::DeleteAllVotes()
 	RemoveAllElements();
 	}
 
-//	IEventBallot::IEvent::XmlUnserializeCore()
-void
-IEventBallot::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+//	IEventBallot::IEvent::XmlUnserializeCoreE()
+EXml
+IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_IEventBallot_strTitle, m_strTitle);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_IEventBallot_strDescription, m_strDescription);
@@ -99,6 +99,7 @@ IEventBallot::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 			}
 		pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotVotes ">");
 		}
+	return eXml_fElementPresent;	// There may be an element present
 	}
 
 //	IEventBallot::IEvent::XmlUnserializeCore()
@@ -385,13 +386,13 @@ CEventBallotReceived::CEventBallotReceived(const TIMESTAMP * ptsEventID) : IEven
 	m_tsConfirmationReceipt = d_ts_zNA;
 	}
 
-void
-CEventBallotReceived::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+EXml
+CEventBallotReceived::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chAPIa_CEventBallotReceived_uxVotedChoice, m_ukmChoices);	// Save the attribute before the rest of the ballot, because the ballot includes XML elements
 	pbinXmlAttributes->BinAppendXmlAttributeTimestamp(d_chAPIa_CEventBallotReceived_tsConfirmationReceipt, m_tsConfirmationReceipt);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_CEventBallotReceived_strNote, m_strComment);
-	IEventBallot::XmlSerializeCore(IOUT pbinXmlAttributes);
+	return IEventBallot::XmlSerializeCoreE(IOUT pbinXmlAttributes);
 	}
 
 void

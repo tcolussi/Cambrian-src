@@ -443,7 +443,7 @@ void
 TGroup::Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const
 	{
 	g_strScratchBufferStatusBar.BinInitFromBinaryData(IN &m_hashGroupIdentifier, sizeof(m_hashGroupIdentifier));
-	g_strScratchBufferStatusBar.BinAppendCBinLowercase(m_pAccount->m_strJID);
+	g_strScratchBufferStatusBar.BinAppendCBinLowercaseAscii(m_pAccount->m_strJID);
 	g_strScratchBufferStatusBar.BinAppendBinaryData(m_pAccount->PGetSaltOfConfiguration(), CChatConfiguration::c_cbSalt);
 	HashSha1_CalculateFromCBin(OUT pHashFileNameVault, IN g_strScratchBufferStatusBar);
 	}

@@ -58,7 +58,7 @@ CStr::PathUrl_FIsValidHyperlinkNonCambrian() const
 
 TIMESTAMP g_tsLast;	// Last returned timestamp (this global variable is to ensure all timestamps are unique)
 
-//	Return the current timestamp.
+//	Return the current timestamp (now)
 //	The timestamp if the number the number of milliseconds that have passed since 1970.
 //	Ideally, this function should be called less than 1000 times per second, otherwise the returned timestamp will be ahead of the current time, however
 //	the functionalitly will remain the same: the timestamp provides a mechanism to identify events in chronological order.
@@ -66,7 +66,7 @@ TIMESTAMP
 Timestamp_GetCurrentDateTime()
 	{
 	const TIMESTAMP tsPrev = g_tsLast;
-	TIMESTAMP tsTest = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();
+	TIMESTAMP tsTest = QDateTime::currentDateTimeUtc().toMSecsSinceEpoch();	// This line should be removed in the future
 	g_tsLast = QDateTime::currentMSecsSinceEpoch();
 	Assert(g_tsLast >= tsTest && g_tsLast <= tsTest + 40);
 	if (g_tsLast <= tsPrev)
@@ -145,7 +145,7 @@ IEvent::IEvent(const TIMESTAMP * ptsEventID)
 	m_pContactGroupSender_YZ = NULL;
 	m_uFlagsEvent = FE_kzDefault;
 	m_tsOther = d_tsOther_ezEventNeverSent;		// Initialize m_tsOther to something so we don't get unpleasant surprises
-	if (ptsEventID != NULL)
+	if (ptsEventID != d_ts_pNULL_AssignToNow)
 		m_tsEventID = *ptsEventID;						// We are creating an event with an existing timestamp, which is typically when an event is being unserialized from disk or XCP
 	else
 		m_tsEventID = Timestamp_GetCurrentDateTime();	// We are creating a new event, so use the current date & time as the timestamp.
@@ -181,30 +181,31 @@ IEvent::EGetEventClassForXCP() const
 	return EGetEventClass();		// By default, return the same as the event class.  This is useful for objects which may not be serialized, however may send stanzas such as a ping or raw XML.
 	}
 
-//	XmlSerializeCore(), virtual
+//	XmlSerializeCoreE(), virtual
 //
-//	Core virtual method to serialize the data of the event into an XML to be saved to disk or transmitted over the Cambrian Protocol.
-//	Since most events are made of simple data types, such as strings, numbers and timestamps, the entire event is often
-//	serialized as multiple attributes.  Later, an event may be serialized as an XML element (TBD).
+//	Core virtual method to serialize the data of the event into an XML to be saved to disk or transmitted over the Cambrian Protocol (XCP).
+//	Return eXml_zAttributesOnly if the event was serialized as attributes.  This is the typical case, a most events are made of simple data types, such as strings, numbers and timestamps.
+//	Return eXml_fElementPresent if the event contains one or more child XML element.  This is the case for events containing complex data types, such as lists of other objects which cannot be serialized as attributes.
 //
 //	Originally this method was using a CBin object to store the XML information, however the Cambrian Protocol requires to know
 //	the destination contact.  As a result, the CBinXcpStanza is used to store the XML info as well as providing additional information for the XCP.
 //
 //
 //	IMPLEMENTATION NOTES
-//	Most implementations of XmlSerializeCore() will use a single letter of the alphabet to designe an attribute name.
+//	Most implementations of XmlSerializeCoreE() will use a single letter of the alphabet to designe an attribute name.
 //	Using a single character makes the comparison faster to find an attribute, while reducing the storage requirement of the XML file.
-void
-IEvent::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+EXml
+IEvent::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	Assert(pbinXmlAttributes != NULL);
 	Endorse(pbinXmlAttributes->m_pContact == NULL);	// NULL => Serialize to disk
 	Assert(FALSE && "No need to call this virtual method");
+	return eXml_zAttributesOnly;	// By default, there is no XML elements
 	}
 
 //	XmlUnserializeCore(), virtual
 //
-//	Virtual method compliment to XmlSerializeCore().  This is the method for unserializing an event from disk or or from XCP.
+//	Virtual method compliment to XmlSerializeCoreE().  This is the method for unserializing an event from disk or or from XCP.
 void
 IEvent::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	{
@@ -665,13 +666,14 @@ IEventMessageText::IEventMessageText(const TIMESTAMP * ptsEventID) : IEvent(ptsE
 	m_uFlagsMessage = FM_kzMessagePlainText;
 	}
 
-//	IEventMessageText::IEvent::XmlSerializeCore()
-void
-IEventMessageText::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+//	IEventMessageText::IEvent::XmlSerializeCoreE()
+EXml
+IEventMessageText::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{	
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strText, m_strMessageText);
 	pbinXmlAttributes->BinAppendXmlAttributeUInt(d_chAttribute_uFlags, m_uFlagsMessage);
 	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<message to='^J' id='$t'><body>^S</body><request xmlns='urn:xmpp:receipts'/></message>", pbinXmlAttributes->m_pContact, m_tsEventID, &m_strMessageText);
+	return eXml_zAttributesOnly;
 	}
 
 //	IEventMessageText::IEvent::XmlUnserializeCore()
@@ -702,11 +704,13 @@ CEventMessageXmlRawSent::CEventMessageXmlRawSent(PSZUC pszXmlStanza) : IEventMes
 	m_strMessageText = pszXmlStanza;
 	}
 
-void
-CEventMessageXmlRawSent::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+//	CEventMessageXmlRawSent::IEvent::XmlSerializeCoreE()
+EXml
+CEventMessageXmlRawSent::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->BinXmlInitStanzaWithXmlRaw(m_strMessageText);
 	pbinXmlAttributes->XmppWriteStanzaToSocket();
+	return eXml_zAttributesOnly;
 	}
 
 //	CEventMessageXmlRawSent::IEvent::ChatLogUpdateTextBlock()
@@ -824,9 +828,9 @@ IEventFile::_FileClose()
 #define d_chIEventFile_Attribute_cblFileSize		's'
 #define d_chIEventFile_Attribute_cblDataTransferred	'd'
 
-//	IEventFile::IEvent::XmlSerializeCore()
-void
-IEventFile::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+//	IEventFile::IEvent::XmlSerializeCoreE()
+EXml
+IEventFile::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	PSZUC pszFileNameOnly = m_strFileName.PathFile_PszGetFileNameOnly_NZ();
 	const BOOL fSerializingEventToDisk = pbinXmlAttributes->FSerializingEventToDisk();
@@ -841,6 +845,7 @@ IEventFile::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
 			"<si id='$t' profile='^*ft' ^:si><file ^:ft name='^s' size='$l'/>"
 				"<feature ^:fn><x ^:xd type='form'><field var='stream-method' type='list-single'><option><value>^*ib</value></option></field></x></feature>"
 			"</si></iq>", m_tsEventID, pbinXmlAttributes->m_pContact, m_tsEventID, pszFileNameOnly, m_cblFileSize);
+	return eXml_zAttributesOnly;
 	}
 
 //	IEventFile::IEvent::XmlUnserializeCore()
@@ -1711,12 +1716,13 @@ CEventPing::CEventPing()
 	m_tsContact = d_ts_zNULL;
 	}
 
-//	CEventPing::IEvent::XmlSerializeCore()
+//	CEventPing::IEvent::XmlSerializeCoreE()
 //	Send a ping request, both in XMPP and XCP.  Since the ping contains no 'data', the XCP ping is automaticaly handled by the core XCP routines handling the protocol.
-void
-CEventPing::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+EXml
+CEventPing::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><ping xmlns='urn:xmpp:ping'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
+	return eXml_zAttributesOnly;
 	}
 
 void
@@ -1751,10 +1757,12 @@ CEventVersion::CEventVersion()
 	{
 	}
 
-void
-CEventVersion::XmlSerializeCore(IOUT CBinXcpStanza * pbinXmlAttributes) const
+//	CEventVersion::IEvent::XmlSerializeCoreE()
+EXml
+CEventVersion::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><query xmlns='jabber:iq:version'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
+	return eXml_zAttributesOnly;
 	}
 
 void

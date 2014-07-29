@@ -347,7 +347,7 @@ PszroGetParameterNext(INOUT PSZU pszParameter)
 EUserCommand
 ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & strCommandLineOrMessage)
 	{
-//	const BOOL fIsContact = (EGetRuntimeClass() == RTI(TContact));
+	const BOOL fIsContact = (EGetRuntimeClass() == RTI(TContact));
 	PSZU pszMessage = strCommandLineOrMessage.PbGetData();
 	Assert(pszMessage != NULL);
 	// Check if there is a command line instead of a message
@@ -366,6 +366,14 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			Xmpp_QueryVersion();
 			goto Done;
 			}
+		if (PszrCompareStringBeginCommand(pszCommand, "sync"))
+			{
+			//XcpApi_Invoke_Synchronize();
+			if (fIsContact)
+				((TContact *)this)->Xcp_Synchronize();
+			goto Done;
+			}
+
 		PSZUC pszParameters =  PszrCompareStringBeginCommand(pszCommand, "api");
 		if (pszParameters != NULL && *pszParameters != '\0')
 			{

@@ -14,6 +14,53 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+
+ITask::ITask(const TIMESTAMP * ptsTaskID)
+	{
+	if (ptsTaskID == d_ts_pNULL_AssignToNow)
+		m_tsTaskID = Timestamp_GetCurrentDateTime();	// We are creating a new task, so use the current date & time as identifier of the task.
+	else
+		m_tsTaskID = *ptsTaskID;						// We are unserializing an existing task, so use its previous identifier
+	}
+
+ITask::~ITask()
+	{
+	}
+
+void
+CListTasks::DeleteTask(PA_DELETING ITask * paTask)
+	{
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "CListTasks::DeleteTask() - Task ID '$t'\n", paTask->m_tsTaskID);
+	Assert(paTask != NULL);
+	DetachNode(INOUT paTask);
+	delete paTask;
+	}
+
+void
+CListTasks::DeleteAllTasks()
+	{
+
+	}
+
+ITask *
+CListTasks::PFindTaskByID(TIMESTAMP tsTaskID, ETaskClass eTaskClass) const
+	{
+	ITask * pTask = (ITask *)pHead;
+	while (pTask != NULL)
+		{
+		if (pTask->m_tsTaskID == tsTaskID && pTask->EGetTaskClass() == eTaskClass)
+			break;
+		pTask = (ITask *)pTask->pNext;
+		} // while
+	return pTask;
+	}
+
+void
+TContact::XcpApiContact_TaskQueue(PA_TASK ITask * paTask)
+	{
+	m_listTasksSocket.InsertNodeAtHead(OUT paTask);
+	}
+
 #if 0
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void
@@ -28,6 +75,14 @@ ISocketTask::Socket_WriteStanzaIqSet_Gso(PSZAC pszFmtTemplate, ...)
 	PGetSocket()->Socket_WriteBin(g_strScratchBufferSocket);
 	}
 
-#define d_cbBufferSizeDefaultTransferFiles		4096	// Default block size to transfer files
-
 #endif
+
+
+CTaskSend::CTaskSend(const TIMESTAMP * ptsTaskID) : ITask(ptsTaskID)
+	{
+	}
+
+CTaskReceive::CTaskReceive(const TIMESTAMP * ptsTaskID) : CTaskSend(ptsTaskID)
+	{
+	m_cbTotal = 0;
+	}
