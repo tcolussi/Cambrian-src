@@ -283,7 +283,7 @@ OJapiPollCore::choices(const QStringList & lsChoices)
 QDateTime
 OJapiPollCore::dateStarted() const
 	{
-	return Timestamp_ToQDateTime(m_pBallot->m_tsEventID);	// At the moment, use the timestamp where the event was created as the start date
+	return Timestamp_ToQDateTime(0); // m_pBallot->m_tsEventID);	// At the moment, use the timestamp where the event was created as the start date
 	}
 
 QDateTime
