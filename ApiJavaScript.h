@@ -7,7 +7,11 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-class OJapiCambrian;
+class OJapi;
+	class OJapiCambrian;
+	class OJapiPollCore;
+		class OJapiPoll;
+		class OJapiPollResults;
 
 //	Every object offering a JavaScript API must inherit from OJapi
 //
@@ -20,6 +24,7 @@ public:
 	OJapi(QObject * pObjectParent = NULL) : QObject(pObjectParent) { }
 };
 
+#define POJapi		QObject *	// Every object returned to the JavaScript engine must be either a QVariant or a QObject *.  Since a QObject * is too generic, we #define a new type of object to distinguish their types. It makes the code easier to read.  BTW: Using a typedef does not work, as the compiler no longer recognizes the QObject *.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core object shared with OPoll and OPollResults
@@ -56,14 +61,30 @@ public:
 
 class OJapiPollResults : public OJapiPollCore
 {
+	Q_OBJECT
 public:
 	OJapiPollResults(CEventBallotSent * pBallot);
 
+	int pollTimeLength() const { return 0; }	// Need to be read-write
+	int statsSent() const { return 0; }
+	int statsResponded() const { return 0; }
+	int statsPending() const { return 0; }
+	int statsInvalid() const { return 0; }
+	QString statsTurnout() const { return "1.5"; }
+
+	Q_PROPERTY(int pollTimeLength READ pollTimeLength)
+	Q_PROPERTY(int statsSent READ statsSent)
+	Q_PROPERTY(int statsResponded READ statsResponded)
+	Q_PROPERTY(int statsPending READ statsPending)
+	Q_PROPERTY(int statsInvalid READ statsInvalid)
+	Q_PROPERTY(QString statsTurnout READ statsTurnout)
+
 public slots:
+	QVariant counts() { return 0; }
 
 }; // OJapiPollResults
-//typedef QObject * POJapiPollResults;
-#define POJapiPollResults QObject *
+//typedef QObject * POJapiPollResults;	// Does not work
+#define POJapiPollResults POJapi
 
 //	OJapiPoll
 //
@@ -86,12 +107,9 @@ public slots:
 	void start();
 	void stop();
 	POJapiPollResults getResults() CONST_MCC;
-
-public:
-	static QVariant S_VariantFromValue(CEventBallotSent * pBallot);
 };
-//typedef QObject * POJapiPoll;	// In order for
-#define POJapiPoll QObject *
+//typedef QObject * POJapiPoll;
+#define POJapiPoll	POJapi
 
 //	Helper for the Ballotmaster
 class OJapiPolls : public OJapi
@@ -115,6 +133,7 @@ public slots:
 	POJapiPoll get(const QString & sIdPoll);
 	QVariant getList();
 };
+#define POJapiPolls		POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class OSettings : public QObject
@@ -165,18 +184,17 @@ public:
 	Q_OBJECT
 	Q_PROPERTY(QVariant Settings READ Settings)
 	Q_PROPERTY(QVariant Profile READ Profile)
-	Q_PROPERTY(QVariant polls READ polls)
+	Q_PROPERTY(POJapiPolls polls READ polls)
 public:
 	OJapiCambrian(TProfile * pProfile, QObject * pParent);
 	virtual ~OJapiCambrian();
 	QVariant Settings();
 	QVariant Profile();
-	QVariant polls();
+	POJapiPolls polls();
 
 public slots:
 	void SendBitcoin(int n);
 	void MessageSendTo(const QString & sContactTo, const QString & sMessage);
-	//QVariant Settings();
 };
 
 #endif // APIJAVASCRIPT_H

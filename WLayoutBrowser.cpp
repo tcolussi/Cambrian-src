@@ -161,7 +161,7 @@ OJapiCambrian::Profile()
 	return v;
 	}
 
-QVariant
+POJapiPolls
 OJapiCambrian::polls()
 	{
 	/*
@@ -178,7 +178,8 @@ OJapiCambrian::polls()
 	//return QVariant::fromValue(new OPolls(this));
 	if (m_paPolls == NULL)
 		m_paPolls = new OJapiPolls(this);
-	return QVariant::fromValue(m_paPolls);
+	return m_paPolls;
+	//return QVariant::fromValue(m_paPolls);
 
 	/*
 	QScopedPointer <OPolls *>p;

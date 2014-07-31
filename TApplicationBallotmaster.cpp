@@ -185,6 +185,7 @@ TApplicationBallotmaster::PAllocateBallot(const IEventBallot * pEventBallotTempl
 		}
 	Assert(paEventBallot->m_pVaultParent_NZ == pVault);
 	pVault->m_arraypaEvents.Add(PA_CHILD paEventBallot);
+	//MessageLog_AppendTextFormatSev(eSeverityNoise, "TApplicationBallotmaster::PAllocateBallot(0x$p) - Returning $t\n", pEventBallotTemplate, paEventBallot->m_tsEventID);
 	return paEventBallot;
 	}
 
@@ -229,19 +230,13 @@ OJapiPollCore::OJapiPollCore(CEventBallotSent * pBallot)
 	m_pBallot = pBallot;
 	}
 
-/*
-//	This static method causes a memory leak.  Until Qt has a reference counter of QObjects, Cambrian must provide a mechanism to minimize the memory leaks.
-QVariant
-OPoll::S_VariantFromValue(CEventBallotSent * pBallot)
-	{
-	return (pBallot != NULL) ? QVariant::fromValue(new OPoll(pBallot)) : c_vEmpty;
-	}
-*/
-
 QString
 OJapiPollCore::id() const
 	{
-	return Timestamp_ToStringBase85(m_pBallot->m_tsEventID);
+	Assert(m_pBallot->EGetEventClass() == CEventBallotSent::c_eEventClass);
+	QString s = Timestamp_ToStringBase85(m_pBallot->m_tsEventID);
+	//MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::id($t) returns $Q\n", m_pBallot->m_tsEventID, &s);
+	return s;
 	}
 
 QString
@@ -356,6 +351,7 @@ OJapiPolls::~OJapiPolls()
 CEventBallotSent *
 OJapiPolls::PFindPollByID(TIMESTAMP tsIdPoll) const
 	{
+	//MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiPolls::PFindPollByID($t)\n", tsIdPoll);
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = m_pBallotmaster->PGetVault_NZ()->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
@@ -363,7 +359,10 @@ OJapiPolls::PFindPollByID(TIMESTAMP tsIdPoll) const
 		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
 		Assert(pEvent->EGetEventClass() == CEventBallotSent::c_eEventClass);
 		if (pEvent->m_tsEventID == tsIdPoll && (pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted) == 0)
+			{
+			//MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiPolls::PFindPollByID($t) -> 0x$p $t\n", tsIdPoll, pEvent, pEvent->m_tsEventID);
 			return pEvent;
+			}
 		}
 	return NULL;
 	}
@@ -374,10 +373,13 @@ OJapiPolls::PFindPollByID(const QString & sIdPoll) const
 	return PFindPollByID(Timestamp_FromStringW_ML(sIdPoll));
 	}
 
+//	Return the JavaScript object for a ballot
 POJapiPoll
 OJapiPolls::PGetOJapiPoll(CEventBallotSent * pBallot)
 	{
-	return new OJapiPoll(pBallot);	//	This static method causes a memory leak.  Until Qt has a reference counter of QObjects, Cambrian must provide a mechanism to minimize the memory leaks.
+	if (pBallot != NULL)
+		return new OJapiPoll(pBallot);	//	This code causes a memory leak.  Until Qt has a reference counter of QObjects, Cambrian must provide a mechanism to minimize the memory leaks.
+	return NULL;
 	}
 
 POJapiPoll
@@ -422,7 +424,7 @@ OJapiPolls::build(const QString & sIdPollTemplate)
 POJapiPoll
 OJapiPolls::get(const QString & sIdPoll)
 	{
-	return PCreateNewPollFromTemplate(PFindPollByID(sIdPoll));
+	return PGetOJapiPoll(PFindPollByID(sIdPoll));
 	}
 
 //	getList(), slot
