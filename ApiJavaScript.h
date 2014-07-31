@@ -38,13 +38,13 @@ public:
 	OJapiPollCore(CEventBallotSent * pBallot);
 
 	QString id() const;
-	QString type() const { return "Test Poll"; }
+	QString type() const { return c_sEmpty; }
 	QString title() const;
 	void title(const QString & sTitle);
 	QString description() const;
 	void description(const QString & sDescription);
-	QStringList choices() const;
-	void choices(const QStringList & lsChoices);
+	QStringList options() const;
+	void options(const QStringList & lsChoices);
 	QDateTime dateStarted() const;
 	QDateTime dateStopped() const;
 	QString status() const;
@@ -53,7 +53,7 @@ public:
 	Q_PROPERTY(QString type READ type)
 	Q_PROPERTY(QString title READ title WRITE title)
 	Q_PROPERTY(QString description READ description WRITE description)
-	Q_PROPERTY(QStringList choices READ choices WRITE choices)
+	Q_PROPERTY(QStringList options READ options WRITE options)
 	Q_PROPERTY(QDateTime dateStarted READ dateStarted)
 	Q_PROPERTY(QDateTime dateStopped READ dateStopped)
 	Q_PROPERTY(QString status READ status)
@@ -67,7 +67,7 @@ class OJapiPollResults : public OJapiPollCore
 public:
 	OJapiPollResults(CEventBallotSent * pBallot);
 
-	int pollTimeLength() const { return 3600000; }	// Need to be read-write
+	int pollTimeLength() const { return 3600000; }
 	void pollTimeLength(int cSeconds) { }
 	int statsSent() const { return 0; }
 	int statsResponded() const { return 0; }

@@ -269,13 +269,12 @@ OJapiPollCore::description(const QString & sDescription)
 	m_pBallot->m_strDescription = sDescription;
 	}
 QStringList
-OJapiPollCore::choices() const
+OJapiPollCore::options() const
 	{
 	return m_pBallot->LsGetChoices();
 	}
-
 void
-OJapiPollCore::choices(const QStringList & lsChoices)
+OJapiPollCore::options(const QStringList & lsChoices)
 	{
 	return m_pBallot->SetChoices(lsChoices);
 	}
