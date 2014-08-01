@@ -81,7 +81,7 @@ class CEventBallotSent : public IEventBallot
 public:
 	static const EEventClass c_eEventClass = eEventClass_eBallotSent_class;
 public:
-	CEventBallotSent(const TIMESTAMP * ptsEventID = NULL);
+    CEventBallotSent(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const { return eEventClass_eBallotReceived_class; }
 	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
@@ -108,4 +108,21 @@ public:
 	void UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditTextArea * pwEditComments);
 };
 
+// This event is used by the poll master, it is not an event by itself however used as a template to send ballots
+class CEventBallotPoll : public CEventBallotSent
+{
+public:
+    TIMESTAMP m_tsStarted;
+    TIMESTAMP m_tsStopped;
+    int m_cSecondsPollLength;
+
+    CEventBallotPoll(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);
+    virtual EEventClass EGetEventClass() const { return eEventClass_eBallotPoll; }
+    virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+    virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
+};
+
+
 #endif // IEVENTBALLOT_H
+
+

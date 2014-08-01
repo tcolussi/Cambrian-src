@@ -114,6 +114,7 @@ enum EEventClass
 	eEventClass_eBallotSent_class					= eEventClass_eBallotSent,
 	eEventClass_eBallotReceived						= _USZU3('b', 'a', 'l'),
 	eEventClass_eBallotReceived_class				= eEventClass_eBallotReceived | eEventClass_kfReceivedByRemoteClient,
+    eEventClass_eBallotPoll							= _USZU3('P', 'O', 'L'),
 
 	// Not used
 	eEventClass_eServiceDiscovery_Query				= _USZU2('S', 'D'),		// There is no 'event' for service discovery, however the "SD"

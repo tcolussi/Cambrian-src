@@ -116,6 +116,8 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 		return new CEventBallotSent(ptsEventID);
 	case eEventClass_eBallotReceived:
 		return new CEventBallotReceived(ptsEventID);
+    case eEventClass_eBallotPoll:
+        return new CEventBallotPoll(ptsEventID);
 
 	default:
 		return NULL;

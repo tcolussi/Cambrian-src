@@ -171,11 +171,11 @@ TApplicationBallotmaster::PGetVault_NZ()
 	return m_paVaultBallots;
 
 	}
-CEventBallotSent *
+CEventBallotPoll *
 TApplicationBallotmaster::PAllocateBallot(const IEventBallot * pEventBallotTemplate)
 	{
 	CVaultEvents * pVault = PGetVault_NZ();	// Get the vault first because it will initialize m_paContactDummy
-	CEventBallotSent * paEventBallot = new CEventBallotSent;
+    CEventBallotPoll * paEventBallot = new CEventBallotPoll;
 	paEventBallot->m_pVaultParent_NZ = pVault;
 	if (pEventBallotTemplate != NULL)
 		{
@@ -183,7 +183,7 @@ TApplicationBallotmaster::PAllocateBallot(const IEventBallot * pEventBallotTempl
 		CBinXcpStanzaEventCopier binXcpStanzaCopier(m_paContactDummy);
 		binXcpStanzaCopier.EventCopy(IN pEventBallotTemplate, OUT paEventBallot);
 		}
-	Assert(paEventBallot->m_pVaultParent_NZ == pVault);
+    //Assert(paEventBallot->m_pVaultParent_NZ == pVault);
 	pVault->m_arraypaEvents.Add(PA_CHILD paEventBallot);
 	//MessageLog_AppendTextFormatSev(eSeverityNoise, "TApplicationBallotmaster::PAllocateBallot(0x$p) - Returning $t\n", pEventBallotTemplate, paEventBallot->m_tsEventID);
 	return paEventBallot;
@@ -223,17 +223,17 @@ TApplicationBallotmaster::ApiBallotsList(OUT CBin * pbinXmlBallots)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiPollCore::OJapiPollCore(CEventBallotSent * pBallot)
+OJapiPollCore::OJapiPollCore(CEventBallotPoll * pBallot)
 	{
 	Assert(pBallot != NULL);
-	Assert(pBallot->EGetEventClass() == CEventBallotSent::c_eEventClass);
+    Assert(pBallot->EGetEventClass() == eEventClass_eBallotPoll);
 	m_pBallot = pBallot;
 	}
 
 QString
 OJapiPollCore::id() const
 	{
-	Assert(m_pBallot->EGetEventClass() == CEventBallotSent::c_eEventClass);
+    Assert(m_pBallot->EGetEventClass() == eEventClass_eBallotPoll);
 	QString s = Timestamp_ToStringBase85(m_pBallot->m_tsEventID);
 	//MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::id($t) returns $Q\n", m_pBallot->m_tsEventID, &s);
 	return s;
@@ -242,9 +242,29 @@ OJapiPollCore::id() const
 QString
 OJapiPollCore::status() const
 	{
+    if ( m_pBallot->m_tsStopped != d_ts_zNA )
+        return "stopped";
+
+    if ( m_pBallot->m_tsStarted != d_ts_zNA )
+        return "started";
+
 	//return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "deleted" : "unstarted";
 	return "unsaved";
 	}
+
+int
+OJapiPollCore::pollTimeLength() const
+    {
+    //MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::pollTimeLength get");
+    return m_pBallot->m_cSecondsPollLength;
+    }
+
+void
+OJapiPollCore::pollTimeLength(int cSeconds)
+    {
+    //MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPoll::pollTimeLength set");
+    m_pBallot->m_cSecondsPollLength = cSeconds;
+    }
 
 QString
 OJapiPollCore::title() const
@@ -282,22 +302,82 @@ OJapiPollCore::options(const QStringList & lsChoices)
 QDateTime
 OJapiPollCore::dateStarted() const
 	{
-	return Timestamp_ToQDateTime(0); // m_pBallot->m_tsEventID);	// At the moment, use the timestamp where the event was created as the start date
+    return Timestamp_ToQDateTime(m_pBallot->m_tsStarted);
 	}
 
 QDateTime
 OJapiPollCore::dateStopped() const
 	{
-	return Timestamp_ToQDateTime(d_ts_zNULL);	// At the moment, there is no real implementation of stop
+    return Timestamp_ToQDateTime(m_pBallot->m_tsStopped);
 	}
 
-OJapiPollResults::OJapiPollResults(CEventBallotSent * pBallot) : OJapiPollCore(pBallot)
+OJapiPollResultsStats::OJapiPollResultsStats(CEventBallotPoll * pBallot)
+    {
+    m_pBallot = pBallot;
+    }
+
+
+OJapiPollResultsComment::OJapiPollResultsComment (_CEventBallotVote * pComment )
+{
+    m_pComment = pComment;
+}
+
+QDateTime
+OJapiPollResultsComment::date()
+    {
+    return Timestamp_ToQDateTime(m_pComment->m_tsVote);
+    }
+
+QString
+OJapiPollResultsComment::comment()
+{
+    return m_pComment->m_strComment;
+}
+
+QString
+OJapiPollResultsComment::name()
+{
+    return m_pComment->m_pContact->m_strJidBare;
+}
+
+
+OJapiPollResults::OJapiPollResults(CEventBallotPoll * pBallot) : OJapiPollCore(pBallot), m_oStats(pBallot)
 	{
 
-	}
+    }
+
+QVariant
+OJapiPollResults::comments() const
+    {
+    //MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPollResults::comments($t)\n", &m_pBallot->m_tsEventID);
+    QVariantList lvComments;
+
+    _CEventBallotVote ** ppVoteStop;
+    _CEventBallotVote ** ppVote = m_pBallot->m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
+    while (ppVote != ppVoteStop)
+        {
+        _CEventBallotVote * pVote = *ppVote++;
+        MessageLog_AppendTextFormatCo(d_coBlue, "comment: $t $S $S\n", pVote->m_tsVote, &pVote->m_pContact->m_strJidBare, &pVote->m_strComment);
+        if ( pVote->m_strComment.FIsEmptyString() )
+            continue;
+        lvComments.append(QVariant::fromValue(new OJapiPollResultsComment(pVote)) );
+        }
+
+    return lvComments;
+    }
+
+QVariant
+OJapiPollResults::counts() const
+    {
+    MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPollResults::counts()\n");
+    QVariantList list;
+    //list.append(123);
+    //list.append(456);
+    return list;
+    }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiPoll::OJapiPoll(CEventBallotSent * pBallot) : OJapiPollCore(pBallot), m_oResults(pBallot)
+OJapiPoll::OJapiPoll(CEventBallotPoll * pBallot) : OJapiPollCore(pBallot), m_oResults(pBallot)
 	{
 	}
 
@@ -319,13 +399,15 @@ OJapiPoll::destroy()
 void
 OJapiPoll::start()
 	{
-	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::start($S)\n", &m_pBallot->m_strTitle);
+    m_pBallot->m_tsStarted = Timestamp_GetCurrentDateTime();
+    m_pBallot->m_tsStopped = d_ts_zNA;
 	}
 
 void
 OJapiPoll::stop()
 	{
-	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::stop($S)\n", &m_pBallot->m_strTitle);
+    if ( m_pBallot->m_tsStarted != d_ts_zNA )
+        m_pBallot->m_tsStopped = Timestamp_GetCurrentDateTime();
 	}
 
 POJapiPollResults
@@ -347,7 +429,7 @@ OJapiPolls::~OJapiPolls()
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPolls::~OPolls() 0x$p\n", this);	// Display in the Error Log (to make sure we have not missed it)
 	}
 
-CEventBallotSent *
+CEventBallotPoll*
 OJapiPolls::PFindPollByID(TIMESTAMP tsIdPoll) const
 	{
 	//MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiPolls::PFindPollByID($t)\n", tsIdPoll);
@@ -355,8 +437,8 @@ OJapiPolls::PFindPollByID(TIMESTAMP tsIdPoll) const
 	IEvent ** ppEvent = m_pBallotmaster->PGetVault_NZ()->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
 		{
-		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
-		Assert(pEvent->EGetEventClass() == CEventBallotSent::c_eEventClass);
+        CEventBallotPoll* pEvent = (CEventBallotPoll *)*ppEvent++;
+        //Assert(pEvent->EGetEventClass() == CEventBallotPoll::c_eEventClass);
 		if (pEvent->m_tsEventID == tsIdPoll && (pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted) == 0)
 			{
 			//MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiPolls::PFindPollByID($t) -> 0x$p $t\n", tsIdPoll, pEvent, pEvent->m_tsEventID);
@@ -366,7 +448,7 @@ OJapiPolls::PFindPollByID(TIMESTAMP tsIdPoll) const
 	return NULL;
 	}
 
-CEventBallotSent *
+CEventBallotPoll *
 OJapiPolls::PFindPollByID(const QString & sIdPoll) const
 	{
 	return PFindPollByID(Timestamp_FromStringW_ML(sIdPoll));
@@ -374,7 +456,7 @@ OJapiPolls::PFindPollByID(const QString & sIdPoll) const
 
 //	Return the JavaScript object for a ballot
 POJapiPoll
-OJapiPolls::PGetOJapiPoll(CEventBallotSent * pBallot)
+OJapiPolls::PGetOJapiPoll(CEventBallotPoll * pBallot)
 	{
 	if (pBallot != NULL)
 		return new OJapiPoll(pBallot);	//	This code causes a memory leak.  Until Qt has a reference counter of QObjects, Cambrian must provide a mechanism to minimize the memory leaks.
@@ -382,9 +464,9 @@ OJapiPolls::PGetOJapiPoll(CEventBallotSent * pBallot)
 	}
 
 POJapiPoll
-OJapiPolls::PCreateNewPollFromTemplate(CEventBallotSent * pPollTemplate)
+OJapiPolls::PCreateNewPollFromTemplate(CEventBallotPoll * pPollTemplate)
 	{
-	CEventBallotSent * pPollNew = m_pBallotmaster->PAllocateBallot(pPollTemplate);
+    CEventBallotPoll * pPollNew = m_pBallotmaster->PAllocateBallot(pPollTemplate);
 	Assert(pPollNew != NULL);
 	pPollNew->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;	// When allocating a new poll, assume it has never been saved
 	return PGetOJapiPoll(pPollNew);
@@ -469,13 +551,15 @@ OJapiPolls::getList()
 	IEvent ** ppEvent = pVaultPolls->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
 		{
-		CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
+        CEventBallotPoll * pEvent = (CEventBallotPoll *)*ppEvent++;
+        if ( pEvent->EGetEventClass() != eEventClass_eBallotPoll )
+            continue;
 		if ((pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted) == 0)
 			{
 			//OPoll oPoll(pEvent);
 			//oList.append(QVariant::fromValue(&oPoll));
 			oList.append(QVariant::fromValue(PGetOJapiPoll(pEvent)));	// List only non-deleted polls
-			}
+            }
 		}
 	return QVariant::fromValue(oList);
 	}

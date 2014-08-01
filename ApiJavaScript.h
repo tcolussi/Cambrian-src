@@ -32,10 +32,10 @@ class OJapiPollCore : public OJapi
 {
 	Q_OBJECT
 public:
-	CEventBallotSent * m_pBallot;
+    CEventBallotPoll * m_pBallot;
 
 public:
-	OJapiPollCore(CEventBallotSent * pBallot);
+    OJapiPollCore(CEventBallotPoll * pBallot);
 
 	QString id() const;
 	QString type() const { return c_sEmpty; }
@@ -48,8 +48,8 @@ public:
 	QDateTime dateStarted() const;
 	QDateTime dateStopped() const;
 	QString status() const;
-	int pollTimeLength() const { return 3600000; }
-	void pollTimeLength(int cSeconds) { }
+    int pollTimeLength() const;
+    void pollTimeLength(int cSeconds);
 
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString type READ type)
@@ -64,30 +64,77 @@ public:
 }; // OJapiPollCore
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class OJapiPollResultsStats : public OJapi
+{
+    Q_OBJECT
+public:
+    CEventBallotPoll * m_pBallot;
+
+public:
+    OJapiPollResultsStats(CEventBallotPoll * pBallot);
+
+    int pending() const { return 5 ; }
+
+    Q_PROPERTY(int pending READ pending)
+};
+#define POJapiPollResultsStats  POJapi
+
+class _CEventBallotVote;
+class OJapiPollResultsComment : public OJapi
+{
+    Q_OBJECT
+    _CEventBallotVote * m_pComment;
+
+public:
+    OJapiPollResultsComment (_CEventBallotVote * pComment );
+
+    QDateTime date();
+    QString comment();
+    QString name();
+
+    Q_PROPERTY(QDateTime date READ date)
+    Q_PROPERTY(QString comment READ comment)
+    Q_PROPERTY(QString name READ name)
+
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiPollResults : public OJapiPollCore
 {
 	Q_OBJECT
+    OJapiPollResultsStats m_oStats;
+
 public:
-	OJapiPollResults(CEventBallotSent * pBallot);
+    OJapiPollResults(CEventBallotPoll * pBallot);
 
 	int statsSent() const { return 0; }
 	int statsResponded() const { return 0; }
 	int statsPending() const { return 0; }
 	int statsInvalid() const { return 0; }
 	QString statsTurnout() const { return "1.5"; }
+    QVariant comments() const;
+    QVariant counts() const;
+    POJapiPollResultsStats stats() { return &m_oStats; }
 
 	Q_PROPERTY(int statsSent READ statsSent)
 	Q_PROPERTY(int statsResponded READ statsResponded)
 	Q_PROPERTY(int statsPending READ statsPending)
 	Q_PROPERTY(int statsInvalid READ statsInvalid)
 	Q_PROPERTY(QString statsTurnout READ statsTurnout)
+    Q_PROPERTY(QVariant comments READ comments)
+    Q_PROPERTY(QVariant counts READ counts)
+    Q_PROPERTY(POJapiPollResultsStats stats READ stats)
 
 public slots:
-	QVariant counts() { return 0; }
+
 
 }; // OJapiPollResults
 //typedef QObject * POJapiPollResults;	// Does not work
 #define POJapiPollResults POJapi
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //	OJapiPoll
 //
@@ -102,7 +149,7 @@ public:
 	OJapiPollResults m_oResults;
 
 public:
-	OJapiPoll(CEventBallotSent * pBallot);
+    OJapiPoll(CEventBallotPoll * pBallot);
 
 public slots:
 	bool save();
@@ -124,10 +171,10 @@ protected:
 public:
 	OJapiPolls(OJapiCambrian * poCambrian);
 	~OJapiPolls();
-	POJapiPoll PGetOJapiPoll(CEventBallotSent * pBallot);
-	POJapiPoll PCreateNewPollFromTemplate(CEventBallotSent * pPollTemplate);
-	CEventBallotSent * PFindPollByID(TIMESTAMP tsIdPoll) const;
-	CEventBallotSent * PFindPollByID(const QString & sIdPoll) const;
+    POJapiPoll PGetOJapiPoll(CEventBallotPoll * pBallot);
+    POJapiPoll PCreateNewPollFromTemplate(CEventBallotPoll * pPollTemplate);
+    CEventBallotPoll* PFindPollByID(TIMESTAMP tsIdPoll) const;
+    CEventBallotPoll* PFindPollByID(const QString & sIdPoll) const;
 
 public slots:
 	POJapiPoll build();

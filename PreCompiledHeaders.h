@@ -218,6 +218,8 @@ class IEvent;
 	class IEventBallot;
 		class CEventBallotSent;
 		class CEventBallotReceived;
+        class CEventBallotPoll;
+
 
 class CVaultEvents;
 

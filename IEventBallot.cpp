@@ -86,7 +86,7 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 		}
 	pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotChoices ">");
 
-	if (pbinXmlAttributes->FSerializingEventToDisk())
+    //if (pbinXmlAttributes->FSerializingEventToDisk())
 		{
 		// Do not transmit the votes to the contacts; only serialize the vote to disk.
 		pbinXmlAttributes->BinAppendText("><" d_szAPIe_BallotVotes ">");
@@ -386,6 +386,7 @@ CEventBallotReceived::CEventBallotReceived(const TIMESTAMP * ptsEventID) : IEven
 	m_tsConfirmationReceipt = d_ts_zNA;
 	}
 
+//  CEventBallotReceived::IEvent::XmlSerializeCoreE()
 EXml
 CEventBallotReceived::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
@@ -395,6 +396,7 @@ CEventBallotReceived::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) 
 	return IEventBallot::XmlSerializeCoreE(IOUT pbinXmlAttributes);
 	}
 
+//  CEventBallotReceived::IEvent:XmlUnserializeCore()
 void
 CEventBallotReceived::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	{
@@ -425,4 +427,33 @@ CEventBallotReceived::UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditT
 	CBinXcpStanzaTypeInfo binXcpStanza(this);
 	binXcpStanza.BinAppendTextSzv_VE("<" d_szXCP_"x" _tsI d_szAPIa_CEventBallotReceived_uxVotedChoice_ux d_szAPIa_CEventBallotReceived_strNote "/>", m_tsOther, m_ukmChoices, &m_strComment);	// TODO: rewrite this with more elegant code!
 	binXcpStanza.XcpSendStanzaToContact(PGetContactForReply_YZ());
-	}
+}
+
+
+CEventBallotPoll::CEventBallotPoll(const TIMESTAMP *ptsEventID) : CEventBallotSent ( ptsEventID )
+    {
+    m_tsStarted = d_ts_zNA;
+    m_tsStopped = d_ts_zNA;
+    m_cSecondsPollLength = d_zNA;
+    }
+
+//  CEventBallotPoll::IEvent::XmlSerializeCoreE()
+EXml
+CEventBallotPoll::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
+    {
+    pbinXmlAttributes->BinAppendXmlAttributeTimestamp('z', m_tsStarted);
+    pbinXmlAttributes->BinAppendXmlAttributeTimestamp('Z', m_tsStopped);
+    pbinXmlAttributes->BinAppendXmlAttributeInt('l', m_cSecondsPollLength);
+
+    return CEventBallotSent::XmlSerializeCoreE(IOUT pbinXmlAttributes);
+    }
+
+//  CEventBallotPoll::IEvent:XmlUnserializeCore()
+void
+CEventBallotPoll::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
+    {
+    pXmlNodeElement->UpdateAttributeValueTimestamp('z', OUT_F_UNCH &m_tsStarted);
+    pXmlNodeElement->UpdateAttributeValueTimestamp('Z', OUT_F_UNCH &m_tsStopped);
+    pXmlNodeElement->UpdateAttributeValueInt('l', &m_cSecondsPollLength);
+    CEventBallotSent::XmlUnserializeCore(pXmlNodeElement);
+    }

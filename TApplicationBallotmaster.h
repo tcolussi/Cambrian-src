@@ -24,7 +24,7 @@ public:
 
 	CVaultEvents * PGetVault_NZ();
 
-	CEventBallotSent * PAllocateBallot(const IEventBallot * pEventBallotTemplate = NULL);
+    CEventBallotPoll * PAllocateBallot(const IEventBallot * pEventBallotTemplate = NULL);
 	void EventBallotAddAsTemplate(IEventBallot * pEventBallot);
 	void ApiBallotSave(IN PSZUC pszXmlBallot);
 	void ApiBallotsList(OUT CBin * pbinXmlBallots);
