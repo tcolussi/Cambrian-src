@@ -157,6 +157,7 @@ ITreeItemChatLogEvents::XcpApi_Invoke_Synchronize()
 	binXcpStanza.XcpSendStanzaToContactOrGroup(IN this);
 	}
 */
+
 /*
 <_a n="Sync">
 	<s i='3U]`%sv'/>	==> <s

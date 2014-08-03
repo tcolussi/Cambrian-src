@@ -103,6 +103,7 @@ public:
 
 public:
 	OJapiPoll(CEventBallotSent * pBallot);
+	~OJapiPoll();
 
 public slots:
 	bool save();
