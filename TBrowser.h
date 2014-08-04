@@ -21,7 +21,9 @@ public:
 	~TBrowser();
 
 	void SetIconNameAndUrl(EMenuAction eMenuActionIcon, PSZAC pszName, PSZAC pszUrl = NULL);
+    void SetNameAndUrl(const QString & sName, const QString & sUrl);
 
+    virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);		// From IXmlExchange
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);			// From ITreeItem
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);	// From ITreeItem

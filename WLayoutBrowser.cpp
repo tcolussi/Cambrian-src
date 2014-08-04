@@ -30,7 +30,7 @@ OSettings::OSettings(OJapiCambrian * poCambrian) : QObject(poCambrian)
 
 OSettings::~OSettings()
 	{
-	MessageLog_AppendTextFormatCo(d_coYellowDirty, "OSettings::~OSettings()\n");
+    MessageLog_AppendTextFormatCo(d_coYellowDirty, "OSettings::~OSettings()\n");
 	}
 
 /*
@@ -361,4 +361,17 @@ TBrowser::~TBrowser()
 	delete m_pawLayoutBrowser;
 	}
 
+void LaunchBrowser(const QString & sName, const QString & sUrl)
+    {
+    //EMessageBoxInformation("opening page $Q", &sUrl);
 
+    TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+    MessageLog_AppendTextFormatCo(d_coBlack, "LaunchBrowser($p)\n", pProfile);
+    if (pProfile == NULL)
+        return;
+    TBrowser * pBrowser = new TBrowser(pProfile);
+    pProfile->m_arraypaBrowsers.Add(PA_CHILD pBrowser);
+    pBrowser->SetNameAndUrl(sName, sUrl);
+    pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
+    pBrowser->TreeItemW_SelectWithinNavigationTree();
+    }

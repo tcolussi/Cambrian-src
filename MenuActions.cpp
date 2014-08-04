@@ -97,6 +97,16 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Display Certificates" _ "s=Display the certificates securing (encrypting) the communication" _ "i=Certificate" _, // eMenuAction_DisplayCertificates
 	"BallotMaster" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
 
+    "Developer Apps"    _ "i=Browser" _, // eMenuAction_WikiSubMenu
+    "NavShell Contacts" _ "s=http://group.cambrian.org/wiki/doku.php?id=html5_apps_config#navshell_contacts" _"i=Browser" _,
+    "NavShell Sidebar"  _ "s=http://group.cambrian.org/wiki/doku.php?id=html5_apps_config#navshell_sidebar" _"i=Browser" _,
+    "NavShell Header"   _ "s=http://group.cambrian.org/wiki/doku.php?id=html5_apps_config#navshell_header"  _"i=Browser" _,
+    "Office Kingpin"    _ "s=http://group.cambrian.org/wiki/doku.php?id=html5_apps_config#office_kingpin"   _"i=Browser" _,
+    "Pomodoro"          _ "s=http://group.cambrian.org/wiki/doku.php?id=html5_apps_config#pomodoro"         _"i=Browser" _,
+    "JAPI TESTS"        _ "s=http://group.cambrian.org/wiki/doku.php?id=html5_apps_config#japi_tests"       _"i=Browser" _,
+    "Scratch"           _ "s=http://group.cambrian.org/wiki/doku.php?id=html5_apps_config#scratch"          _"i=Browser" _,
+    "HTML5 xik"         _ "s=http://group.cambrian.org/wiki/doku.php?id=html5_apps_config#html5_xik"        _"i=Browser" _,
+
 	"New Wallet" _ "i=Bitcoin" _, // eMenuAction_DisplayWallet
 	"New Web Browser" _ "i=Browser" _, // eMenuAction_DisplaySecureWebBrowsing
 
@@ -688,8 +698,24 @@ const EMenuActionByte c_rgzeActionsMenuAdvanced[] =
 	eMenuActionSeparator,
 	eMenuAction_DisplayProfileInfo,
 	eMenuAction_DisplayCertificates,
+
+    eMenuActionSeparator,
+    //eMenuAction_WikiSubMenu, // added manually c_rgzeActionsMenuWiki[]
 	ezMenuActionNone
 	};
+
+const EMenuActionByte c_rgzeActionsMenuWiki[] =
+{
+    eMenuAction_WikiNavShellContacts,
+    eMenuAction_WikiNavShellSideBar,
+    eMenuAction_WikiNavShellHeader,
+    eMenuAction_WikiOfficeKingpin,
+    eMenuAction_WikiPomodoro,
+    eMenuAction_WikiJapiTests,
+    eMenuAction_WikiScratch,
+    eMenuAction_WikiHtml5Xik,
+    ezMenuActionNone
+};
 
 BOOL Configuration_FIsWithoutAccounts();
 
@@ -713,7 +739,12 @@ MenuBarInitialize(WMenu * pMenu)
 		{
 		pMenu->clear();
 		pMenu->ActionsAdd(prgzeActions);
-		}
+        if (prgzeActions == c_rgzeActionsMenuAdvanced)
+            {
+            pMenu = pMenu->PMenuAdd(c_mapepszmMenuActions[eMenuAction_WikiSubMenu], eMenuAction_WikiSubMenu);
+            pMenu->ActionsAdd(c_rgzeActionsMenuWiki);
+            }
+        }
 	}
 
 void
@@ -848,6 +879,18 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		void DisplayApplicationBallotMaster();
 		DisplayApplicationBallotMaster();
 		return;
+
+    case eMenuAction_WikiNavShellContacts:
+    case eMenuAction_WikiNavShellSideBar:
+    case eMenuAction_WikiNavShellHeader:
+    case eMenuAction_WikiOfficeKingpin:
+    case eMenuAction_WikiPomodoro:
+    case eMenuAction_WikiJapiTests:
+    case eMenuAction_WikiScratch:
+    case eMenuAction_WikiHtml5Xik:
+        void LaunchBrowser(const QString & sName, const QString & sUrl);
+        LaunchBrowser( pAction->text(), pAction->statusTip());
+        return;
 	/*
 	case eMenuIconMarketplace:
 		void NavigationTree_NewBrowserMarketplace();

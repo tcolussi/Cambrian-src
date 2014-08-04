@@ -23,9 +23,24 @@ void
 TBrowser::SetIconNameAndUrl(EMenuAction eMenuActionIcon, PSZAC pszName, PSZAC pszUrl)
 	{
 	m_uFlags = (eMenuActionIcon == eMenuIconMarketplace);
-	m_strNameDisplayTyped.BinInitFromStringWithNullTerminator(pszName);
-	m_strUrl.BinInitFromStringWithNullTerminator(pszUrl);
-	}
+    m_strNameDisplayTyped.BinInitFromStringWithNullTerminator(pszName);
+    m_strUrl.BinInitFromStringWithNullTerminator(pszUrl);
+    }
+
+void
+TBrowser::SetNameAndUrl(const QString &sName, const QString &sUrl)
+    {
+    m_strNameDisplayTyped = sName;
+    m_strUrl = sUrl;
+    }
+
+//	TBrowser::IRuntimeObject::PGetRuntimeInterface()
+POBJECT
+TBrowser::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
+    {
+    Report(piParent == NULL);
+    return ITreeItem::PGetRuntimeInterface(rti, m_pProfile);
+    }
 
 //	TBrowser::IXmlExchange::XmlExchange()
 void

@@ -79,6 +79,17 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_DisplayProfileInfo,		// Show the node displaying the profile(s) info
 	eMenuAction_DisplayCertificates,	// Display the certificates securing (encrypting) the communication
 	eMenuAction_DisplayBallotMaster,	// Manage ballots to create polls
+
+    eMenuAction_WikiSubMenu,
+    eMenuAction_WikiNavShellContacts,
+    eMenuAction_WikiNavShellSideBar,
+    eMenuAction_WikiNavShellHeader,
+    eMenuAction_WikiOfficeKingpin,
+    eMenuAction_WikiPomodoro,
+    eMenuAction_WikiJapiTests,
+    eMenuAction_WikiScratch,
+    eMenuAction_WikiHtml5Xik,
+
 	eMenuAction_DisplayWallet,		// Ccreate a new wallet
 	eMenuAction_DisplaySecureWebBrowsing,	// New instance of a web browser
 
