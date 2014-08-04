@@ -150,6 +150,7 @@ public:
 
 public:
     OJapiPoll(CEventBallotPoll * pBallot);
+	~OJapiPoll();
 
 public slots:
 	bool save();

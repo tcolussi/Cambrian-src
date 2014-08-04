@@ -381,6 +381,11 @@ OJapiPoll::OJapiPoll(CEventBallotPoll * pBallot) : OJapiPollCore(pBallot), m_oRe
 	{
 	}
 
+OJapiPoll::~OJapiPoll()
+	{
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OJapiPoll::~OJapiPoll() 0x$p\n", this);
+	}
+
 bool
 OJapiPoll::save()
 	{

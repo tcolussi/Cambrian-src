@@ -1125,15 +1125,18 @@ TContact::Xcp_ServiceDiscovery()
 void
 TContact::Xcp_Synchronize()
 	{
-	/*
+	#if 1
+	// Old legacy sync
 	CBinXcpStanzaTypeInfo binXcpStanza;
 	binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithContact(this);
 	binXcpStanza.XcpSendStanzaToContact(IN this);
-	*/
+	#else
+	// New PAPI way to sync (still under development)
 	CBinXcpStanzaTypeInfo binXcpStanza;
 	binXcpStanza.m_pContact = this;
 	binXcpStanza.BinXmlAppendXcpApiSynchronize_RequestCreate();
 	binXcpStanza.XcpSendStanza();
+	#endif
 	}
 
 /*

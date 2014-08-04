@@ -132,6 +132,7 @@ OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pPa
 
 OJapiCambrian::~OJapiCambrian()
 	{
+	//MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OJapiCambrian::~OJapiCambrian()\n");
 	delete m_paPolls;
 	}
 
@@ -301,7 +302,7 @@ WLayoutBrowser::~WLayoutBrowser()
 void
 WLayoutBrowser::SL_InitJavaScript()
 	{
-	m_poFrame->addToJavaScriptWindowObject("Cambrian", m_paCambrian);
+	m_poFrame->addToJavaScriptWindowObject("Cambrian", m_paCambrian); // , QWebFrame::ScriptOwnership);
 	}
 
 void
