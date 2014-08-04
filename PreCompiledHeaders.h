@@ -274,6 +274,7 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "TContact.h"
 #include "TGroup.h"
 #include "TAccount.h"
+#include "IApplication.h"
 #include "TProfile.h"
 #include "Sockets.h"
 #include "TCertificate.h"

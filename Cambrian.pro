@@ -84,7 +84,8 @@ SOURCES += \
     Identities.cpp \
     TApplicationBallotmaster.cpp \
     CVaultEvents.cpp \
-    ApiJavaScript.cpp
+    ApiJavaScript.cpp \
+    IApplication.cpp
 
 
 HEADERS += \
@@ -155,7 +156,8 @@ HEADERS += \
     Identities.h \
     TApplicationBallotmaster.h \
     CVaultEvents.h \
-    ApiJavaScript.h
+    ApiJavaScript.h \
+    IApplication.h
 
 
 FORMS +=

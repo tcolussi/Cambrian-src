@@ -74,9 +74,15 @@ public:
 public:
     OJapiPollResultsStats(CEventBallotPoll * pBallot);
 
-    int pending() const { return 5 ; }
+    int pending() const { return 0 ; }
+    int invalid() const { return 0; }
+    int responded() const { return 0; }
+    int sent() const { return 0; }
 
     Q_PROPERTY(int pending READ pending)
+    Q_PROPERTY(int invalid READ invalid)
+    Q_PROPERTY(int responded READ responded)
+    Q_PROPERTY(int sent READ sent)
 };
 #define POJapiPollResultsStats  POJapi
 
@@ -108,27 +114,15 @@ class OJapiPollResults : public OJapiPollCore
 public:
     OJapiPollResults(CEventBallotPoll * pBallot);
 
-	int statsSent() const { return 0; }
-	int statsResponded() const { return 0; }
-	int statsPending() const { return 0; }
-	int statsInvalid() const { return 0; }
-	QString statsTurnout() const { return "1.5"; }
     QVariant comments() const;
     QVariant counts() const;
     POJapiPollResultsStats stats() { return &m_oStats; }
 
-	Q_PROPERTY(int statsSent READ statsSent)
-	Q_PROPERTY(int statsResponded READ statsResponded)
-	Q_PROPERTY(int statsPending READ statsPending)
-	Q_PROPERTY(int statsInvalid READ statsInvalid)
-	Q_PROPERTY(QString statsTurnout READ statsTurnout)
     Q_PROPERTY(QVariant comments READ comments)
     Q_PROPERTY(QVariant counts READ counts)
     Q_PROPERTY(POJapiPollResultsStats stats READ stats)
 
 public slots:
-
-
 }; // OJapiPollResults
 //typedef QObject * POJapiPollResults;	// Does not work
 #define POJapiPollResults POJapi
@@ -183,6 +177,7 @@ public slots:
 	POJapiPoll build(const QString & sIdPollTemplate);
 	POJapiPoll get(const QString & sIdPoll);
 	QVariant getList();
+    void go();
 };
 #define POJapiPolls		POJapi
 
@@ -221,6 +216,19 @@ protected:
 	TProfile * PFindProfileByID(const QString & sIdProfile) const;
 };
 
+class OJapiApps : public OJapi
+{
+    Q_OBJECT
+    OJapiCambrian * m_poCambrian;
+
+public:
+    OJapiApps(OJapiCambrian * poCambrian);
+    QObject * ballotmaster();
+
+    Q_PROPERTY(QObject * ballotmaster READ ballotmaster)
+
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiCambrian : public OJapi
 {
@@ -230,18 +238,22 @@ protected:
 	OSettings m_oSettings;
 	OJapiProfile m_oProfile;
 	OJapiPolls * m_paPolls;
+    OJapiApps m_oApps;
 
 public:
 	Q_OBJECT
 	Q_PROPERTY(QVariant Settings READ Settings)
 	Q_PROPERTY(QVariant Profile READ Profile)
 	Q_PROPERTY(POJapiPolls polls READ polls)
+    Q_PROPERTY(QObject* apps READ apps)
+
 public:
 	OJapiCambrian(TProfile * pProfile, QObject * pParent);
 	virtual ~OJapiCambrian();
 	QVariant Settings();
 	QVariant Profile();
 	POJapiPolls polls();
+    QObject * apps();
 
 public slots:
 	void SendBitcoin(int n);

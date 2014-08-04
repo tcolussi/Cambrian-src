@@ -9,7 +9,9 @@ class TApplicationBallotmaster : public IApplication
 protected:
 	CStr m_strUrlAddress;				// Address to start the application (of course, this solution is not 100% portable, because the HTML files for the application are stored into the "user folder", however remembering the last URL is better than nothing)
 	CVaultEvents * m_paVaultBallots;	// Ballots are 'events' because they may be sent to other users, and therefore require a vault for their storage.
-	WLayoutBrowser * m_pawLayoutBrowser;
+public:
+    WLayoutBrowser * m_pawLayoutBrowser;
+
 private:
 	TContact * m_paContactDummy;		// Temporary hack to have a dummy contact as the 'parent' of the vault.  This is necessary because the vault was designed to have a contact as its parent, and need to be refactored.
 

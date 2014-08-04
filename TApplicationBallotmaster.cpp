@@ -413,7 +413,14 @@ OJapiPoll::stop()
 	{
     if ( m_pBallot->m_tsStarted != d_ts_zNA )
         m_pBallot->m_tsStopped = Timestamp_GetCurrentDateTime();
-	}
+}
+
+void OJapiPolls::go()
+    {
+    CStr strUrl = (PSZUC)"file:///C:/Users/Cesar/.Cambrian/Apps/Ballotmaster/default.htm";
+    MessageLog_AppendTextFormatCo(d_coGreen, "OJapiPolls::go($S)", &strUrl);
+    m_pBallotmaster->m_pawLayoutBrowser->NavigateToAddress(strUrl);
+    }
 
 POJapiPollResults
 OJapiPoll::getResults() CONST_MCC

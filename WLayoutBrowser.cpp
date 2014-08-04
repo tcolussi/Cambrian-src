@@ -124,7 +124,7 @@ OJapiProfile::PFindProfileByID(const QString & sIdProfile) const
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oProfile(this)
+OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oProfile(this), m_oApps(this)
 	{
 	m_pProfile = pProfile;
 	m_paPolls = NULL;
@@ -308,6 +308,7 @@ WLayoutBrowser::SL_InitJavaScript()
 void
 WLayoutBrowser::NavigateToAddress(const CStr & strAddress)
 	{
+    Assert(m_pwWebView != NULL);
 	m_pwWebView->stop();
 	QUrl url(strAddress);
 	if (url.scheme().isEmpty())
