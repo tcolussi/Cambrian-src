@@ -365,14 +365,22 @@ TBrowser::~TBrowser()
 void LaunchBrowser(const QString & sName, const QString & sUrl)
     {
     //EMessageBoxInformation("opening page $Q", &sUrl);
+	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser($Q, $Q)\n", &sName, &sUrl);
 
     TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
-    MessageLog_AppendTextFormatCo(d_coBlack, "LaunchBrowser($p)\n", pProfile);
+	//MessageLog_AppendTextFormatCo(d_coBlack, "LaunchBrowser($p)\n", pProfile);
     if (pProfile == NULL)
         return;
+
+	//MessageLog_AppendTextFormatCo(d_coAqua, "pProfile ($p)\n", pProfile);
+	//MessageLog_AppendTextFormatCo(d_coAqua, "pProfile->m_pConfigurationParent ($p)\n", pProfile->m_pConfigurationParent);
+
+	CStr strUrl(sUrl);
+	CStr strUrlAddress = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrl);//"Apps/Test/index.htm");
+
     TBrowser * pBrowser = new TBrowser(pProfile);
     pProfile->m_arraypaBrowsers.Add(PA_CHILD pBrowser);
-    pBrowser->SetNameAndUrl(sName, sUrl);
+	pBrowser->SetNameAndUrl(sName, strUrlAddress);
     pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
     pBrowser->TreeItemW_SelectWithinNavigationTree();
-    }
+	}

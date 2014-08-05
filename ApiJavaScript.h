@@ -8,7 +8,11 @@
 #endif
 
 class OJapi;
+	class OJapiApps;
+	class OJapiPollResultsStats;
+	class OJapiPollResultsComment;
 	class OJapiCambrian;
+	class OJapiPolls;
 	class OJapiPollCore;
 		class OJapiPoll;
 		class OJapiPollResults;
@@ -25,6 +29,8 @@ public:
 };
 
 #define POJapi		QObject *	// Every object returned to the JavaScript engine must be either a QVariant or a QObject *.  Since a QObject * is too generic, we #define a new type of object to distinguish their types. It makes the code easier to read.  BTW: Using a typedef does not work, as the compiler no longer recognizes the QObject *.
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core object shared with OPoll and OPollResults
@@ -86,6 +92,7 @@ public:
 };
 #define POJapiPollResultsStats  POJapi
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class _CEventBallotVote;
 class OJapiPollResultsComment : public OJapi
 {
