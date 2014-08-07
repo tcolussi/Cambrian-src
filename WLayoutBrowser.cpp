@@ -383,11 +383,22 @@ void LaunchBrowser(const QString & sName, const QString & sUrl)
 	CStr strUrl(sUrl);
 	CStr strUrlAddress = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrl);//"Apps/Test/index.htm");
 
-	// find an open web browser
-	TBrowser *pBrowser = NULL;
-	if ( pProfile->m_arraypaBrowsers.GetSize())
-		pBrowser = (TBrowser *) pProfile->m_arraypaBrowsers.PvGetElementAt(0);
+	// find a browser opened with the same name
+	TBrowser *pBrowser			= NULL;
+	TBrowser **ppBrowserStop	= NULL;
+	TBrowser **ppBrowserIter	= pProfile->m_arraypaBrowsers.PrgpGetBrowsersStop(&ppBrowserStop);
+	while( ppBrowserIter != ppBrowserStop )
+		{
+		CStr strName(sName); 	// Typecast
+		if ( strName.FCompareBinary((*ppBrowserIter)->m_strNameDisplayTyped) )
+			{
+			pBrowser = *ppBrowserIter;
+			break;
+			}
+		ppBrowserIter ++;
+		}
 
+	// display the browser
 	if ( !pBrowser )
 		{
 		pBrowser = new TBrowser(pProfile);
