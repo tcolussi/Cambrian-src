@@ -16,13 +16,13 @@ WLayoutWelcome::WLayoutWelcome()
 	//QGridLayout * poLayoutGrid = new QGridLayout(this);
 	OLayoutHorizontal * pLayoutH = new OLayoutHorizontal(this);
 	//poLayoutGrid->addLayout(pLayoutH, 0, 0);
-	pLayoutH->addWidget(new WLabelSelectable("If you are new to Cambrian, you are welcome to register an account."), 0, 0);
+	pLayoutH->addWidget(new WLabelSelectable("If you are new to SocietyPro, you are welcome to register an account."), 0, 0);
 	pLayoutH->addWidget(new WButtonTextWithIcon("Register...|Create a new chat account on an XMPP server", eMenuIconXmpp), 1, 0);
 //	setLayout(poLayout);
 	#endif
 
-	OLayoutForm * poLayout = Splitter_PoAddGroupBoxAndLayoutForm_VE("Welcome to Cambrian");
-	WButtonTextWithIcon * pwButton = poLayout->Layout_PwAddRowLabelAndPushButton("If you are new to Cambrian, you are welcome to register an account.", "Register...|Create a new chat account on an XMPP server", eMenuIconXmpp);
+	OLayoutForm * poLayout = Splitter_PoAddGroupBoxAndLayoutForm_VE("Welcome to SocietyPro");
+	WButtonTextWithIcon * pwButton = poLayout->Layout_PwAddRowLabelAndPushButton("If you are new to SocietyPro, you are welcome to register an account.", "Register...|Create a new chat account on an XMPP server", eMenuIconXmpp);
 	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_AccountRegister()));
 	pwButton = poLayout->Layout_PwAddRowLabelAndPushButton("If you already have an existing chat account, feel free to login.", "Login...|Connect to an XMPP server using an existing", eMenuIconXmpp);
 	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_AccountLogin()));
@@ -31,18 +31,18 @@ WLayoutWelcome::WLayoutWelcome()
 
 
 	#if 0
-	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Welcome to Cambrian");
+	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Welcome to SocietyPro");
 	WButtonTextWithIcon * pwButtonRegister = new WButtonTextWithIcon("Register...|Create a new chat account on an XMPP server", eMenuIconXmpp);
-	poLayoutVertical->Layout_PwAddRowLabelAndButton("If you are new to Cambrian, you are welcome to register an account.", pwButtonRegister);
+	poLayoutVertical->Layout_PwAddRowLabelAndButton("If you are new to SocietyPro, you are welcome to register an account.", pwButtonRegister);
 	WButtonTextWithIcon * pwButtonLogin = new WButtonTextWithIcon("Login...|Connect to an XMPP server using an existing", eMenuIconXmpp);
 	poLayoutVertical->Layout_PwAddRowLabelAndButton("If you already have an existing chat account, feel free to login.", pwButtonLogin);
 	#endif
 
 	/*
-	OLayoutHorizontal * poLayout = Splitter_PoAddGroupBoxAndLayoutHorizontal_VE("Welcome to Cambrian");
+	OLayoutHorizontal * poLayout = Splitter_PoAddGroupBoxAndLayoutHorizontal_VE("Welcome to SocietyPro");
 
 	WButtonTextWithIcon * pwButtonRegister = new WButtonTextWithIcon("Register...|Create a new chat account on an XMPP server", eMenuIconXmpp);
-	poLayout->Layout_AddLabelAndWidgetH_PA("If you are new to Cambrian, you are welcome to register an account.", pwButtonRegister);
+	poLayout->Layout_AddLabelAndWidgetH_PA("If you are new to SocietyPro, you are welcome to register an account.", pwButtonRegister);
 
 	WButtonTextWithIcon * pwButtonLogin = new WButtonTextWithIcon("Login...|Connect to an XMPP server using an existing", eMenuIconXmpp);
 	poLayout->Layout_AddLabelAndWidgetH_PA("If you already have an existing chat account, feel free to login.", pwButtonLogin);
@@ -566,7 +566,7 @@ WNoticeWarningCertificateNotAuthenticated::WNoticeWarningCertificateNotAuthentic
 		const CBin * pbinFingerprint = pAccount->Certificate_PGetBinaryFingerprint();
 		NoticeWarning_SetTextFormat_VE(
 			//"You are seeing this warning because a security certificate change has been detected for site <b>^S</b>.<br/><br/>"
-			"You are seeing this warning because Cambrian detected a change of security certificate for site <b>^S</b>.<br/><br/>"
+			"You are seeing this warning because SocietyPro detected a change of security certificate for site <b>^S</b>.<br/><br/>"
 			"The expected certificate fingerprint was: <b>{BG}</b><br/>"
 			"The current certificate fingerprint is now: <b>{hG}</b>", &m_pAccount->m_strServerName, pbinFingerprint, &hashCertificate);
 		connect(pButtonCertificateApprove, SIGNAL(clicked()), this, SLOT(SL_CertificateApprove()));

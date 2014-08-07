@@ -550,7 +550,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	pbinTextHtml->BinAppendTextSzv_VE("<span title='^Q'>[^Q] </span>", &sDateTime, &sTime);
 	if (m_uFlagsEvent & FE_kfEventProtocolError)
 		{
-		pbinTextHtml->BinAppendText(" <img src=':/ico/Error' title='XCP Protocol Error: One of the contact has an old version of Cambrian and cannot process this event because its type is unknown'/> ");
+		pbinTextHtml->BinAppendText(" <img src=':/ico/Error' title='XCP Protocol Error: One of the contact has an old version of SocietyPro and cannot process this event because its type is unknown'/> ");
 		}
 	if ((eEventClass & eEventClass_kfReceivedByRemoteClient) == 0)
 		{

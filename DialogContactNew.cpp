@@ -175,10 +175,10 @@ WLayoutContactNew::WLayoutContactNew(TAccountXmpp * pAccount)
 	m_pAccount = pAccount;
 
 	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Add New Contacts");
-	poLayoutVertical->Layout_PwAddRowLabelWrap("To add a contact that may not have Cambrian yet, please send them this personalized download link by whatever means you prefer. Once they install Cambrian you will be connected automatically. If they have Cambrian they can enter this same link in the bottom field to connect.");
+	poLayoutVertical->Layout_PwAddRowLabelWrap("To add a contact that may not have SocietyPro yet, please send them this personalized download link by whatever means you prefer. Once they install SocietyPro you will be connected automatically. If they have SocietyPro they can enter this same link in the bottom field to connect.");
 
 	m_pwEditInvitation= new WEditReadOnly;
-	m_pwEditInvitation->Edit_SetToolTip((PSZUC)"Personalized invlitation link to download Cambrian.\nPlease send this link to your friends by email or by instant messaging.");
+	m_pwEditInvitation->Edit_SetToolTip((PSZUC)"Personalized invitation link to download SocietyPro.\nPlease send this link to your friends by email or by instant messaging.");
 	m_pwEditInvitation->Edit_SetTextU(pAccount->ChatLog_PszGetInvitationLink(OUT_IGNORED &g_strScratchBufferStatusBar));
 	m_pwButtonCopyInvitation = new WButtonTextWithIcon("Copy|Copy the invitation link into the clipboard", eMenuAction_Copy);
 	poLayoutVertical->Layout_PwAddRowLabelEditButton("Invitation Link:", m_pwEditInvitation, m_pwButtonCopyInvitation);

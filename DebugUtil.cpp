@@ -133,7 +133,7 @@ _FAssertionFailed(
 		}
 	CStr strMessageHtml;
 	strMessageHtml.Format("<b>$s</b>(<b>^s</b>)<br/>File $s, line $i.<br/><br/>"
-		"You have discovered a potential bug; <u>please</u> contact the developers of Cambrian.",
+		"You have discovered a potential bug; <u>please</u> contact the developers of SocietyPro.",
 		pszAssert, pszExpression, pszFile, nLine);
 	//qDebug(strMessageHtml);
 
@@ -211,7 +211,7 @@ FIsDebugAllowanceReached(INOUT long * pcDebugAllowance, PSZAC pszaAllowanceName,
 	if (cAllowance == 0)
 		{
 		MessageLog_AppendTextFormatCo(d_coGreen,
-			"To improve the performance of Cambrian in debug mode, redundant error checking for '$U' has been disabled (after completing successfully %D verifications).\n",
+			"To improve the performance of SocietyPro in debug mode, redundant error checking for '$U' has been disabled (after completing successfully %D verifications).\n",
 			pszaAllowanceName, cDebugAllowanceDefault);
 		MessageLog_Show();
 		}

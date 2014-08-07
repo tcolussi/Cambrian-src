@@ -202,7 +202,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 	setGeometry(rc);
 	MessageLog_ModuleInitialize();	// Initialize/create the MessageLog/ErrorLog as early as possible in case there is an error/assert during the creation of the other widgets
 
-	g_pwMenuCambrian = new WMenu("Cambrian");
+	g_pwMenuCambrian = new WMenu("SocietyPro");
 	g_pwMenuContacts = new WMenu("Contacts");
 	g_pwMenuTools = new WMenu("Tools");
 	#if 0

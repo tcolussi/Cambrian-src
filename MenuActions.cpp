@@ -119,7 +119,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Message Log..." _ "a=Ctrl+Shift+L" _ "i=LogMessages" _,	// eMenuAction_ShowLogMessages
 	"Recent Error..." _ "a=Ctrl+Shift+E" _ "i=LogErrors" _,	// eMenuAction_ShowLogErrors
 	"Find Text..." _ "a=Ctrl+F" _ "i=Find" _,	// eMenuAction_FindText
-	"[Debug] Send Chat Log to Cambrian" _ "s=Send the entire chat history to chatlogs@xmpp.cambrian.org for analysis" _ "i=Forward" _,	// eMenuAction_DebugSendChatLog
+	"[Debug] Send Chat Log to SocietyPro" _ "s=Send the entire chat history to chatlogs@xmpp.cambrian.org for analysis" _ "i=Forward" _,	// eMenuAction_DebugSendChatLog
 
 	"Play Sounds" _ "s=Play a sound when a new message arrive" _ ,  // eMenuAction_PlaySound
 

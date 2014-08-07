@@ -168,7 +168,7 @@ main(int argc, char *argv[])
 	QSharedMemory oSharedMemory(c_sCambrianOrg);
 	if (!oSharedMemory.create(1))
 		{
-		EMessageBoxInformation("There is already an instance of Cambrian running.");
+		EMessageBoxInformation("There is already an instance of SocietyPro running.");
 		return 0;
 		}
 	#endif

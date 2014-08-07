@@ -21,7 +21,7 @@ TProfile::TreeItem_GotFocus()
 WLayoutMyProfiles::WLayoutMyProfiles()
 	{
 	m_pAccountNew = NULL;
-	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Welcome to Cambrian");
+	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Welcome to SocietyPro");
 	WLabelSelectableWrap * pwLabel = new WLabelSelectableWrap(g_oConfiguration.m_arraypaProfiles.FIsEmpty() ?
 		"To get started, you need to pick a name for your role:<br/><br/>"
 		" - A personal role contains information about your personal life.  With a personal role, you will likely share information with your friends and family, such as pictures and the things you like and/or personally recommend to them.<br/>"
@@ -141,7 +141,7 @@ WLayoutProfile::WLayoutProfile(TProfile * pProfile)
 		{
 		m_pwGroupBoxAccountNew = Splitter_PwAddGroupBox_VE("Please assign an XMPP account for your "d_sza_profile" '$S'", &pProfile->m_strNameProfile);
 		OLayoutVerticalAlignTop * poLayout = new OLayoutVerticalAlignTop(m_pwGroupBoxAccountNew);
-		poLayout->Layout_PwAddRowLabelWrap("Cambrian needs an XMPP account to send and receive messages with others:");
+		poLayout->Layout_PwAddRowLabelWrap("SocietyPro needs an XMPP account to send and receive messages with others:");
 		WButtonTextWithIcon * pwButtonAccountNewAutomatic = poLayout->Layout_PwAddRowButtonAndLabel("Automatic!", eMenuIconXmpp, "Automatically and instantly create an XMPP account");
 		m_pwEditSocketMessageLog_YZ = new WEditMessageLogHidden;
 		poLayout->addWidget(m_pwEditSocketMessageLog_YZ);
@@ -214,7 +214,7 @@ TProfile::PAllocateAccountAutomaticCreationUI(ISocketUI * piSocketUI)
 	pAccount->m_strUsername.InitWithRandomUsername(m_strNameProfile, *(UINT *)&hashSha1);
 	pAccount->m_strPassword.InitWithRandomPassword(IN hashSha1.rgbData + 4);
 	pAccount->TreeItemAccount_DisplayWithinNavigationTreeInit(c_szXmppServerDefault, d_uPortXmppDefault);
-	pAccount->TreeItemAccount_PContactAllocateNewToNavigationTree_NZ((PSZUC)"cambrian@xmpp.cambrian.org", (PSZUC)"Cambrian Team");
+	pAccount->TreeItemAccount_PContactAllocateNewToNavigationTree_NZ((PSZUC)"cambrian@xmpp.cambrian.org", (PSZUC)"SocietyPro Team");
 	pAccount->Socket_ConnectUI(piSocketUI, TRUE);
 	return pAccount;
 	}
@@ -336,18 +336,18 @@ WLayoutProfile::DisplayApplications()
 
 //	PAddOption(eMenuIconXmpp, "Create an XMPP account", "Associate an additional XMPP account with my profile");
 	QTreeWidgetItem * pContacts = PAddOption(eMenuIconXmpp, "Import Contacts", "");
-	PAddOption(eMenuIconFacebook, "Import Facebook contacts", "Communicate securely with my Facebook contacts using Cambrian", pContacts);
-	PAddOption(eMenuIconGoogleHangout, "Import Google+ contacts", "Communicate securely with my Google contacts using Cambrian", pContacts);
-	PAddOption(eMenuIconBitcoin, "Create a Bitcoin wallet", "Use Cambrian to send and receive Bitcoin via Blockchain.info");
-//	PAddOption(eMenuIconCorporations, "Incorporate a Company", "Register a business. Use Cambrian to issue dividends and communicate with directors and shareholders to vote");
+	PAddOption(eMenuIconFacebook, "Import Facebook contacts", "Communicate securely with my Facebook contacts using SocietyPro", pContacts);
+	PAddOption(eMenuIconGoogleHangout, "Import Google+ contacts", "Communicate securely with my Google contacts using SocietyPro", pContacts);
+	PAddOption(eMenuIconBitcoin, "Create a Bitcoin wallet", "Use SocietyPro to send and receive Bitcoin via Blockchain.info");
+//	PAddOption(eMenuIconCorporations, "Incorporate a Company", "Register a business. Use SocietyPro to issue dividends and communicate with directors and shareholders to vote");
 
-	QTreeWidgetItem * pRegistry = PAddOption(eMenuIconCorporations, "Cambrian Registry", "");
-			PAddOption(eMenuIconCorporations, "Incorporate", "Incorporate a Cambrian company", pRegistry);
+	QTreeWidgetItem * pRegistry = PAddOption(eMenuIconCorporations, "SocietyPro Registry", "");
+			PAddOption(eMenuIconCorporations, "Incorporate", "Incorporate a SocietyPro company", pRegistry);
 //			PAddOption(eMenuIconMarketplaceMediation, "Mediator", "Register as a mediator", pRegistry);
 			PAddOption(eMenuIconMarketplaceArbitration, "Arbitrate", "Register as an arbitrator", pRegistry);
 
 	/*
-	QTreeWidgetItem * pBank = PAddOption(eMenuIconBank, "Open a bank account", "You may open a personal or business bank account using Cambrian");
+	QTreeWidgetItem * pBank = PAddOption(eMenuIconBank, "Open a bank account", "You may open a personal or business bank account using SocietyPro");
 		PAddOption(eMenuIconBank, "CityBank", "Open an account at CityBank", pBank);
 		PAddOption(eMenuIconBank, "Wells Fargo", "Open an account at Wells Fargo", pBank);
 	*/
@@ -369,7 +369,7 @@ WLayoutProfile::DisplayApplications()
 		QTreeWidgetItem * pOtMarkets = PAddOption(eMenuIconMarket, "OT Markets Dashboard", "", pOT);
 			PAddOption(eMenuIconMarket, "OT://1  OrlinUSD <-> BTC", "", pOtMarkets);
 			PAddOption(eMenuIconMarket, "OT://1  Monetas Shares <-> BTC", "", pOtMarkets);
-			PAddOption(eMenuIconMarket, "OT://2  Cambrian Shares <-> OrlinUSD", "", pOtMarkets);
+			PAddOption(eMenuIconMarket, "OT://2  SocietyPro Shares <-> OrlinUSD", "", pOtMarkets);
 		QTreeWidgetItem * pOtRipple = PAddOption(eMenuIconRipple, "OT Ripple Dashboard", "", pOT);
 			PAddOption(eMenuIconBroadcast, "Broadcast Buy/Sell Offer", "Broadcast my offer(s) through the OT network", pOtRipple);
 			PAddOption(eMenuIconListen, "Listen for Buy/Sell Offers", "Listen to all offers within the OT network", pOtRipple);

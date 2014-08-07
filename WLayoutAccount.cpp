@@ -29,8 +29,8 @@ WLayoutAccountAlias::WLayoutAccountAlias(TAccountAlias * pAlias)
 		{
 		WLabel * pwLabel = new WLabelSelectableWrap;
 		pwLabel->Label_SetTextFormat_VE_Gsb(
-			"The XMPP account <b>^S</b/> was automatically created by Cambrian so you may send and receive messages. "
-			"If you already have an XMPP account, feel free to add it to Cambrian.", &pAccount->m_strJID);
+			"The XMPP account <b>^S</b/> was automatically created by SocietyPro so you may send and receive messages. "
+			"If you already have an XMPP account, feel free to add it to SocietyPro.", &pAccount->m_strJID);
 		pLayout->addRow(pwLabel);
 		}
 	pLayout->Layout_PwAddRowLabelEditReadOnly("Username:", pAccount->m_strUsername);

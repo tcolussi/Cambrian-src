@@ -8,7 +8,7 @@ QT       += core gui network multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
-TARGET = Cambrian
+TARGET = SocietyPro
 TEMPLATE = app
 
 PRECOMPILED_HEADER = PreCompiledHeaders.h

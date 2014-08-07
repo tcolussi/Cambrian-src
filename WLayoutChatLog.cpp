@@ -400,9 +400,9 @@ WNoticeContactInvite::WNoticeContactInvite(TContact * pContact) : INoticeWithIco
 
 	CStr strInvitation;
 	strInvitation.Format("Hi $s,\nThis is an invitation to create a chat account to communicate with $S.\n\n"
-	"If you do not have Cambrian installed, please click on this download link:\n"
+	"If you do not have SocietyPro installed, please click on this download link:\n"
 	d_szUrlBaseDowloadInvitation "?Invitation={S/}\n\n"
-	"Otherwise, just copy & paste the invitation below into Cambrian:\n\n" d_szInvitationPrefix "{S/}" d_szInvitationPostfix "\n", pszNickNameContact, &pAccount->m_strJID, &strInvitationXml, &strInvitationXml);
+	"Otherwise, just copy & paste the invitation below into SocietyPro:\n\n" d_szInvitationPrefix "{S/}" d_szInvitationPostfix "\n", pszNickNameContact, &pAccount->m_strJID, &strInvitationXml, &strInvitationXml);
 	m_pwEditInvitation = new WEditTextArea(strInvitation);
 
 	PSZAC pszaLabelAndToolTip = (PSZAC)strInvitation.Format("Suggested Invitation to Send:|"

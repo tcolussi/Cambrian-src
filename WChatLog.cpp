@@ -183,7 +183,7 @@ TContact::ChatLogContact_AppendExtraTextToChatState(INOUT OCursor & oTextCursor)
 	else
 		{
 		/*
-		oTextCursor.InsertHtmlCoFormat_VE(0xFFAA11, "<br/><b>^s</b> uses a non-secure communication software.  If you wish to send secure messages please recommend <b>^s</b> to download Cambrian with the following invitation link:<br/><br/></br>^s<br/> ",
+		oTextCursor.InsertHtmlCoFormat_VE(0xFFAA11, "<br/><b>^s</b> uses a non-secure communication software.  If you wish to send secure messages please recommend <b>^s</b> to download SocietyPro with the following invitation link:<br/><br/></br>^s<br/> ",
 			pszNickname, pszNickname, pszInvitationLink);
 		*/
 		}

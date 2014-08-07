@@ -136,7 +136,7 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 				new TTreeItemDemo(pRegistry, "Mediator", eMenuIconMarketplaceMediation);
 				new TTreeItemDemo(pRegistry, "Oracle", eMenuIconListen);
 			new TTreeItemDemo(pApplications, "Calendar", eMenuIconIssueFuture);
-		new TTreeItemDemo(pIDs, "Cambrian Inc.", eMenuIconIdentities);
+		new TTreeItemDemo(pIDs, "SocietyPro Inc.", eMenuIconIdentities);
 		*/
 #endif
 

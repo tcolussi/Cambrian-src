@@ -72,7 +72,7 @@ TMarketplace::TMarketplace()
 		TTreeItemDemo * pOtMarkets = new TTreeItemDemo(pExchange, "OT Markets Dashboard", eMenuIconMarket);
 			new TTreeItemDemo(pOtMarkets, "OT://1  OrlinUSD <-> BTC", eMenuIconExchange);
 			new TTreeItemDemo(pOtMarkets, "OT://1  Monetas Shares <-> BTC", eMenuIconExchange);
-			new TTreeItemDemo(pOtMarkets, "OT://2  Cambrian Shares <-> OrlinUSD", eMenuIconExchange);
+			new TTreeItemDemo(pOtMarkets, "OT://2  SocietyPro Shares <-> OrlinUSD", eMenuIconExchange);
 		TTreeItemDemo * pLocalAssets = new TTreeItemDemo(pExchange, "LocalAssets Dashboard", eMenuIconIssueAsset);
 			new TTreeItemDemo(pLocalAssets, "Place Ad", eMenuIconBroadcast);
 			new TTreeItemDemo(pLocalAssets, "Search City", eMenuAction_FindText);

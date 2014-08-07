@@ -488,7 +488,7 @@ Configuration_GlobalSettingsPresenceUpdate(EMenuAction eMenuAction)
 	*/
 	}
 
-QString c_sFilter = "Cambrian Configuration (*.xml)";	// This string should be 'const' however the function getSaveFileName() accepts only a QString* without 'const'
+QString c_sFilter = "SocietyPro Configuration (*.xml)";	// This string should be 'const' however the function getSaveFileName() accepts only a QString* without 'const'
 /*
 void
 Configuration_SetPathDefault(const QString & strPath)

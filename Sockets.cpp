@@ -1057,7 +1057,7 @@ CXmlNode::PszFindStanzaErrorDescription() const
 	if (PFindElement("malformed-request"))
 		return "Malformed Request - The data sent to the server violates the syntax for the specified SASL mechanism.  Please contact the developers.";
 	if (PFindElement("not-well-formed"))
-		return "Cambrian has sent XML that violates the well-formedness rules of XML.";
+		return "SocietyPro has sent XML that violates the well-formedness rules of XML.";
 	if (PFindElement("system-shutdown"))
 		return "The XMPP server is shutting down and consequently disconnecting you.";	// <stream:error><system-shutdown xmlns="urn:ietf:params:xml:ns:xmpp-streams"/><text xmlns="urn:ietf:params:xml:ns:xmpp-streams">Received SIGTERM</text></stream:error>
 

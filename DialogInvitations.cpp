@@ -66,9 +66,9 @@ DDialogInvitationCreate::UpdateUI()
 	m_pwLabelInvitationXml->Label_SetTextPlain(strInvitationXml);
 	//m_strInvitationBase64.InitFromTextEncodedInBase64(strInvitationXml);
 	m_strInvitationBase64.Format("Hi $S,\nThis is an invitation to create a chat account to communicate with $S.\n\n"
-	"If you do not have Cambrian installed, please click on this download link:\n"
+	"If you do not have SocietyPro installed, please click on this download link:\n"
 	d_szUrlBaseDowloadInvitation "?Invitation={S/}\n\n"
-	"Otherwise, just copy & paste the invitation below into Cambrian:\n\n" d_szInvitationPrefix "{S/}" d_szInvitationPostfix "\n", &strUsername, &m_pAccount->m_strJID, &strInvitationXml, &strInvitationXml);
+	"Otherwise, just copy & paste the invitation below into SocietyPro:\n\n" d_szInvitationPrefix "{S/}" d_szInvitationPostfix "\n", &strUsername, &m_pAccount->m_strJID, &strInvitationXml, &strInvitationXml);
 
 	m_pwEditInvitationBase64->setPlainText(m_strInvitationBase64);
 	}
@@ -384,7 +384,7 @@ WNoticeInviteContactsByEmail::WNoticeInviteContactsByEmail(TAccountXmpp * pAccou
 	ConnectButton(pwButtonSend, SL_WNoticeInviteContactsByEmail(SL_ButtonSend_clicked));
 	CStr strInvitation;
 	strInvitation.Format("Hi,\nThis is an invitation to create a chat account to communicate with $S.\n\n"
-	"If you do not have Cambrian installed, please click on this download link:\n"
+	"If you do not have SocietyPro installed, please click on this download link:\n"
 	d_szUrlBaseDowloadInvitation "?Contact=^j", &pAccount->m_pProfileParent->m_strNameProfile, pAccount);
 	m_pwEditInvitation = new WEditTextArea(strInvitation);
 	m_poLayoutNotice->Layout_PoAddRowLabelsAndWidgets_VEZA("Suggested Invitation Text", m_pwEditInvitation, NULL);
