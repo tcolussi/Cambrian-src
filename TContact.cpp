@@ -232,7 +232,7 @@ TContact::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	WMenu * pMenuView = pMenu->PMenuAdd("View", eMenuAction_Contact_SubMenuView);
 	pMenuView->ActionsAdd(c_rgzeActionsMenuContactView);
 
-	WMenu * pMenuGroup = pMenu->PMenuAdd("Add Contact to Group", eMenuAction_ContactAddToGroup);
+	WMenu * pMenuGroup = pMenu->PMenuAdd("Add Peer to Group", eMenuAction_ContactAddToGroup);
 	int eMenuActionGroup = eMenuSpecialAction_GroupFirst;
 	TGroup ** ppGroupStop;
 	TGroup ** ppGroup = m_pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
@@ -383,7 +383,7 @@ TContact::Contact_AddToGroup(int iGroup)
 void
 TContact::TreeItemContact_DeleteFromNavigationTree_MB(PA_DELETING)
 	{
-	EAnswer eAnswer = EMessageBoxQuestion("Are you sure you want to remove the contact $S?", &m_strJidBare);
+	EAnswer eAnswer = EMessageBoxQuestion("Are you sure you want to remove the peer $S?", &m_strJidBare);
 	if (eAnswer != eAnswerYes)
 		return;
 	Vault_WriteEventsToDiskIfModified();	// Always save the Chat Log. This is important because if the user wants to add the contact again, he/she will recover the entire Chat Log.
@@ -858,6 +858,6 @@ TContactNew::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent)
 PSZUC
 TContactNew::TreeItem_PszGetNameDisplay() CONST_MCC
 	{
-	return (PSZUC)"<New Contact...>";
+	return (PSZUC)"<New Peer...>";
 	}
 

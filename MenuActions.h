@@ -186,7 +186,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 
 	// The following menu actions are for sharing icons with other menu actions
 	eMenuIconXmpp = eMenuAction_AccountLogin,
-	eMenuIconAccept = eMenuAction_ContactApprove,	// At the moment the "Accept" icon is the same as the "Approve Contact"
+	eMenuIconAccept = eMenuAction_ContactApprove,	// At the moment the "Accept" icon is the same as the "Approve Peer"
 
 	eMenuIconMax
 	}; // EMenuAction

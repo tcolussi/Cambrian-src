@@ -48,7 +48,7 @@ void
 DDialogInvitationCore::CreateLabelInvitationFrom()
 	{
 	Assert(m_pwLabelInvitationFrom == NULL);
-	m_pwLabelInvitationFrom = DialogBody_PwAddRowLabel("|Contact who invited you\n\nBy creating an acount, this contact will to your contact list");
+	m_pwLabelInvitationFrom = DialogBody_PwAddRowLabel("|Peer who invited you\n\nBy creating an acount, this peer will go to your peer list");
 	UpdateLabelInvitationFrom();
 	}
 
@@ -115,7 +115,7 @@ DDialogInvitationCore::AddContactInvitationToNavigationTree_MB(TAccountXmpp * pA
 			#endif
 			}
 		else
-			EMessageBoxInformation("The contact <b>^s</b> is already in your list", pszContact);
+			EMessageBoxInformation("The peer <b>^s</b> is already in your list", pszContact);
 		pContactInvitation->TreeItemW_SelectWithinNavigationTree();		// Make the new contact has the focus and/or is visible to the user
 		}
 	pAccount->TreeItemW_Expand();
@@ -123,12 +123,12 @@ DDialogInvitationCore::AddContactInvitationToNavigationTree_MB(TAccountXmpp * pA
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define SL_DDialogInvitationContactAdd(pfmSlot)		SL_DDialog(pfmSlot, DDialogInvitationContactAdd)
-DDialogInvitationContactAdd::DDialogInvitationContactAdd(CInvitation * pInvitationInit) : DDialogInvitationCore(pInvitationInit, "Add Contact From Invitation", eMenuAction_AccountAcceptInvitation)
+DDialogInvitationContactAdd::DDialogInvitationContactAdd(CInvitation * pInvitationInit) : DDialogInvitationCore(pInvitationInit, "Add Peer From Invitation", eMenuAction_AccountAcceptInvitation)
 	{
 	if (pInvitationInit == NULL)
 		CreateEditInvitation();
 	CreateLabelInvitationFrom();
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogInvitationContactAdd(SL_ButtonOK_clicked), "Add Contact", eMenuAction_ContactAdd);
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogInvitationContactAdd(SL_ButtonOK_clicked), "Add Peer", eMenuAction_ContactAdd);
 	}
 
 void

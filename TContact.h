@@ -199,7 +199,7 @@ public:
 #define d_szInvitationPostfix		"]]"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Tree Item displaying the text "<New Contact...>" in the Navigation Tree.
+//	Tree Item displaying the text "<New Peer...>" in the Navigation Tree.
 //	When selected, the Tree Item displays a layout to add contact(s)
 class TContactNew : public ITreeItem
 {

@@ -16,20 +16,20 @@ DisplayDialogContactNew()
 
 #define	SL_DialogContactNew(_pfmName)		SL_DDialog(_pfmName, DialogContactNew)
 
-DialogContactNew::DialogContactNew(TAccountXmpp * pAccount) : DDialogOkCancelWithLayouts("Add New Contact", eMenuAction_ContactAdd)
+DialogContactNew::DialogContactNew(TAccountXmpp * pAccount) : DDialogOkCancelWithLayouts("Add New Peer", eMenuAction_ContactAdd)
 	{
 	Assert(pAccount != NULL);
 	m_pAccount = pAccount;
 
-	DialogBody_PwAddRowLabel((PSZAC)g_strScratchBufferStatusBar.Format("Adding a new contact to your account <b>^S</b>", &pAccount->m_strJID))->setWordWrap(false);
+	DialogBody_PwAddRowLabel((PSZAC)g_strScratchBufferStatusBar.Format("Adding a new peer to your account <b>^S</b>", &pAccount->m_strJID))->setWordWrap(false);
 	m_pwEditUsername = new WEdit;
-	m_pwEditUsername->setPlaceholderText("Enter multiple contact usernames separated with a space");
-	DialogBody_AddRowWidget_PA("Contact Username:|Enter the usernames of the contacts you wish to add to your list.\n\nTo add multiple contacts at once, separate each username with a space", m_pwEditUsername);
+	m_pwEditUsername->setPlaceholderText("Enter multiple peer usernames separated with a space");
+	DialogBody_AddRowWidget_PA("Peer Username:|Enter the usernames of the peers you wish to add to your list.\n\nTo add multiple peers at once, separate each username with a space", m_pwEditUsername);
 	m_pwEditHtmlUsernames = new WEditTextAreaReadOnlyGray;
-	m_pwEditHtmlUsernames->Edit_SetWatermark("New Contacts");
+	m_pwEditHtmlUsernames->Edit_SetWatermark("New Peers");
 	DialogBody_AddRowWidget_PA(m_pwEditHtmlUsernames);
 	connect(m_pwEditUsername, SIGNAL(textChanged(QString)), this, SLOT(SL_EditUsername_textChanged(QString)));
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DialogContactNew(SL_ButtonOK_clicked), "Add Contact", eMenuAction_ContactAdd);
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DialogContactNew(SL_ButtonOK_clicked), "Add Peer", eMenuAction_ContactAdd);
 	m_pwEditUsername->setFocus();
 	}
 
@@ -117,10 +117,10 @@ DialogContactNew::SL_ButtonOK_clicked()
 			}
 		} // while
 	if (!strContactsDuplicate.FIsEmptyString())
-		EMessageBoxInformation("The following contacts have been skipped because they are already present in the account $S:\n\n$S", &m_pAccount->m_strJID, &strContactsDuplicate);
+		EMessageBoxInformation("The following peers have been skipped because they are already present in the account $S:\n\n$S", &m_pAccount->m_strJID, &strContactsDuplicate);
 	if (pContactSelect == NULL)
 		{
-		// No contact were added, so select one of the duplicate contact.  This dialog "Add Contacts" can be used to search for a contact.
+		// No peer were added, so select one of the duplicate contact.  This dialog "Add Peers" can be used to search for a contact.
 		pContactSelect = pContactDuplicate;
 		}
 	if (pContactSelect != NULL)
@@ -174,8 +174,8 @@ WLayoutContactNew::WLayoutContactNew(TAccountXmpp * pAccount)
 	{
 	m_pAccount = pAccount;
 
-	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Add New Contacts");
-	poLayoutVertical->Layout_PwAddRowLabelWrap("To add a contact that may not have SocietyPro yet, please send them this personalized download link by whatever means you prefer. Once they install SocietyPro you will be connected automatically. If they have SocietyPro they can enter this same link in the bottom field to connect.");
+	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Add New Peers");
+	poLayoutVertical->Layout_PwAddRowLabelWrap("To add a peer that may not have SocietyPro yet, please send them this personalized download link by whatever means you prefer. Once they install SocietyPro you will be connected automatically. If they have SocietyPro they can enter this same link in the bottom field to connect.");
 
 	m_pwEditInvitation= new WEditReadOnly;
 	m_pwEditInvitation->Edit_SetToolTip((PSZUC)"Personalized invitation link to download SocietyPro.\nPlease send this link to your friends by email or by instant messaging.");
@@ -185,12 +185,12 @@ WLayoutContactNew::WLayoutContactNew(TAccountXmpp * pAccount)
 	connect(m_pwButtonCopyInvitation, SIGNAL(clicked()), this, SLOT(SL_CopyInvitation()));
 
 	poLayoutVertical->Layout_PwAddRowHorizonalLine();
-	poLayoutVertical->Layout_PwAddRowLabelWrap("If you have received a download invitation link or know your contact's username please enter either below to connect.");
+	poLayoutVertical->Layout_PwAddRowLabelWrap("If you have received a download invitation link or know your peer's username please enter either below to connect.");
 
 	m_pwEditUsername = new WEdit;
 	m_pwEditUsername->setPlaceholderText("Paste received invitation link, or enter multiple usernames separated with a space");
-	WButtonTextWithIcon * pwButtonAddContacts = new WButtonTextWithIcon("Add|Add the new contacts", eMenuAction_ContactAdd);
-	poLayoutVertical->Layout_PwAddRowLabelEditButton("New Contacts:", m_pwEditUsername, pwButtonAddContacts);
+	WButtonTextWithIcon * pwButtonAddContacts = new WButtonTextWithIcon("Add|Add the new peers", eMenuAction_ContactAdd);
+	poLayoutVertical->Layout_PwAddRowLabelEditButton("New Peers:", m_pwEditUsername, pwButtonAddContacts);
 
 	m_pwEditHtmlUsernames = new WEditTextAreaReadOnlyGray;
 	m_pwEditHtmlUsernames->hide();
@@ -249,24 +249,24 @@ WLayoutContactNew::SL_EditUsername_textChanged(const QString & sUsernames)
 						}
 					fHideContacts = false;
 					QRGB coUsername = d_coBlack;
-					PSZAC pszUsernameIntro = "New Contact";
+					PSZAC pszUsernameIntro = "New Peer";
 					if (m_pAccount->m_strJID.FCompareStringsNoCase(pszUsername))
 						{
 						// The username is the same as the account JID
 						coUsername = d_coRed;
-						pszUsernameIntro = "Your Contact";
+						pszUsernameIntro = "Your Peer";
 						pszUsernameAllocate = NULL;
 						}
 					else if (m_pAccount->Contact_PFindByJID(pszUsername) != NULL)
 						{
 						// There is already an existing contact sharing this username
 						coUsername = d_coGrayLight;
-						pszUsernameIntro = "Duplicate Contact";
+						pszUsernameIntro = "Duplicate Peer";
 						}
 					else if (PcheValidateJID(pszUsername) != NULL)
 						{
 						coUsername = d_coRed;
-						pszUsernameIntro = "Invalid Contact JID";
+						pszUsernameIntro = "Invalid Peer JID";
 						pszUsernameAllocate = NULL;
 						}
 					#ifdef DEBUG_
@@ -324,7 +324,7 @@ WLayoutContactNew::SL_ButtonAddContacts()
 		delete paInvitation;
 		} // while
 	if (!strContactsDuplicate.FIsEmptyString())
-		EMessageBoxInformation("The following contacts have been skipped because they are already present in the account $S:\n\n$S", &m_pAccount->m_strJID, &strContactsDuplicate);
+		EMessageBoxInformation("The following peers have been skipped because they are already present in the account $S:\n\n$S", &m_pAccount->m_strJID, &strContactsDuplicate);
 	if (pContactSelect == NULL)
 		pContactSelect = pContactDuplicate;	// No contact were added, so select one of the duplicate contact (if any).  This feature may be used to find a contact.
 	if (pContactSelect != NULL)

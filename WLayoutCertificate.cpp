@@ -104,7 +104,7 @@ public:
 
 CTableAccounts::CTableAccounts(PA_PARENT OLayoutForm * poLayoutParent, const CArrayPtrAccountsXmpp & arraypAccounts) : WTable(PA_PARENT poLayoutParent)
 	{
-	SetColumns_VEZ("Account Name", "Resource", "Contacts", /*"Tasks",*/ NULL); // Errors
+	SetColumns_VEZ("Account Name", "Resource", "Peers", /*"Tasks",*/ NULL); // Errors
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = arraypAccounts.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)

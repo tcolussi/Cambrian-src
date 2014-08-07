@@ -40,7 +40,7 @@ WLayoutAccountAlias::WLayoutAccountAlias(TAccountAlias * pAlias)
 	pLayout->Layout_PwAddRowLabelEditReadOnlyFingerprint("Certificate Fingerprint:", *pAccount->Certificate_PGetBinaryFingerprint());
 
 	WTable * pTableContacts = new WTable(this);
-	pTableContacts->SetColumns_VEZ("Display Name", "Contact JID", "Subscription", "Resource", "XCP", "File Name Chat History", NULL);
+	pTableContacts->SetColumns_VEZ("Display Name", "Peer JID", "Subscription", "Resource", "XCP", "File Name Chat History", NULL);
 	TContact ** ppContactStop;
 	TContact ** ppContact = pAccount->m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
 	while (ppContact != ppContactStop)

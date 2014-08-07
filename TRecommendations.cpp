@@ -251,9 +251,9 @@ WLayoutRecommendations::WLayoutRecommendations(TProfile * pProfile, TContact * p
 	m_pContact_YZ = pContact;
 	m_pszNameDisplayContact = (pContact != NULL) ? pContact->TreeItem_PszGetNameDisplay() : (PSZUC)"me";
 
-	OLayoutVerticalAlignTop * m_poLayoutApplications = Splitter_PoAddGroupBoxAndLayoutVertical_VE((pContact == NULL) ? "My personal recommendations for my contacts" : "Recommendations made by '$s'", m_pszNameDisplayContact);
+	OLayoutVerticalAlignTop * m_poLayoutApplications = Splitter_PoAddGroupBoxAndLayoutVertical_VE((pContact == NULL) ? "My personal recommendations for my peers" : "Recommendations made by '$s'", m_pszNameDisplayContact);
 	if (pContact == NULL)
-		m_poLayoutApplications->Layout_PwAddRowLabel("To recommend a contact or a group to your friends, right-click on the contact or group and select the menu item 'Recommend'");
+		m_poLayoutApplications->Layout_PwAddRowLabel("To recommend a peer or a group to your friends, right-click on the peer or group and select the menu item 'Recommend'");
 
 	WEdit * pwEditSearchRecommendations = new WEdit;
 	//pwEdit->setMaximumHeight(20);
@@ -279,9 +279,9 @@ WLayoutRecommendations::WLayoutRecommendations(TProfile * pProfile, TContact * p
 void
 WLayoutRecommendations::PopulateTreeWidget()
 	{
-	CRecommendationCategory * pRecommendationCategoryContactsNew = _PAllocateRecommendationCategory(CRecommendationContact::c_eMenuIcon, "Contacts recommended by '$s'");
+	CRecommendationCategory * pRecommendationCategoryContactsNew = _PAllocateRecommendationCategory(CRecommendationContact::c_eMenuIcon, "Peers recommended by '$s'");
 	CRecommendationCategory * pRecommendationCategoryGroupsNew = _PAllocateRecommendationCategory(CRecommendationGroup::c_eMenuIcon, "Groups recommended by '$s'");
-	CRecommendationCategory * pRecommendationCategoryContactsExisting = _PAllocateRecommendationCategory(CRecommendationContact::c_eMenuIcon, (m_pContact_YZ != NULL) ? "Contacts recommended by '$s' already in your contact list" : "My recommended contacts");
+	CRecommendationCategory * pRecommendationCategoryContactsExisting = _PAllocateRecommendationCategory(CRecommendationContact::c_eMenuIcon, (m_pContact_YZ != NULL) ? "Peers recommended by '$s' already in your peer list" : "My recommended peers");
 	CRecommendationCategory * pRecommendationCategoryGroupsExisting = _PAllocateRecommendationCategory(CRecommendationGroup::c_eMenuIcon, (m_pContact_YZ != NULL) ? "Groups recommended by '$s' you already subscribed" : "My recommended groups");
 	CRecommendationCategory * pCategoryParent;
 

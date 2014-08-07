@@ -233,7 +233,7 @@ OJapiCambrian::MessageSendTo(const QString & sContactTo, const QString & sMessag
 				}
 			} // while
 		} // while
-	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Unable to find contact '$Q'\n", &sContactTo);
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Unable to find peer '$Q'\n", &sContactTo);
 	}
 
 /*

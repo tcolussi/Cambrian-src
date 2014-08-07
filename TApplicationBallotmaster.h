@@ -22,8 +22,8 @@ struct SApplicationHtmlInfo
 const SApplicationHtmlInfo c_rgApplicationHtmlInfo[] =
 {
 	{ "Ballotmaster", "Apps/Ballotmaster/index.html" },
-	{ "NavShell Contacts", "Apps/navshell-contacts/index.htm" },
-	{ "Office Kingpin", "Apps/html5-office-kingpin/index.htm" }
+	{ "NavShell Peers", "Apps/navshell-contacts/index.html" },
+	{ "Office Kingpin", "Apps/html5-office-kingpin/index.html" }
 };
 
 class CApplicationHtmlBallotmaster

@@ -126,7 +126,7 @@ DDialogPropertiyPageContactGeneral::DDialogPropertiyPageContactGeneral(TContact 
 DDialogPropertiesContact::DDialogPropertiesContact(TContact * pContact)
 	{
 	m_pContact = pContact;
-	Dialog_SetCaptionFormat_VE("Contact - ^j", pContact);
+	Dialog_SetCaptionFormat_VE("Peer - ^j", pContact);
 	PageAdd(new DDialogPropertiyPageContactGeneral(pContact));
 	PageAdd(new DDialogPropertiyPageAccountTest("RootID"));
 	PageAdd(new DDialogPropertiyPageAccountTest("PGP"));
@@ -248,7 +248,7 @@ WListContacts::ContactsGetAll(IOUT CArrayPtrContacts * parraypContacts) const
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pContactOrGroup) : DDialogOkCancelWithLayouts("Add Contacts to Group", eMenuAction_GroupAddContacts)
+DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pContactOrGroup) : DDialogOkCancelWithLayouts("Add Peers to Group", eMenuAction_GroupAddContacts)
 	{
 	m_pwListContactsAvailable = new WListContacts;
 	m_pwListContactsInGroup = new WListContacts;
@@ -270,18 +270,18 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 		m_pGroup = NULL;
 		}
 
-	m_poLayoutBody->Layout_PwAddRowLabel("Double-click on the contacts you wish to add or remove to the group:");
+	m_poLayoutBody->Layout_PwAddRowLabel("Double-click on the peers you wish to add or remove to the group:");
 	OLayoutHorizontal * poLayoutHorizontal = new OLayoutHorizontal(m_poLayoutBody);
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(poLayoutHorizontal);
-	poLayoutVertical->Layout_PwAddRowLabel("Contacts not in group");
+	poLayoutVertical->Layout_PwAddRowLabel("Peers not in group");
 	poLayoutVertical->addWidget(PA_CHILD m_pwListContactsAvailable);
-//	poLayoutVertical->addWidget(new WButtonIconForToolbar(eMenuAction_ContactAdd, "Include the selected contact(s) to the group"), d_zNA, Qt::AlignRight);
+//	poLayoutVertical->addWidget(new WButtonIconForToolbar(eMenuAction_ContactAdd, "Include the selected peer(s) to the group"), d_zNA, Qt::AlignRight);
 	poLayoutVertical = new OLayoutVerticalAlignTop(poLayoutHorizontal);
-	poLayoutVertical->Layout_PwAddRowLabel("Contacts in group");
+	poLayoutVertical->Layout_PwAddRowLabel("Peers in group");
 	poLayoutVertical->addWidget(PA_CHILD m_pwListContactsInGroup);
-//	poLayoutVertical->addWidget(new WButtonIconForToolbar(eMenuAction_ContactRemove, "Remove selected contact(s) from the group"));
+//	poLayoutVertical->addWidget(new WButtonIconForToolbar(eMenuAction_ContactRemove, "Remove selected peer(s) from the group"));
 	poLayoutHorizontal = new OLayoutHorizontal(m_poLayoutBody);
-	WButtonText * pwButtonOK = new WButtonTextWithIcon((m_pGroup != NULL) ? " Add Contacts " : " Create Group ", eMenuAction_Group);
+	WButtonText * pwButtonOK = new WButtonTextWithIcon((m_pGroup != NULL) ? " Add Peers " : " Create Group ", eMenuAction_Group);
 	poLayoutHorizontal->addWidget(pwButtonOK, d_zNA, Qt::AlignRight);
 
 	// Populate the lists of contacts

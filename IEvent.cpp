@@ -267,7 +267,7 @@ TContact *
 IEvent::PGetContactSender()
 	{
 	return m_pContact_NZ;
-	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "eEventClass $U, tsEventID $t has no contact\n", EGetEventClass(), m_tsEventID);
+	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "eEventClass $U, tsEventID $t has no peer\n", EGetEventClass(), m_tsEventID);
 	return NULL;
 	}
 */
@@ -440,7 +440,7 @@ IEvent::PGetContactForReply_YZ() const
 	ITreeItemChatLogEvents * pContactOrGroup = m_pVaultParent_NZ->m_pParent;
 	if (pContactOrGroup->EGetRuntimeClass() == RTI(TContact))
 		return (TContact *)pContactOrGroup;
-	Assert(FALSE && "The event does not have a valid contact to reply");
+	Assert(FALSE && "The event does not have a valid peer to reply");
 	return NULL;
 	}
 
@@ -550,7 +550,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	pbinTextHtml->BinAppendTextSzv_VE("<span title='^Q'>[^Q] </span>", &sDateTime, &sTime);
 	if (m_uFlagsEvent & FE_kfEventProtocolError)
 		{
-		pbinTextHtml->BinAppendText(" <img src=':/ico/Error' title='XCP Protocol Error: One of the contact has an old version of SocietyPro and cannot process this event because its type is unknown'/> ");
+		pbinTextHtml->BinAppendText(" <img src=':/ico/Error' title='XCP Protocol Error: One of the peers has an old version of SocietyPro and cannot process this event because its type is unknown'/> ");
 		}
 	if ((eEventClass & eEventClass_kfReceivedByRemoteClient) == 0)
 		{
@@ -1522,7 +1522,7 @@ CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * p
 				if (pEvent->m_tsEventID < tsEventStop)
 					{
 					if (!fDebugContinueSearch)
-						MessageLog_AppendTextFormatSev(eSeverityNoise, "PFindEventReceivedByTimestampOther($t ({tL}) for contact ^j) - Stopping search at pEvent->m_tsOther $t ({tL})\n", tsOther, tsOther, pContactGroupSender, pEvent->m_tsOther, pEvent->m_tsOther);
+						MessageLog_AppendTextFormatSev(eSeverityNoise, "PFindEventReceivedByTimestampOther($t ({tL}) for peer ^j) - Stopping search at pEvent->m_tsOther $t ({tL})\n", tsOther, tsOther, pContactGroupSender, pEvent->m_tsOther, pEvent->m_tsOther);
 					// For the debug build, search further to see if the event could be there
 					fDebugContinueSearch = TRUE;
 					//break;	// We went far enough in the list to conclude the event does not match the timestamp

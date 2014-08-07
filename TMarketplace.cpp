@@ -168,7 +168,7 @@ WLayoutWallet::WLayoutWallet(ITreeItem * pTreeItemFilterBy, EWalletViewFlags eWa
 	pwEdit->setParent(this);
 
 	WTable * pwTable = new WTable(this);
-	pwTable->SetColumns_VEZ("Date", "Contact", "Amount mBTC", "Value", "Comment", NULL);
+	pwTable->SetColumns_VEZ("Date", "Peer", "Amount mBTC", "Value", "Comment", NULL);
 
 	CArrayPtrEventsWalletTransactions arraypaTransactions;
 	arraypaTransactions.Wallets_AppendEventsTransactionsFor(pTreeItemFilterBy, eWalletViewFlags);

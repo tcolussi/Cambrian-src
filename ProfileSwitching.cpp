@@ -15,7 +15,7 @@
 #include "WNavigationTree.h"
 #include "TRecommendations.h"
 
-const CHU c_szContacts[]	= "Contacts";	// Display name fo rthe 'Inbox' node
+const CHU c_szContacts[]	= "Peers";	// Display name fo rthe 'Inbox' node
 
 //	The following two Tree Items are created on-demand (and deleted) each time the Navigation Teee is re-populated.
 TTreeItemInbox * g_pTreeItemInbox;
@@ -255,7 +255,7 @@ TAccountXmpp::TreeItem_PszGetNameDisplay() CONST_MCC
 	if (g_pTreeItemInbox == NULL)
 		{
 		if (m_pProfileParent->m_arraypaAccountsXmpp.PvGetElementUnique_YZ() != NULL)
-			return c_szContacts;	// The name of the account may be substituted with the word "Contacts" if there is only one account in the profile
+			return c_szContacts;	// The name of the account may be substituted with the word "Peers" if there is only one account in the profile
 		}
 	return TreeItemAccount_PszGetNameDisplay();
 	}

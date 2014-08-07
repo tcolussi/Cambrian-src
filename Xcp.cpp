@@ -220,7 +220,7 @@ TContact::Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEve
 	WChatLog * pwChatLog = ChatLog_PwGet_YZ();
 	CVaultEvents * pVault = Vault_PGet_NZ();					// By default, use the vault of the contact.  If the message is for a group, then change the vault and the synchronization timestamps.
 	TIMESTAMP * ptsOtherLastSynchronized = &m_tsOtherLastSynchronized;	// When the data was last synchronized with the remote contact
-	MessageLog_AppendTextFormatCo(d_coBlack, "Xcp_ProcessStanzasAndUnserializeEvents(Account: $s, Contact: $s - $S)\n\t m_tsOtherLastSynchronized=$t, m_tsEventIdLastSentCached=$t\n",
+	MessageLog_AppendTextFormatCo(d_coBlack, "Xcp_ProcessStanzasAndUnserializeEvents(Account: $s, Peer: $s - $S)\n\t m_tsOtherLastSynchronized=$t, m_tsEventIdLastSentCached=$t\n",
 		m_pAccount->TreeItem_PszGetNameDisplay(), pszNameDisplay, &m_strJidBare, m_tsOtherLastSynchronized, m_tsEventIdLastSentCached);
 	CBinXcpStanzaTypeInfo binXcpStanzaReply;	// What stanza to send to the remote client as a response to pXmlNodeXcpEvent
 	binXcpStanzaReply.m_pContact = this;
@@ -997,7 +997,7 @@ IEvent::Event_WriteToSocket()
 			binXcpStanza.m_pContact = pMember->m_pContact;
 			if (binXcpStanza.m_pContact->m_cVersionXCP <= 0)
 				{
-				MessageLog_AppendTextFormatSev(eSeverityNoise, "Skipping group contact $S because its client does not support XCP (probably because it is offline)\n", &pMember->m_pContact->m_strJidBare);
+				MessageLog_AppendTextFormatSev(eSeverityNoise, "Skipping group peer $S because its client does not support XCP (probably because it is offline)\n", &pMember->m_pContact->m_strJidBare);
 				continue;
 				}
 			MessageLog_AppendTextFormatSev(eSeverityNoise, "Sending message to group member $S\n", &pMember->m_pContact->m_strJidBare);
@@ -1171,7 +1171,7 @@ CBinXcpStanzaTypeInfo::CBinXcpStanzaTypeInfo(IEvent * pEvent) : CBinXcpStanza(eS
 		{
 		Assert(pContactOrGroup->EGetRuntimeClass() == RTI(TGroup));
 		m_pContact = pEvent->m_pContactGroupSender_YZ;
-		Report(m_pContact != NULL && "Invalid contact group sender");	// This pointer may actually be NULL if the event is the group sender
+		Report(m_pContact != NULL && "Invalid peer group sender");	// This pointer may actually be NULL if the event is the group sender
 		// We have a group, therefore add the group selector to the XCP stanza
 		BinXmlInitStanzaWithGroupSelector(pContactOrGroup);
 		}
@@ -1588,7 +1588,7 @@ CBinXcpStanza::XcpSendStanzaToContact(TContact * pContact) CONST_MCC
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 	if (pContact->m_cVersionXCP <= 0)
 		{
-		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlue), "Contact not supporting XCP - Therefore ignoring XcpSendStanzaToContact($s):\n$B\n", pContact->ChatLog_PszGetNickname(), this);
+		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlue), "Peer not supporting XCP - Therefore ignoring XcpSendStanzaToContact($s):\n$B\n", pContact->ChatLog_PszGetNickname(), this);
 		return;
 		}
 	MessageLog_AppendTextFormatCo(d_coBlue, "XcpSendStanzaToContact($s):\n$B\n", pContact->ChatLog_PszGetNickname(), this);

@@ -1266,7 +1266,7 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 			if (pContact != NULL)
 				pContact->XmppXcp_ProcessStanza(pXmlNodeXCP);
 			else
-				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "XMPP Stanza contains an invalid contact:\n^N", m_pXmlNodeStanzaCurrent_YZ);	// This happens when the stanza is incomplete and the JID is not adequate to create a new contact
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "XMPP Stanza contains an invalid peer:\n^N", m_pXmlNodeStanzaCurrent_YZ);	// This happens when the stanza is incomplete and the JID is not adequate to create a new contact
 			return;
 			}
 		const CXmlNode * pXmlAttributeVersion = pXmlNodeXCP->PFindAttribute('v');
@@ -1276,10 +1276,10 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 			if (pContact != NULL)
 				{
 				pContact->m_cVersionXCP = NStringToNumber_ZZR_ML(pXmlAttributeVersion->m_pszuTagValue);
-				MessageLog_AppendTextFormatSev(eSeverityComment, "Contact ^j is supporting XCP version $i\n", pContact, pContact->m_cVersionXCP);
+				MessageLog_AppendTextFormatSev(eSeverityComment, "Peer ^j is supporting XCP version $i\n", pContact, pContact->m_cVersionXCP);
 				}
 			//else
-			//	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "No contact for stanza: ^N", m_pXmlNodeStanzaCurrent_YZ);
+			//	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "No peer for stanza: ^N", m_pXmlNodeStanzaCurrent_YZ);
 			}
 		}
 

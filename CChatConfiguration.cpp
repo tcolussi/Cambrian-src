@@ -208,7 +208,7 @@ TProfile::UnserializeContactsFromOldConfigXml()
 	EError err = oXmlExchanger.ELoadFileAndParseToXmlNodes(sPathConfigurationXml);
 	if (err != errSuccess)
 		return;
-	MessageLog_AppendTextFormatSev(eSeverityWarning, "Importing XMPP accounts and contacts from file '$Q'\n", &sPathConfigurationXml);
+	MessageLog_AppendTextFormatSev(eSeverityWarning, "Importing XMPP accounts and peers from file '$Q'\n", &sPathConfigurationXml);
 	if (!oXmlExchanger.XmlExchangeNodeRootF("HavenChat"))
 		return;	// If there is no root node, there there is nothing to do!
 	SHashSha1 * pHashSalt = const_cast<SHashSha1 *>(m_pConfigurationParent->PGetSalt());	// This is a hack to reuse the same salt as the previous configuration
@@ -366,7 +366,7 @@ ChatContact_DeleteSelectedUI()
 	TContact * pContact = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact();
 	if (pContact == NULL)
 		return;
-	EAnswer eAnswer = EMessageBoxQuestion("Are you sure you want to remove the contact $S?", &pContact->m_strJidBare);
+	EAnswer eAnswer = EMessageBoxQuestion("Are you sure you want to remove the peer $S?", &pContact->m_strJidBare);
 	if (eAnswer != eAnswerYes)
 		return;
 	pContact->Events_WriteToDiskIfModified();	// Save whatever chat history was present (this is important because if the user wants to add the contact again, he/she will have the message history)

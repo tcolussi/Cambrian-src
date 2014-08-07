@@ -108,7 +108,7 @@ WMarketplaceArbitrators::WMarketplaceArbitrators()
 const SGridColumn c_rgzColumns[] =
 {
 	{ "Date", GCF_Width(170) },
-	{ "Contact", GCF_Width(120) },
+	{ "Peer", GCF_Width(120) },
 	{ "Amount", GCF_Width(90) },
 	{ "Value", GCF_Width(80) },
 	{ "Comment", GCF_WidthStretch(200) },

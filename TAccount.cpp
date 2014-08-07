@@ -132,9 +132,9 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 						if (!pContact->m_strRessource.FCompareStringsExactCase(pszResource))
 							{
 							if (pContact->m_strRessource.FIsEmptyString())
-								MessageLog_AppendTextFormatCo(d_coBlack, "Contact $S: Assigning resource '$s'\n", &pContact->m_strJidBare, pszResource);
+								MessageLog_AppendTextFormatCo(d_coBlack, "Peer $S: Assigning resource '$s'\n", &pContact->m_strJidBare, pszResource);
 							else
-								MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "Contact $S: Updating resource from '$S' to '$s'\n", &pContact->m_strJidBare, &pContact->m_strRessource, pszResource);
+								MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "Peer $S: Updating resource from '$S' to '$s'\n", &pContact->m_strJidBare, &pContact->m_strRessource, pszResource);
 							//pContact->Xcp_ServiceDiscovery();	// The resource changed, therefore query the remote client for its capabilities
 							pContact->SetFlagXcpComposingSendTimestampsOfLastKnownEvents();	// Each time the resource change, re-send the timestamps of the last known events so we give an opportunity to synchronie
 							pContact->m_cVersionXCP = 0;	// Also, reset the XCP version, to make sure the device connects properly
@@ -165,7 +165,7 @@ TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(PSZUC pszCo
 	{
 	Assert(pszContactJID != NULL);
 	Endorse(pszContactNameDisplay == NULL);	// Automatically generate a display name
-	Assert(Contact_PFindByJID(pszContactJID) == NULL && "Contact already in the account");
+	Assert(Contact_PFindByJID(pszContactJID) == NULL && "Peer already in the account");
 	Assert(m_paTreeItemW_YZ != NULL && "No Tree Item to attach to");	// This line of code has to be revised
 	TContact * pContact = new TContact(this);
 	pContact->m_strRessource = pContact->m_strJidBare.AppendTextUntilCharacterPszr(pszContactJID, '/');
@@ -393,7 +393,7 @@ TAccountXmpp::ChatLog_DisplayStanza(const CXmlNode * pXmlNodeMessageStanza)
 	if (pContact != NULL)
 		pContact->ChatLogContact_DisplayStanzaToUI(pXmlNodeMessageStanza);
 	else
-		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to deliver message from unknown contact:\n^N", pXmlNodeMessageStanza);	// This happens when the stanza is incomplete and the JID is not adequate to create a contact
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to deliver message from unknown peer:\n^N", pXmlNodeMessageStanza);	// This happens when the stanza is incomplete and the JID is not adequate to create a contact
 	}
 
 PSZUC
@@ -479,7 +479,7 @@ TAccountXmpp::Contact_RosterSubscribe(INOUT TContact * pContact)
 	Assert(pContact != NULL);
 	if (m_paSocket == NULL)
 		return;
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Adding contact ^j to roster...\n", pContact);
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Adding peer ^j to roster...\n", pContact);
 	m_paSocket->Socket_WriteXmlFormatted("<iq id='$p' type='set'><query xmlns='jabber:iq:roster'><item jid='^j'></item></query></iq>", pContact, pContact);
 	//m_paSocket->Socket_WriteXmlFormatted("<presence to='^j' type='subscribe'/>", pContact);
 	//m_paSocket->Socket_WriteXmlFormatted("<presence ^:jc from='^J' to='^j' type='subscribe'/>", this, pContact);
@@ -491,7 +491,7 @@ TAccountXmpp::Contact_RosterUnsubscribe(INOUT TContact * pContact)
 	Assert(pContact != NULL);
 	if (m_paSocket == NULL)
 		return;
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Unsubscribing from contact ^j...\n", pContact);
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Unsubscribing from peer ^j...\n", pContact);
 	m_paSocket->Socket_WriteXmlFormatted("<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^j' subscription='remove'></item></query></iq>", pContact);
 	}
 
@@ -587,7 +587,7 @@ TAccountXmpp::TreeItemAccount_DeleteFromNavigationTree_MB(PA_DELETING)
 	const int cContacts =  m_arraypaContacts.GetSize();
 	if (cContacts > 0)
 		{
-		if (EMessageBoxQuestion("Are you sure you want to remove the account $S and its $i contacts?", &m_strJID, cContacts) != eAnswerYes)
+		if (EMessageBoxQuestion("Are you sure you want to remove the account $S and its $i peers?", &m_strJID, cContacts) != eAnswerYes)
 			return;
 		}
 	m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;

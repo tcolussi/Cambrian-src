@@ -50,7 +50,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Application Properties" _, // eMenuAction_ApplicationProperties
 
 
-	"Accept Contact Invitation..." _ "s=Accept the invitation sent by a friend" _ "i=XMPP" _,	// eMenuAction_AccountAcceptInvitation
+	"Accept Peer Invitation..." _ "s=Accept the invitation sent by a friend" _ "i=XMPP" _,	// eMenuAction_AccountAcceptInvitation
 	"Sign Up..."  _ "s=Register (create) a new XMPP account" _ "i=XMPP" _,		// eMenuAction_AccountRegister
 	"Login..." _ "s=Login to an existing XMPP account" _ "i=XMPP" _, // eMenuAction_AccountLogin
 	"Rename Account..." _ "i=ContactEdit" _ "s=Change the display name of the selected account" _,				// eMenuAction_AccountRename
@@ -58,35 +58,35 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Account Properties..." _ "i=Properties" _ "s=Display the properties of the selected account" _, // eMenuAction_AccountProperties
 	"Reconnect" _ "i=ServerConnect" _ "s=Reconnect to the server" _, // eMenuAction_AccountReconnect
 
-	"Contact" _ "i=Contact" _, //eMenuAction_Contact
-	"Add Contact..." _ /*"a=Ctrl+Shift+C" _*/ "i=ContactAdd" _ "s=Add a new contact for the selected account" _,	// eMenuAction_ContactAdd
-	"Add Contact to Group" _ "i=ContactAdd" _ "s=Add the selected contact to a group" _,	// eMenuAction_ContactAddToGroup
-	"Rename Contact..." _ "i=ContactEdit" _ "s=Change the display name of the selected contact" _,	// eMenuAction_ContactRename
-	"Remove Contact..." _ "i=ContactRemove" _ "s=Remove the selected contact from my list of approved contacts" _,	// eMenuAction_ContactRemove
-	"Send File to Contact..." _ "i=FileUpload" _ "s=Upload a file to the selected contact" _, // eMenuAction_ContactSendFile	("a=Ctrl+Shift+F" does not work because it is not connected to the main menu)
-	"Create Invitation..." _ "i=Forward" _ "s=Create a one-click invitation to send to my contact" _, // eMenuAction_ContactInvite
-	"Approve Contact" _ "i=Accept" _ "s=Add the unsolicited contact to my list of approved contacts" _, // eMenuAction_ContactApprove
+	"Peer" _ "i=Contact" _, //eMenuAction_Contact
+	"Add Peer..." _ /*"a=Ctrl+Shift+C" _*/ "i=ContactAdd" _ "s=Add a new peer for the selected account" _,	// eMenuAction_ContactAdd
+	"Add Peer to Group" _ "i=ContactAdd" _ "s=Add the selected peer to a group" _,	// eMenuAction_ContactAddToGroup
+	"Rename Peer..." _ "i=ContactEdit" _ "s=Change the display name of the selected peer" _,	// eMenuAction_ContactRename
+	"Remove Peer..." _ "i=ContactRemove" _ "s=Remove the selected peer from my list of approved peers" _,	// eMenuAction_ContactRemove
+	"Send File to Peer..." _ "i=FileUpload" _ "s=Upload a file to the selected peer" _, // eMenuAction_ContactSendFile	("a=Ctrl+Shift+F" does not work because it is not connected to the main menu)
+	"Create Invitation..." _ "i=Forward" _ "s=Create a one-click invitation to send to my peer" _, // eMenuAction_ContactInvite
+	"Approve Peer" _ "i=Accept" _ "s=Add the unsolicited peer to my list of approved peers" _, // eMenuAction_ContactApprove
 	"Subscribe" _ , // eMenuAction_ContactSubscribe
 	"Unsubscribe" _ , // eMenuAction_ContactUnsubscribe
-	"Contact Properties..." _ "i=Properties" _ "s=Display the properties of the selected contact" _, // eMenuAction_ContactProperties
-	"Ping Contact" _ "i=Ping" _ "s=Send a network packet to the contact and calculate how long it take to receive a response" _, // eMenuAction_ContactPing
+	"Peer Properties..." _ "i=Properties" _ "s=Display the properties of the selected peer" _, // eMenuAction_ContactProperties
+	"Ping Peer" _ "i=Ping" _ "s=Send a network packet to the peer and calculate how long it take to receive a response" _, // eMenuAction_ContactPing
 
-	"View" _ "s=Display extra information related to the contact" _ "i=Find" _, // eMenuAction_Contact_SubMenuView
-	"Recommendations" _ "s=View the recommendations made by the contact" _ "i=Reputation" _,	// eMenuAction_Contact_SubMenuView_Recommendations
-	"Bitcoin Transactions" _ "s=Display the Bitcoin transactions related to the contact" _ "i=Bitcoin" _, // eMenuAction_Contact_SubMenuView_Transactions
+	"View" _ "s=Display extra information related to the peer" _ "i=Find" _, // eMenuAction_Contact_SubMenuView
+	"Recommendations" _ "s=View the recommendations made by the peer" _ "i=Reputation" _,	// eMenuAction_Contact_SubMenuView_Recommendations
+	"Bitcoin Transactions" _ "s=Display the Bitcoin transactions related to the peer" _ "i=Bitcoin" _, // eMenuAction_Contact_SubMenuView_Transactions
 
-	"Synchronize with Contact" _ "i=OutOfSync" _ "s=Make sure me and my contact are up-to-date with the messages sent to each other" _, // eMenuAction_Synchronize
+	"Synchronize with Peer" _ "i=OutOfSync" _ "s=Make sure me and my peer are up-to-date with the messages sent to each other" _, // eMenuAction_Synchronize
 
 	"Group" _ "i=Group" _, // eMenuAction_Group
 	"<New Group...>" _ "i=GroupAdd" _, // eMenuAction_GroupNew
 	"Create Group..." _ "s=Create a new group" _ "i=GroupAdd" _, // eMenuAction_GroupCreate (this is essentially the same as new group, except the text is different)
 	"Delete Group" _ "i=GroupDelete" _, // eMenuAction_GroupDelete
 	"Rename Group" _ "i=GroupEdit" _, // eMenuAction_GroupRename
-	"Add Contacts to Group..." _ "i=ContactAdd" _ "s=Add people to the group" _, // eMenuAction_GroupAddContacts
-	"Remove Contact from Group" _ "i=ContactRemove" _, // eMenuAction_GroupRemoveContact
+	"Add Peers to Group..." _ "i=ContactAdd" _ "s=Add people to the group" _, // eMenuAction_GroupAddContacts
+	"Remove Peer from Group" _ "i=ContactRemove" _, // eMenuAction_GroupRemoveContact
 	"Group Properties..." _ "i=Properties" _, // eMenuAction_GroupProperties
 
-	"Recommend" _ "s=Recommend the selected item to my contacts" _ "i=Reputation" _,	// eMenuAction_TreeItemRecommended
+	"Recommend" _ "s=Recommend the selected item to my peers" _ "i=Reputation" _,	// eMenuAction_TreeItemRecommended
 	"Rename..." _, // eMenuAction_TreeItemRename
 	"Edit Message..." _ "i=Pencil" _, // eMenuAction_MessageEdit
 	"Copy" _ "i=Copy" _, // eMenuAction_Copy
@@ -98,7 +98,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"BallotMaster" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
 
     "Developer Apps"    _ "i=Browser" _, // eMenuAction_WikiSubMenu
-	"Navshell Contacts" _ "s=Apps/navshell-contacts/index.html"		_"i=Browser" _,
+	"Navshell Peers"	_ "s=Apps/navshell-contacts/index.html"		_"i=Browser" _,
 	"Navshell Sidebar"  _ "s=Apps/navshell-stack/index.html"		_"i=Browser" _,
 	"Navshell Header"   _ "s=Apps/navshell-header/index.html"		_"i=Browser" _,
 	"Office Kingpin"    _ "s=Apps/html5-office-kingpin/index.html"	_"i=Browser" _,

@@ -356,14 +356,14 @@ TGroup::TreeItem_IconUpdateOnMessagesRead()
 
 #define SL_INoticeUnsolicited(_pfmName)					SL_INotice(_pfmName, WNoticeContactUnsolicited)
 
-WNoticeContactUnsolicited::WNoticeContactUnsolicited(TContact * pContact) : INoticeWithIcon("Approve Contact?", eMenuIconQuestion)
+WNoticeContactUnsolicited::WNoticeContactUnsolicited(TContact * pContact) : INoticeWithIcon("Approve Peer?", eMenuIconQuestion)
 	{
 	Assert(pContact != NULL);
 //	NoticeListAuxiliary_AddNotice(this);
 	mu_sponsor.pContact = pContact;	// This line is necessary for the notice to delete itself if the contact is deleted
 
-	NoticeMessage_SetText_VE("You received an unsolicited message from <b>{C/}</b>:<br/>If <b>$s</b> is a contact you wish to keep, please approve him/her to your contact list.", &pContact->m_strJidBare, pContact->TreeItem_PszGetNameDisplay());
-	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Approve|Add the contact to your list of approved contacts", eMenuAction_ContactApprove), SL_INoticeUnsolicited(SL_ButtonContactApprove_clicked));
+	NoticeMessage_SetText_VE("You received an unsolicited message from <b>{C/}</b>:<br/>If <b>$s</b> is a peer you wish to keep, please approve him/her to your peers list.", &pContact->m_strJidBare, pContact->TreeItem_PszGetNameDisplay());
+	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Approve|Add the peer to your list of approved peers", eMenuAction_ContactApprove), SL_INoticeUnsolicited(SL_ButtonContactApprove_clicked));
 	}
 
 void
@@ -383,7 +383,7 @@ WNoticeContactUnsolicited::SL_ButtonContactReject_clicked()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define SL_WNoticeContactInvite(_pfmName)			SL_INotice(_pfmName, WNoticeContactInvite)
 
-WNoticeContactInvite::WNoticeContactInvite(TContact * pContact) : INoticeWithIcon("Invite Contact?", eMenuIconQuestion)
+WNoticeContactInvite::WNoticeContactInvite(TContact * pContact) : INoticeWithIcon("Invite Peer?", eMenuIconQuestion)
 	{
 	Assert(pContact != NULL);
 	mu_sponsor.pContact = pContact;	// This line is necessary for the notice to delete itself if the contact is deleted
@@ -413,7 +413,7 @@ WNoticeContactInvite::WNoticeContactInvite(TContact * pContact) : INoticeWithIco
 	m_poLayoutNotice->Layout_PoAddRowLabelsAndWidgets_VEZA(pszaLabelAndToolTip, m_pwEditInvitation, NULL);
 	/*
 	WEdit * pwEditEmail = new WEdit;
-	m_poLayoutBody->Layout_AddLabelAndWidgetH_PA("Email Address:|Enter the email address of the contact you wish to send the invitation.", pwEditEmail);
+	m_poLayoutBody->Layout_AddLabelAndWidgetH_PA("Email Address:|Enter the email address of the peer you wish to send the invitation.", pwEditEmail);
 	WButtonTextWithIcon * m_pButtonConnectNow = new WButtonTextWithIcon("Send Email", eMenuAction_ContactInvite);
 	m_poLayoutBody->Layout_PoAddLayoutVerticalWithWidgets_VEZA(m_pButtonConnectNow, NULL);
 	Notice_LayoutBodyMoveToBottom(); // Move the fields: Edit Email and the Send button at the bottom.  This is done by removing the layout, and adding it at the bottom
@@ -433,7 +433,7 @@ WNoticeContactInvite::SL_ButtonCopy_clicked()
 	CInvitation * paInvitation = Invitation_PazAllocateFromEdit(m_pwEditInvitation);
 	if (paInvitation == NULL)
 		{
-		EMessageBoxWarning("The invitation you are about to copy in the clipboard is not valid, and therefore the contact <b>^s</b> will not be able to use it.", mu_sponsor.pContact->ChatLog_PszGetNickname());
+		EMessageBoxWarning("The invitation you are about to copy in the clipboard is not valid, and therefore the peer <b>^s</b> will not be able to use it.", mu_sponsor.pContact->ChatLog_PszGetNickname());
 		m_pwEditInvitation->setFocus();
 		return;
 		}

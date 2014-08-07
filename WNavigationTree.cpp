@@ -116,8 +116,8 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 
 	pLayout->addWidget(g_pwButtonStatusOfNavigationTree);
 	pLayout->addStretch();
-	//WButtonTextWithIcon * pwButtonAddContact = new WButtonTextWithIcon("Add Contact |Add a new contact to your profile", eMenuAction_ContactAdd);
-	WButtonIconForToolbar * pwButtonAddContact = new WButtonIconForToolbar(eMenuAction_ContactAdd, "Add a new contact to your "d_sza_profile);
+	//WButtonTextWithIcon * pwButtonAddContact = new WButtonTextWithIcon("Add Peer |Add a new peer to your profile", eMenuAction_ContactAdd);
+	WButtonIconForToolbar * pwButtonAddContact = new WButtonIconForToolbar(eMenuAction_ContactAdd, "Add a new peer to your "d_sza_profile);
 	pLayout->addWidget(pwButtonAddContact, Qt::AlignBottom);
 	connect(pwButtonAddContact, SIGNAL(clicked()), this, SLOT(SL_ContactNew()));
 

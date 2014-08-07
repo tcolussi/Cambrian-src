@@ -26,7 +26,7 @@ WLayoutMyProfiles::WLayoutMyProfiles()
 		"To get started, you need to pick a name for your role:<br/><br/>"
 		" - A personal role contains information about your personal life.  With a personal role, you will likely share information with your friends and family, such as pictures and the things you like and/or personally recommend to them.<br/>"
 		" - A professional role contains information about the role you play within an organization.  "
-		"With a professional role, you will likely share information with your business contact to promote your organization.<br/><br/>"
+		"With a professional role, you will likely share information with your business peers to promote your organization.<br/><br/>"
 		"Creating a "d_sza_profile" is easy; you pick a name you wish other people will recognize you." :
 		"You already have a "d_sza_profile", however you are welcome to 'play' multiple "d_sza_profile"s.");
 	poLayoutVertical->addWidget(pwLabel);
@@ -335,9 +335,9 @@ WLayoutProfile::DisplayApplications()
 	connect(m_pwTreeViewApplications, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)), this, SLOT(SL_ActionDoubleClicked(QTreeWidgetItem*,int)));
 
 //	PAddOption(eMenuIconXmpp, "Create an XMPP account", "Associate an additional XMPP account with my profile");
-	QTreeWidgetItem * pContacts = PAddOption(eMenuIconXmpp, "Import Contacts", "");
-	PAddOption(eMenuIconFacebook, "Import Facebook contacts", "Communicate securely with my Facebook contacts using SocietyPro", pContacts);
-	PAddOption(eMenuIconGoogleHangout, "Import Google+ contacts", "Communicate securely with my Google contacts using SocietyPro", pContacts);
+	QTreeWidgetItem * pContacts = PAddOption(eMenuIconXmpp, "Import Peers", "");
+	PAddOption(eMenuIconFacebook, "Import Facebook peers", "Communicate securely with my Facebook peers using SocietyPro", pContacts);
+	PAddOption(eMenuIconGoogleHangout, "Import Google+ peers", "Communicate securely with my Google peers using SocietyPro", pContacts);
 	PAddOption(eMenuIconBitcoin, "Create a Bitcoin wallet", "Use SocietyPro to send and receive Bitcoin via Blockchain.info");
 //	PAddOption(eMenuIconCorporations, "Incorporate a Company", "Register a business. Use SocietyPro to issue dividends and communicate with directors and shareholders to vote");
 
