@@ -303,7 +303,7 @@ const EMenuActionByte c_rgzeActionsMenuNavigationTree[] =
 	eMenuAction_AccountRegister,
 	eMenuActionSeparator,
 	eMenuAction_DisplayWallet,
-	eMenuAction_DisplaySecureWebBrowsing,
+	//eMenuAction_DisplaySecureWebBrowsing,
 	ezMenuActionNone
 	};
 
