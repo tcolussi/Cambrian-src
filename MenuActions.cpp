@@ -98,14 +98,14 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"BallotMaster" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
 
     "Developer Apps"    _ "i=Browser" _, // eMenuAction_WikiSubMenu
-	"NavShell Contacts" _ "s=Apps/navshell-contacts/index.htm"		_"i=Browser" _,
-	"NavShell Sidebar"  _ "s=Apps/navshell-stack/index.htm"			_"i=Browser" _,
-	"NavShell Header"   _ "s=Apps/navshell-header/index.htm"		_"i=Browser" _,
-	"Office Kingpin"    _ "s=Apps/html5-office-kingpin/index.htm"	_"i=Browser" _,
-	"Pomodoro"          _ "s=Apps/html5-pomodoro/index.htm"			_"i=Browser" _,
-	"JAPI TESTS"        _ "s=Apps/html5-japi-tests/index.htm"		_"i=Browser" _,
-	"Scratch"           _ "s=Apps/html5-scratch/index.htm"			_"i=Browser" _,
-	"HTML5 xik"         _ "s=Apps/html5-xik/index.htm"				_"i=Browser" _,
+	"Navshell Contacts" _ "s=Apps/navshell-contacts/index.html"		_"i=Browser" _,
+	"Navshell Sidebar"  _ "s=Apps/navshell-stack/index.html"		_"i=Browser" _,
+	"Navshell Header"   _ "s=Apps/navshell-header/index.html"		_"i=Browser" _,
+	"Office Kingpin"    _ "s=Apps/html5-office-kingpin/index.html"	_"i=Browser" _,
+	"Pomodoro"          _ "s=Apps/html5-pomodoro/index.html"		_"i=Browser" _,
+	"JAPI Tests"        _ "s=Apps/html5-japi-tests/index.html"		_"i=Browser" _,
+	"Scratch"           _ "s=Apps/html5-scratch/index.html"			_"i=Browser" _,
+	"HTML5 xik"         _ "s=Apps/html5-xik/index.html"				_"i=Browser" _,
 
 	"New Wallet" _ "i=Bitcoin" _, // eMenuAction_DisplayWallet
 	"New Web Browser" _ "i=Browser" _, // eMenuAction_DisplaySecureWebBrowsing
@@ -663,7 +663,7 @@ const EMenuActionByte c_rgzeActionsMenuCambrian[] =
 	eMenuActionSeparator,
 	eMenuAction_DisplayWallet,
 	*/
-	eMenuAction_DisplaySecureWebBrowsing,
+	//eMenuAction_DisplaySecureWebBrowsing,
 	//eMenuIconMarketplace,
 	eMenuActionSeparator,
 	eMenuAction_Quit,

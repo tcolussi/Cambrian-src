@@ -366,6 +366,7 @@ TBrowser::~TBrowser()
 	delete m_pawLayoutBrowser;
 	}
 
+
 void LaunchBrowser(const QString & sName, const QString & sUrl)
     {
     //EMessageBoxInformation("opening page $Q", &sUrl);
@@ -382,9 +383,23 @@ void LaunchBrowser(const QString & sName, const QString & sUrl)
 	CStr strUrl(sUrl);
 	CStr strUrlAddress = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrl);//"Apps/Test/index.htm");
 
-    TBrowser * pBrowser = new TBrowser(pProfile);
-    pProfile->m_arraypaBrowsers.Add(PA_CHILD pBrowser);
-	pBrowser->SetNameAndUrl(sName, strUrlAddress);
-    pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
+	// find an open web browser
+	TBrowser *pBrowser = NULL;
+	if ( pProfile->m_arraypaBrowsers.GetSize())
+		pBrowser = (TBrowser *) pProfile->m_arraypaBrowsers.PvGetElementAt(0);
+
+	if ( !pBrowser )
+		{
+		pBrowser = new TBrowser(pProfile);
+		pProfile->m_arraypaBrowsers.Add(PA_CHILD pBrowser);
+		pBrowser->SetNameAndUrl(sName, strUrlAddress);
+		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
+		}
+	else
+		{
+		pBrowser->SetNameAndUrl(sName, strUrlAddress);
+
+		}
+
     pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}

@@ -2,6 +2,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include "WLayoutBrowser.h"
 
 IXmlExchange *
 TBrowser::S_PaAllocateBrowser(POBJECT pProfileParent)
@@ -32,6 +33,10 @@ TBrowser::SetNameAndUrl(const QString &sName, const QString &sUrl)
     {
     m_strNameDisplayTyped = sName;
     m_strUrl = sUrl;
+	if ( m_pawLayoutBrowser )
+		{
+		m_pawLayoutBrowser->NavigateToAddress(sUrl);
+		}
     }
 
 //	TBrowser::IRuntimeObject::PGetRuntimeInterface()
