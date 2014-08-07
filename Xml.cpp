@@ -3712,14 +3712,27 @@ CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CAr
 	} // XmlExchangePointers()
 
 void
-CXmlExchanger::XmlExchangeWriteAttribute(PSZAC pszNameAttribute, PSZAC pszAttributeValue)
+CXmlExchanger::XmlExchangeWriteAttribute(PSZAC pszNameAttribute, PSZUC pszAttributeValue)
 	{
 	if (m_fSerializing)
-		AllocateAttributeValuePsz(pszNameAttribute, (PSZUC)pszAttributeValue);
+		AllocateAttributeValueCopyPsz(pszNameAttribute, pszAttributeValue);
 	}
 
 void
-CXmlExchanger::AllocateAttributeValuePsz(PSZAC pszaAttributeName, PSZUC pszValue)
+CXmlExchanger::XmlExchangeWriteAttributeUSZU(PSZAC pszNameAttribute, USZU uszuAttributeValue)
+	{
+	XmlExchangeWriteAttribute(pszNameAttribute, PszFromUSZU(uszuAttributeValue));
+	}
+
+void
+CXmlExchanger::XmlExchangeWriteAttributeRtiSz(PSZAC pszNameAttribute, RTI_ENUM rtiAttributeValue)
+	{
+	XmlExchangeWriteAttribute(pszNameAttribute, PszFromUSZU(rtiAttributeValue));
+	}
+
+//	This method does NOT make a copy of pszValue
+void
+CXmlExchanger::AllocateAttributePsz(PSZAC pszaAttributeName, PSZUC pszValue)
 	{
 	(void)_PAllocateAttribute(INOUT m_pXmlNodeSerialize, IN pszaAttributeName, IN pszValue);
 	}
@@ -3727,7 +3740,7 @@ CXmlExchanger::AllocateAttributeValuePsz(PSZAC pszaAttributeName, PSZUC pszValue
 void
 CXmlExchanger::AllocateAttributeValueCopyPsz(PSZAC pszaAttributeName, PSZUC pszValue)
 	{
-	AllocateAttributeValuePsz(pszaAttributeName, IN m_accumulatorText.PszuAllocateCopyStringU(IN pszValue));
+	AllocateAttributePsz(pszaAttributeName, IN m_accumulatorText.PszuAllocateCopyStringU(IN pszValue));
 	}
 
 //	Allocate the attribute only if the integer is non-zero
@@ -3751,7 +3764,7 @@ CXmlExchanger::AllocateAttributeValueGuid(PSZAC pszaAttributeName, const GUID * 
 		{
 		PSZU pszGuid = (PSZU)m_accumulatorText.PvAllocateData(32 + 1);
 		Guid_ToStringHex(OUT pszGuid,  IN pGuid);
-		AllocateAttributeValuePsz(pszaAttributeName, IN pszGuid);
+		AllocateAttributePsz(pszaAttributeName, IN pszGuid);
 		}
 	}
 
@@ -3759,7 +3772,7 @@ void
 CXmlExchanger::AllocateAttributeValueStringQ(PSZAC pszaAttributeName, const QString & sString)
 	{
 	if (!sString.isEmpty())
-		AllocateAttributeValuePsz(pszaAttributeName, IN m_accumulatorText.PszuAllocateEncodeStringQ(sString));
+		AllocateAttributePsz(pszaAttributeName, IN m_accumulatorText.PszuAllocateEncodeStringQ(sString));
 	}
 
 //	Allocate the content of binary data (CBin) with the assumption it contains a string.
@@ -3767,5 +3780,5 @@ void
 CXmlExchanger::AllocateAttributeValueCBinString(PSZAC pszaAttributeName, IN_MOD_TMP CBin & binString)
 	{
 	if (!binString.FIsEmptyBinary())
-		AllocateAttributeValuePsz(pszaAttributeName, IN m_accumulatorText.PszuAllocateCopyCBinString(IN_MOD_TMP binString));
+		AllocateAttributePsz(pszaAttributeName, IN m_accumulatorText.PszuAllocateCopyCBinString(IN_MOD_TMP binString));
 	}

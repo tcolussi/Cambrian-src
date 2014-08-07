@@ -19,9 +19,13 @@ public:
 	CBin m_binKeyPublic;
 	CStr m_strComment;			// Description of the profile (this is useful for a user having multiple profiles)
 	CArrayPtrAccountsXmpp m_arraypaAccountsXmpp;	// Accounts using the profile
-	CArrayPtrApplications m_arraypaApplications;	// Applications uding the profile
+	CArrayPtrApplications m_arraypaApplications;	// Applications using the profile
+	CArrayPtrServices m_arraypaServices;			// Running services for the profile
 	CArrayPtrBrowsers m_arraypaBrowsers;			// This is a bit of a hack, however at the moment, it will work
 	CStr m_strData;									// Data of the profile (this variable is used for the JAPI)
+
+private:
+	TContact * m_paContactDummy;		// Temporary contact necessary to implement JavaScript security and perform other tasks, such as having in-memory event vaults (the vault was designed to have a contact as its parent).
 
 public:
 	TProfile(CChatConfiguration * pConfigurationParent);
@@ -52,8 +56,14 @@ public:
 	void GetRecommendations_Links() const;	// NYI
 	void InitHashTablesOfIdentifiers(IOUT CHashTableIdentifiersOfContacts * pHashTableContacts, IOUT CHashTableIdentifiersOfGroups * pHashTableGroups) const;
 
+	IService * PAllocateService_YZ(RTI_ENUM rtiService);
+	IService * PGetService_NZ(RTI_ENUM rtiService) CONST_MCC;
+	inline CServiceBallotmaster * PGetServiceBallotmaster_NZ() { return (CServiceBallotmaster *)PGetService_NZ(RTI_SZ(CServiceBallotmaster)); }
+
 	TApplicationMayanX * PAllocateApplicationMayanX();
-	TApplicationBallotmaster * PGetApplicationBallotmaster_NZ();
+	//TApplicationBallotmaster * PGetApplicationBallotmaster_NZ();
+
+	TContact * PGetContactDummy_NZ() CONST_MCC;
 
 	void BallotMaster_EventBallotAddAsTemplate(IEventBallot * pEventBallot);
 public:

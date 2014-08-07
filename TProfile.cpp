@@ -68,13 +68,16 @@ TProfile::TProfile(CChatConfiguration * pConfigurationParent)
 	{
 	Assert(pConfigurationParent != NULL);
 	m_pConfigurationParent = pConfigurationParent;
+	m_paContactDummy = NULL;
 	}
 
 TProfile::~TProfile()
 	{
+	//delete m_paContactDummy; // This is a memory leak, however this line of code crashes.  Need to investigate
 	m_arraypaAccountsXmpp.DeleteAllTreeItems();
 	m_arraypaApplications.DeleteAllTreeItems();
 	m_arraypaBrowsers.DeleteAllTreeItems();
+	m_arraypaServices.DeleteAllRuntimeObjects();
 	}
 
 //	Generate a pair of keys for the profile.
@@ -118,6 +121,8 @@ TProfile::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) co
 
 #define d_chElementName_Accounts			'A'
 #define d_chElementName_Applications		'X'	// User-defined applications
+#define d_chElementName_Services			'S'
+
 void
 TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
@@ -128,6 +133,7 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeBin("KeyPublic", INOUT_F_UNCH_S &m_binKeyPublic);
 	pXmlExchanger->XmlExchangeObjects(d_chElementName_Accounts, INOUT &m_arraypaAccountsXmpp, TAccountXmpp::S_PaAllocateAccount, this);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Applications, INOUT_F_UNCH_S &m_arraypaApplications, IApplication::S_PaAllocateApplication_YZ, this);
+	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Services, INOUT &m_arraypaServices, IService::S_PaAllocateService_YZ, this);
 	pXmlExchanger->XmlExchangeObjects('B', INOUT &m_arraypaBrowsers, TBrowser::S_PaAllocateBrowser, this);
 
 	pXmlExchanger->XmlExchangeStr("Data", INOUT_F_UNCH_S &m_strData);
@@ -222,4 +228,18 @@ TProfile::GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecomme
 				parraypaGroupsRecommended->Add(pGroup);
 			} // while
 		} // while
+	}
+
+TContact *
+TProfile::PGetContactDummy_NZ() CONST_MCC
+	{
+	if (m_paContactDummy == NULL)
+		{
+		TAccountXmpp * pAccount = (TAccountXmpp *)m_arraypaAccountsXmpp.PvGetElementFirst_YZ();
+		Assert(pAccount != NULL);	// The code should not call PGetContactDummy_NZ() without having an account.
+		if (pAccount == NULL)
+			pAccount = new TAccountXmpp(this);	// This will cause a memory leak.  At the moment, I just want the code to work as a proof of concept
+		m_paContactDummy = new TContact(pAccount);
+		}
+	return m_paContactDummy;
 	}

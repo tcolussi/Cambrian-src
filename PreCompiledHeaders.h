@@ -36,6 +36,8 @@
 	#define d_szOS		"Other"
 #endif
 
+#include "DataTypesAndMacros.h"
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Runtime Information
 //
@@ -93,14 +95,20 @@ enum RTI_ENUM	// rti
 	eRTI_WNoticeWarning,
 	eRTI_WNoticeWarningCertificateNotAuthenticated,
 
-	eRTI_Max	// Must be last
+	// Special enums which are serialized to disk.  The values should have at least 2 letters so they do not collide with the previous enum values.
+	eRTI_szCServiceBallotmaster = _USZU3('B', 'A', 'L')
+
 	}; // RTI_ENUM
 
-#define RTI(class_name)		(eRTI_##class_name)
+#define RTI(class_name)				(eRTI_##class_name)
+#define RTI_SZ(class_name)			(eRTI_sz##class_name)
 
 #define RTI_IMPLEMENTATION(class_name)	\
 		public:	\
 		virtual RTI_ENUM EGetRuntimeClass() const { return eRTI_##class_name; }
+#define RTI_IMPLEMENTATION_SZ(class_name)	\
+		public:	\
+		virtual RTI_ENUM EGetRuntimeClass() const { return eRTI_sz##class_name; }
 
 
 // Forward Declarations
@@ -175,6 +183,8 @@ class IRuntimeObject;
 				class TMyRecommendations;
 				class TTreeItemInbox;
 				class TContactNew;
+			class IService;
+				class CServiceBallotmaster;
 
 class CArrayPtrTreeItems;
 	class CArrayPtrContacts;
@@ -238,7 +248,6 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #endif
 #define DEBUG_WANT_ASSERT	// We want Assert() in the release build
 
-#include "DataTypesAndMacros.h"
 #include "ErrorCodes.h"
 #include "StringsShared.h"
 #include "StringUtilities.h"

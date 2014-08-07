@@ -7,15 +7,16 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-class OJapi;
-	class OJapiApps;
-	class OJapiPollResultsStats;
-	class OJapiPollResultsComment;
+class OJapi;	
 	class OJapiCambrian;
-	class OJapiPolls;
+	class OJapiApps;
+	class OJapiAppBallotmaster;
+
 	class OJapiPollCore;
 		class OJapiPoll;
 		class OJapiPollResults;
+	class OJapiPollResultsStats;
+	class OJapiPollResultsComment;
 
 //	Every object offering a JavaScript API must inherit from OJapi
 //
@@ -90,7 +91,7 @@ public:
     Q_PROPERTY(int responded READ responded)
     Q_PROPERTY(int sent READ sent)
 };
-#define POJapiPollResultsStats  POJapi
+#define POJapiPollResultsStats		POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class _CEventBallotVote;
@@ -109,7 +110,6 @@ public:
     Q_PROPERTY(QDateTime date READ date)
     Q_PROPERTY(QString comment READ comment)
     Q_PROPERTY(QString name READ name)
-
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,8 +131,7 @@ public:
 
 public slots:
 }; // OJapiPollResults
-//typedef QObject * POJapiPollResults;	// Does not work
-#define POJapiPollResults POJapi
+#define POJapiPollResults	POJapi
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -160,23 +159,22 @@ public slots:
 	void stop();
 	POJapiPollResults getResults() CONST_MCC;
 };
-//typedef QObject * POJapiPoll;
-#define POJapiPoll	POJapi
+#define POJapiPoll		POJapi
 
-//	Helper for the Ballotmaster
-class OJapiPolls : public OJapi
+class OJapiAppBallotmaster : public OJapi
 {
 	Q_OBJECT
 protected:
-	TApplicationBallotmaster * m_pBallotmaster;
+	CServiceBallotmaster * m_pServiceBallotmaster;
+//	TApplicationBallotmaster * m_pBallotmaster;
 
 public:
-	OJapiPolls(OJapiCambrian * poCambrian);
-	~OJapiPolls();
+	OJapiAppBallotmaster(OJapiCambrian * poCambrian);
+	~OJapiAppBallotmaster();
     POJapiPoll PGetOJapiPoll(CEventBallotPoll * pBallot);
     POJapiPoll PCreateNewPollFromTemplate(CEventBallotPoll * pPollTemplate);
-    CEventBallotPoll* PFindPollByID(TIMESTAMP tsIdPoll) const;
-    CEventBallotPoll* PFindPollByID(const QString & sIdPoll) const;
+	CEventBallotPoll * PFindPollByID(TIMESTAMP tsIdPoll) const;
+	CEventBallotPoll * PFindPollByID(const QString & sIdPoll) const;
 
 public slots:
 	POJapiPoll build();
@@ -186,7 +184,7 @@ public slots:
 	QVariant getList();
     void go();
 };
-#define POJapiPolls		POJapi
+#define POJapiAppBallotmaster		POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class OSettings : public QObject
@@ -230,11 +228,11 @@ class OJapiApps : public OJapi
 
 public:
     OJapiApps(OJapiCambrian * poCambrian);
-    QObject * ballotmaster();
+	POJapiAppBallotmaster ballotmaster();
 
-    Q_PROPERTY(QObject * ballotmaster READ ballotmaster)
-
+	Q_PROPERTY(POJapiAppBallotmaster ballotmaster READ ballotmaster)
 };
+#define POJapiApps		POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiCambrian : public OJapi
@@ -244,23 +242,24 @@ public:
 protected:
 	OSettings m_oSettings;
 	OJapiProfile m_oProfile;
-	OJapiPolls * m_paPolls;
     OJapiApps m_oApps;
-
-public:
-	Q_OBJECT
-	Q_PROPERTY(QVariant Settings READ Settings)
-	Q_PROPERTY(QVariant Profile READ Profile)
-	Q_PROPERTY(POJapiPolls polls READ polls)
-    Q_PROPERTY(QObject* apps READ apps)
+	OJapiAppBallotmaster * m_paAppBallotmaster;
 
 public:
 	OJapiCambrian(TProfile * pProfile, QObject * pParent);
 	virtual ~OJapiCambrian();
 	QVariant Settings();
 	QVariant Profile();
-	POJapiPolls polls();
-    QObject * apps();
+
+	POJapiApps apps();
+	POJapiAppBallotmaster polls();
+
+public:
+	Q_OBJECT
+	Q_PROPERTY(QVariant Settings READ Settings)
+	Q_PROPERTY(QVariant Profile READ Profile)
+	Q_PROPERTY(POJapiAppBallotmaster polls READ polls)
+	Q_PROPERTY(POJapiApps apps READ apps)
 
 public slots:
 	void SendBitcoin(int n);

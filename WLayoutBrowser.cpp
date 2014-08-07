@@ -127,13 +127,13 @@ OJapiProfile::PFindProfileByID(const QString & sIdProfile) const
 OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oProfile(this), m_oApps(this)
 	{
 	m_pProfile = pProfile;
-	m_paPolls = NULL;
+	m_paAppBallotmaster = NULL;
 	}
 
 OJapiCambrian::~OJapiCambrian()
 	{
 	//MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OJapiCambrian::~OJapiCambrian()\n");
-	delete m_paPolls;
+	delete m_paAppBallotmaster;
 	}
 
 QVariant
@@ -162,9 +162,16 @@ OJapiCambrian::Profile()
 	return v;
 	}
 
-POJapiPolls
+POJapiAppBallotmaster
 OJapiCambrian::polls()
 	{
+	if (m_paAppBallotmaster == NULL)
+		m_paAppBallotmaster = new OJapiAppBallotmaster(this);
+	return m_paAppBallotmaster;
+	/*
+	if (FDeniedBySecurityPolicy())
+		return NULL;
+	*/
 	/*
 	OPolls * p = new OPolls(this);
 	p->dumpObjectTree();
@@ -177,9 +184,6 @@ OJapiCambrian::polls()
 	return QVariant::fromValue(oPolls.data());
 	*/
 	//return QVariant::fromValue(new OPolls(this));
-	if (m_paPolls == NULL)
-		m_paPolls = new OJapiPolls(this);
-	return m_paPolls;
 	//return QVariant::fromValue(m_paPolls);
 
 	/*

@@ -149,6 +149,7 @@ WNavigationTree::NavigationTree_SelectTreeItemWidget(CTreeItemW * poTreeItem)
 		{
 		Assert(poTreeItem->m_piTreeItem != NULL);
 		Assert(PGetRuntimeInterfaceOf_ITreeItem(poTreeItem->m_piTreeItem) != NULL);
+		poTreeItem->setVisible(true);			// Any selected Tree Item should be visible within the Navigation Tree
 		m_pwTreeView->setCurrentItem(poTreeItem);
 		}
 	}
