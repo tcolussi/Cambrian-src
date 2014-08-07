@@ -115,7 +115,7 @@ typedef USZU USZUF;			// An USZU with flags.  To convert from USZUF to USZU, use
 	#define USZU_from_USZUF(uszu)		((uszu) & 0x00FFFFFF)	// Strip the flags
 	#define USZU1_from_USZUX(uszu)		((BYTE)(uszu))			// Strip everything and keep only the first byte
 
-	#define PszFromUSZU(uszu)			((PSZU)&(uszu))		// Cast the 32-bit integer to a null-terminated string.
+	#define PszFromUSZU(uszu)			((PSZUC)&(uszu))		// Cast the 32-bit integer to a null-terminated string.
 	USZU UszuFromPsz(PSZUC pszUszu);
 
 
@@ -136,6 +136,7 @@ typedef LU64 TIMESTAMP;		// ts	- Unique value to identify  events in a chronolog
 	#define d_ts_cMinutes		60000		// Number of minutes in a timestamp
 	#define d_ts_cHours			3600000		// Number of hours in a timestamp
 	#define d_ts_cDays			86400000LL	// Number of days in a timestamp
+
 	#define d_cSecondsPerHour	3600
 	#define d_cSecondsPerDay	86400
 	#define d_cSecondsPerWeek	604800

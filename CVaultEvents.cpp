@@ -64,14 +64,14 @@ CVaultEvents::XmlExchange(PSZAC pszTagNameVault, INOUT CXmlExchanger * pXmlExcha
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CVaultEvents::CVaultEvents(PA_PARENT ITreeItemChatLogEvents * pTreeItemParent, const SHashSha1 * pHashFileName)
 	{
-	Assert(pHashFileName != NULL);
 	Assert(pTreeItemParent != NULL);
 	Assert(pTreeItemParent->m_paVaultEvents == NULL && "Memory leak!");
 	pTreeItemParent->m_paVaultEvents = this;
 	m_pParent = pTreeItemParent;
 	m_pEventLastSaved = NULL;
 	InitToZeroes(OUT &m_history, sizeof(m_history));
-	ReadEventsFromDisk(pHashFileName);
+	if (pHashFileName != d_zNA)
+		ReadEventsFromDisk(pHashFileName);
 	}
 
 CVaultEvents::~CVaultEvents()
@@ -99,6 +99,7 @@ CVaultEvents::EventsUnserialize(PSZUC pszXmlNodeEvents)
 void
 CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 	{
+	Assert(pHashFileName != NULL);
 	CWaitCursor wait;
 	CXmlTree oXmlTreeEvents;
 	m_sPathFileName = m_pParent->PGetConfiguration()->SGetPathOfFileName(IN pHashFileName);

@@ -328,10 +328,12 @@ public:
 	void XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject2_YZ pfnPaAllocatorObject2_YZ, PVOID pvContextAllocate = d_zNA);
 	void XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S IXmlExchangeObjectID ** ppObject, const CArrayPtrXmlSerializableObjects * parraypObjectsLookup);
 	void XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CArrayPtrXmlSerializableObjects * parraypObjects, const CArrayPtrXmlSerializableObjects & arraypObjectsLookup);
-	void XmlExchangeWriteAttribute(PSZAC pszNameAttribute, PSZAC pszAttributeValue);
+	void XmlExchangeWriteAttribute(PSZAC pszNameAttribute, PSZUC pszAttributeValue);
+	void XmlExchangeWriteAttributeUSZU(PSZAC pszNameAttribute, USZU uszuAttributeValue);
+	void XmlExchangeWriteAttributeRtiSz(PSZAC pszNameAttribute, RTI_ENUM rtiAttributeValue);
 
 protected:
-	void AllocateAttributeValuePsz(PSZAC pszaAttributeName, PSZUC pszValue);
+	void AllocateAttributePsz(PSZAC pszaAttributeName, PSZUC pszValue);
 	void AllocateAttributeValueCopyPsz(PSZAC pszaAttributeName, PSZUC pszValue);
 	void AllocateAttributeValueInteger(PSZAC pszaAttributeName, int nValue);
 	void AllocateAttributeValueGuid(PSZAC pszaAttributeName, const GUID * pGuid);

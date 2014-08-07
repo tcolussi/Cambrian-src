@@ -13,9 +13,10 @@ class TBrowser : public ITreeItem
 	RTI_IMPLEMENTATION(TBrowser)
 protected:
 	TProfile * m_pProfile;
-	CStr m_strUrl;
 	UINT m_uFlags;	// Flags to remember which icon to display
+	CStr m_strUrl;
 	WLayoutBrowser * m_pawLayoutBrowser;
+//	SApplicationHtmlInfo * m_pApplicationHtmlInfo;
 public:
 	TBrowser(TProfile * pProfile);
 	~TBrowser();

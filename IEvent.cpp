@@ -1122,7 +1122,7 @@ CEventFileReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CO
 		}
 	else
 		{
-		Assert(m_cblDataTransferred <= m_cblFileSize);
+		Report(m_cblDataTransferred <= m_cblFileSize && "You have received more data than the original file size!");
 		pszTextHtmlTemplate = (m_cblDataTransferred < m_cblFileSize) ? "Downloading file @L: @% received... @c" : "Download complete! @L @Z @o";
 		}
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);

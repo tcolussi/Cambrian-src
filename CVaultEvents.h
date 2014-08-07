@@ -50,7 +50,7 @@ private:
 		CVaultEvents * m_paVault;					// Pointer to the vault of the rest of the history.  This is useful to chain a long history of events into multiple files (vaults).
 		} m_history;	// Data necessary to load the vault history
 public:
-	CVaultEvents(PA_PARENT ITreeItemChatLogEvents * pTreeItemParent, const SHashSha1 * pHashFileName);
+	CVaultEvents(PA_PARENT ITreeItemChatLogEvents * pTreeItemParent, const SHashSha1 * pHashFileName = d_zNA);
 	~CVaultEvents();
 	inline void SetNotModified() { m_pEventLastSaved = m_arraypaEvents.PGetEventLast_YZ(); }
 	inline void SetModified() { m_pEventLastSaved = NULL; }

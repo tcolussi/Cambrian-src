@@ -6,22 +6,20 @@
 #include "ApiJavaScript.h"
 
 
-
-
-OJapiApps::OJapiApps(OJapiCambrian *poCambrian)
-{
+OJapiApps::OJapiApps(OJapiCambrian * poCambrian)
+	{
     m_poCambrian = poCambrian;
-}
+	}
 
-QObject *OJapiApps::ballotmaster()
-{
-     //MessageLog_AppendTextFormatCo(d_coGreen, "apps()");
-     return m_poCambrian->polls();
-}
+POJapiAppBallotmaster
+OJapiApps::ballotmaster()
+	{
+	//MessageLog_AppendTextFormatCo(d_coGreen, "apps()");
+	return m_poCambrian->polls();
+	}
 
-
-QObject * OJapiCambrian::apps()
-{
-
-    return &m_oApps;
-}
+POJapiApps
+OJapiCambrian::apps()
+	{
+	return &m_oApps;
+	}

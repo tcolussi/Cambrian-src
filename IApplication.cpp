@@ -1,6 +1,60 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	IApplication.cpp
+
 #ifndef PRECOMPILEDHEADERS_H
     #include "PreCompiledHeaders.h"
 #endif
+
+IService::IService(TProfile * pProfileParent)
+	{
+	Assert(pProfileParent->EGetRuntimeClass() == RTI(TProfile));
+	m_pProfileParent = pProfileParent;
+	}
+
+//	IService::IXmlExchange::XmlExchange()
+void
+IService::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
+	{
+	pXmlExchanger->XmlExchangeWriteAttributeRtiSz(c_szaApplicationClass_, EGetRuntimeClass());
+	}
+
+
+IXmlExchange *
+IService::S_PaAllocateService_YZ(POBJECT poProfileParent, const CXmlNode * pXmlNodeElement)
+	{
+	Assert(pXmlNodeElement != NULL);
+	return S_PaAllocateService_YZ((TProfile *)poProfileParent, ERuntimeClassFromPsz(pXmlNodeElement->PszuFindAttributeValue_NZ(c_szaApplicationClass_)));
+	}
+
+IService *
+IService::S_PaAllocateService_YZ(TProfile * pProfileParent, RTI_ENUM rtiService)
+	{
+	Assert(pProfileParent != NULL);
+	Assert(pProfileParent->EGetRuntimeClass() == RTI(TProfile));
+	switch (rtiService)
+		{
+	case RTI_SZ(CServiceBallotmaster):
+		return new CServiceBallotmaster(pProfileParent);
+	#ifdef DEBUG
+	default:
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unknown service '$U'\n", rtiService);
+	#endif
+		}
+	return NULL;
+	}
+
+IService *
+TProfile::PGetService_NZ(RTI_ENUM rtiService) CONST_MCC
+	{
+	IService * pService = (IService *)m_arraypaServices.PFindRuntimeObject(rtiService);
+	if (pService == NULL)
+		{
+		pService = IService::S_PaAllocateService_YZ(this, rtiService);	// Although this method may return NULL, it should 'never' be the case because the rtiService should be valid
+		m_arraypaServices.Add(PA_CHILD pService);
+		}
+	return pService;
+	} // PGetService_NZ()
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 IApplication::IApplication(TProfile * pProfileParent, EMenuAction eMenuIcon)
@@ -15,15 +69,6 @@ POBJECT
 IApplication::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
     {
     Report(piParent == NULL);
-    /*
-    switch (rti)
-        {
-    case RTI(TProfile):
-        return m_pProfileParent;
-    default:
-        return ITreeItem::PGetRuntimeInterface(rti);
-        }
-    */
     return ITreeItem::PGetRuntimeInterface(rti, m_pProfileParent);
     }
 
@@ -31,7 +76,7 @@ IApplication::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent
 void
 IApplication::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
     {
-    pXmlExchanger->XmlExchangeWriteAttribute(c_szaApplicationClass_, PszGetClassNameApplication());	// We need to serialize the class name because the unserialize need to know what object to allocate
+	pXmlExchanger->XmlExchangeWriteAttribute(c_szaApplicationClass_, (PSZUC)PszGetClassNameApplication());	// We need to serialize the class name because the unserialize need to know what object to allocate
     }
 
 
@@ -49,7 +94,7 @@ struct SApplicationAllocator
 const SApplicationAllocator c_rgzApplicationAllocators[] =
     {
     { c_szaApplicationClass_MayanX, PaAllocateApplicationMayanX },
-    { c_szaApplicationClass_Ballotmaster, PaAllocateApplicationBallotmaster },
+//    { c_szaApplicationClass_Ballotmaster, PaAllocateApplicationBallotmaster },
     { NULL, NULL }	// Must be last
     };
 
