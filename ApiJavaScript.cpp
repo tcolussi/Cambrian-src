@@ -56,7 +56,24 @@ OJapiMe::groups()
 OJapiList
 OJapiMe::peers()
 	{
-	return c_vEmpty;
+	QVariantList oList;
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		TContact ** ppContactStop;
+		TContact ** ppContact = pAccount->m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
+
+		while (ppContact != ppContactStop)
+			{
+			TContact * pContact = *ppContact++;
+			Assert(pContact != NULL);
+			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+			oList.append(QVariant::fromValue(new OJapiContact(pContact)));
+			} // while
+		} // while
+	return oList;
 	}
 
 
@@ -86,4 +103,26 @@ int
 OJapiGroup::count()
 	{
 	return m_pGroup->m_arraypaMembers.GetSize();
+}
+
+
+////////////////////////////////////////////////////////////////
+
+
+OJapiContact::OJapiContact(TContact *pContact)
+	{
+	m_pContact = pContact;
 	}
+
+QString OJapiContact::id()
+	{
+	return m_pContact->m_strJidBare;
+	}
+
+QString OJapiContact::name()
+	{
+	return m_pContact->m_strNameDisplayTyped;
+	}
+
+
+

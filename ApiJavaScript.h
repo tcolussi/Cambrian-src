@@ -273,6 +273,16 @@ public:
 class OJapiContact : public OJapi
 {
 	TContact * m_pContact;
+
+public:
+	OJapiContact(TContact *pContact);
+
+	QString id();
+	QString name();
+
+	Q_OBJECT
+	Q_PROPERTY(QString id READ id)
+	Q_PROPERTY(QString name READ name)
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
