@@ -30,8 +30,7 @@ public:
 };
 
 #define POJapi		QObject *	// Every object returned to the JavaScript engine must be either a QVariant or a QObject *.  Since a QObject * is too generic, we #define a new type of object to distinguish their types. It makes the code easier to read.  BTW: Using a typedef does not work, as the compiler no longer recognizes the QObject *.
-
-
+#define OJapiList	QVariant	// Every list is stored as a QVariant, however it makes more sense to specify OJapiList than QVariant because QVariant may be used for other purposes
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core object shared with OPoll and OPollResults
@@ -223,16 +222,48 @@ protected:
 
 class OJapiApps : public OJapi
 {
-    Q_OBJECT
     OJapiCambrian * m_poCambrian;
-
 public:
     OJapiApps(OJapiCambrian * poCambrian);
 	POJapiAppBallotmaster ballotmaster();
 
+	Q_OBJECT
 	Q_PROPERTY(POJapiAppBallotmaster ballotmaster READ ballotmaster)
 };
 #define POJapiApps		POJapi
+
+
+class OJapiMe : public OJapi
+{
+	OJapiCambrian * m_poCambrian;
+public:
+	OJapiMe(OJapiCambrian * poCambrian);
+	OJapiList groups();
+	OJapiList peers();
+
+	Q_OBJECT
+	Q_PROPERTY(OJapiList groups READ groups)
+	Q_PROPERTY(OJapiList peers READ peers)
+};
+
+//	JavaScript wrapper for TGroup
+class OJapiGroup : public OJapi
+{
+	TGroup * m_pGroup;
+
+public:
+	QString id();
+	QString name();
+
+	Q_OBJECT
+	Q_PROPERTY(QString id READ id)
+	Q_PROPERTY(QString name READ name)
+};
+
+class OJapiContact : public OJapi
+{
+	TContact * m_pContact;
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiCambrian : public OJapi

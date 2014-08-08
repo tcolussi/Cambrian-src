@@ -170,6 +170,7 @@ void HashSha1_CalculateFromStringU(OUT SHashSha1 * pHashSha1, IN PSZUC pszuStrin
 void HashSha1_CalculateFromSaltedPassword(OUT SHashSha1 * pHashSha1, ESaltPrefix eSaltPrefix, IN PSZUC pszuPassword);
 inline void HashSha1_ToStringHex(OUT CHU pszStringHex[20*2 + 1], IN const SHashSha1 * pHashSha1)			{ Base16_StringFromBinary(OUT pszStringHex, (const BYTE *)pHashSha1, sizeof(SHashSha1)); }
 inline void HashSha1_ToStringBase85(OUT CHU pszStringBase85[25 + 1], IN const SHashSha1 * pHashSha1)		{ Base85_CchEncodeToText(OUT pszStringBase85, (const BYTE *)pHashSha1, sizeof(SHashSha1)); }
+QString HashSha1_ToQStringBase85(IN const SHashSha1 * pHashSha1);
 inline BOOL HashSha1_FCompareEqual(const SHashSha1 * pHashSha1A, const SHashSha1 * pHashSha1B)				{ return (0 == memcmp(pHashSha1A, pHashSha1B, sizeof(SHashSha1))); }
 //inline void HashSha1_ToStringBase64(OUT CHU pszStringHex[42], IN const SHashSha1 * pHashSha1)			{ Base64_CchStringFromBinary(OUT pszStringHex, (const BYTE *)pHashSha1, sizeof(SHashSha1)); }
 BOOL HashSha1_FInitFromStringBase85_ZZR_ML(OUT_ZZR SHashSha1 * pHashSha1, IN PSZUC pszuStringBase85);

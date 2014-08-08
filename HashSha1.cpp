@@ -249,6 +249,14 @@ HashSha1_CalculateFromSaltedPassword(OUT SHashSha1 * pHashSha1, ESaltPrefix eSal
 	HashSha1_CalculateFromBinary(OUT pHashSha1, IN pSaltedPassword, cbSaltedPassword);
 	}
 
+QString
+HashSha1_ToQStringBase85(IN const SHashSha1 * pHashSha1)
+	{
+	CHU szString[32];
+	HashSha1_ToStringBase85(OUT szString, IN pHashSha1);
+	return QString::fromUtf8((const char *)szString);
+	}
+
 BOOL
 HashSha1_FInitFromStringBase85_ZZR_ML(OUT SHashSha1 * pHashSha1, IN PSZUC pszuStringBase85)
 	{
