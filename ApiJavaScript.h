@@ -220,6 +220,9 @@ protected:
 	TProfile * PFindProfileByID(const QString & sIdProfile) const;
 };
 
+///////////////////////////////////////////////////
+/// \brief The OJapiApps class
+///
 class OJapiApps : public OJapi
 {
     OJapiCambrian * m_poCambrian;
@@ -232,7 +235,9 @@ public:
 };
 #define POJapiApps		POJapi
 
-
+///////////////////////////////////////////////////
+/// \brief The OJapiMe class
+///
 class OJapiMe : public OJapi
 {
 	OJapiCambrian * m_poCambrian;
@@ -245,6 +250,7 @@ public:
 	Q_PROPERTY(OJapiList groups READ groups)
 	Q_PROPERTY(OJapiList peers READ peers)
 };
+#define POJapiMe		POJapi
 
 //	JavaScript wrapper for TGroup
 class OJapiGroup : public OJapi
@@ -252,12 +258,16 @@ class OJapiGroup : public OJapi
 	TGroup * m_pGroup;
 
 public:
+	OJapiGroup(TGroup *pGroup);
+
 	QString id();
 	QString name();
+	int count();
 
 	Q_OBJECT
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name)
+	Q_PROPERTY(int count READ count)
 };
 
 class OJapiContact : public OJapi
@@ -274,6 +284,7 @@ protected:
 	OSettings m_oSettings;
 	OJapiProfile m_oProfile;
     OJapiApps m_oApps;
+	OJapiMe m_oMe;
 	OJapiAppBallotmaster * m_paAppBallotmaster;
 
 public:
@@ -284,6 +295,7 @@ public:
 
 	POJapiApps apps();
 	POJapiAppBallotmaster polls();
+	POJapiMe me();
 
 public:
 	Q_OBJECT
@@ -291,6 +303,7 @@ public:
 	Q_PROPERTY(QVariant Profile READ Profile)
 	Q_PROPERTY(POJapiAppBallotmaster polls READ polls)
 	Q_PROPERTY(POJapiApps apps READ apps)
+	Q_PROPERTY(POJapiMe me READ me)
 
 public slots:
 	void SendBitcoin(int n);

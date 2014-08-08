@@ -46,7 +46,8 @@ OJapiMe::groups()
 			TGroup * pGroup = *ppGroup++;
 			Assert(pGroup != NULL);
 			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-			oList.append(pGroup->m_strNameDisplayTyped.ToQString());
+			//oList.append(pGroup->m_strNameDisplayTyped.ToQString());
+			oList.append(QVariant::fromValue(new OJapiGroup(pGroup)));
 			} // while
 		} // while
 	return oList;
@@ -58,6 +59,11 @@ OJapiMe::peers()
 	return c_vEmpty;
 	}
 
+
+OJapiGroup::OJapiGroup(TGroup *pGroup)
+{
+m_pGroup = pGroup;
+}
 
 QString
 OJapiGroup::id()
@@ -74,4 +80,10 @@ QString
 OJapiGroup::name()
 	{
 	return m_pGroup->m_strNameDisplayTyped;
+	}
+
+int
+OJapiGroup::count()
+	{
+	return m_pGroup->m_arraypaMembers.GetSize();
 	}
