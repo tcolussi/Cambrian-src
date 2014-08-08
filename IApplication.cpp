@@ -79,7 +79,7 @@ IApplication::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeWriteAttribute(c_szaApplicationClass_, (PSZUC)PszGetClassNameApplication());	// We need to serialize the class name because the unserialize need to know what object to allocate
     }
 
-
+#if 1 // The fillowing code will need to be replaced using USZU() technology
 typedef IApplication * (* PFn_PaAllocateApplication)(TProfile * pProfileParent);
     IApplication * PaAllocateApplicationMayanX(TProfile * pProfileParent);
     IApplication * PaAllocateApplicationBallotmaster(TProfile * pProfileParent);
@@ -120,5 +120,6 @@ IApplication::S_PaAllocateApplication_YZ(POBJECT poProfileParent, const CXmlNode
     MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find application of class '$s'\n", pszClass);
     return NULL;
     }
+#endif
 
 

@@ -14,9 +14,10 @@ class TBrowser : public ITreeItem
 protected:
 	TProfile * m_pProfile;
 	UINT m_uFlags;	// Flags to remember which icon to display
-	CStr m_strUrl;
 	WLayoutBrowser * m_pawLayoutBrowser;
 //	SApplicationHtmlInfo * m_pApplicationHtmlInfo;
+public:
+	CStr m_strUrl;
 public:
 	TBrowser(TProfile * pProfile);
 	~TBrowser();

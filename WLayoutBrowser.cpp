@@ -367,10 +367,11 @@ TBrowser::~TBrowser()
 	}
 
 
-void LaunchBrowser(const QString & sName, const QString & sUrl)
+void
+LaunchBrowser(const QString & sName, const QString & sUrlRelative)
     {
     //EMessageBoxInformation("opening page $Q", &sUrl);
-	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser($Q, $Q)\n", &sName, &sUrl);
+	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser($Q, $Q)\n", &sName, &sUrlRelative);
 
     TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
 	//MessageLog_AppendTextFormatCo(d_coBlack, "LaunchBrowser($p)\n", pProfile);
@@ -380,37 +381,27 @@ void LaunchBrowser(const QString & sName, const QString & sUrl)
 	//MessageLog_AppendTextFormatCo(d_coAqua, "pProfile ($p)\n", pProfile);
 	//MessageLog_AppendTextFormatCo(d_coAqua, "pProfile->m_pConfigurationParent ($p)\n", pProfile->m_pConfigurationParent);
 
-	CStr strUrl(sUrl);
-	CStr strUrlAddress = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrl);//"Apps/Test/index.htm");
+	CStr strUrlRelative(sUrlRelative);
+	CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrlRelative);//"Apps/Test/index.htm");
 
 	// find a browser opened with the same name
-	TBrowser *pBrowser			= NULL;
-	TBrowser **ppBrowserStop	= NULL;
-	TBrowser **ppBrowserIter	= pProfile->m_arraypaBrowsers.PrgpGetBrowsersStop(&ppBrowserStop);
-	while( ppBrowserIter != ppBrowserStop )
+	TBrowser ** ppBrowserStop;
+	TBrowser ** ppBrowser = pProfile->m_arraypaBrowsers.PrgpGetBrowsersStop(OUT &ppBrowserStop);
+	while (ppBrowser != ppBrowserStop)
 		{
-		CStr strName(sName); 	// Typecast
-		if ( strName.FCompareBinary((*ppBrowserIter)->m_strNameDisplayTyped) )
+		TBrowser * pBrowser = *ppBrowser++;
+		if (pBrowser->m_strUrl.FCompareStringsExactCase(strUrl))
 			{
-			pBrowser = *ppBrowserIter;
-			break;
+			// There is already an opened browser with the same URL, therefore select it
+			pBrowser->TreeItemW_SelectWithinNavigationTree();
+			return;
 			}
-		ppBrowserIter ++;
 		}
 
-	// display the browser
-	if ( !pBrowser )
-		{
-		pBrowser = new TBrowser(pProfile);
-		pProfile->m_arraypaBrowsers.Add(PA_CHILD pBrowser);
-		pBrowser->SetNameAndUrl(sName, strUrlAddress);
-		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
-		}
-	else
-		{
-		pBrowser->SetNameAndUrl(sName, strUrlAddress);
-
-		}
-
+	// No browser yet, therefore allocate one
+	TBrowser * pBrowser = new TBrowser(pProfile);
+	pProfile->m_arraypaBrowsers.Add(PA_CHILD pBrowser);
+	pBrowser->SetNameAndUrl(sName, strUrl);
+	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
     pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}

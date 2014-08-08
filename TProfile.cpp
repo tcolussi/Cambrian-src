@@ -18,17 +18,6 @@ POBJECT
 TAccountAlias::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
 	Report(piParent == NULL);
-	/*
-	switch (rti)
-		{
-	case RTI(TAccountXmpp):
-	case RTI(TCertificate):
-	case RTI(TCertificateServerName):
-		return m_pAccount->PGetRuntimeInterface(rti);
-	default:
-		return ITreeItem::PGetRuntimeInterface(rti);
-		}
-	*/
 	return ITreeItem::PGetRuntimeInterface(rti, m_pAccount);
 	} // PGetRuntimeInterface()
 
