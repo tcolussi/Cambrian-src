@@ -1122,7 +1122,10 @@ CEventFileReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CO
 		}
 	else
 		{
-		Report(m_cblDataTransferred <= m_cblFileSize && "You have received more data than the original file size!");
+		#ifdef DEBUG_WANT_ASSERT
+		if (m_cblDataTransferred > m_cblFileSize)
+			MessageLog_AppendTextFormatSev(eSeverityInfoTextBlueDark, "EventID $t ($T) has received more data ($L bytes extra) than the original file size of $L bytes\n", m_tsEventID, m_tsEventID, m_cblDataTransferred - m_cblFileSize, m_cblFileSize);
+		#endif
 		pszTextHtmlTemplate = (m_cblDataTransferred < m_cblFileSize) ? "Downloading file @L: @% received... @c" : "Download complete! @L @Z @o";
 		}
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);

@@ -47,7 +47,8 @@ OJapiMe::groups()
 			Assert(pGroup != NULL);
 			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 			//oList.append(pGroup->m_strNameDisplayTyped.ToQString());
-			oList.append(QVariant::fromValue(new OJapiGroup(pGroup)));
+			//oList.append(QVariant::fromValue(new OJapiGroup(pGroup)));
+			oList.append(QVariant::fromValue(pGroup->POJapiGet()));
 			} // while
 		} // while
 	return oList;
@@ -70,17 +71,26 @@ OJapiMe::peers()
 			TContact * pContact = *ppContact++;
 			Assert(pContact != NULL);
 			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-			oList.append(QVariant::fromValue(new OJapiContact(pContact)));
+			//oList.append(QVariant::fromValue(new OJapiContact(pContact)));
+			oList.append(QVariant::fromValue(pContact->POJapiGet()));
 			} // while
 		} // while
 	return oList;
 	}
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+POJapiGroup
+TGroup::POJapiGet()
+	{
+	if (m_paoJapiGroup == NULL)
+		m_paoJapiGroup = new OJapiGroup(this);
+	return m_paoJapiGroup;
+	}
 
-OJapiGroup::OJapiGroup(TGroup *pGroup)
-{
-m_pGroup = pGroup;
-}
+OJapiGroup::OJapiGroup(TGroup * pGroup)
+	{
+	m_pGroup = pGroup;
+	}
 
 QString
 OJapiGroup::id()
@@ -103,23 +113,31 @@ int
 OJapiGroup::count()
 	{
 	return m_pGroup->m_arraypaMembers.GetSize();
-}
+	}
 
 
-////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+POJapiContact
+TContact::POJapiGet()
+	{
+	if (m_paoJapiContact == NULL)
+		m_paoJapiContact = new OJapiContact(this);
+	return m_paoJapiContact;
+	}
 
-
-OJapiContact::OJapiContact(TContact *pContact)
+OJapiContact::OJapiContact(TContact * pContact)
 	{
 	m_pContact = pContact;
 	}
 
-QString OJapiContact::id()
+QString
+OJapiContact::id()
 	{
 	return m_pContact->m_strJidBare;
 	}
 
-QString OJapiContact::name()
+QString
+OJapiContact::name()
 	{
 	return m_pContact->m_strNameDisplayTyped;
 	}

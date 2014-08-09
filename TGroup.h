@@ -44,6 +44,9 @@ public:
 	SHashSha1 m_hashGroupIdentifier;		// Unique identifier for the group
 	TContact * m_pContactWhoRecommended_YZ;	// Contact who recommended the group
 	CArrayPtrGroupMembers m_arraypaMembers;
+protected:
+	POJapiGroup m_paoJapiGroup;
+
 public:
 	TGroup(TAccountXmpp * pAccount);
 	~TGroup();
@@ -75,6 +78,8 @@ public:
 
 	void DisplayDialogProperties();
 	void DisplayDialogAddContacts();
+
+	POJapiGroup POJapiGet();
 
 public:
 	static IXmlExchange * S_PaAllocateGroup(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()

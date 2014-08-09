@@ -204,7 +204,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 
 	g_pwMenuCambrian = new WMenu("SocietyPro");
 	g_pwMenuContacts = new WMenu("Peers");
-	g_pwMenuTools = new WMenu("Tools");
+	g_pwMenuTools = new WMenu("Applications");
 	#if 0
 	g_pwMenuAdvanced = new WMenu("test");
 	//g_pwMenuAdvanced->setTitle("test");

@@ -19,7 +19,7 @@ DisplayApplicationBallotMaster()
 	CStr strPathApplication = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName("Apps/Ballotmaster/default.htm");
 	TBrowser * pBrowser = new TBrowser(pProfile);
 	pProfile->m_arraypaBrowsers.Add(PA_CHILD pBrowser);
-	pBrowser->SetIconNameAndUrl(eMenuAction_DisplayBallotMaster, "Ballotmaster", strPathApplication);
+	pBrowser->SetIconNameAndUrl(eMenuAction_DisplayBallotMaster, "Ballots", strPathApplication);
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 	pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}

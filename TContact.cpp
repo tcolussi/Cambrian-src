@@ -24,6 +24,7 @@ TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	m_plistAliases = NULL;
 	m_tsOtherLastSynchronized = d_ts_zNA;
 	m_cVersionXCP = 0;
+	m_paoJapiContact = NULL;
 	}
 
 TContact::~TContact()

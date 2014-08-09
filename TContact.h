@@ -66,6 +66,7 @@ protected:
 	IContactAlias * m_plistAliases;
 	TIMESTAMP m_tsLastSeenOnline;					// Date & time when the contact was last seen online
 	TIMESTAMP_MINUTES m_tsmLastStanzaReceived;		// Timestamp where the last network packet was received by the contact. This is useful to determine if the contact became idle.
+	POJapiContact m_paoJapiContact;					//
 
 public:
 	TContact(TAccountXmpp * pAccount);
@@ -139,6 +140,8 @@ public:
 	BOOL TreeItemContact_FSetDisplayNameUnique(PSZUC pszBegin, PCHUC pchCopyUntil);
 
 	void DisplayDialogProperties();
+
+	POJapiContact POJapiGet();
 
 public:
 	static IXmlExchange * S_PaAllocateContact(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()

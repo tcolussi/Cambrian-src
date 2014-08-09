@@ -129,6 +129,7 @@ TGroup::TGroup(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	{
 	HashSha1_InitEmpty(OUT &m_hashGroupIdentifier);
 	m_pContactWhoRecommended_YZ = NULL;
+	m_paoJapiGroup = NULL;
 	}
 
 TGroup::~TGroup()

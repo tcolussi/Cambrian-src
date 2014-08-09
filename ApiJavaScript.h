@@ -18,6 +18,9 @@ class OJapi;
 	class OJapiPollResultsStats;
 	class OJapiPollResultsComment;
 
+	class OJapiContact;
+	class OJapiGroup;
+
 //	Every object offering a JavaScript API must inherit from OJapi
 //
 //	Eventually this object will implement the security necessary for HTML applications.
@@ -29,7 +32,6 @@ public:
 	OJapi(QObject * pObjectParent = NULL) : QObject(pObjectParent) { }
 };
 
-#define POJapi		QObject *	// Every object returned to the JavaScript engine must be either a QVariant or a QObject *.  Since a QObject * is too generic, we #define a new type of object to distinguish their types. It makes the code easier to read.  BTW: Using a typedef does not work, as the compiler no longer recognizes the QObject *.
 #define OJapiList	QVariant	// Every list is stored as a QVariant, however it makes more sense to specify OJapiList than QVariant because QVariant may be used for other purposes
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -220,9 +222,7 @@ protected:
 	TProfile * PFindProfileByID(const QString & sIdProfile) const;
 };
 
-///////////////////////////////////////////////////
-/// \brief The OJapiApps class
-///
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiApps : public OJapi
 {
     OJapiCambrian * m_poCambrian;
@@ -235,9 +235,7 @@ public:
 };
 #define POJapiApps		POJapi
 
-///////////////////////////////////////////////////
-/// \brief The OJapiMe class
-///
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiMe : public OJapi
 {
 	OJapiCambrian * m_poCambrian;
@@ -252,13 +250,14 @@ public:
 };
 #define POJapiMe		POJapi
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //	JavaScript wrapper for TGroup
 class OJapiGroup : public OJapi
 {
 	TGroup * m_pGroup;
 
 public:
-	OJapiGroup(TGroup *pGroup);
+	OJapiGroup(TGroup * pGroup);
 
 	QString id();
 	QString name();
@@ -275,7 +274,7 @@ class OJapiContact : public OJapi
 	TContact * m_pContact;
 
 public:
-	OJapiContact(TContact *pContact);
+	OJapiContact(TContact * pContact);
 
 	QString id();
 	QString name();
