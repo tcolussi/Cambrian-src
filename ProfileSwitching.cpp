@@ -288,7 +288,8 @@ TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTree()
 		Assert(pGroup != NULL);
 		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 		Assert(pGroup->m_pAccount == this);
-		pGroup->TreeItemGroup_DisplayWithinNavigationTree();
+		if (pGroup->m_eGroupType == eGroupType_Open)
+			pGroup->TreeItemGroup_DisplayWithinNavigationTree();
 		}
 	TreeItemW_ExpandAccordingToSavedState();
 	TreeItemAccount_UpdateIcon();

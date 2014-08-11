@@ -35,6 +35,12 @@ public:
 	inline TGroupMember ** PrgpGetMembersStop(OUT TGroupMember *** pppMemberStop) const { return (TGroupMember **)PrgpvGetElementsStop(OUT (void ***)pppMemberStop); }
 };
 
+enum EGroupType
+	{
+	eGroupType_Open,		// Default group type which shows in the Navigation Tree
+	eGroupType_Audience		// Private distribution list to send polls (at the moment)
+	};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Class holding information for group chat
 class TGroup : public ITreeItemChatLogEvents	// (group)
@@ -44,12 +50,15 @@ public:
 	SHashSha1 m_hashGroupIdentifier;		// Unique identifier for the group
 	TContact * m_pContactWhoRecommended_YZ;	// Contact who recommended the group
 	CArrayPtrGroupMembers m_arraypaMembers;
+	EGroupType m_eGroupType;
 protected:
 	POJapiGroup m_paoJapiGroup;
 
 public:
 	TGroup(TAccountXmpp * pAccount);
 	~TGroup();
+	void MarkForDeletion();
+	void Group_UpdateFlagCannotBeDeleted();
 	void RemoveAllReferencesToContactsAboutBeingDeleted();
 	void GroupInitNewIdentifier();
 

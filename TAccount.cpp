@@ -72,6 +72,41 @@ TAccountXmpp::~TAccountXmpp()
 		m_paSocket->Socket_Destroy(PA_DELETING);
 	}
 
+void
+TAccountXmpp::MarkForDeletion()
+	{
+	m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
+	m_arraypaContacts.ForEach_SetFlagTreeItemAboutBeingDeleted();
+	m_arraypaGroups.ForEach_SetFlagTreeItemAboutBeingDeleted();
+	}
+
+void
+TAccountXmpp::RemoveAllReferencesToObjectsAboutBeingDeleted()
+	{
+	TContact ** ppContactStop;
+	TContact ** ppContact = m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
+	while (ppContact != ppContactStop)
+		{
+		TContact * pContact = *ppContact++;
+		pContact->RemoveAllReferencesToObjectsAboutBeingDeleted();
+		}
+	TGroup ** ppGroupStop;
+	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+	while (ppGroup != ppGroupStop)
+		{
+		TGroup * pGroup = *ppGroup++;
+		Assert(pGroup != NULL);
+		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+		Assert(pGroup->m_pAccount == this);
+		pGroup->RemoveAllReferencesToContactsAboutBeingDeleted();
+		}
+//	m_arraypaGroups.RemoveAllTreeItemsAboutBeingDeleted();
+//	m_arraypaContacts.RemoveAllTreeItemsAboutBeingDeleted();
+	m_arraypContactsComposing.RemoveAllTreeItemsAboutBeingDeleted();
+	m_arraypContactsMessagesUnread.RemoveAllTreeItemsAboutBeingDeleted();
+	}
+
+
 TAccountAlias *
 TAccountXmpp::PGetAlias_NZ() CONST_MCC
 	{
@@ -491,8 +526,11 @@ TAccountXmpp::Contact_RosterUnsubscribe(INOUT TContact * pContact)
 	Assert(pContact != NULL);
 	if (m_paSocket == NULL)
 		return;
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Unsubscribing from peer ^j...\n", pContact);
-	m_paSocket->Socket_WriteXmlFormatted("<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^j' subscription='remove'></item></query></iq>", pContact);
+	if (m_paSocket->Socket_FuIsReadyToSendMessages())
+		{
+		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Unsubscribing from peer ^j...\n", pContact);
+		m_paSocket->Socket_WriteXmlFormatted("<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^j' subscription='remove'></item></query></iq>", pContact);
+		}
 	}
 
 void
@@ -531,35 +569,26 @@ TAccountXmpp::Contacts_BroadcastAboutBeingDeleted()
 	}
 */
 
-//	Method to safely delete a contact from an account.
+//	The two methods Contact_UpdateFlagCannotBeDeleted() could be merged into ITreeItemChatLogEvents
 void
-TAccountXmpp::Contact_DeleteSafely(PA_DELETING TContact * paContactDelete)
+TContact::Contact_UpdateFlagCannotBeDeleted()
 	{
-	Assert(paContactDelete != NULL);
-	Assert(paContactDelete->EGetRuntimeClass() == RTI(TContact));
-	paContactDelete->m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
-	TreeItemW_SelectWithinNavigationTree();	// Select the parent deleting the contact (without this line of code, the application will crash if the contact was selected in the GUI because the contact is no longer there)
-	if (m_paSocket != NULL && m_paSocket->Socket_FuIsReadyToSendMessages())
+	if (m_paoJapiContact != NULL)
 		{
-		if (paContactDelete->XmppRoster_PszGetSubscription() != NULL)
-			Contact_RosterUnsubscribe(paContactDelete);	// Remove the contact from the roster
+		m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeleted;
+		m_pAccount->m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeleted;	// Also prevent its parent account to be deleted
 		}
-	TGroup ** ppGroupStop;
-	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
-	while (ppGroup != ppGroupStop)
+	}
+
+void
+TGroup::Group_UpdateFlagCannotBeDeleted()
+	{
+	if (m_paoJapiGroup != NULL)
 		{
-		TGroup * pGroup = *ppGroup++;
-		Assert(pGroup != NULL);
-		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-		Assert(pGroup->m_pAccount == this);
-		pGroup->RemoveAllReferencesToContactsAboutBeingDeleted();
+		m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeleted;
+		m_pAccount->m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeleted;	// Also prevent its parent account to be deleted
 		}
-	m_arraypContactsComposing.RemoveAllTreeItemsAboutBeingDeleted();
-	m_arraypContactsMessagesUnread.RemoveAllTreeItemsAboutBeingDeleted();
-	g_arraypContactsRecentMessages.RemoveAllTreeItemsAboutBeingDeleted();	// Make sure the contact is no longer in the recent messages
-	TWallet::S_DetachFromContactsAboutBeingDeleted();	// Detach the contact from the any wallet
-	m_arraypaContacts.DeleteTreeItem(PA_DELETING paContactDelete);	// Delete the contact object and remove it from the Navigation Tree
-	} // Contact_DeleteSafely()
+	}
 
 void
 TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTreeInit(PSZUC pszServerName, UINT uServerPort)
@@ -590,13 +619,7 @@ TAccountXmpp::TreeItemAccount_DeleteFromNavigationTree_MB(PA_DELETING)
 		if (EMessageBoxQuestion("Are you sure you want to remove the account $S and its $i peers?", &m_strJID, cContacts) != eAnswerYes)
 			return;
 		}
-	m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
-	m_arraypaContacts.ForEach_SetFlagTreeItemAboutBeingDeleted();
-	m_arraypaGroups.ForEach_SetFlagTreeItemAboutBeingDeleted();
-	g_arraypContactsRecentMessages.RemoveAllTreeItemsAboutBeingDeleted();	// Make sure there is dangling pointer to a deleted contact
-	g_arraypAccounts.RemoveAllTreeItemsAboutBeingDeleted();
-	TWallet::S_AccountsAboutBeingDeleted();
-	m_pProfileParent->m_arraypaAccountsXmpp.DeleteTreeItem(PA_DELETING this);
+	m_pProfileParent->DeleteAccount(PA_DELETING this);
 	}
 
 void

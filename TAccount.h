@@ -69,7 +69,11 @@ protected:
 
 public:
 	TAccountXmpp(TProfile * pProfileParent);
+private:
 	~TAccountXmpp();
+public:
+	void MarkForDeletion();
+	void RemoveAllReferencesToObjectsAboutBeingDeleted();
 	CChatConfiguration * PGetConfiguration() const;
 	const SHashSha1 * PGetSaltOfConfiguration() const;
 
@@ -137,7 +141,6 @@ public:
 	void Contacts_Append(IOUT CArrayPtrContacts * parraypContacts) const { parraypContacts->Append(IN &m_arraypaContacts); }
 	void Contacts_SetFlagAboutBeingDeleted();
 	void Contacts_BroadcastAboutBeingDeleted();
-	void Contact_DeleteSafely(PA_DELETING TContact * paContactDelete);
 	void Contact_RosterSubscribe(INOUT TContact * pContact);
 	void Contact_RosterUnsubscribe(INOUT TContact * pContact);
 	PSZUC Contact_RosterUpdateItem(const CXmlNode * pXmlNodeItemRoster);
@@ -160,7 +163,6 @@ public:
 	static const int c_iGroupNew = -1;
 	TGroup * Group_PAllocate();
 	void Group_AddNewMember_UI(TContact * pContact, int iGroup);
-	void Group_Delete(PA_DELETING TGroup * pGroup);
 	enum EFindGroup
 		{
 		eFindGroupOnly,		// Return NULL if there is no group matchng the identifier

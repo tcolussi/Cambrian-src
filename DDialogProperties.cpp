@@ -369,7 +369,7 @@ DisplayDialogGroupCreate()
 	pGroup->TreeItemW_EnsureVisible();
 	pGroup->TreeItemW_SelectWithinNavigationTreeExpanded();
 	if (!pGroup->DisplayDialogAddContactsToGroupFu())
-		pAccount->Group_Delete(PA_DELETING pGroup);	// The user clicked on Cancel, therefore delete the group
+		pAccount->m_pProfileParent->DeleteGroup(PA_DELETING pGroup);	// The user clicked on Cancel, therefore delete the group
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -460,7 +460,7 @@ CBinXcpStanzaEventPreview::CBinXcpStanzaEventPreview(ITreeItemChatLogEvents * pC
 
 CBinXcpStanzaEventPreview::~CBinXcpStanzaEventPreview()
 	{
-	delete m_paContact;
+	//delete m_paContact; // Need to be fixed
 	delete m_paEventReceived;
 	}
 

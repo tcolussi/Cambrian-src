@@ -261,6 +261,16 @@ IEvent::PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) cons
 	return NULL;
 	}
 
+
+//	DetachFromObjectsAboutBeingDeleted(), virtual
+//
+//	Notify the event an object (typically a contact or group) is about to be deleted.
+//	This method is useful for complex events, such as a ballot poll, having references (pointers) to other objects such as contacts and groups.
+void
+IEvent::DetachFromObjectsAboutBeingDeleted()
+	{
+	}
+
 /*
 //	Always return the pointer of the contact who sent the event
 TContact *
@@ -1689,6 +1699,19 @@ CArrayPtrEvents::DeleteAllEventsReceivedHavingDuplicateTsOther()
 		}
 	m_paArrayHdr->cElements = ppEventDst - ppEventStart;
 	} // DeleteAllEventsReceivedHavingDuplicateTsOther
+
+
+void
+CArrayPtrEvents::ForEach_DetachFromObjectsAboutBeingDeleted() const
+	{
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		IEvent * pEvent = *ppEvent++;
+		pEvent->DetachFromObjectsAboutBeingDeleted();
+		}
+	}
 
 #if 0
 CTaskFileDownload *

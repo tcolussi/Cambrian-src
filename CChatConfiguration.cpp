@@ -184,7 +184,7 @@ CChatConfiguration::XmlConfigurationExchange(INOUT CXmlExchanger * pXmlExchanger
 
 	pXmlExchanger->XmlExchangeObjects('P', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);
 	if (!pXmlExchanger->m_fSerializing && m_arraypaProfiles.FIsEmpty())
-		pXmlExchanger->XmlExchangeObjects('I', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);	// Load old 'Identities' <I> which have been <P>
+		pXmlExchanger->XmlExchangeObjects('I', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);	// Load old 'Identities' <I> which have been replaced by <P>
 	m_oTreeItemCertificates.XmlExchange(INOUT pXmlExchanger);
 	m_oTreeItemCertificates.InitializeAsRootCertificates();
 
@@ -335,65 +335,6 @@ OSettingsRegistry::OSettingsRegistry() : QSettings(c_sCambrianOrg, c_sChat)
 	{
 	}
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//#pragma GCC diagnostic warning "-fpermissive"	// Get the warning in XmlExchangePointer()
-//#pragma GCC diagnostic ignored "-fpermissive"	// Get the warning in XmlExchangePointer()
-//#pragma GCC diagnostic ignored "-pedantic"
-//#pragma GCC diagnostic ignored "-w"
-//#pragma GCC diagnostic ignored "-Wno-pmf-conversions"
-/*
-void
-TAccountXmpp::PrepareAccountForDeletion()
-	{
-	PresenceUnsubscribe();
-	Contacts_SetFlagAboutBeingDeleted();
-	Contacts_BroadcastAboutBeingDeleted();
-	}
-*/
-/*
-void
-ChatAccount_DeleteSelectedUI()
-	{
-	TAccountXmpp * pAccount = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTAccount();
-	if (pAccount == NULL)
-		return;
-	}
-*/
-/*
-void
-ChatContact_DeleteSelectedUI()
-	{
-	TContact * pContact = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact();
-	if (pContact == NULL)
-		return;
-	EAnswer eAnswer = EMessageBoxQuestion("Are you sure you want to remove the peer $S?", &pContact->m_strJidBare);
-	if (eAnswer != eAnswerYes)
-		return;
-	pContact->Events_WriteToDiskIfModified();	// Save whatever chat history was present (this is important because if the user wants to add the contact again, he/she will have the message history)
-	pContact->m_pAccount->Contact_DeleteSafely(PA_DELETING pContact);
-	Configuration_Save();		// Save the configuration to make sure the contact does not re-appear in case of a power failure or if the application crashes
-	}
-
-void
-ChatContact_UploadFileTo()
-	{
-	TContact * pContact = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact();
-	if (pContact == NULL)
-		return;
-	CStr strCaption;
-	strCaption.Format("Send file to $S", &pContact->m_strNameDisplay);
-	strCaption = QFileDialog::getOpenFileName(g_pwMainWindow, IN strCaption);
-	pContact->XmppUploadFile(strCaption);
-	}
-
-void
-ChatContact_FindText()
-	{
-	TContact * pContact = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTContact();
-	if (pContact != NULL)
-		pContact->ChatLog_FindText();
-	}
-*/
 
 //	Return TRUE if the configuration does not contain any accounts
 BOOL

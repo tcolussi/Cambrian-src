@@ -32,6 +32,14 @@ TContact::~TContact()
 //	NoticeListAuxiliary_DeleteAllNoticesRelatedToTreeItem(IN this);		// This line is necessary, so the notices are deleted before the layout, otherwise the layout will delete
 	}
 
+void
+TContact::MarkForDeletion()
+	{
+	m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
+	if (XmppRoster_PszGetSubscription() != NULL)
+		m_pAccount->Contact_RosterUnsubscribe(this);	// Remove the contact from the roster
+	}
+
 CChatConfiguration *
 TContact::PGetConfiguration() const
 	{
@@ -384,11 +392,11 @@ TContact::Contact_AddToGroup(int iGroup)
 void
 TContact::TreeItemContact_DeleteFromNavigationTree_MB(PA_DELETING)
 	{
-	EAnswer eAnswer = EMessageBoxQuestion("Are you sure you want to remove the peer $S?", &m_strJidBare);
+	EAnswer eAnswer = EMessageBoxQuestion("Are you sure you want to remove peer $S?", &m_strJidBare);
 	if (eAnswer != eAnswerYes)
 		return;
 	Vault_WriteEventsToDiskIfModified();	// Always save the Chat Log. This is important because if the user wants to add the contact again, he/she will recover the entire Chat Log.
-	m_pAccount->Contact_DeleteSafely(PA_DELETING this);
+	m_pAccount->m_pProfileParent->DeleteContact(PA_DELETING this);
 	Configuration_Save();		// Save the configuration to make sure the contact does not re-appear in case of a power failure or if the application crashes
 	}
 

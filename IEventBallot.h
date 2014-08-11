@@ -66,6 +66,7 @@ public:
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
+	virtual void DetachFromObjectsAboutBeingDeleted();
 
 	void DeleteChoices();
 	void SetChoices(const QStringList & lsChoices);

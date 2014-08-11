@@ -7,6 +7,17 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+class CListVariants : public QVariantList
+{
+public:
+	void AddContact(TContact * pContact);
+	void AddContacts(const CArrayPtrContacts & arraypContacts);
+	void AddGroupMatchingType(TGroup * pGroup, EGroupType eGroupType);
+	void AddGroupsMatchingType(const CArrayPtrGroups & arraypGroups, EGroupType eGroupType) { }
+	void AddGroup(TGroup * pGroup);
+	void AddAudience(TGroup * pGroup);
+};
+
 class OJapi;	
 	class OJapiCambrian;
 	class OJapiApps;
@@ -242,6 +253,7 @@ class OJapiMe : public OJapi
 public:
 	OJapiMe(OJapiCambrian * poCambrian);
 	OJapiList groups();
+	OJapiList peerList();
 	OJapiList peers();
 
 	Q_OBJECT
@@ -249,25 +261,6 @@ public:
 	Q_PROPERTY(OJapiList peers READ peers)
 };
 #define POJapiMe		POJapi
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	JavaScript wrapper for TGroup
-class OJapiGroup : public OJapi
-{
-	TGroup * m_pGroup;
-
-public:
-	OJapiGroup(TGroup * pGroup);
-
-	QString id();
-	QString name();
-	int count();
-
-	Q_OBJECT
-	Q_PROPERTY(QString id READ id)
-	Q_PROPERTY(QString name READ name)
-	Q_PROPERTY(int count READ count)
-};
 
 class OJapiContact : public OJapi
 {
@@ -282,6 +275,28 @@ public:
 	Q_OBJECT
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name)
+};
+#define POJapiContact		POJapi
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	JavaScript wrapper for TGroup
+class OJapiGroup : public OJapi
+{
+	TGroup * m_pGroup;
+
+public:
+	OJapiGroup(TGroup * pGroup);
+
+	QString id();
+	QString name();
+	int count();
+	void addPeer(POJapiContact pContactAdd);
+	void removePeer(POJapiContact pContactRemove);
+
+	Q_OBJECT
+	Q_PROPERTY(QString id READ id)
+	Q_PROPERTY(QString name READ name)
+	Q_PROPERTY(int count READ count)
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

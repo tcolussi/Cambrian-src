@@ -366,16 +366,22 @@ ITreeItem::TreeItemW_PGetParent() const
 	return NULL;
 	}
 
-// The next two methods can be removed
+
+//	Remove the Tree Item from the array (and the Navigation Tree if present) and delete it from memory if possible.
 void
 CArrayPtrTreeItems::DeleteTreeItem(PA_DELETING ITreeItem * paTreeItem)
 	{
 	Assert(paTreeItem != NULL);
 	Assert(PGetRuntimeInterfaceOf_ITreeItem(paTreeItem) == paTreeItem);
 	(void)RemoveElementAssertI(paTreeItem);
-	delete paTreeItem;
+	if ((paTreeItem->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItem_CannotBeDeleted) == 0)
+		delete paTreeItem;	// This will remove the Tree Item from the Navigation Tree if present
+	else
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[MemoryLeak] TreeItem 0x$p '$S' is not deleted because it is used by another object which cannot be deleted\n", paTreeItem, &paTreeItem->m_strNameDisplayTyped);
 	}
 
+
+//	This method may be replaced with CArrayPtrRuntimeObjects::DeleteAllRuntimeObjects()
 void
 CArrayPtrTreeItems::DeleteAllTreeItems()
 	{

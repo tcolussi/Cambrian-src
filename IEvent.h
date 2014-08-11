@@ -329,6 +329,7 @@ public:
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
+	virtual void DetachFromObjectsAboutBeingDeleted();
 
 	BOOL Event_FIsEventBelongsToGroup() const;
 	BOOL Event_FIsEventTypeSent() const;
@@ -409,6 +410,7 @@ public:
 	BOOL FEventsSortedByIDs() const;
 	void DeleteAllEvents();
 	void DeleteAllEventsReceivedHavingDuplicateTsOther();
+	void ForEach_DetachFromObjectsAboutBeingDeleted() const;
 
 	void Wallets_AppendEventsTransactionsFor(ITreeItem * pFilterBy, EWalletViewFlags eWalletViewFlags);
 }; // CArrayPtrEvents

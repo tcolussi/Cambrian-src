@@ -360,11 +360,13 @@ bool
 WMainWindow::event(QEvent * pEvent)
 	{
 	const QEvent::Type eEvent = pEvent->type();
+//	TRACE1("WMainWindow::event($i)\n", eEvent);
 //	MessageLog_AppendTextFormatCo(d_coRed, "[$@] event($i)\n", eEvent);
 	switch (eEvent)
 		{
 	case QEvent::Close:	// The close button was clicked
 		#ifdef DEBUG
+		QCoreApplication::exit(0);	// This line is necessary so the QWebInspector is closed when the application closes
 		break;		// When debugging, close Cambrian
 		#endif
 		hide();	// Hide Cambrian from the System Tray (only the icon in the System Tray will remain)
@@ -372,6 +374,7 @@ WMainWindow::event(QEvent * pEvent)
 		pEvent->ignore();	// This line is important, otherwise the Close event will be processed by the calling method, regardless if true is returned.
 		return true;	// The event was processed
 	case QEvent::Quit:
+		TRACE0("WMainWindow::event(Quit)\n");
 		void MessageLog_ModuleShutdown();
 		MessageLog_ModuleShutdown();
 		break;

@@ -57,7 +57,7 @@ CBinXcpStanzaEventCopier::CBinXcpStanzaEventCopier(ITreeItemChatLogEvents * pCon
 
 CBinXcpStanzaEventCopier::~CBinXcpStanzaEventCopier()
 	{
-	delete m_paContact;
+	// delete m_paContact;
 	}
 
 void
@@ -95,6 +95,13 @@ CServiceBallotmaster::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	IService::XmlExchange(pXmlExchanger);
 	m_oVaultBallots.XmlExchange("Ballots", INOUT pXmlExchanger);
+	}
+
+//	CServiceBallotmaster::IService::DetachFromObjectsAboutBeingDeleted()
+void
+CServiceBallotmaster::DetachFromObjectsAboutBeingDeleted()
+	{
+
 	}
 
 CEventBallotPoll *

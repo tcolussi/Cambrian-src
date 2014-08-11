@@ -130,6 +130,7 @@ TGroup::TGroup(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	HashSha1_InitEmpty(OUT &m_hashGroupIdentifier);
 	m_pContactWhoRecommended_YZ = NULL;
 	m_paoJapiGroup = NULL;
+	m_eGroupType = eGroupType_Open;
 	}
 
 TGroup::~TGroup()
@@ -138,11 +139,18 @@ TGroup::~TGroup()
 	}
 
 void
+TGroup::MarkForDeletion()
+	{
+
+	}
+
+void
 TGroup::RemoveAllReferencesToContactsAboutBeingDeleted()
 	{
 	if (m_pContactWhoRecommended_YZ != NULL && (m_pContactWhoRecommended_YZ->m_uFlagsTreeItem & FTI_kfTreeItem_AboutBeingDeleted))
 		m_pContactWhoRecommended_YZ = NULL;	// The user decided to remove the contact form his list, however to keep the group referred by the contact
 	m_arraypaMembers.DeleteAllAliasesRelatedToContactsAboutBeingDeleted();
+	RemoveAllReferencesToObjectsAboutBeingDeleted();
 	}
 
 void
@@ -275,6 +283,7 @@ TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeSha1("ID", INOUT_F_UNCH_S &m_hashGroupIdentifier);
 	pXmlExchanger->XmlExchangePointer('Y', PPX &m_pContactWhoRecommended_YZ, IN &m_pAccount->m_arraypaContacts);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Members, INOUT_F_UNCH_S &m_arraypaMembers, TGroupMember::S_PaAllocateGroupMember, this);
+	pXmlExchanger->XmlExchangeInt("Type", INOUT (int *)&m_eGroupType);
 	} // XmlExchange()
 
 
@@ -310,7 +319,7 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		DisplayDialogAddContactsToGroupFu();
 		return ezMenuActionNone;
 	case eMenuAction_GroupDelete:
-		m_pAccount->Group_Delete(PA_DELETING this);
+		m_pAccount->m_pProfileParent->DeleteGroup(PA_DELETING this);
 		return ezMenuActionNone;
 	case eMenuAction_GroupProperties:
 		DisplayDialogProperties();
@@ -485,14 +494,6 @@ TAccountXmpp::Group_AddNewMember_UI(TContact * pContact, int iGroup)
 	*/
 	} // Group_AddNewMember_UI()
 
-void
-TAccountXmpp::Group_Delete(PA_DELETING TGroup * paGroup)
-	{
-	Assert(paGroup != NULL);
-	Assert(paGroup->EGetRuntimeClass() == RTI(TGroup));
-	Assert(paGroup->m_pAccount == this);
-	m_arraypaGroups.DeleteTreeItem(PA_DELETING paGroup);
-	} // Group_Delete()
 
 //	Find the group matching the identifier, and if not found and eFindGroupCreate then allocate a new group.
 //	This method may return NULL despite eFindGroupCreate if the identifier is not valid.

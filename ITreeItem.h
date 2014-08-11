@@ -67,6 +67,7 @@ public:
 		FTI_kfTreeItem_NameDisplayedSuggested	= 0x00000002,	// The content of member variable m_strNameDisplayTyped was suggested by another contact, typically when querying a group for its name and list of contacts.
 		FTI_kfRecommended						= 0x00000010,	// The Tree Item (typically a contact or a group) was recommended by the user.  This flag is used for /api Contact.Recommendations.Get
 		FTI_kfFavorites							= 0x00000020,	// NYI: The Tree Item is among the user's favorites.  A favorite is private to the user, while a recommendation is public.
+		FTI_kfTreeItem_Archived					= 0x00000040,	// The Tree Item, typically a contact or group, has been archived so it is no longer visible in the Navigation Tree, however accessible in the 'Recycle Bin'.  An archived item is something 'half deleted' which may permanently deleted later.
 		FTI_kmTreeItem_FlagsSerializeMask		= 0x0000FFFF,	// Bits to save to disk
 
 		FTI_kezIconNone							= 0x00000000,
@@ -75,9 +76,11 @@ public:
 		FTI_kemIconMask							= 0x000F0000,
 		FTI_kfTreeItem_fBit						= 0x00100000,	// Generic bit to store a boolean value (this bit is used to efficiently merge or delete arrays)
 		FTI_kfTreeItem_AboutBeingDeleted		= 0x00200000,	// The Tree Item is about being deleted (therefore any reference/pointer to it must be removed).  This flag is typically used when deleting accounts and contacts.
+		FTI_kfTreeItem_CannotBeDeleted			= 0x00800000,	// The Tree Item cannot be deleted because it is in used by another object(s) which cannot be deleted.  A typical case is a JavaScript object OJapi having a reference to the Tree Item.  The Tree Item cannot be deleted other Cambrian will crash.
+
 		FTI_kfTreeItem_NameDisplayedGenerated	= 0x00400000,	// The member variable m_strNameDisplayTyped has been generated, and therefore should not be serialized (saved to disk).  Since this flag is not stored to disk nor m_strNameDisplayTyped, the display name will be re-geneated each time Cambrian starts.
 		// The following flags FTI_kfChatLog* are used by ITreeItemChatLog and ITreeItemChatLogEvents.  The motivation for storing those flags in m_uFlagsTreeItem is avoiding another member variable.
-		FTI_kfChatLog_BrushColor				= 0x01000000,	// Which brush color to use when displaying events in the Chat Log.
+		FTI_kfChatLog_BrushColor				= 0x01000000,	// Which brush color to use when displaying events in the Chat Log.  Since there are only two brushes of similar color, a single bit is sufficient to remember which one.
 		FTI_kfChatLogEvents_RepopulateAll		= 0x02000000,	// Repopulate all events of the Chat Log next time the Tree Item gets the focus
 		FTI_kfChatLogEvents_IncludeFromWallet	= 0x04000000	// Include wallet events when repopulating the Chat Log.  This is a small optimization preventing searching all wallets when there is nothing
 		};

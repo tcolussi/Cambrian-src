@@ -70,14 +70,19 @@ protected:
 
 public:
 	TContact(TAccountXmpp * pAccount);
+private:
 	~TContact();
-	CChatConfiguration * PGetConfiguration() const;
+public:
+	void MarkForDeletion();
+	void Contact_UpdateFlagCannotBeDeleted();
 	inline void _ClearFlags() { m_uFlagsContact = 0; }
 	inline void SetFlagContactAsUnsolicited() { m_uFlagsContact |= FC_kfContactUnsolicited; }
 	inline void SetFlagContactAsInvited() { m_uFlagsContact &= ~FC_kfContactNeedsInvitation; }
 	inline void SetFlagXcpComposingSendTimestampsOfLastKnownEvents() { m_uFlagsContact |= FC_kfXcpComposingSendTimestampsOfLastKnownEvents; }
 	//inline BOOL Contact_FuIsInsecure() const { return (m_uFlagsContact & FC_kfNoCambrianProtocol); }
 	BOOL Contact_FuCommunicateViaXcp() const;
+
+	CChatConfiguration * PGetConfiguration() const;
 
 	void Invitation_InitFromXml(const CStr & strInvitationXml);
 	void Invitation_ReplyWithBase64(const CStr & strInvitationBase64);

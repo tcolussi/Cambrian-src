@@ -78,30 +78,61 @@ TProfile::GenerateKeys()
 	m_binKeyPublic = m_binKeyPrivate;
 	}
 
-/*
 void
-TProfile::DeleteAccount(PA_DELETING TAccountXmpp * paAccount)
+TProfile::RemoveAllReferencesToObjectsAboutBeingDeleted()
 	{
-	Assert(paAccount != NULL);
-	Assert(paAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
+	g_arraypContactsRecentMessages.RemoveAllTreeItemsAboutBeingDeleted();	// Make sure there is dangling pointer to a deleted contact
+	g_arraypAccounts.RemoveAllTreeItemsAboutBeingDeleted();
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		pAccount->RemoveAllReferencesToObjectsAboutBeingDeleted();
+		}
+	m_arraypaServices.ForEach_DetachFromObjectsAboutBeingDeleted();
+	TWallet::S_AccountsAboutBeingDeleted();
 	}
-*/
+
+void
+TProfile::DeleteAccount(PA_DELETING TAccountXmpp * paAccountDelete)
+	{
+	Assert(paAccountDelete != NULL);
+	Assert(paAccountDelete->EGetRuntimeClass() == RTI(TAccountXmpp));
+	Assert(paAccountDelete->m_pProfileParent == this);
+	paAccountDelete->MarkForDeletion();
+	RemoveAllReferencesToObjectsAboutBeingDeleted();
+	m_arraypaAccountsXmpp.DeleteTreeItem(PA_DELETING this);
+	}
+
+void
+TProfile::DeleteGroup(PA_DELETING TGroup * paGroupDelete)
+	{
+	Assert(paGroupDelete != NULL);
+	Assert(paGroupDelete->EGetRuntimeClass() == RTI(TGroup));
+	paGroupDelete->MarkForDeletion();
+	RemoveAllReferencesToObjectsAboutBeingDeleted();
+	paGroupDelete->Group_UpdateFlagCannotBeDeleted();
+	paGroupDelete->m_pAccount->m_arraypaGroups.DeleteTreeItem(PA_DELETING paGroupDelete);
+	}
+
+//	Method to safely delete a contact from a profile
+void
+TProfile::DeleteContact(PA_DELETING TContact * paContactDelete)
+	{
+	Assert(paContactDelete != NULL);
+	Assert(paContactDelete->EGetRuntimeClass() == RTI(TContact));
+	paContactDelete->MarkForDeletion();
+	RemoveAllReferencesToObjectsAboutBeingDeleted();
+	paContactDelete->Contact_UpdateFlagCannotBeDeleted();
+	//paContactDelete->m_pAccount->m_arraypaContacts.DeleteTreeItem(PA_DELETING paContactDelete);	// Delete the contact object and remove it from the Navigation Tree
+	}
 
 //	TProfile::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
 TProfile::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
 	Report(piParent == NULL);
-	/*
-	switch (rti)
-		{
-	case RTI(TAccountXmpp):	// If there is only one account, then return the interface of this account
-		return m_arraypaAccountsXmpp.PvGetElementUnique_YZ();	// May return NULL
-	default:
-		return ITreeItem::PGetRuntimeInterface(rti);
-		}
-	*/
-	//return ITreeItem::PGetRuntimeInterface(rti, m_arraypaAccountsXmpp.PGetObjectUnique_YZ());	// If there is only one account, then return the interface of this account
 	POBJECT pObject = ITreeItem::PGetRuntimeInterface(rti, piParent);
 	if (pObject != NULL)
 		return pObject;

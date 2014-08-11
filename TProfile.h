@@ -35,7 +35,10 @@ public:
 	void TreeItemProfile_DisplayApplicationsWithinNavigationTree();
 	void TreeItemProfile_DisplayProfileInfoWithinNavigationTree();
 
-	void DeleteAccount(PA_DELETING TAccountXmpp * paAccount);
+	void RemoveAllReferencesToObjectsAboutBeingDeleted();
+	void DeleteAccount(PA_DELETING TAccountXmpp * paAccountDelete);
+	void DeleteGroup(PA_DELETING TGroup * paGroupDelete);
+	void DeleteContact(PA_DELETING TContact * paContactDelete);
 
 	TAccountXmpp * PAllocateAccount();
 	TAccountXmpp * PAllocateAccountAutomaticCreationUI(ISocketUI * piSocketUI);

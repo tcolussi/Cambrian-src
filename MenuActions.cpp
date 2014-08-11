@@ -848,17 +848,6 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		NavigationTree_RenameSelectedItem();
 		return;
 	/*
-	case eMenuAction_AccountDelete:
-		ChatAccount_DeleteSelectedUI();
-		return;
-	*/
-	/*
-	case eMenuAction_ContactRemove:
-		ChatContact_DeleteSelectedUI();
-		return;
-	case eMenuAction_ContactSendFile:
-		ChatContact_UploadFileTo();
-		return;
 	case eMenuAction_FindText:
 		ChatContact_FindText();
 		return;

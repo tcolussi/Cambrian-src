@@ -16,6 +16,7 @@ public:
 public:
 	IService(TProfile * pProfileParent);
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);			// From IXmlExchange
+	virtual void DetachFromObjectsAboutBeingDeleted();						// From IService
 
 public:
 	static IXmlExchange * S_PaAllocateService_YZ(POBJECT poProfileParent, const CXmlNode * pXmlNodeElement);	// This static method must be compatible with interface PFn_PaAllocateXmlObject2_YZ()
@@ -26,6 +27,7 @@ class CArrayPtrServices : public CArrayPtrXmlSerializableObjects
 {
 public:
 	inline IService ** PrgpGetServicesStop(OUT IService *** pppServiceStop) const { return (IService **)PrgpvGetElementsStop(OUT (void ***)pppServiceStop); }
+	void ForEach_DetachFromObjectsAboutBeingDeleted() const;
 };
 
 
@@ -37,6 +39,7 @@ public:
 public:
 	CServiceBallotmaster(TProfile * pProfileParent);
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);			// From IXmlExchange
+	virtual void DetachFromObjectsAboutBeingDeleted();						// From IService
 
 	CEventBallotPoll * PAllocateBallot(const IEventBallot * pEventBallotTemplate = NULL);
 	void EventBallotAddAsTemplate(IEventBallot * pEventBallot);

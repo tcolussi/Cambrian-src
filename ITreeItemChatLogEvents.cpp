@@ -87,6 +87,13 @@ ITreeItemChatLogEvents::~ITreeItemChatLogEvents()
 	MainWindow_DeleteLayout(PA_DELETING m_pawLayoutChatLog);
 	}
 
+void
+ITreeItemChatLogEvents::RemoveAllReferencesToObjectsAboutBeingDeleted()
+	{
+	if (m_paVaultEvents != NULL)
+		m_paVaultEvents->m_arraypaEvents.ForEach_DetachFromObjectsAboutBeingDeleted();
+	}
+
 CChatConfiguration *
 ITreeItemChatLogEvents::PGetConfiguration() const
 	{

@@ -33,12 +33,15 @@ OJapiMe::OJapiMe(OJapiCambrian * poCambrian)
 OJapiList
 OJapiMe::groups()
 	{
+	CListVariants listVariants;
 	QVariantList oList;
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
+		listVariants.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Open);
+		/*
 		TGroup ** ppGroupStop;
 		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
 		while (ppGroup != ppGroupStop)
@@ -50,6 +53,7 @@ OJapiMe::groups()
 			//oList.append(QVariant::fromValue(new OJapiGroup(pGroup)));
 			oList.append(QVariant::fromValue(pGroup->POJapiGet()));
 			} // while
+		*/
 		} // while
 	return oList;
 	}

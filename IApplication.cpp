@@ -18,6 +18,11 @@ IService::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeWriteAttributeRtiSz(c_szaApplicationClass_, EGetRuntimeClass());
 	}
 
+//	DetachFromObjectsAboutBeingDeleted(), virtual
+void
+IService::DetachFromObjectsAboutBeingDeleted()
+	{
+	}
 
 IXmlExchange *
 IService::S_PaAllocateService_YZ(POBJECT poProfileParent, const CXmlNode * pXmlNodeElement)
@@ -41,6 +46,18 @@ IService::S_PaAllocateService_YZ(TProfile * pProfileParent, RTI_ENUM rtiService)
 	#endif
 		}
 	return NULL;
+	}
+
+void
+CArrayPtrServices::ForEach_DetachFromObjectsAboutBeingDeleted() const
+	{
+	IService ** ppServiceStop;
+	IService ** ppService = PrgpGetServicesStop(OUT &ppServiceStop);
+	while (ppService != ppServiceStop)
+		{
+		IService * pService = *ppService++;
+		pService->DetachFromObjectsAboutBeingDeleted();
+		}
 	}
 
 IService *

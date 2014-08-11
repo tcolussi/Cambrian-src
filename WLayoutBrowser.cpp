@@ -306,6 +306,7 @@ WLayoutBrowser::WLayoutBrowser(TProfile * pProfile, CStr * pstrUrlAddress_NZ)
 
 WLayoutBrowser::~WLayoutBrowser()
 	{
+	TRACE1("WLayoutBrowser::~WLayoutBrowser(0x$p)\n", this);
 	delete m_paCambrian;	// Maybe use deleteLater()
 	}
 
@@ -367,9 +368,12 @@ TBrowser::TreeItem_GotFocus()
 		m_pawLayoutBrowser = new WLayoutBrowser(m_pProfile, INOUT_LATER &m_strUrl);
 	MainWindow_SetCurrentLayout(IN m_pawLayoutBrowser);
 	}
+
 TBrowser::~TBrowser()
 	{
-	delete m_pawLayoutBrowser;
+	TRACE1("TBrowser::~TBrowser(0x$p)\n", this);
+	MainWindow_DeleteLayout(PA_DELETING m_pawLayoutBrowser);
+	//delete m_pawLayoutBrowser;
 	}
 
 

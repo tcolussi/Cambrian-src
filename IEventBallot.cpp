@@ -299,6 +299,20 @@ IEventBallot::HyperlinkClicked(PSZUC pszActionOfHyperlink, OCursor *)
 	((CEventBallotReceived *)this)->DisplayDialogBallotVote();
 	}
 
+//	IEventBallot::IEvent::DetachFromObjectsAboutBeingDeleted()
+void
+IEventBallot::DetachFromObjectsAboutBeingDeleted()
+	{
+	_CEventBallotVote ** ppVoteStop;
+	_CEventBallotVote ** ppVote = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
+	while (ppVote != ppVoteStop)
+		{
+		_CEventBallotVote * pVote = *ppVote++;
+		Assert(pVote->m_pContact != NULL);
+		pVote->m_pContact->Contact_UpdateFlagCannotBeDeleted();	// Prevent any contact in use by the ballot to be deleted
+		}
+	}
+
 
 _CEventBallotChoice *
 IEventBallot::PAllocateNewChoice()

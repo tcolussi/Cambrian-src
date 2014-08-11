@@ -162,6 +162,7 @@ main(int argc, char *argv[])
 	{
 	Assert(sizeof(UINT) == 4);
 	QApplication oApplication(argc, argv);
+	//oApplication.setQuitOnLastWindowClosed(false);
 
 	#ifdef Q_OS_WIN
 	// At the moment, the object QSharedMemory only works on Windows
