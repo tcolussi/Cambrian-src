@@ -106,6 +106,8 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"JAPI Tests"        _ "s=Apps/html5-japi-tests/index.html"		_"i=Browser" _,
 	"Scratch"           _ "s=Apps/html5-scratch/index.html"			_"i=Browser" _,
 	"HTML5 xik"         _ "s=Apps/html5-xik/index.html"				_"i=Browser" _,
+	"Group Manager"		_ "s=Apps/html5-group-manager/index.html"	_"i=Browser" _,
+	"Ballotmaster"		_ "s=Apps/html5-pollmaster/index.html"		_"i=Browser" _,
 
 	"New Wallet" _ "i=Bitcoin" _, // eMenuAction_DisplayWallet
 	"New Web Browser" _ "i=Browser" _, // eMenuAction_DisplaySecureWebBrowsing
@@ -714,6 +716,8 @@ const EMenuActionByte c_rgzeActionsMenuWiki[] =
     eMenuAction_WikiJapiTests,
     eMenuAction_WikiScratch,
     eMenuAction_WikiHtml5Xik,
+	eMenuAction_WikiGroupManager,
+	eMenuAction_WikiBallotMaster,
     ezMenuActionNone
 };
 
@@ -878,6 +882,8 @@ MainWindow_MenuActionExecute(QAction * pAction)
     case eMenuAction_WikiJapiTests:
     case eMenuAction_WikiScratch:
     case eMenuAction_WikiHtml5Xik:
+	case eMenuAction_WikiGroupManager:
+	case eMenuAction_WikiBallotMaster:
 		void LaunchBrowser(const QString & sName, const QString & sUrl);
 		LaunchBrowser( pAction->text(), pAction->statusTip());
         return;

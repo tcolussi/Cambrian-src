@@ -89,6 +89,8 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
     eMenuAction_WikiJapiTests,
     eMenuAction_WikiScratch,
     eMenuAction_WikiHtml5Xik,
+	eMenuAction_WikiGroupManager,
+	eMenuAction_WikiBallotMaster,
 
 	eMenuAction_DisplayWallet,		// Ccreate a new wallet
 	eMenuAction_DisplaySecureWebBrowsing,	// New instance of a web browser
