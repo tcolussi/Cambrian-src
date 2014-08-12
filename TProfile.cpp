@@ -102,7 +102,7 @@ TProfile::DeleteAccount(PA_DELETING TAccountXmpp * paAccountDelete)
 	Assert(paAccountDelete->m_pProfileParent == this);
 	paAccountDelete->MarkForDeletion();
 	RemoveAllReferencesToObjectsAboutBeingDeleted();
-	m_arraypaAccountsXmpp.DeleteTreeItem(PA_DELETING this);
+	m_arraypaAccountsXmpp.DeleteTreeItem(PA_DELETING paAccountDelete);
 	}
 
 void
@@ -125,6 +125,10 @@ TProfile::DeleteContact(PA_DELETING TContact * paContactDelete)
 	paContactDelete->MarkForDeletion();
 	RemoveAllReferencesToObjectsAboutBeingDeleted();
 	paContactDelete->Contact_UpdateFlagCannotBeDeleted();
+	paContactDelete->m_uFlagsTreeItem |= FTI_kfObjectInvisible;
+	delete paContactDelete->m_paTreeItemW_YZ;
+	paContactDelete->m_paTreeItemW_YZ = NULL;
+
 	//paContactDelete->m_pAccount->m_arraypaContacts.DeleteTreeItem(PA_DELETING paContactDelete);	// Delete the contact object and remove it from the Navigation Tree
 	}
 

@@ -77,7 +77,9 @@ public:
 	TContact * m_pContact;
 public:
 	TRecommendations(TContact * pContact);
+	~TRecommendations();
 	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;			// From IRuntimeObject
+	virtual void TreeItem_RemoveAllReferencesToObjectsAboutBeingDeleted();
 	virtual void TreeItem_GotFocus();		// From ITreeItem
 
 	RTI_IMPLEMENTATION(TRecommendations)

@@ -68,7 +68,7 @@ TAccountXmpp::Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEven
 	if (pszContactIdentifier != NULL)
 		{
 		Assert(pszContactIdentifier[0] != '\0');
-		TContact * pContact = Contact_PFindByJID(pszContactIdentifier);
+		TContact * pContact = Contact_PFindByJID(pszContactIdentifier, eFindContact_zDefault);
 		if (pContact != NULL)
 			return pContact;
 		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find peer identifier '$s' from XML node: ^N\n", pszContactIdentifier, pXmlNodeEvent);

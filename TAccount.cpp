@@ -158,12 +158,20 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 			while (ppContact != ppContactStop)
 				{
 				pContact = *ppContact++;
+				Assert(!m_strJID.FCompareStringsJIDs(pContact->m_strJidBare) && "Contact should not have the same JID as its parent XMPP account!");
 				//MessageLog_AppendTextFormatCo(d_coBlack, "Comparing $s with $S\n", pszContactJID, &pContact->m_strJidBare);
 				if (pContact->m_strJidBare.FCompareStringsNoCaseCch(pszContactJID, cchJID))
 					{
-					// We have found our contact, so update the resource (if any)
+					// We have found our contact
+					if (pContact->TreeItemFlags_FuIsInvisible())
+						{
+						Assert(pContact->m_paTreeItemW_YZ == NULL);	// An invisible contact should not appear in the Navigation Tree
+						if (eFindContact & eFindContact_kfMakeVisible)
+							pContact->TreeItemContact_DisplayWithinNavigationTreeAndClearInvisibleFlag();
+						}
 					if (*pszResource != '\0')
 						{
+						// Update the contact resource
 						if (!pContact->m_strRessource.FCompareStringsExactCase(pszResource))
 							{
 							if (pContact->m_strRessource.FIsEmptyString())
@@ -180,13 +188,13 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 					}
 				} // while
 			// We could not find the contact, so create a new one if the JID meets the minimal conditions
-			if (eFindContact != eFindContactOnly &&
+			if ((eFindContact & eFindContact_kfCreateNew) &&
 				PcheValidateJID(pszContactJID) == NULL &&			// Make sure the JID is somewhat valid to create a new contact
 				!m_strJID.FCompareStringsJIDs(pszContactJID))		// Make sure the JID is not the same as the account.  It makes no sense to create a contact with the same JID as its parent account.  This situation occurs rarely when the server sends a stanza where the 'from' contains the JID of the account.
 				{
 				MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "Contact_PFindByJID('$s') - Creating contact for account $S\n", pszContactJID, &m_strJID);
 				pContact = TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszContactJID);
-				if (eFindContact == eFindContactCreateAsUnsolicited)
+				if (eFindContact & eFindContact_kfCreateAsUnsolicited)
 					pContact->SetFlagContactAsUnsolicited();
 				return pContact;
 				}
@@ -195,12 +203,24 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 	return NULL;
 	} // Contact_PFindByJID()
 
+/*
+TContact *
+TAccountXmpp::Contact_PFindByJIDorAllocate(PSZUC pszContactJID, PSZUC pszContactName)
+	{
+	TContact * pContact = Contact_PFindByJID(pszContactJID, eFindContactCreate);
+	if (pContact == NULL)
+		pContact = TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszContactJID, pszContactName);
+	return pContact;
+	}
+*/
+
 TContact *
 TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(PSZUC pszContactJID, PSZUC pszContactNameDisplay)
 	{
 	Assert(pszContactJID != NULL);
 	Endorse(pszContactNameDisplay == NULL);	// Automatically generate a display name
-	Assert(Contact_PFindByJID(pszContactJID) == NULL && "Peer already in the account");
+	Assert(Contact_PFindByJID(pszContactJID, eFindContact_zDefault) == NULL && "The JID is already present!");
+	Assert(!m_strJID.FCompareStringsJIDs(pszContactJID) && "The contact JID is the same as the JID of the XMPP account!");
 	Assert(m_paTreeItemW_YZ != NULL && "No Tree Item to attach to");	// This line of code has to be revised
 	TContact * pContact = new TContact(this);
 	pContact->m_strRessource = pContact->m_strJidBare.AppendTextUntilCharacterPszr(pszContactJID, '/');
@@ -424,7 +444,7 @@ void
 TAccountXmpp::ChatLog_DisplayStanza(const CXmlNode * pXmlNodeMessageStanza)
 	{
 	Assert(pXmlNodeMessageStanza != NULL);
-	TContact * pContact = Contact_PFindByJID(IN pXmlNodeMessageStanza->PszFindAttributeValueFrom_NZ(), eFindContactCreateAsUnsolicited);	// Find the contact matching the the stanza
+	TContact * pContact = Contact_PFindByJID(IN pXmlNodeMessageStanza->PszFindAttributeValueFrom_NZ(), eFindContact_kmCreateAsUnsolicited);	// Find the contact matching the the stanza
 	if (pContact != NULL)
 		pContact->ChatLogContact_DisplayStanzaToUI(pXmlNodeMessageStanza);
 	else
@@ -456,7 +476,7 @@ TAccountXmpp::Contact_RosterUpdateItem(const CXmlNode * pXmlNodeItemRoster)
 	PSZUC pszSubscription = pXmlNodeItemRoster->PszuFindAttributeValue_NZ("subscription");	/* // The attribute "subscription" is not present for a "<iq type='set'>" */
 	if (!FCompareStrings(pszSubscription, "remove"))
 		{
-		TContact * pContact = Contact_PFindByJID(pszJid, eFindContactCreate);
+		TContact * pContact = Contact_PFindByJID(pszJid, eFindContact_kfCreateNew);
 		Endorse(pContact == NULL);	// The attribute "jid" may not be valid (for example, missing the '@' character)
 		if (pContact != NULL)
 			pContact->XmppRosterSubscriptionUpdate(pszSubscription);
@@ -514,6 +534,8 @@ TAccountXmpp::Contact_RosterSubscribe(INOUT TContact * pContact)
 	Assert(pContact != NULL);
 	if (m_paSocket == NULL)
 		return;
+	if (TreeItemFlags_FuIsInvisible())
+		return;	// Don't add invisible contacts to the roster
 	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Adding peer ^j to roster...\n", pContact);
 	m_paSocket->Socket_WriteXmlFormatted("<iq id='$p' type='set'><query xmlns='jabber:iq:roster'><item jid='^j'></item></query></iq>", pContact, pContact);
 	//m_paSocket->Socket_WriteXmlFormatted("<presence to='^j' type='subscribe'/>", pContact);
@@ -539,7 +561,7 @@ TAccountXmpp::Contact_PresenceUpdate(const CXmlNode * pXmlNodeStanzaPresence)
 	Assert(pXmlNodeStanzaPresence != NULL);
 	Assert(pXmlNodeStanzaPresence->FCompareTagName("presence"));
 	// Find the contact to update the presence
-	TContact * pContact = Contact_PFindByJID(pXmlNodeStanzaPresence->PszFindAttributeValueFrom_NZ(), eFindContactCreate);
+	TContact * pContact = Contact_PFindByJID(pXmlNodeStanzaPresence->PszFindAttributeValueFrom_NZ(), eFindContact_kfCreateNew);
 	Endorse(pContact == NULL);	// The <presence> stanza sometimes is just a reply from the server, which means the attribute "from" is not a contact.
 	if (pContact != NULL)
 		pContact->XmppPresenceUpdateIcon(pXmlNodeStanzaPresence);

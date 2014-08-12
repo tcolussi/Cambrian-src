@@ -67,7 +67,7 @@ public:
 		FTI_kfTreeItem_NameDisplayedSuggested	= 0x00000002,	// The content of member variable m_strNameDisplayTyped was suggested by another contact, typically when querying a group for its name and list of contacts.
 		FTI_kfRecommended						= 0x00000010,	// The Tree Item (typically a contact or a group) was recommended by the user.  This flag is used for /api Contact.Recommendations.Get
 		FTI_kfFavorites							= 0x00000020,	// NYI: The Tree Item is among the user's favorites.  A favorite is private to the user, while a recommendation is public.
-		FTI_kfTreeItem_Archived					= 0x00000040,	// The Tree Item, typically a contact or group, has been archived so it is no longer visible in the Navigation Tree, however accessible in the 'Recycle Bin'.  An archived item is something 'half deleted' which may permanently deleted later.
+		FTI_kfObjectInvisible					= 0x00000040,	// The Tree Item is no longer visible in the Navigation Tree.  This is typically when a contact or group has been deleted and accessible in the 'Recycle Bin'.  An invisible item is something 'half deleted' which may permanently deleted later.
 		FTI_kmTreeItem_FlagsSerializeMask		= 0x0000FFFF,	// Bits to save to disk
 
 		FTI_kezIconNone							= 0x00000000,
@@ -91,11 +91,13 @@ public:
 	virtual ~ITreeItem();
 
 	inline UINT TreeItemFlags_FuIsRecommended() const { return (m_uFlagsTreeItem & FTI_kfRecommended); }
+	inline UINT TreeItemFlags_FuIsInvisible() const { return (m_uFlagsTreeItem & FTI_kfObjectInvisible); }
 
 	void TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay);
 
 	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);	// From IXmlExchange
+	virtual void TreeItem_RemoveAllReferencesToObjectsAboutBeingDeleted();
 	virtual BOOL TreeItem_FContainsMatchingText(PSZUC pszTextSearchLowercase) CONST_MCC;
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;
 	virtual void TreeItem_IconUpdate();

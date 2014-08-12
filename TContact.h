@@ -135,6 +135,7 @@ public:
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);					// From ITreeItem
 
 	void TreeItemContact_DisplayWithinNavigationTree();
+	void TreeItemContact_DisplayWithinNavigationTreeAndClearInvisibleFlag();
 	void TreeItemContact_DeleteFromNavigationTree_MB(PA_DELETING);
 	void TreeItemContact_UpdateIconComposingStarted(ITreeItemChatLogEvents * pContactOrGroup);
 	void TreeItemContact_UpdateIconComposingStopped(ITreeItemChatLogEvents * pContactOrGroup);

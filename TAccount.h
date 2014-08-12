@@ -43,6 +43,17 @@ public:
 
 };
 
+enum EFindContact
+	{
+	eFindContact_zDefault					= 0x00,	// Return NULL if there is no contact matching the JID.  This parameter will also return an invisible contact
+	eFindContact_kfMakeVisible				= 0x01,	// If the contact is invisible, then make it appear in the Navigation Tree
+	eFindContact_kmMakeVisibleOrCreateNew	= 0x03,	// Combination of eFindContact_kfMakeVisible and eFindContact_kfCreateNew
+	eFindContact_kfCreateNew				= 0x02,	// Create a new contact if there is no contact matching the JID
+	eFindContact_kfCreateAsUnsolicited		= 0x04,	// Create an unsolicited contact if there is no contact matching the JID
+	eFindContact_kmCreateAsUnsolicited		= eFindContact_kfCreateAsUnsolicited | eFindContact_kfCreateNew
+	};
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class TAccountXmpp : public TAccountCore
 {
@@ -148,13 +159,7 @@ public:
 	void Contacts_RosterDisplayDebug(PSZAC pszName);
 	void Contact_PresenceUpdate(const CXmlNode * pXmlNodeStanzaPresence);
 	void Contact_AllocateNewFromGlobalInvitation();
-	enum EFindContact
-		{
-		eFindContactOnly,		// Return NULL if there is no contact matchng the JID
-		eFindContactCreate,		// Create a new contact if there is no contact matchng the JID
-		eFindContactCreateAsUnsolicited	// Create an unsolicited contact if there is no contact matchng the JID
-		};
-	TContact * Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact = eFindContactOnly);
+	TContact * Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact);
 	TContact * Contact_PFindByIdentifierGroupSender_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC;
 	TContact * Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest) CONST_MCC;
 	void Contact_AddToNavigationTree(PA_CHILD TContact * paContact);
@@ -165,7 +170,7 @@ public:
 	void Group_AddNewMember_UI(TContact * pContact, int iGroup);
 	enum EFindGroup
 		{
-		eFindGroupOnly,		// Return NULL if there is no group matchng the identifier
+		eFindGroupOnly,		// Return NULL if there is no group matching the identifier
 		eFindGroupCreate,		// Create a new group if not present
 		};
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanza * pbinXcpApiExtraRequest, EFindGroup eFindGroup);

@@ -66,6 +66,14 @@ ITreeItem::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		pXmlExchanger->XmlExchangeStr("NameDisplay", INOUT &m_strNameDisplayTyped);	// Compatibility with the old file format (to be removed in 2015)
 	} // XmlExchange()
 
+//	TreeItem_RemoveAllReferencesToObjectsAboutBeingDeleted(), virtual
+//
+//	This virtual method is implemented for orphan Tree Items (the parent Tree Item does not care about the object), and therefore the object must be notified in some way.
+void
+ITreeItem::TreeItem_RemoveAllReferencesToObjectsAboutBeingDeleted()
+	{
+	}
+
 //	TreeItem_FContainsMatchingText(), virtual
 //
 //	Return TRUE if the object contains the text content of pszTextSearchLowercase.

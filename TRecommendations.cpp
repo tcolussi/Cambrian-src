@@ -441,6 +441,11 @@ TRecommendations::TRecommendations(TContact * pContact)
 	m_pContact = pContact;
 	}
 
+TRecommendations::~TRecommendations()
+	{
+	MessageLog_AppendTextFormatCo(eSeverityNoise, "TRecommendations::~TRecommendations(0x$p) - ^j\n", this, m_pContact);
+	}
+
 //	TRecommendations::IRuntimeObject::PGetRuntimeInterface()
 //
 //	Enable the TRecommendations object to respond to the interfaces of its parent contact.
@@ -449,6 +454,12 @@ TRecommendations::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piPa
 	{
 	Report(piParent == NULL);
 	return ITreeItem::PGetRuntimeInterface(rti, m_pContact);
+	}
+
+void
+TRecommendations::TreeItem_RemoveAllReferencesToObjectsAboutBeingDeleted()
+	{
+
 	}
 
 //	TRecommendations::ITreeItem::TreeItem_GotFocus()

@@ -701,5 +701,6 @@ TWalletView::TWalletView(ITreeItem * pParentFilterBy, PSZAC pszName, EWalletView
 
 TWalletView::~TWalletView()
 	{
+	MessageLog_AppendTextFormatCo(d_coGrayDark, "TWalletView::~TWalletView(0x$p)\n", this);
 	}
 

@@ -65,7 +65,8 @@ DialogContactNew::SL_EditUsername_textChanged(const QString & sUsernames)
 						}
 					m_arraypaszContacts.AddStringAllocate(pszUsername);
 					QRGB coUsername = d_coBlack;
-					if (m_pAccount->Contact_PFindByJID(pszUsername) != NULL)
+					TContact * pContact = m_pAccount->Contact_PFindByJID(pszUsername, eFindContact_zDefault);
+					if (pContact != NULL && !pContact->TreeItemFlags_FuIsInvisible())
 						{
 						// There is already a contact sharing the same username
 						coUsername = d_coGrayLight;
@@ -103,7 +104,7 @@ DialogContactNew::SL_ButtonOK_clicked()
 		Assert(pszContact[0] != '\0');
 		if (m_pAccount->m_strJID.FCompareStringsJIDs(pszContact))
 			continue;	// Skip the contact, since its JID is the same as its parent account JID
-		TContact * pContact = m_pAccount->Contact_PFindByJID(pszContact);
+		TContact * pContact = m_pAccount->Contact_PFindByJID(pszContact, eFindContact_zDefault);
 		if (pContact == NULL)
 			{
 			// This is a new JID which is not already in the contact list
@@ -112,8 +113,16 @@ DialogContactNew::SL_ButtonOK_clicked()
 		else
 			{
 			// The JID is already in the contact list
-			pContactDuplicate = pContact;
-			strContactsDuplicate.AppendSeparatorAndTextU("\n", pszContact);
+			if (pContact->TreeItemFlags_FuIsInvisible())
+				{
+				pContact->TreeItemContact_DisplayWithinNavigationTreeAndClearInvisibleFlag();
+				pContactSelect = pContact;
+				}
+			else
+				{
+				pContactDuplicate = pContact;
+				strContactsDuplicate.AppendSeparatorAndTextU("\n", pszContact);
+				}
 			}
 		} // while
 	if (!strContactsDuplicate.FIsEmptyString())
@@ -163,7 +172,7 @@ TAccountXmpp::Contact_AllocateNewFromGlobalInvitation()
 	g_paInvitation->m_strJID.AppendServerNameToJidIfMissing(m_strServerName);
 	PSZUC pszJID = g_paInvitation->m_strJID;
 	MessageLog_AppendTextFormatSev(eSeverityComment, "Adding $s ($S) from invitation...\n", pszJID, &g_paInvitation->m_strNameDisplay);
-	if (Contact_PFindByJID(pszJID) == NULL)
+	if (Contact_PFindByJID(pszJID, eFindContact_kfMakeVisible) == NULL)
 		(void)TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszJID, g_paInvitation->m_strNameDisplay);
 	g_paInvitation = NULL;
 	Invitation_EraseFile();
@@ -254,16 +263,20 @@ WLayoutContactNew::SL_EditUsername_textChanged(const QString & sUsernames)
 						{
 						// The username is the same as the account JID
 						coUsername = d_coRed;
-						pszUsernameIntro = "Your Peer";
+						pszUsernameIntro = "Yourself";
 						pszUsernameAllocate = NULL;
 						}
-					else if (m_pAccount->Contact_PFindByJID(pszUsername) != NULL)
+					else
 						{
-						// There is already an existing contact sharing this username
-						coUsername = d_coGrayLight;
-						pszUsernameIntro = "Duplicate Peer";
+						TContact * pContact = m_pAccount->Contact_PFindByJID(pszUsername, eFindContact_zDefault);
+						if (pContact != NULL && !pContact->TreeItemFlags_FuIsInvisible())
+							{
+							// There is already an existing contact with this username/JID
+							coUsername = d_coGrayLight;
+							pszUsernameIntro = "Duplicate Peer";
+							}
 						}
-					else if (PcheValidateJID(pszUsername) != NULL)
+					if (PcheValidateJID(pszUsername) != NULL)
 						{
 						coUsername = d_coRed;
 						pszUsernameIntro = "Invalid Peer JID";
@@ -309,7 +322,7 @@ WLayoutContactNew::SL_ButtonAddContacts()
 			pszContact = paInvitation->m_strJID;
 			pszContactName = paInvitation->m_strNameDisplay;
 			}
-		TContact * pContact = m_pAccount->Contact_PFindByJID(pszContact);
+		TContact * pContact = m_pAccount->Contact_PFindByJID(pszContact, eFindContact_zDefault);
 		if (pContact == NULL)
 			{
 			// This is a new JID which is not already in the contact list
@@ -318,8 +331,16 @@ WLayoutContactNew::SL_ButtonAddContacts()
 		else
 			{
 			// The JID is already in the contact list
-			pContactDuplicate = pContact;
-			strContactsDuplicate.AppendSeparatorAndTextU("\n", pszContact);
+			if (pContact->TreeItemFlags_FuIsInvisible())
+				{
+				pContact->TreeItemContact_DisplayWithinNavigationTreeAndClearInvisibleFlag();
+				pContactSelect = pContact;
+				}
+			else
+				{
+				pContactDuplicate = pContact;
+				strContactsDuplicate.AppendSeparatorAndTextU("\n", pszContact);
+				}
 			}
 		delete paInvitation;
 		} // while

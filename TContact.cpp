@@ -404,11 +404,21 @@ void
 TContact::TreeItemContact_DisplayWithinNavigationTree()
 	{
 	Assert(m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
+	if (m_uFlagsTreeItem & FTI_kfObjectInvisible)
+		return;	// Don't display hidden contacts
 	TreeItemW_DisplayWithinNavigationTree(m_pAccount);
 	TreeItemChatLog_UpdateTextAndIcon();
 
 	if (!m_binXmlRecommendations.FIsEmptyBinary())
 		Contact_RecommendationsDisplayWithinNavigationTree();
+	}
+
+void
+TContact::TreeItemContact_DisplayWithinNavigationTreeAndClearInvisibleFlag()
+	{
+	Assert(TreeItemFlags_FuIsInvisible());
+	m_uFlagsTreeItem &= ~FTI_kfObjectInvisible;	// Remove the hidden flag
+	TreeItemContact_DisplayWithinNavigationTree();
 	}
 
 void

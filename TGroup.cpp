@@ -222,7 +222,7 @@ TGroup::Member_PFindOrAllocate_NZ(PSZUC pszMemberJID)
 			return pMember;
 		}
 	// We have not found the member in the contact
-	TContact * pContact = m_pAccount->Contact_PFindByJID(pszMemberJID, TAccountXmpp::eFindContactCreate);
+	TContact * pContact = m_pAccount->Contact_PFindByJID(pszMemberJID, eFindContact_kfCreateNew);
 	Assert(pContact != NULL);
 	TGroupMember * pMember = new TGroupMember(this, pContact);
 	m_arraypaMembers.Add(pMember);
