@@ -24,6 +24,9 @@ OJapiCambrian::apps()
 	return &m_oApps;
 	}
 
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 OJapiMe::OJapiMe(OJapiCambrian * poCambrian)
 	{
@@ -33,7 +36,7 @@ OJapiMe::OJapiMe(OJapiCambrian * poCambrian)
 OJapiList
 OJapiMe::groups()
 	{
-	CListVariants oList;
+	CListVariants oList(m_poCambrian);
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
@@ -59,9 +62,9 @@ OJapiMe::groups()
 	}
 
 OJapiList
-OJapiMe::peerList()
+OJapiMe::peerLists()
 	{
-	CListVariants oList;
+	CListVariants oList(m_poCambrian);
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
@@ -76,7 +79,7 @@ OJapiMe::peerList()
 OJapiList
 OJapiMe::peers()
 	{
-	CListVariants oList;
+	CListVariants oList(m_poCambrian);
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
@@ -101,28 +104,67 @@ OJapiMe::peers()
 	return oList;
 }
 
-POJapiGroup OJapiMe::newPeerList()
+POJapiGroup
+OJapiMe::newPeerList()
 	{
 	TAccountXmpp *pAccount = (TAccountXmpp*) m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PvGetElementFirst_YZ();
 	if ( pAccount == NULL)
 		return NULL;
 	TGroup *paGroup = pAccount->Group_PaAllocateAudience();
 	m_poCambrian->m_arraypaTemp.Add(paGroup);
-	return paGroup->POJapiGet();
+	return paGroup->POJapiGet(m_poCambrian);
+	}
+
+POJapiGroup
+OJapiMe::getPeerList(const QString & sId)
+	{
+
+	SHashSha1 hashId ;
+	CStr strId = sId;
+	HashSha1_FInitFromStringBase85_ZZR_ML(OUT &hashId, strId);
+
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Open);
+
+		TGroup ** ppGroupStop;
+		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+		while (ppGroup != ppGroupStop)
+			{
+			TGroup * pGroup = *ppGroup++;
+			Assert(pGroup != NULL);
+			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+
+			if ( HashSha1_FCompareEqual(pGroup->m_hashGroupIdentifier, hasId  ))
+				return pGroup->POJapiGet(m_poCambrian);
+			} // while
+
+		} // while
+	return NULL;
+	}
+
+POJapiGroup
+OJapiMe::getGroup(const QString & sId)
+	{
+	return getPeerList(sId);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 POJapiGroup
-TGroup::POJapiGet()
+TGroup::POJapiGet(OJapiCambrian * poCambrian)
 	{
 	if (m_paoJapiGroup == NULL)
-		m_paoJapiGroup = new OJapiGroup(this);
+		m_paoJapiGroup = new OJapiGroup(this, poCambrian);
 	return m_paoJapiGroup;
 	}
 
-OJapiGroup::OJapiGroup(TGroup * pGroup)
+OJapiGroup::OJapiGroup(TGroup * pGroup, OJapiCambrian * poCambrian)
 	{
 	m_pGroup = pGroup;
+	m_poCambrian = poCambrian;
 	}
 
 QString
@@ -142,7 +184,8 @@ OJapiGroup::name()
 	return m_pGroup->m_strNameDisplayTyped;
 	}
 
-void OJapiGroup::name(const QString &sName)
+void
+OJapiGroup::name(const QString &sName)
 	{
 	MessageLog_AppendTextFormatCo(d_coBlue, "OJapiGroup.name($Q)\n", &sName);
 	m_pGroup->m_strNameDisplayTyped = sName;
@@ -162,7 +205,8 @@ OJapiGroup::addPeer(QObject *pContactAdd)
 	m_pGroup->Member_PFindOrAddContact_NZ(pContact->m_pContact);
 	}
 
-void OJapiGroup::removePeer(QObject *pContactRemove)
+void
+OJapiGroup::removePeer(QObject *pContactRemove)
 	{
 
 	OJapiContact * pContact = qobject_cast<OJapiContact *>(pContactRemove); // Make sure we received an object of proper type
@@ -180,6 +224,24 @@ void OJapiGroup::removePeer(QObject *pContactRemove)
 		}
 	}
 
+void
+OJapiGroup::save()
+	{
+	if (m_poCambrian->m_arraypaTemp.RemoveElementFastF(m_pGroup))
+		m_pGroup->m_pAccount->m_arraypaGroups.Add(m_pGroup);
+	}
+
+void
+OJapiGroup::destroy()
+	{
+	Assert(m_pGroup != NULL);
+	if ( !m_pGroup || m_pGroup->m_eGroupType != eGroupType_Audience)
+		return;
+	if ( m_poCambrian->m_arraypaTemp.DeleteRuntimeObjectF(m_pGroup))
+		return;
+	m_pGroup->m_pAccount->m_arraypaGroups.DeleteRuntimeObject(m_pGroup);
+	m_pGroup = NULL;
+	}
 
 
 
@@ -213,6 +275,11 @@ OJapiContact::name()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+CListVariants::CListVariants(OJapiCambrian *poCambrian)
+	{
+	m_poCambrian = poCambrian;
+	}
+
 void
 CListVariants::AddContact(TContact *pContact)
 	{
@@ -240,7 +307,7 @@ CListVariants::AddGroupMatchingType(TGroup *pGroup, EGroupType eGroupType)
 	Assert(pGroup != NULL);
 	if ( pGroup->m_eGroupType == eGroupType)
 	{
-		append(QVariant::fromValue(pGroup->POJapiGet()));
+		append(QVariant::fromValue(pGroup->POJapiGet(m_poCambrian)));
 	}
 }
 
@@ -268,5 +335,4 @@ CListVariants::AddAudience(TGroup *pGroup)
 	AddGroupMatchingType(pGroup, eGroupType_Audience);
 	}
 
-
-
+//////////////////////////////////////////////////////////////////////////////////

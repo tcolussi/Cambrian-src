@@ -32,6 +32,7 @@ public:
 	inline IRuntimeObject ** PrgpGetRuntimeObjectsStop(OUT IRuntimeObject *** pppRuntimeObjectStop) const { return (IRuntimeObject **)PrgpvGetElementsStop(OUT (void ***)pppRuntimeObjectStop); }
 	IRuntimeObject * PFindRuntimeObject(RTI_ENUM rti) const;
 	void DeleteRuntimeObject(PA_DELETING IRuntimeObject * paRuntimeObject);
+	bool DeleteRuntimeObjectF(PA_DELETING IRuntimeObject * paRuntimeObject);
 	void DeleteAllRuntimeObjects();
 
 	inline IRuntimeObject * PGetObjectUnique_YZ() const { return (IRuntimeObject *)PvGetElementUnique_YZ(); }

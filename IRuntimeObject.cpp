@@ -85,6 +85,18 @@ CArrayPtrRuntimeObjects::DeleteRuntimeObject(PA_DELETING IRuntimeObject * paRunt
 	delete paRuntimeObject;
 	}
 
+bool
+CArrayPtrRuntimeObjects::DeleteRuntimeObjectF(PA_DELETING IRuntimeObject * paRuntimeObject)
+	{
+	Assert(paRuntimeObject != NULL);
+	if ( RemoveElementI(paRuntimeObject) >= 0)
+		{
+		delete paRuntimeObject;
+		return true;
+		}
+	return false;
+	}
+
 void
 CArrayPtrRuntimeObjects::DeleteAllRuntimeObjects()
 	{
