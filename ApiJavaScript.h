@@ -13,7 +13,7 @@ public:
 	void AddContact(TContact * pContact);
 	void AddContacts(const CArrayPtrContacts & arraypContacts);
 	void AddGroupMatchingType(TGroup * pGroup, EGroupType eGroupType);
-	void AddGroupsMatchingType(const CArrayPtrGroups & arraypGroups, EGroupType eGroupType) { }
+	void AddGroupsMatchingType(const CArrayPtrGroups & arraypGroups, EGroupType eGroupType);
 	void AddGroup(TGroup * pGroup);
 	void AddAudience(TGroup * pGroup);
 };
@@ -258,16 +258,21 @@ public:
 
 	Q_OBJECT
 	Q_PROPERTY(OJapiList groups READ groups)
+	Q_PROPERTY(OJapiList peerList READ peerList)
 	Q_PROPERTY(OJapiList peers READ peers)
+
+public slots:
+	QObject *newPeerList();
 };
 #define POJapiMe		POJapi
 
 class OJapiContact : public OJapi
 {
-	TContact * m_pContact;
 
 public:
 	OJapiContact(TContact * pContact);
+
+	TContact * m_pContact;
 
 	QString id();
 	QString name();
@@ -289,21 +294,27 @@ public:
 
 	QString id();
 	QString name();
+	void name(const QString & sName);
 	int count();
-	void addPeer(POJapiContact pContactAdd);
-	void removePeer(POJapiContact pContactRemove);
 
 	Q_OBJECT
 	Q_PROPERTY(QString id READ id)
-	Q_PROPERTY(QString name READ name)
+	Q_PROPERTY(QString name READ name WRITE name)
 	Q_PROPERTY(int count READ count)
+
+public slots:
+	void addPeer(POJapiContact pContactAdd);
+	void removePeer(POJapiContact pContactRemove);
 };
+#define POJapiGroup		POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiCambrian : public OJapi
 {
 public:
 	TProfile * m_pProfile;
+	CArrayPtrRuntimeObjects m_arraypaTemp;
+
 protected:
 	OSettings m_oSettings;
 	OJapiProfile m_oProfile;

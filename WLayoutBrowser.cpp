@@ -133,6 +133,7 @@ OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pPa
 OJapiCambrian::~OJapiCambrian()
 	{
 	//MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OJapiCambrian::~OJapiCambrian()\n");
+	m_arraypaTemp.DeleteAllRuntimeObjects();// Delete all temporary object
 	delete m_paAppBallotmaster;
 	}
 
@@ -313,6 +314,8 @@ WLayoutBrowser::~WLayoutBrowser()
 void
 WLayoutBrowser::SL_InitJavaScript()
 	{
+	//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlueDark), "SL_InitJavaScript()\n");
+	m_paCambrian->m_arraypaTemp.DeleteAllRuntimeObjects();// Delete any previous temporary object
 	m_poFrame->addToJavaScriptWindowObject("Cambrian", m_paCambrian); // , QWebFrame::ScriptOwnership);
 	}
 

@@ -66,6 +66,8 @@ public:
 	void XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * pbinXcpApiExtraRequest);
 	void XcpApiGroup_Profile_GetFromContact(TContact * pContact);
 
+
+	bool IsUIDisplayable();
 	void Member_Add_UI(TContact * pContact);
 	void Member_Remove_UI(PA_DELETING TGroupMember * pMember);
 	TGroupMember * Member_PFindOrAddContact_NZ(TContact * pContact);
