@@ -128,7 +128,6 @@ OJapiMe::getPeerList(const QString & sId)
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
-		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Open);
 
 		TGroup ** ppGroupStop;
 		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
@@ -138,7 +137,7 @@ OJapiMe::getPeerList(const QString & sId)
 			Assert(pGroup != NULL);
 			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 
-			if ( HashSha1_FCompareEqual(pGroup->m_hashGroupIdentifier, hasId  ))
+			if ( HashSha1_FCompareEqual( &pGroup->m_hashGroupIdentifier, &hashId  ))
 				return pGroup->POJapiGet(m_poCambrian);
 			} // while
 
