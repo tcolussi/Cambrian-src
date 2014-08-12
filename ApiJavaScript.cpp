@@ -39,7 +39,6 @@ OJapiMe::groups()
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
-		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Audience);
 		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Open);
 		/*
 		TGroup ** ppGroupStop;
@@ -54,6 +53,21 @@ OJapiMe::groups()
 			oList.append(QVariant::fromValue(pGroup->POJapiGet()));
 			} // while
 		*/
+		} // while
+	MessageLog_AppendTextFormatCo(d_coBlack, "Groups List length end = $i\n", oList.length());
+	return oList;
+	}
+
+OJapiList
+OJapiMe::peerList()
+	{
+	CListVariants oList;
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Audience);
 		} // while
 	MessageLog_AppendTextFormatCo(d_coBlack, "Groups List length end = $i\n", oList.length());
 	return oList;

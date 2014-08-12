@@ -258,6 +258,7 @@ public:
 
 	Q_OBJECT
 	Q_PROPERTY(OJapiList groups READ groups)
+	Q_PROPERTY(OJapiList peerList READ peerList)
 	Q_PROPERTY(OJapiList peers READ peers)
 
 public slots:

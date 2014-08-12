@@ -133,6 +133,7 @@ OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pPa
 OJapiCambrian::~OJapiCambrian()
 	{
 	//MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OJapiCambrian::~OJapiCambrian()\n");
+	m_arraypaTemp.DeleteAllRuntimeObjects();// Delete all temporary object
 	delete m_paAppBallotmaster;
 	}
 
