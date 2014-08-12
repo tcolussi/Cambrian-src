@@ -170,11 +170,21 @@ TGroup::Member_PFindOrAddContact_NZ(TContact * pContact)
 		// Add a new member to the group
 		pMember = new TGroupMember(this, pContact);
 		m_arraypaMembers.Add(pMember);
-		pMember->TreeItemGroupMember_DisplayWithinNavigationTree();
-		TreeItemW_SetTextToDisplayNameIfGenerated();
+		// add the child only if the group is visible
+		if ( m_paTreeItemW_YZ != NULL)
+			{
+			pMember->TreeItemGroupMember_DisplayWithinNavigationTree();
+			TreeItemW_SetTextToDisplayNameIfGenerated();
+			}
 		}
 	Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
 	return pMember;
+	}
+
+
+bool TGroup::IsUIDisplayable()
+	{
+	return m_eGroupType == eGroupType_Open;
 	}
 
 void
@@ -466,6 +476,15 @@ TAccountXmpp::Group_PAllocate()
 	pGroup->m_strNameDisplayTyped.Format("Group #$i", iGroup + 1);
 	pGroup->GroupInitNewIdentifier();
 	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
+	return pGroup;
+	}
+
+TGroup *TAccountXmpp::Group_PaAllocateAudience()
+	{
+	TGroup * pGroup = new TGroup(this);
+	//m_arraypaGroups.Add(PA_CHILD pGroup);
+	pGroup->m_eGroupType = eGroupType_Audience;
+	pGroup->GroupInitNewIdentifier();
 	return pGroup;
 	}
 

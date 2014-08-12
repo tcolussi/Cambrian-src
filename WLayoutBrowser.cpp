@@ -313,6 +313,8 @@ WLayoutBrowser::~WLayoutBrowser()
 void
 WLayoutBrowser::SL_InitJavaScript()
 	{
+	//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlueDark), "SL_InitJavaScript()\n");
+	m_paCambrian->m_arraypaTemp.DeleteAllRuntimeObjects();// Delete any previous temporary object
 	m_poFrame->addToJavaScriptWindowObject("Cambrian", m_paCambrian); // , QWebFrame::ScriptOwnership);
 	}
 

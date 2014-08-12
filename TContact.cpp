@@ -248,7 +248,8 @@ TContact::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	while (ppGroup != ppGroupStop)
 		{
 		TGroup * pGroup = *ppGroup++;
-		pMenuGroup->ActionAddFromText(pGroup->TreeItem_PszGetNameDisplay(), eMenuActionGroup++, eMenuAction_Group);
+		if (pGroup->IsUIDisplayable())
+			pMenuGroup->ActionAddFromText(pGroup->TreeItem_PszGetNameDisplay(), eMenuActionGroup++, eMenuAction_Group);
 		}
 	pMenuGroup->ActionAddFromText((PSZUC)"<New Group...>", eMenuAction_GroupNew, eMenuAction_GroupNew);
 
