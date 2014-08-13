@@ -67,7 +67,6 @@ public:
 	void XcpApiGroup_Profile_GetFromContact(TContact * pContact);
 
 
-	bool IsUIDisplayable();
 	void Member_Add_UI(TContact * pContact);
 	void Member_Remove_UI(PA_DELETING TGroupMember * pMember);
 	TGroupMember * Member_PFindOrAddContact_NZ(TContact * pContact);
@@ -84,6 +83,7 @@ public:
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);			// From ITreeItem
 	virtual void Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const;	// From ITreeItemChatLogEvents
 
+	bool TreeItemGroup_FCanDisplayWithinNavigationTree() const;
 	void TreeItemGroup_DisplayWithinNavigationTree();
 	void TreeItemGroup_RemoveFromNavigationTree();
 

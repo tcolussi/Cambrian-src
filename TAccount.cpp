@@ -597,8 +597,8 @@ TContact::Contact_UpdateFlagCannotBeDeleted()
 	{
 	if (m_paoJapiContact != NULL)
 		{
-		m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeleted;
-		m_pAccount->m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeleted;	// Also prevent its parent account to be deleted
+		m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeletedFromMemory;
+		m_pAccount->m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeletedFromMemory;	// Also prevent its parent account to be deleted
 		}
 	}
 
@@ -607,8 +607,8 @@ TGroup::Group_UpdateFlagCannotBeDeleted()
 	{
 	if (m_paoJapiGroup != NULL)
 		{
-		m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeleted;
-		m_pAccount->m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeleted;	// Also prevent its parent account to be deleted
+		m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeletedFromMemory;
+		m_pAccount->m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeletedFromMemory;	// Also prevent its parent account to be deleted
 		}
 	}
 

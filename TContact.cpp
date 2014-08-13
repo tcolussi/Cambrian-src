@@ -248,7 +248,7 @@ TContact::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	while (ppGroup != ppGroupStop)
 		{
 		TGroup * pGroup = *ppGroup++;
-		if (pGroup->IsUIDisplayable())
+		if (pGroup->TreeItemGroup_FCanDisplayWithinNavigationTree())
 			pMenuGroup->ActionAddFromText(pGroup->TreeItem_PszGetNameDisplay(), eMenuActionGroup++, eMenuAction_Group);
 		}
 	pMenuGroup->ActionAddFromText((PSZUC)"<New Group...>", eMenuAction_GroupNew, eMenuAction_GroupNew);
@@ -777,7 +777,7 @@ CArrayPtrContactAliases::DeleteAllAliasesRelatedToContactsAboutBeingDeleted()
 		Assert(pAlias != NULL);
 		Assert(pAlias->m_pContact != NULL);
 		Assert(pAlias->m_pContact->EGetRuntimeClass() == RTI(TContact));
-		if ((pAlias->m_pContact->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItem_AboutBeingDeleted) == 0)
+		if (!pAlias->m_pContact->TreeItemFlags_FuIsDeleted())
 			*ppAliasDst++ = pAlias;
 		else
 			delete pAlias;

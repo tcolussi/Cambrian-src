@@ -3492,17 +3492,21 @@ CXmlExchanger::XmlExchangeDateTime(PSZAC pszuTagNameDateTime, INOUT_F_UNCH_S QDa
 	}
 
 void
-CXmlExchanger::XmlExchangeObjects(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject pfnPaAllocatorObject, PVOID pvContextAllocate)
+CXmlExchanger::XmlExchangeObjects(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrTreeItems * parraypaObjects, PFn_PaAllocateXmlObject pfnPaAllocatorObject, PVOID pvContextAllocate)
 	{
 	PSZAC pszuTagNameObjects = (PSZAC)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNameObjects);
 	PSZAC pszuTagNameObject = (PSZAC)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNameObjects + 32);	// Use a lowercase version for each object
 	XmlExchangeObjects(pszuTagNameObjects, pszuTagNameObject, parraypaObjects, pfnPaAllocatorObject, pvContextAllocate);
 	}
 
+//	Serialize Tree Item objects.
+//	Originally this method was serializing CArrayPtrXmlSerializable, however since some objects may be undeletable (and every serializable object inherits from ITreeItem),
+//	the array parraypaObjects is of type CArrayPtrTreeItems.
+//
 //	INTERFACE NOTES
 //	The pointers pszuTagNameObjects and pszuTagNameObject are assumed to be static.  If they are dynamic, it is the responsibility of the caller to allocate them.
 void
-CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObject, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject pfnPaAllocatorObject, PVOID pvContextAllocate)
+CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObject, INOUT_F_UNCH_S CArrayPtrTreeItems * parraypaObjects, PFn_PaAllocateXmlObject pfnPaAllocatorObject, PVOID pvContextAllocate)
 	{
 	Assert(pszuTagNameObjects != NULL);
 	Assert(pszuTagNameObjects[0] != '\0');
@@ -3511,9 +3515,9 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 
 	if (m_fSerializing)
 		{
-		IXmlExchange ** ppObject;
-		IXmlExchange ** ppObjectStop;
-		ppObject = parraypaObjects->PrgpGetObjectsStop(OUT &ppObjectStop);
+		ITreeItem ** ppObject;
+		ITreeItem ** ppObjectStop;
+		ppObject = parraypaObjects->PrgpGetTreeItemsStop(OUT &ppObjectStop);
 		if (ppObject == ppObjectStop)
 			return;	// The array is empty, therefore there is nothing to serialize
 		CXmlNode * pNodeObjects = _PAllocateElement(m_pXmlNodeSerialize, pszuTagNameObjects);	// Allocate the element for the objects
@@ -3523,7 +3527,13 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 			// An object is always serialized as an element
 			CXmlNode * pNodeObject = _PAllocateElement(pNodeObjects, pszuTagNameObject);
 			*ppNodeObjectStack = pNodeObject;
-			IXmlExchange * pObject = *ppObject++;
+			ITreeItem * pObject = *ppObject++;
+			Assert(PGetRuntimeInterfaceOf_ITreeItem(pObject) == pObject);
+			if (pObject->TreeItemFlags_FuIsDeleted())
+				{
+				MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "The Tree Item 0x$p '$S' is NOT serialized because it is considered deleted\n", pObject, &pObject->m_strNameDisplayTyped);
+				continue;
+				}
 			pObject->XmlExchange(INOUT this);
 			if (ppObject == ppObjectStop)
 				break;
@@ -3552,8 +3562,7 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 
 //	The method XmlExchangeObjects2() is very similar to XmlExchangeObjects(), however pfnPaAllocatorObject2 takes two (2) parameters:
 //		1. The first parameter is identical to XmlExchangeObjects()
-//		2. The second parameter of pfnPaAllocatorObject2 is a pointer to the XML element to unserialize.  This allows allocator pfnPaAllocatorObject2 to fetch additional information necessary to create (allocate) the object.
-//
+//		2. The second parameter of pfnPaAllocatorObject2 is a pointer to the XML element to unserialize.  This allows the allocator pfnPaAllocatorObject2 to fetch additional information necessary to create (allocate) the object.
 void
 CXmlExchanger::XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject2_YZ pfnPaAllocatorObject2_YZ, PVOID pvContextAllocate)
 	{
@@ -3608,14 +3617,18 @@ CXmlExchanger::XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPt
 	}
 
 void
-CXmlExchanger::XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S IXmlExchangeObjectID ** ppObject, const CArrayPtrXmlSerializableObjects * parraypObjectsLookup)
+CXmlExchanger::XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S ITreeItem ** ppObject, const CArrayPtrTreeItems * parraypObjectsLookup)
 	{
 	Assert(ppObject != NULL);
 	if (m_fSerializing)
 		{
-		IXmlExchangeObjectID * pObject = *ppObject;
+		ITreeItem * pObject = *ppObject;
 		if (pObject != NULL)
+			{
+			Assert(PGetRuntimeInterfaceOf_ITreeItem(pObject) == pObject);
+			Assert(!pObject->TreeItemFlags_FuIsDeleted() && "Attempting to serialize a pointer to a deleted object is a bug!");
 			AllocateAttributeValueInteger((PSZA)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNamePointer), pObject->UGetObjectId());
+			}
 		}
 	else
 		{
@@ -3634,7 +3647,7 @@ CXmlExchanger::XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S IXmlExcha
 				{
 				if (stn.u.nData > 0)
 					{
-					*ppObject = parraypObjectsLookup->PFindObjectById(stn.u.nData);
+					*ppObject = (ITreeItem *)parraypObjectsLookup->PFindObjectById(stn.u.nData);
 					return;
 					}
 				}
@@ -3645,28 +3658,31 @@ CXmlExchanger::XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S IXmlExcha
 	} // XmlExchangePointer()
 
 void
-CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CArrayPtrXmlSerializableObjects * parraypObjects, const CArrayPtrXmlSerializableObjects & arraypObjectsLookup)
+CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CArrayPtrTreeItems * parraypObjects, const CArrayPtrXmlSerializableObjects & arraypObjectsLookup)
 	{
 	Assert(pszuTagNamePointers != NULL);
 	Assert(parraypObjects != NULL);
 	Assert(&arraypObjectsLookup != NULL);
+	Assert(parraypObjects != &arraypObjectsLookup);
 	if (m_fSerializing)
 		{
 		// Serialize the pointers
-		IXmlExchangeObjectID ** ppObject;
-		IXmlExchangeObjectID ** ppObjectStop;
-		ppObject = parraypObjects->PrgpGetObjectsStop(OUT &ppObjectStop);
+		ITreeItem ** ppObject;
+		ITreeItem ** ppObjectStop;
+		ppObject = parraypObjects->PrgpGetTreeItemsStop(OUT &ppObjectStop);
 		if (ppObject == ppObjectStop)
 			return;	// The array is empty, therefore there is nothing to serialize
 		g_strScratchBufferStatusBar.Empty();	// For performance, reuse the global variable as a CBin
 		while (TRUE)
 			{
-			IXmlExchangeObjectID * pObject = *ppObject++;
-			Assert(pObject != NULL);
-			Assert(pObject->PGetRuntimeInterface(RTI(IXmlExchangeObjectID), NULL) == pObject);
-			Assert(pObject->UGetObjectId() > 0);
+			ITreeItem * pObject = *ppObject++;
 			if (pObject != NULL)
+				{
+				Assert(PGetRuntimeInterfaceOf_ITreeItem(pObject) == pObject);
+				Assert(!pObject->TreeItemFlags_FuIsDeleted() && "Attempting to serialize a pointer to a deleted object is a bug!");
+				Assert(pObject->UGetObjectId() > 0);
 				g_strScratchBufferStatusBar.BinAppendTextInteger(pObject->UGetObjectId());
+				}
 			if (ppObject == ppObjectStop)
 				break;
 			g_strScratchBufferStatusBar.BinAppendByte(' ');	// Put a space between the pointers

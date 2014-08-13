@@ -141,13 +141,13 @@ TGroup::~TGroup()
 void
 TGroup::MarkForDeletion()
 	{
-
+	m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
 	}
 
 void
 TGroup::RemoveAllReferencesToContactsAboutBeingDeleted()
 	{
-	if (m_pContactWhoRecommended_YZ != NULL && (m_pContactWhoRecommended_YZ->m_uFlagsTreeItem & FTI_kfTreeItem_AboutBeingDeleted))
+	if (m_pContactWhoRecommended_YZ != NULL && m_pContactWhoRecommended_YZ->TreeItemFlags_FuIsDeleted())
 		m_pContactWhoRecommended_YZ = NULL;	// The user decided to remove the contact form his list, however to keep the group referred by the contact
 	m_arraypaMembers.DeleteAllAliasesRelatedToContactsAboutBeingDeleted();
 	RemoveAllReferencesToObjectsAboutBeingDeleted();
@@ -179,12 +179,6 @@ TGroup::Member_PFindOrAddContact_NZ(TContact * pContact)
 		}
 	Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
 	return pMember;
-	}
-
-
-bool TGroup::IsUIDisplayable()
-	{
-	return m_eGroupType == eGroupType_Open;
 	}
 
 void
@@ -266,18 +260,6 @@ POBJECT
 TGroup::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
 	Report(piParent == NULL);
-	/*
-	switch (rti)
-		{
-	case RTI(TProfile):
-	case RTI(TAccountXmpp):
-	case RTI(TCertificate):
-	case RTI(TCertificateServerName):
-		return m_pAccount->PGetRuntimeInterface(rti);
-	default:
-		return ITreeItemChatLogEvents::PGetRuntimeInterface(rti);
-		}
-	*/
 	return ITreeItemChatLogEvents::PGetRuntimeInterface(rti, m_pAccount);
 	} // PGetRuntimeInterface()
 
@@ -361,6 +343,13 @@ WLayoutGroup::WLayoutGroup(TGroup * pGroup)
 	addWidget(pLabel);
 	}
 */
+
+//	Return TRUE if the group may be displayed within the Navigation Tree
+bool
+TGroup::TreeItemGroup_FCanDisplayWithinNavigationTree() const
+	{
+	return (m_eGroupType == eGroupType_Open) && TreeItemFlags_FCanDisplayWithinNavigationTree();
+	}
 
 void
 TGroup::TreeItemGroup_DisplayWithinNavigationTree()

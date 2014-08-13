@@ -328,7 +328,7 @@ CVaultEventsForContact::ContactUnbindIfAboutBeingDeleted()
 		Assert(m_pContactParent_YZ->EGetRuntimeClass() == RTI(TContact));
 		if (m_binEventsEncrypted.FIsEmptyBinary())
 			EventsEncryptCb();
-		if (m_pContactParent_YZ->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItem_AboutBeingDeleted)
+		if (m_pContactParent_YZ->TreeItemFlags_FuIsDeleted())
 			{
 			m_pContactParent_YZ = NULL;
 			m_arraypaEvents.DeleteAllEvents();	// The events are no longer available since its parent contact is about being deleted

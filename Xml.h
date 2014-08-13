@@ -323,11 +323,11 @@ public:
 	void XmlExchangeSha1(PSZAC pszuTagNameSha1, INOUT_F_UNCH_S SHashSha1 * pHashSha1);
 	void XmlExchangeTimestamp(PSZAC pszuTagNameTimestamp, INOUT_F_UNCH_S TIMESTAMP * ptsValue);
 	void XmlExchangeDateTime(PSZAC pszuTagNameDateTime, INOUT_F_UNCH_S QDateTime * pDateTime);
-	void XmlExchangeObjects(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject pfnPaAllocatorObject, PVOID pvContextAllocate = d_zNA);
-	void XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObject, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject pfnPaAllocatorObject, PVOID pvContextAllocate = d_zNA);
+	void XmlExchangeObjects(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrTreeItems * parraypaObjects, PFn_PaAllocateXmlObject pfnPaAllocatorObject, PVOID pvContextAllocate = d_zNA);
+	void XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObject, INOUT_F_UNCH_S CArrayPtrTreeItems * parraypaObjects, PFn_PaAllocateXmlObject pfnPaAllocatorObject, PVOID pvContextAllocate = d_zNA);
 	void XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject2_YZ pfnPaAllocatorObject2_YZ, PVOID pvContextAllocate = d_zNA);
-	void XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S IXmlExchangeObjectID ** ppObject, const CArrayPtrXmlSerializableObjects * parraypObjectsLookup);
-	void XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CArrayPtrXmlSerializableObjects * parraypObjects, const CArrayPtrXmlSerializableObjects & arraypObjectsLookup);
+	void XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S ITreeItem ** ppObject, const CArrayPtrTreeItems * parraypObjectsLookup);
+	void XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CArrayPtrTreeItems * parraypObjects, const CArrayPtrXmlSerializableObjects & arraypObjectsLookup);
 	void XmlExchangeWriteAttribute(PSZAC pszNameAttribute, PSZUC pszAttributeValue);
 	void XmlExchangeWriteAttributeUSZU(PSZAC pszNameAttribute, USZU uszuAttributeValue);
 	void XmlExchangeWriteAttributeRtiSz(PSZAC pszNameAttribute, RTI_ENUM rtiAttributeValue);
@@ -341,7 +341,7 @@ protected:
 	void AllocateAttributeValueCBinString(PSZAC pszaAttributeName, IN_MOD_TMP CBin & binString);
 }; // CXmlExchanger
 
-#define PPX		(IXmlExchangeObjectID **)	// The purpose of this macro is suppressing the compiler error: warning: invalid conversion from 'ITreeItem**' to 'IXmlExchangeObjectID**' [-fpermissive]
+#define PPX		(ITreeItem **)	// The purpose of this macro is suppressing the compiler error: warning: invalid conversion from 'TProfile**' to 'ITreeItem**' [-fpermissive]
 
 #define d_uVersionFileFormat0			0	// The very first file format where the filenames of the chat history was stored using a random GUID and binary data was stored in Base64.  This value is implicit, as there is no attribute "Version='0'"
 #define d_szVersionFileFormatCurrent	"1"	// Current file format: All binary data is stored in Base85 and the filenames are determined from a SHA-1 of the JIDs of the account and the contact.

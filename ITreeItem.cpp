@@ -375,17 +375,25 @@ ITreeItem::TreeItemW_PGetParent() const
 	}
 
 
-//	Remove the Tree Item from the array (and the Navigation Tree if present) and delete it from memory if possible.
+//	Remove the Tree Item from the array (and from the Navigation Tree if present) and delete it from memory if possible.
 void
 CArrayPtrTreeItems::DeleteTreeItem(PA_DELETING ITreeItem * paTreeItem)
 	{
 	Assert(paTreeItem != NULL);
 	Assert(PGetRuntimeInterfaceOf_ITreeItem(paTreeItem) == paTreeItem);
 	(void)RemoveElementAssertI(paTreeItem);
-	if ((paTreeItem->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItem_CannotBeDeleted) == 0)
-		delete paTreeItem;	// This will remove the Tree Item from the Navigation Tree if present
+	if ((paTreeItem->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItem_CannotBeDeletedFromMemory) == 0)
+		{
+		delete paTreeItem;	// The deletion of ITreeItem will also delete m_paTreeItemW_YZ (if present) which will remove the 'widget' from the Navigation Tree
+		}
 	else
+		{
+		// The Tree Item cannot be deleted, therefore make sure it will never be serialized
+		paTreeItem->m_uFlagsTreeItem |= ITreeItem::FTI_kfTreeItem_DoNotSerializeToDisk;
+		delete paTreeItem->m_paTreeItemW_YZ;	// Make sure it is no longer visible in the Navigation Tree
+		paTreeItem->m_paTreeItemW_YZ = NULL;
 		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[MemoryLeak] TreeItem 0x$p '$S' is not deleted because it is used by another object which cannot be deleted\n", paTreeItem, &paTreeItem->m_strNameDisplayTyped);
+		}
 	}
 
 

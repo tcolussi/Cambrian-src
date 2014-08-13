@@ -63,26 +63,28 @@ public:
 
 	enum // Values for m_uFlagsTreeItem
 		{
-		FTI_kfTreeItem_IsExpanded				= 0x00000001,	// Expand this Tree Item when adding it to the Navigation Tree.  For instance, a user may wish to expand a group to see each group member.
-		FTI_kfTreeItem_NameDisplayedSuggested	= 0x00000002,	// The content of member variable m_strNameDisplayTyped was suggested by another contact, typically when querying a group for its name and list of contacts.
-		FTI_kfRecommended						= 0x00000010,	// The Tree Item (typically a contact or a group) was recommended by the user.  This flag is used for /api Contact.Recommendations.Get
-		FTI_kfFavorites							= 0x00000020,	// NYI: The Tree Item is among the user's favorites.  A favorite is private to the user, while a recommendation is public.
-		FTI_kfObjectInvisible					= 0x00000040,	// The Tree Item is no longer visible in the Navigation Tree.  This is typically when a contact or group has been deleted and accessible in the 'Recycle Bin'.  An invisible item is something 'half deleted' which may permanently deleted later.
-		FTI_kmTreeItem_FlagsSerializeMask		= 0x0000FFFF,	// Bits to save to disk
+		FTI_kfTreeItem_IsExpanded					= 0x00000001,	// Expand this Tree Item when adding it to the Navigation Tree.  For instance, a user may wish to expand a group to see each group member.
+		FTI_kfTreeItem_NameDisplayedSuggested		= 0x00000002,	// The content of member variable m_strNameDisplayTyped was suggested by another contact, typically when querying a group for its name and list of contacts.
+		FTI_kfRecommended							= 0x00000010,	// The Tree Item (typically a contact or a group) was recommended by the user.  This flag is used for /api Contact.Recommendations.Get
+		FTI_kfFavorites								= 0x00000020,	// NYI: The Tree Item is among the user's favorites.  A favorite is private to the user, while a recommendation is public.
+		FTI_kfObjectInvisible						= 0x00000040,	// The Tree Item is no longer visible in the Navigation Tree.  This is typically when a contact or group has been deleted and accessible in the 'Recycle Bin'.  An invisible item is something 'half deleted' which may permanently deleted later.
+		FTI_kmTreeItem_FlagsSerializeMask			= 0x0000FFFF,	// Bits to save to disk
 
-		FTI_kezIconNone							= 0x00000000,
-		FTI_kefIconWarning						= 0x00010000,
-		FTI_kefIconError						= 0x00020000,
-		FTI_kemIconMask							= 0x000F0000,
-		FTI_kfTreeItem_fBit						= 0x00100000,	// Generic bit to store a boolean value (this bit is used to efficiently merge or delete arrays)
-		FTI_kfTreeItem_AboutBeingDeleted		= 0x00200000,	// The Tree Item is about being deleted (therefore any reference/pointer to it must be removed).  This flag is typically used when deleting accounts and contacts.
-		FTI_kfTreeItem_CannotBeDeleted			= 0x00800000,	// The Tree Item cannot be deleted because it is in used by another object(s) which cannot be deleted.  A typical case is a JavaScript object OJapi having a reference to the Tree Item.  The Tree Item cannot be deleted other Cambrian will crash.
+		FTI_kfTreeItem_AboutBeingDeleted			= 0x00010000,	// The Tree Item is about being deleted (therefore any reference/pointer to it must be removed).  This flag is typically used when deleting contacts and groups.
+		FTI_kfTreeItem_DoNotSerializeToDisk			= 0x00020000,	// This flag indicates the object is 'deleted' and therefore should not be serialized into disk.  Using this flag is a safe mechanism to 'delete' objects, because if the object is not serialized, then it won't be present next time the application starts.
+		FTI_kfTreeItem_CannotBeDeletedFromMemory	= 0x00040000,	// The Tree Item cannot be deleted because it is in used by another object(s) which cannot be deleted from memory.  A typical case is a JavaScript object OJapi having a reference to the Tree Item.  Deleting such an object would crash the application.
+		FTI_kfTreeItem_NameDisplayedGenerated		= 0x00080000,	// The member variable m_strNameDisplayTyped has been generated, and therefore should not be serialized (saved to disk).  Since this flag is not stored to disk nor m_strNameDisplayTyped, the display name will be re-geneated each time Cambrian starts.
 
-		FTI_kfTreeItem_NameDisplayedGenerated	= 0x00400000,	// The member variable m_strNameDisplayTyped has been generated, and therefore should not be serialized (saved to disk).  Since this flag is not stored to disk nor m_strNameDisplayTyped, the display name will be re-geneated each time Cambrian starts.
+		FTI_kezIconNone								= 0x00000000,
+		FTI_kefIconWarning							= 0x00100000,
+		FTI_kefIconError							= 0x00200000,
+		FTI_kemIconMask								= 0x00F00000,
+		FTI_kfTreeItem_fBit							= 0x01000000,	// Generic bit to store a boolean value (this bit is used to efficiently merge or delete arrays)
+
 		// The following flags FTI_kfChatLog* are used by ITreeItemChatLog and ITreeItemChatLogEvents.  The motivation for storing those flags in m_uFlagsTreeItem is avoiding another member variable.
-		FTI_kfChatLog_BrushColor				= 0x01000000,	// Which brush color to use when displaying events in the Chat Log.  Since there are only two brushes of similar color, a single bit is sufficient to remember which one.
-		FTI_kfChatLogEvents_RepopulateAll		= 0x02000000,	// Repopulate all events of the Chat Log next time the Tree Item gets the focus
-		FTI_kfChatLogEvents_IncludeFromWallet	= 0x04000000	// Include wallet events when repopulating the Chat Log.  This is a small optimization preventing searching all wallets when there is nothing
+		FTI_kfChatLog_BrushColor					= 0x10000000,	// Which brush color to use when displaying events in the Chat Log.  Since there are only two brushes of similar color, a single bit is sufficient to remember which one.
+		FTI_kfChatLogEvents_RepopulateAll			= 0x20000000,	// Repopulate all events of the Chat Log next time the Tree Item gets the focus
+		FTI_kfChatLogEvents_IncludeFromWallet		= 0x40000000	// Include wallet events when repopulating the Chat Log.  This is a small optimization preventing searching all wallets when there is nothing
 		};
 	UINT m_uFlagsTreeItem;			// Various flags regarding the Tree Item (icon, error, Chat Log).  Some of those values are serialized (saved to disk)
 
@@ -92,6 +94,10 @@ public:
 
 	inline UINT TreeItemFlags_FuIsRecommended() const { return (m_uFlagsTreeItem & FTI_kfRecommended); }
 	inline UINT TreeItemFlags_FuIsInvisible() const { return (m_uFlagsTreeItem & FTI_kfObjectInvisible); }
+	inline BOOL TreeItemFlags_FCanDisplayWithinNavigationTree() const { return (m_uFlagsTreeItem & (FTI_kfObjectInvisible | FTI_kfTreeItem_AboutBeingDeleted | FTI_kfTreeItem_DoNotSerializeToDisk)) == 0; }	// Any invisible or deleted item should not be displayed within the Navigation Tree
+	inline UINT TreeItemFlags_FuIsDeleted() const { return (m_uFlagsTreeItem & (FTI_kfTreeItem_AboutBeingDeleted | FTI_kfTreeItem_DoNotSerializeToDisk)); }
+	inline void TreeItemFlags_UnserializableSet() { m_uFlagsTreeItem |= FTI_kfTreeItem_DoNotSerializeToDisk; }
+	inline void TreeItemFlags_UnserializableClear() { m_uFlagsTreeItem &= ~FTI_kfTreeItem_DoNotSerializeToDisk; }
 
 	void TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay);
 

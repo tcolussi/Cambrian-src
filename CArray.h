@@ -98,6 +98,7 @@ public:
 	int RemoveElementAllInst(const void * pvElement);
 	int RemoveElementAllInstNULL() { return RemoveElementAllInst(NULL); }
 	UINT RemoveTailingNULLsU();
+	void ElementTransferFrom(const void * pvElementTransfer, INOUT CArray * pArraySrc);
 
 	VOID InsertAtHead(const CArray * pArrayInsert);
 	void Append(const CArray * pArrayAppend);

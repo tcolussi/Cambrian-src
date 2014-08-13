@@ -226,20 +226,32 @@ OJapiGroup::removePeer(QObject *pContactRemove)
 void
 OJapiGroup::save()
 	{
+	Assert(m_pGroup != NULL);
+	m_pGroup->TreeItemFlags_UnserializableClear();
+	m_pGroup->m_pAccount->m_arraypaGroups.ElementTransferFrom(m_pGroup, INOUT &m_poCambrian->m_arraypaTemp);	// Transfer the group from 'temp' to the account
+	/*
 	if (m_poCambrian->m_arraypaTemp.RemoveElementFastF(m_pGroup))
 		m_pGroup->m_pAccount->m_arraypaGroups.Add(m_pGroup);
+	*/
 	}
 
 void
 OJapiGroup::destroy()
 	{
 	Assert(m_pGroup != NULL);
+	if (m_pGroup->m_eGroupType != eGroupType_Audience)
+		return;	// Don't allow a JavaScript to delete a regular group; only a 'peerlist'
+	m_pGroup->TreeItemFlags_UnserializableSet();
+	m_poCambrian->m_arraypaTemp.ElementTransferFrom(m_pGroup, INOUT &m_pGroup->m_pAccount->m_arraypaGroups);	// Transfer the group back to the 'temp' array
+
+	/*
 	if ( !m_pGroup || m_pGroup->m_eGroupType != eGroupType_Audience)
 		return;
 	if ( m_poCambrian->m_arraypaTemp.DeleteRuntimeObjectF(m_pGroup))
 		return;
 	m_pGroup->m_pAccount->m_arraypaGroups.DeleteRuntimeObject(m_pGroup);
 	m_pGroup = NULL;
+	*/
 	}
 
 

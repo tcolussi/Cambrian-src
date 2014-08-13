@@ -778,6 +778,17 @@ CArray::RemoveElementFirstPv()
 	return pvElementRemoved;
 	}
 
+//	Transfer an element from one array to another.
+//	If the element is already into the destination array, then do nothing
+void
+CArray::ElementTransferFrom(const void * pvElementTransfer, INOUT CArray * pArraySrc)
+	{
+	int iElementRemoved = pArraySrc->RemoveElementI(pvElementTransfer);	// Try to remove the element from the array
+	if (iElementRemoved >= 0)
+		Add(pvElementTransfer);	// Add the element to the array only if it was removed from the other array
+	Assert(FindElementF(pvElementTransfer));
+	}
+
 //	Method very similar to Append() however the content of the array is
 //	inserted at the beginning of the array rather than appended to the end of the array.
 VOID
