@@ -7,17 +7,6 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-class CListVariants : public QVariantList
-{
-public:
-	void AddContact(TContact * pContact);
-	void AddContacts(const CArrayPtrContacts & arraypContacts);
-	void AddGroupMatchingType(TGroup * pGroup, EGroupType eGroupType);
-	void AddGroupsMatchingType(const CArrayPtrGroups & arraypGroups, EGroupType eGroupType);
-	void AddGroup(TGroup * pGroup);
-	void AddAudience(TGroup * pGroup);
-};
-
 class OJapi;	
 	class OJapiCambrian;
 	class OJapiApps;
@@ -31,6 +20,21 @@ class OJapi;
 
 	class OJapiContact;
 	class OJapiGroup;
+
+class CListVariants : public QVariantList
+{
+	OJapiCambrian *m_poCambrian;
+
+public:
+	CListVariants(OJapiCambrian *poCambrian);
+	void AddContact(TContact * pContact);
+	void AddContacts(const CArrayPtrContacts & arraypContacts);
+	void AddGroupMatchingType(TGroup * pGroup, EGroupType eGroupType);
+	void AddGroupsMatchingType(const CArrayPtrGroups & arraypGroups, EGroupType eGroupType);
+	void AddGroup(TGroup * pGroup);
+	void AddAudience(TGroup * pGroup);
+};
+
 
 //	Every object offering a JavaScript API must inherit from OJapi
 //
@@ -253,16 +257,18 @@ class OJapiMe : public OJapi
 public:
 	OJapiMe(OJapiCambrian * poCambrian);
 	OJapiList groups();
-	OJapiList peerList();
+	OJapiList peerLists();
 	OJapiList peers();
 
 	Q_OBJECT
 	Q_PROPERTY(OJapiList groups READ groups)
-	Q_PROPERTY(OJapiList peerList READ peerList)
+	Q_PROPERTY(OJapiList peerLists READ peerLists)
 	Q_PROPERTY(OJapiList peers READ peers)
 
 public slots:
-	QObject *newPeerList();
+	POJapiGroup newPeerList();
+	POJapiGroup getPeerList(const QString & sId);
+	POJapiGroup getGroup(const QString & sId);
 };
 #define POJapiMe		POJapi
 
@@ -288,9 +294,10 @@ public:
 class OJapiGroup : public OJapi
 {
 	TGroup * m_pGroup;
+	OJapiCambrian * m_poCambrian;
 
 public:
-	OJapiGroup(TGroup * pGroup);
+	OJapiGroup(TGroup * pGroup, OJapiCambrian * poCambrian);
 
 	QString id();
 	QString name();
@@ -305,6 +312,8 @@ public:
 public slots:
 	void addPeer(POJapiContact pContactAdd);
 	void removePeer(POJapiContact pContactRemove);
+	void save();
+	void destroy();
 };
 #define POJapiGroup		POJapi
 

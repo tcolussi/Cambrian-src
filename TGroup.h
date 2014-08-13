@@ -90,7 +90,7 @@ public:
 	void DisplayDialogProperties();
 	void DisplayDialogAddContacts();
 
-	POJapiGroup POJapiGet();
+	POJapiGroup POJapiGet(OJapiCambrian * poCambrian);
 
 public:
 	static IXmlExchange * S_PaAllocateGroup(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
