@@ -81,8 +81,8 @@ TProfile::GenerateKeys()
 void
 TProfile::RemoveAllReferencesToObjectsAboutBeingDeleted()
 	{
-	g_arraypContactsRecentMessages.RemoveAllTreeItemsAboutBeingDeleted();	// Make sure there is dangling pointer to a deleted contact
-	g_arraypAccounts.RemoveAllTreeItemsAboutBeingDeleted();
+	g_arraypContactsRecentMessages.RemoveAllUnserializableTreeItems();	// Make sure there is dangling pointer to a deleted contact
+	g_arraypAccounts.RemoveAllUnserializableTreeItems();
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
@@ -100,7 +100,7 @@ TProfile::DeleteAccount(PA_DELETING TAccountXmpp * paAccountDelete)
 	Assert(paAccountDelete != NULL);
 	Assert(paAccountDelete->EGetRuntimeClass() == RTI(TAccountXmpp));
 	Assert(paAccountDelete->m_pProfileParent == this);
-	paAccountDelete->MarkForDeletion();
+	paAccountDelete->Account_MarkForDeletion();
 	RemoveAllReferencesToObjectsAboutBeingDeleted();
 	m_arraypaAccountsXmpp.DeleteTreeItem(PA_DELETING paAccountDelete);
 	}
@@ -110,10 +110,13 @@ TProfile::DeleteGroup(PA_DELETING TGroup * paGroupDelete)
 	{
 	Assert(paGroupDelete != NULL);
 	Assert(paGroupDelete->EGetRuntimeClass() == RTI(TGroup));
-	paGroupDelete->MarkForDeletion();
+	paGroupDelete->Group_MarkForDeletion();
 	RemoveAllReferencesToObjectsAboutBeingDeleted();
+	paGroupDelete->TreeItemFlags_SerializeToDisk_Yes();
+	/*
 	paGroupDelete->Group_UpdateFlagCannotBeDeleted();
 	paGroupDelete->m_pAccount->m_arraypaGroups.DeleteTreeItem(PA_DELETING paGroupDelete);
+	*/
 	}
 
 //	Method to safely delete a contact from a profile
@@ -122,14 +125,16 @@ TProfile::DeleteContact(PA_DELETING TContact * paContactDelete)
 	{
 	Assert(paContactDelete != NULL);
 	Assert(paContactDelete->EGetRuntimeClass() == RTI(TContact));
-	paContactDelete->MarkForDeletion();
+	paContactDelete->Contact_MarkForDeletion();
 	RemoveAllReferencesToObjectsAboutBeingDeleted();
+	paContactDelete->TreeItemFlags_SerializeToDisk_Yes();	// Serialize the deleted contact so it does not reappear
+	Assert(paContactDelete->TreeItemFlags_FuIsInvisible());
+	/*
 	paContactDelete->Contact_UpdateFlagCannotBeDeleted();
 	paContactDelete->m_uFlagsTreeItem |= FTI_kfObjectInvisible;
-	delete paContactDelete->m_paTreeItemW_YZ;
-	paContactDelete->m_paTreeItemW_YZ = NULL;
-
+	delete paContactDelete->TreeItemW_RemoveFromNavigationTree();
 	//paContactDelete->m_pAccount->m_arraypaContacts.DeleteTreeItem(PA_DELETING paContactDelete);	// Delete the contact object and remove it from the Navigation Tree
+	*/
 	}
 
 //	TProfile::IRuntimeObject::PGetRuntimeInterface()
@@ -175,6 +180,10 @@ const EMenuActionByte c_rgzeActionsMenuProfile[] =
 	eMenuAction_AccountRegister,
 	eMenuAction_AccountLogin,
 	eMenuActionSeparator,
+	#ifdef DEBUG
+	eMenuAction_ProfileShowDeletedObjects,
+	eMenuActionSeparator,
+	#endif
 	eMenuAction_ProfileDelete,
 	//eMenuAction_ProfileProperties,
 	ezMenuActionNone
@@ -187,12 +196,58 @@ TProfile::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	pMenu->ActionsAdd(c_rgzeActionsMenuProfile);
 	}
 
+class TDisplayDeletedItems : public ITreeItemOfProfileOrphaned
+{
+public:
+	TDisplayDeletedItems(TProfile * pProfile);
+	RTI_IMPLEMENTATION(TDisplayDeletedItems)
+};
+
+TDisplayDeletedItems::TDisplayDeletedItems(TProfile * pProfile) : ITreeItemOfProfileOrphaned(pProfile)
+	{
+	TreeItemW_DisplayWithinNavigationTreeExpand(m_pProfile, "Deleted Items", eMenuAction_ProfileShowDeletedObjects);
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		TContact ** ppContactStop;
+		TContact ** ppContact = pAccount->m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
+		while (ppContact != ppContactStop)
+			{
+			TContact * pContact = *ppContact++;
+			Assert(pContact != NULL);
+			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+			if (pContact->TreeItemFlags_FuIsInvisible())
+				{
+				pContact->TreeItemW_DisplayWithinNavigationTree(this);
+				pContact->TreeItemChatLog_UpdateTextAndIcon();
+				}
+			}
+
+		TGroup ** ppGroupStop;
+		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+		while (ppGroup != ppGroupStop)
+			{
+			TGroup * pGroup = *ppGroup++;
+			Assert(pGroup != NULL);
+			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+			if (pGroup->TreeItemFlags_FuIsInvisible())
+				pGroup->TreeItemGroup_DisplayWithinNavigationTree(this);
+			} // while
+		} // while
+	}
+
+
 //	TProfile::ITreeItem::TreeItem_EDoMenuAction()
 EMenuAction
 TProfile::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	{
 	switch (eMenuAction)
 		{
+	case eMenuAction_ProfileShowDeletedObjects:
+		(void)new TDisplayDeletedItems(this);	// TODO: Fix the memory leak and also provide a mechanism to have only a single instance per profile (at the moment, it is used for debugging)
+		return ezMenuActionNone;
 	case eMenuAction_ProfileDelete:
 		if (m_arraypaAccountsXmpp.GetSize() | m_arraypaApplications.GetSize())
 			{

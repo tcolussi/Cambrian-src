@@ -73,7 +73,7 @@ public:
 private:
 	~TContact();
 public:
-	void MarkForDeletion();
+	void Contact_MarkForDeletion();
 	void Contact_UpdateFlagCannotBeDeleted();
 	inline void _ClearFlags() { m_uFlagsContact = 0; }
 	inline void SetFlagContactAsUnsolicited() { m_uFlagsContact |= FC_kfContactUnsolicited; }

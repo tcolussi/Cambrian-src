@@ -73,11 +73,11 @@ TAccountXmpp::~TAccountXmpp()
 	}
 
 void
-TAccountXmpp::MarkForDeletion()
+TAccountXmpp::Account_MarkForDeletion()
 	{
-	m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
-	m_arraypaContacts.ForEach_SetFlagTreeItemAboutBeingDeleted();
-	m_arraypaGroups.ForEach_SetFlagTreeItemAboutBeingDeleted();
+	TreeItem_MarkForDeletion();
+	m_arraypaContacts.ForEach_SetFlagTreeItemDoNotSerializeToDisk();
+	m_arraypaGroups.ForEach_SetFlagTreeItemDoNotSerializeToDisk();
 	}
 
 void
@@ -88,7 +88,7 @@ TAccountXmpp::RemoveAllReferencesToObjectsAboutBeingDeleted()
 	while (ppContact != ppContactStop)
 		{
 		TContact * pContact = *ppContact++;
-		pContact->RemoveAllReferencesToObjectsAboutBeingDeleted();
+		pContact->Vault_RemoveAllReferencesToObjectsAboutBeingDeleted();
 		}
 	TGroup ** ppGroupStop;
 	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
@@ -98,12 +98,12 @@ TAccountXmpp::RemoveAllReferencesToObjectsAboutBeingDeleted()
 		Assert(pGroup != NULL);
 		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 		Assert(pGroup->m_pAccount == this);
-		pGroup->RemoveAllReferencesToContactsAboutBeingDeleted();
+		pGroup->Group_RemoveAllReferencesToContactsAboutBeingDeleted();
 		}
-//	m_arraypaGroups.RemoveAllTreeItemsAboutBeingDeleted();
-//	m_arraypaContacts.RemoveAllTreeItemsAboutBeingDeleted();
-	m_arraypContactsComposing.RemoveAllTreeItemsAboutBeingDeleted();
-	m_arraypContactsMessagesUnread.RemoveAllTreeItemsAboutBeingDeleted();
+//	m_arraypaGroups.RemoveAllUnserializableTreeItems();
+//	m_arraypaContacts.RemoveAllUnserializableTreeItems();
+	m_arraypContactsComposing.RemoveAllUnserializableTreeItems();
+	m_arraypContactsMessagesUnread.RemoveAllUnserializableTreeItems();
 	}
 
 
@@ -571,7 +571,7 @@ TAccountXmpp::Contact_PresenceUpdate(const CXmlNode * pXmlNodeStanzaPresence)
 void
 TAccountXmpp::Contacts_SetFlagAboutBeingDeleted()
 	{
-	m_arraypaContacts.ForEach_SetFlagTreeItemAboutBeingDeleted();
+	m_arraypaContacts.ForEach_SetFlagTreeItemDoNotSerializeToDisk();
 	}
 
 //	This method is a bit slow, as it makes sure any reference to the contact is removed.
@@ -591,6 +591,7 @@ TAccountXmpp::Contacts_BroadcastAboutBeingDeleted()
 	}
 */
 
+/*
 //	The two methods Contact_UpdateFlagCannotBeDeleted() could be merged into ITreeItemChatLogEvents
 void
 TContact::Contact_UpdateFlagCannotBeDeleted()
@@ -611,6 +612,7 @@ TGroup::Group_UpdateFlagCannotBeDeleted()
 		m_pAccount->m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeletedFromMemory;	// Also prevent its parent account to be deleted
 		}
 	}
+*/
 
 void
 TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTreeInit(PSZUC pszServerName, UINT uServerPort)

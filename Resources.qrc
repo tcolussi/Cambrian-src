@@ -104,6 +104,8 @@
         <file alias="OutOfSync">Icons/OutOfSync.png</file>
         <file alias="Menu">Icons/menu.png</file>
         <file alias="Role">Icons/hat.png</file>
+        <file alias="Deleted">Icons/Recycle_Bin.png</file>
+        <file alias="Delete">Icons/DeleteRedX.png</file>
     </qresource>
     <qresource prefix="/snd">
         <file alias="NewMessage">Sounds/msg.wav</file>

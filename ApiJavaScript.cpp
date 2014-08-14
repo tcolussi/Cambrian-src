@@ -227,7 +227,7 @@ void
 OJapiGroup::save()
 	{
 	Assert(m_pGroup != NULL);
-	m_pGroup->TreeItemFlags_UnserializableClear();
+	m_pGroup->TreeItemFlags_SerializeToDisk_Yes();
 	m_pGroup->m_pAccount->m_arraypaGroups.ElementTransferFrom(m_pGroup, INOUT &m_poCambrian->m_arraypaTemp);	// Transfer the group from 'temp' to the account
 	/*
 	if (m_poCambrian->m_arraypaTemp.RemoveElementFastF(m_pGroup))
@@ -241,7 +241,7 @@ OJapiGroup::destroy()
 	Assert(m_pGroup != NULL);
 	if (m_pGroup->m_eGroupType != eGroupType_Audience)
 		return;	// Don't allow a JavaScript to delete a regular group; only a 'peerlist'
-	m_pGroup->TreeItemFlags_UnserializableSet();
+	m_pGroup->Group_MarkForDeletion();
 	m_poCambrian->m_arraypaTemp.ElementTransferFrom(m_pGroup, INOUT &m_pGroup->m_pAccount->m_arraypaGroups);	// Transfer the group back to the 'temp' array
 
 	/*

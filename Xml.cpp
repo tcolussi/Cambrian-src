@@ -3520,21 +3520,23 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 		ppObject = parraypaObjects->PrgpGetTreeItemsStop(OUT &ppObjectStop);
 		if (ppObject == ppObjectStop)
 			return;	// The array is empty, therefore there is nothing to serialize
-		CXmlNode * pNodeObjects = _PAllocateElement(m_pXmlNodeSerialize, pszuTagNameObjects);	// Allocate the element for the objects
-		CXmlNode ** ppNodeObjectStack = PpStackPushNodes(pNodeObjects);
+		CXmlNode * pXmlNodeObjects = _PAllocateElement(m_pXmlNodeSerialize, pszuTagNameObjects);	// Allocate the element for the objects
+		CXmlNode ** ppXmlNodeObjectStack = PpStackPushNodes(pXmlNodeObjects);
 		while (TRUE)
 			{
 			// An object is always serialized as an element
-			CXmlNode * pNodeObject = _PAllocateElement(pNodeObjects, pszuTagNameObject);
-			*ppNodeObjectStack = pNodeObject;
 			ITreeItem * pObject = *ppObject++;
 			Assert(PGetRuntimeInterfaceOf_ITreeItem(pObject) == pObject);
-			if (pObject->TreeItemFlags_FuIsDeleted())
+			if (!pObject->TreeItemFlags_FuIsDeleted())
+				{
+				CXmlNode * pXmlNodeObject = _PAllocateElement(pXmlNodeObjects, pszuTagNameObject);
+				*ppXmlNodeObjectStack = pXmlNodeObject;
+				pObject->XmlExchange(INOUT this);
+				}
+			else
 				{
 				MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "The Tree Item 0x$p '$S' is NOT serialized because it is considered deleted\n", pObject, &pObject->m_strNameDisplayTyped);
-				continue;
 				}
-			pObject->XmlExchange(INOUT this);
 			if (ppObject == ppObjectStop)
 				break;
 			} // while
@@ -3542,19 +3544,19 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 	else
 		{
 		Assert(pfnPaAllocatorObject != NULL);
-		CXmlNode * pNodeObjects = m_pXmlNodeSerialize->PFindElement(pszuTagNameObjects);
-		if (pNodeObjects == NULL)
+		CXmlNode * pXmlNodeObjects = m_pXmlNodeSerialize->PFindElement(pszuTagNameObjects);
+		if (pXmlNodeObjects == NULL)
 			return;
-		CXmlNode ** ppNodeObjectStack = PpStackPushNodes(pNodeObjects);
-		CXmlNode * pNodeObject = pNodeObjects->m_pElementsList;
-		while (pNodeObject != NULL)
+		CXmlNode ** ppXmlNodeObjectStack = PpStackPushNodes(pXmlNodeObjects);
+		CXmlNode * pXmlNodeObject = pXmlNodeObjects->m_pElementsList;
+		while (pXmlNodeObject != NULL)
 			{
-			*ppNodeObjectStack = pNodeObject;
+			*ppXmlNodeObjectStack = pXmlNodeObject;
 			IXmlExchange * paObject = pfnPaAllocatorObject(pvContextAllocate);
 			Report(paObject != NULL);
 			parraypaObjects->Add(PA_CHILD paObject);
 			paObject->XmlExchange(INOUT this);
-			pNodeObject = pNodeObject->m_pNextSibling;
+			pXmlNodeObject = pXmlNodeObject->m_pNextSibling;
 			} // while
 		} // if...else
 	StackPopNodes();
@@ -3577,13 +3579,13 @@ CXmlExchanger::XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPt
 		if (ppObject == ppObjectStop)
 			return;	// The array is empty, therefore there is nothing to serialize
 		PSZU pszTagNameObject = m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNameObjects + 32);	// Use a lowercase version for each object
-		CXmlNode * pNodeObjects = _PAllocateElement(m_pXmlNodeSerialize, (PSZA)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNameObjects));	// Allocate the element for the objects
-		CXmlNode ** ppNodeObjectStack = PpStackPushNodes(pNodeObjects);
+		CXmlNode * pXmlNodeObjects = _PAllocateElement(m_pXmlNodeSerialize, (PSZA)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNameObjects));	// Allocate the element for the objects
+		CXmlNode ** ppXmlNodeObjectStack = PpStackPushNodes(pXmlNodeObjects);
 		while (TRUE)
 			{
 			// An object is always serialized as an element
-			CXmlNode * pNodeObject = _PAllocateElement(pNodeObjects, (PSZA)pszTagNameObject);
-			*ppNodeObjectStack = pNodeObject;
+			CXmlNode * pXMlNodeObject = _PAllocateElement(pXmlNodeObjects, (PSZA)pszTagNameObject);
+			*ppXmlNodeObjectStack = pXMlNodeObject;
 			IXmlExchange * pObject = *ppObject++;
 			pObject->XmlExchange(INOUT this);
 			if (ppObject == ppObjectStop)
@@ -3592,15 +3594,15 @@ CXmlExchanger::XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPt
 		}
 	else
 		{
-		CXmlNode * pNodeObjects = m_pXmlNodeSerialize->PFindElement(chTagNameObjects);
-		if (pNodeObjects == NULL)
+		CXmlNode * pXmlNodeObjects = m_pXmlNodeSerialize->PFindElement(chTagNameObjects);
+		if (pXmlNodeObjects == NULL)
 			return;
-		CXmlNode ** ppNodeObjectStack = PpStackPushNodes(pNodeObjects);
-		CXmlNode * pNodeObject = pNodeObjects->m_pElementsList;
-		while (pNodeObject != NULL)
+		CXmlNode ** ppXmlNodeObjectStack = PpStackPushNodes(pXmlNodeObjects);
+		CXmlNode * pXmlNodeObject = pXmlNodeObjects->m_pElementsList;
+		while (pXmlNodeObject != NULL)
 			{
-			*ppNodeObjectStack = pNodeObject;
-			IXmlExchange * paObject = pfnPaAllocatorObject2_YZ(pvContextAllocate, pNodeObject);
+			*ppXmlNodeObjectStack = pXmlNodeObject;
+			IXmlExchange * paObject = pfnPaAllocatorObject2_YZ(pvContextAllocate, pXmlNodeObject);
 			if (paObject != NULL)
 				{
 				parraypaObjects->Add(PA_CHILD paObject);
@@ -3608,9 +3610,9 @@ CXmlExchanger::XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPt
 				}
 			else
 				{
-				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to allocate object from the data of the following element:\n^N", pNodeObject);
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to allocate object from the data of the following element:\n^N", pXmlNodeObject);
 				}
-			pNodeObject = pNodeObject->m_pNextSibling;
+			pXmlNodeObject = pXmlNodeObject->m_pNextSibling;
 			} // while
 		} // if...else
 	StackPopNodes();
@@ -3633,10 +3635,10 @@ CXmlExchanger::XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S ITreeItem
 	else
 		{
 		Assert(parraypObjectsLookup != NULL);
-		CXmlNode * pNode = m_pXmlNodeSerialize->PFindAttribute(chTagNamePointer);
-		if (pNode == NULL)
+		CXmlNode * pXmlNodePointer = m_pXmlNodeSerialize->PFindAttribute(chTagNamePointer);
+		if (pXmlNodePointer == NULL)
 			return;
-		PSZUC pszuTagValue = pNode->m_pszuTagValue;
+		PSZUC pszuTagValue = pXmlNodePointer->m_pszuTagValue;
 		Assert(pszuTagValue != NULL);
 		if (pszuTagValue != NULL && pszuTagValue[0] != '\0')
 			{
@@ -3691,12 +3693,12 @@ CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CAr
 		}
 	else
 		{
-		CXmlNode * pNode = m_pXmlNodeSerialize->PFindElementOrAttribute(pszuTagNamePointers);
-		if (pNode == NULL)
+		CXmlNode * pXmlNode = m_pXmlNodeSerialize->PFindElementOrAttribute(pszuTagNamePointers);
+		if (pXmlNode == NULL)
 			return;
 		SStringToNumber stn;
 		stn.uFlags = STN_mskzSkipLeadingSpaces | STN_mskzSkipTailingSpaces | STN_mskfAllowRandomTail;
-		stn.pszuSrc = pNode->m_pszuTagValue;
+		stn.pszuSrc = pXmlNode->m_pszuTagValue;
 		Assert(stn.pszuSrc != NULL);
 		if (stn.pszuSrc != NULL && stn.pszuSrc[0] != '\0')
 			{

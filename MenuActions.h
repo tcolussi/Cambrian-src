@@ -28,6 +28,8 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_ProfileDelete,
 	eMenuAction_ProfileProperties,
 	eMenuAction_ProfileMyRecommendations,	// Display all the recommendations I made
+	eMenuAction_ProfileShowDeletedObjects,		// Display all hidden objects such as contacts and groups
+	eMenuAction_ProfilePermanentlyDeleteObject,	// Permanently delete a hidden object
 
 	eMenuAction_ApplicationHide,			// Hide the application from the Navigation Tree (the application will keep running in memory)
 	eMenuAction_ApplicationDelete,			// Permanently delete the application

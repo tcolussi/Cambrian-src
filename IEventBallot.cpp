@@ -309,7 +309,7 @@ IEventBallot::DetachFromObjectsAboutBeingDeleted()
 		{
 		_CEventBallotVote * pVote = *ppVote++;
 		Assert(pVote->m_pContact != NULL);
-		pVote->m_pContact->Contact_UpdateFlagCannotBeDeleted();	// Prevent any contact in use by the ballot to be deleted
+//		pVote->m_pContact->Contact_UpdateFlagCannotBeDeleted();	// Prevent any contact in use by the ballot to be deleted
 		}
 	}
 

@@ -38,6 +38,13 @@ ITreeItem::~ITreeItem()
 	delete m_paTreeItemW_YZ;	// This will remove the widget from the Navigation Tree.  Of course, this is not the most elegant mechanism, but it is the safest to avoid bugs
 	}
 
+void
+ITreeItem::TreeItem_MarkForDeletion()
+	{
+	m_uFlagsTreeItem |= (FTI_kfTreeItem_DoNotSerializeToDisk | FTI_kfObjectInvisible);	// If an object is not serialized to disk, then it should not be visible in the Navigation Tree
+	TreeItemW_RemoveFromNavigationTree();
+	}
+
 //	ITreeItem::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
 ITreeItem::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
@@ -382,6 +389,8 @@ CArrayPtrTreeItems::DeleteTreeItem(PA_DELETING ITreeItem * paTreeItem)
 	Assert(paTreeItem != NULL);
 	Assert(PGetRuntimeInterfaceOf_ITreeItem(paTreeItem) == paTreeItem);
 	(void)RemoveElementAssertI(paTreeItem);
+	delete paTreeItem;	// The deletion of ITreeItem will also delete m_paTreeItemW_YZ (if present) which will remove the 'widget' from the Navigation Tree
+	/*
 	if ((paTreeItem->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItem_CannotBeDeletedFromMemory) == 0)
 		{
 		delete paTreeItem;	// The deletion of ITreeItem will also delete m_paTreeItemW_YZ (if present) which will remove the 'widget' from the Navigation Tree
@@ -394,6 +403,7 @@ CArrayPtrTreeItems::DeleteTreeItem(PA_DELETING ITreeItem * paTreeItem)
 		paTreeItem->m_paTreeItemW_YZ = NULL;
 		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[MemoryLeak] TreeItem 0x$p '$S' is not deleted because it is used by another object which cannot be deleted\n", paTreeItem, &paTreeItem->m_strNameDisplayTyped);
 		}
+	*/
 	}
 
 
@@ -456,15 +466,15 @@ CArrayPtrTreeItems::RemoveAllTreeItemsMatchingFlag(UINT kfFlagTreeItem)
 	}
 
 void
-CArrayPtrTreeItems::ForEach_SetFlagTreeItemAboutBeingDeleted() const
+CArrayPtrTreeItems::ForEach_SetFlagTreeItemDoNotSerializeToDisk() const
 	{
-	ForEach_SetFlagTreeItem(ITreeItem::FTI_kfTreeItem_AboutBeingDeleted);
+	ForEach_SetFlagTreeItem(ITreeItem::FTI_kfTreeItem_DoNotSerializeToDisk);
 	}
 
 void
-CArrayPtrTreeItems::RemoveAllTreeItemsAboutBeingDeleted()
+CArrayPtrTreeItems::RemoveAllUnserializableTreeItems()
 	{
-	RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfTreeItem_AboutBeingDeleted);
+	RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfTreeItem_DoNotSerializeToDisk);
 	}
 
 //	IMPLEMENTATION NOTES: Could also use ForEach_SetCookieValue()

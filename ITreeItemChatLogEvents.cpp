@@ -88,7 +88,7 @@ ITreeItemChatLogEvents::~ITreeItemChatLogEvents()
 	}
 
 void
-ITreeItemChatLogEvents::RemoveAllReferencesToObjectsAboutBeingDeleted()
+ITreeItemChatLogEvents::Vault_RemoveAllReferencesToObjectsAboutBeingDeleted()
 	{
 	if (m_paVaultEvents != NULL)
 		m_paVaultEvents->m_arraypaEvents.ForEach_DetachFromObjectsAboutBeingDeleted();

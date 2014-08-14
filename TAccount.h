@@ -83,7 +83,7 @@ public:
 private:
 	~TAccountXmpp();
 public:
-	void MarkForDeletion();
+	void Account_MarkForDeletion();
 	void RemoveAllReferencesToObjectsAboutBeingDeleted();
 	CChatConfiguration * PGetConfiguration() const;
 	const SHashSha1 * PGetSaltOfConfiguration() const;

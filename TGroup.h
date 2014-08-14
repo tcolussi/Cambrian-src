@@ -57,9 +57,9 @@ protected:
 public:
 	TGroup(TAccountXmpp * pAccount);
 	~TGroup();
-	void MarkForDeletion();
+	inline void Group_MarkForDeletion() { TreeItem_MarkForDeletion(); }
 	void Group_UpdateFlagCannotBeDeleted();
-	void RemoveAllReferencesToContactsAboutBeingDeleted();
+	void Group_RemoveAllReferencesToContactsAboutBeingDeleted();
 	void GroupInitNewIdentifier();
 
 	void XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
@@ -84,7 +84,7 @@ public:
 	virtual void Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const;	// From ITreeItemChatLogEvents
 
 	bool TreeItemGroup_FCanDisplayWithinNavigationTree() const;
-	void TreeItemGroup_DisplayWithinNavigationTree();
+	void TreeItemGroup_DisplayWithinNavigationTree(ITreeItem * pTreeItemParent = d_zDEFAULT);
 	void TreeItemGroup_RemoveFromNavigationTree();
 
 	void DisplayDialogProperties();

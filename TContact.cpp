@@ -29,13 +29,14 @@ TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 
 TContact::~TContact()
 	{
+	//MessageLog_AppendTextFormatSev(eSeverityNoise, "TContact::~TContact(0x$p) $S\n", this, &m_strJidBare);
 //	NoticeListAuxiliary_DeleteAllNoticesRelatedToTreeItem(IN this);		// This line is necessary, so the notices are deleted before the layout, otherwise the layout will delete
 	}
 
 void
-TContact::MarkForDeletion()
+TContact::Contact_MarkForDeletion()
 	{
-	m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
+	TreeItem_MarkForDeletion();
 	if (XmppRoster_PszGetSubscription() != NULL)
 		m_pAccount->Contact_RosterUnsubscribe(this);	// Remove the contact from the roster
 	}

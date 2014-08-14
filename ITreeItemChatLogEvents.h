@@ -56,7 +56,7 @@ protected:
 public:
 	ITreeItemChatLogEvents(TAccountXmpp * pAccount);
 	~ITreeItemChatLogEvents();
-	void RemoveAllReferencesToObjectsAboutBeingDeleted();
+	void Vault_RemoveAllReferencesToObjectsAboutBeingDeleted();
 
 	CChatConfiguration * PGetConfiguration() const;
 

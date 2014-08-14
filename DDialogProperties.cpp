@@ -202,7 +202,8 @@ void
 WListContacts::ContactAdd(TContact * pContact)
 	{
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-	(void)new CListWidgetTreeItem(this, pContact);
+	if (pContact->TreeItemFlags_FCanDisplayWithinNavigationTree())
+		(void)new CListWidgetTreeItem(this, pContact);
 	}
 
 void

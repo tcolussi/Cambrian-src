@@ -44,6 +44,8 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Delete "d_sza_Profile _ "i=Remove" _, // eMenuAction_ProfileDelete
 	d_sza_Profile" Properties" _ "s=Display the properties of my "d_sza_profile _, // eMenuAction_ProfileProperties
 	"My Recommendations" _ "s=Display all the recommendations I made" _ "i=Reputation",  // eMenuAction_ProfileMyRecommendations
+	"Show Deleted Objects" _ "s=Display all hidden objects such as peers and groups" _ "i=Deleted" _, // eMenuAction_ProfileShowDeletedObjects
+	"Permanently Delete" _ "s=Permanently delete a hidden object" _ "i=Delete" _, // eMenuAction_ProfilePermanentlyDeleteObject
 
 	"Hide" _ "s=Hide the application from the Navigation Tree (the application will keep running in memory)" _ "i=Remove" _, // eMenuAction_ApplicationHide
 	"Delete Application" _ "i=Remove" _, // eMenuAction_ApplicationDelete
@@ -51,7 +53,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 
 
 	"Accept Peer Invitation..." _ "s=Accept the invitation sent by a friend" _ "i=XMPP" _,	// eMenuAction_AccountAcceptInvitation
-	"Sign Up..."  _ "s=Register (create) a new XMPP account" _ "i=XMPP" _,		// eMenuAction_AccountRegister
+	"Register..."  _ "s=Register (create) a new XMPP account" _ "i=XMPP" _,		// eMenuAction_AccountRegister
 	"Login..." _ "s=Login to an existing XMPP account" _ "i=XMPP" _, // eMenuAction_AccountLogin
 	"Rename Account..." _ "i=ContactEdit" _ "s=Change the display name of the selected account" _,				// eMenuAction_AccountRename
 	"Remove Account..." _ "i=Remove" _ "s=Remove the selected account from the Navigation Tree (this action does NOT delete the account on the server)" _, // "-i=list-remove.png" _, // eMenuAction_AccountDelete

@@ -67,12 +67,12 @@ public:
 		FTI_kfTreeItem_NameDisplayedSuggested		= 0x00000002,	// The content of member variable m_strNameDisplayTyped was suggested by another contact, typically when querying a group for its name and list of contacts.
 		FTI_kfRecommended							= 0x00000010,	// The Tree Item (typically a contact or a group) was recommended by the user.  This flag is used for /api Contact.Recommendations.Get
 		FTI_kfFavorites								= 0x00000020,	// NYI: The Tree Item is among the user's favorites.  A favorite is private to the user, while a recommendation is public.
-		FTI_kfObjectInvisible						= 0x00000040,	// The Tree Item is no longer visible in the Navigation Tree.  This is typically when a contact or group has been deleted and accessible in the 'Recycle Bin'.  An invisible item is something 'half deleted' which may permanently deleted later.
+		FTI_kfObjectInvisible						= 0x00000040,	// The Tree Item is no longer visible (by default) in the Navigation Tree.  This is typically when a contact or group has been deleted and accessible in the 'Recycle Bin'.  An invisible item is something 'half deleted' which may permanently deleted later.
 		FTI_kmTreeItem_FlagsSerializeMask			= 0x0000FFFF,	// Bits to save to disk
 
-		FTI_kfTreeItem_AboutBeingDeleted			= 0x00010000,	// The Tree Item is about being deleted (therefore any reference/pointer to it must be removed).  This flag is typically used when deleting contacts and groups.
+		//FTI_kfTreeItem_AboutBeingDeleted			= 0x00010000,	// The Tree Item is about being deleted (therefore any reference/pointer to it must be removed).  This flag is typically used when deleting contacts and groups.
 		FTI_kfTreeItem_DoNotSerializeToDisk			= 0x00020000,	// This flag indicates the object is 'deleted' and therefore should not be serialized into disk.  Using this flag is a safe mechanism to 'delete' objects, because if the object is not serialized, then it won't be present next time the application starts.
-		FTI_kfTreeItem_CannotBeDeletedFromMemory	= 0x00040000,	// The Tree Item cannot be deleted because it is in used by another object(s) which cannot be deleted from memory.  A typical case is a JavaScript object OJapi having a reference to the Tree Item.  Deleting such an object would crash the application.
+		//FTI_kfTreeItem_CannotBeDeletedFromMemory	= 0x00040000,	// The Tree Item cannot be deleted because it is in used by another object(s) which cannot be deleted from memory.  A typical case is a JavaScript object OJapi having a reference to the Tree Item.  Deleting such an object would crash the application.
 		FTI_kfTreeItem_NameDisplayedGenerated		= 0x00080000,	// The member variable m_strNameDisplayTyped has been generated, and therefore should not be serialized (saved to disk).  Since this flag is not stored to disk nor m_strNameDisplayTyped, the display name will be re-geneated each time Cambrian starts.
 
 		FTI_kezIconNone								= 0x00000000,
@@ -94,10 +94,10 @@ public:
 
 	inline UINT TreeItemFlags_FuIsRecommended() const { return (m_uFlagsTreeItem & FTI_kfRecommended); }
 	inline UINT TreeItemFlags_FuIsInvisible() const { return (m_uFlagsTreeItem & FTI_kfObjectInvisible); }
-	inline BOOL TreeItemFlags_FCanDisplayWithinNavigationTree() const { return (m_uFlagsTreeItem & (FTI_kfObjectInvisible | FTI_kfTreeItem_AboutBeingDeleted | FTI_kfTreeItem_DoNotSerializeToDisk)) == 0; }	// Any invisible or deleted item should not be displayed within the Navigation Tree
-	inline UINT TreeItemFlags_FuIsDeleted() const { return (m_uFlagsTreeItem & (FTI_kfTreeItem_AboutBeingDeleted | FTI_kfTreeItem_DoNotSerializeToDisk)); }
-	inline void TreeItemFlags_UnserializableSet() { m_uFlagsTreeItem |= FTI_kfTreeItem_DoNotSerializeToDisk; }
-	inline void TreeItemFlags_UnserializableClear() { m_uFlagsTreeItem &= ~FTI_kfTreeItem_DoNotSerializeToDisk; }
+	inline BOOL TreeItemFlags_FCanDisplayWithinNavigationTree() const { return (m_uFlagsTreeItem & (FTI_kfObjectInvisible | FTI_kfTreeItem_DoNotSerializeToDisk)) == 0; }	// Any invisible or deleted item should not be displayed within the Navigation Tree
+	inline UINT TreeItemFlags_FuIsDeleted() const { return (m_uFlagsTreeItem & FTI_kfTreeItem_DoNotSerializeToDisk); }
+	inline void TreeItemFlags_SerializeToDisk_Yes() { m_uFlagsTreeItem &= ~FTI_kfTreeItem_DoNotSerializeToDisk; }
+	void TreeItem_MarkForDeletion();
 
 	void TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay);
 
@@ -152,6 +152,38 @@ protected:
 	void _FlushDisplayNameIfGenerated();
 }; // ITreeItem
 
+
+class CArrayPtrTreeItems : public CArrayPtrXmlSerializableObjects
+{
+public:
+	inline ITreeItem ** PrgpGetTreeItemsStop(OUT ITreeItem *** pppTreeItemStop) const { return (ITreeItem **)PrgpvGetElementsStop(OUT (void ***)pppTreeItemStop); }
+	void DeleteTreeItem(PA_DELETING ITreeItem * paTreeItem);
+	void DeleteAllTreeItems();
+
+	void ForEach_ClearFlagTreeItem(UINT kfFlagTreeItem) const;
+	void ForEach_SetFlagTreeItem(UINT kfFlagTreeItem) const;
+	void RemoveAllTreeItemsMatchingFlag(UINT kfFlagTreeItem);
+
+	void ForEach_SetFlagTreeItemDoNotSerializeToDisk() const;
+	void RemoveAllUnserializableTreeItems();
+	void RemoveTreeItems(const CArrayPtrTreeItems & arraypTreeItemsToRemove);
+};
+
+class ITreeItemOfProfile : public ITreeItem
+{
+public:
+	TProfile * m_pProfile;
+
+public:
+	ITreeItemOfProfile(TProfile * pProfile) { m_pProfile = pProfile; }
+};
+
+class ITreeItemOfProfileOrphaned : public ITreeItemOfProfile
+{
+public:
+	ITreeItemOfProfileOrphaned(TProfile * pProfile) : ITreeItemOfProfile(pProfile) {  }
+};
+
 class TTreeItemDemo : public ITreeItem
 {
 	RTI_IMPLEMENTATION(TTreeItemDemo)
@@ -167,22 +199,5 @@ public:
 	~TTreeItemDemo();
 	virtual void TreeItem_GotFocus();
 }; // TTreeItemDemo
-
-
-class CArrayPtrTreeItems : public CArrayPtrXmlSerializableObjects
-{
-public:
-	inline ITreeItem ** PrgpGetTreeItemsStop(OUT ITreeItem *** pppTreeItemStop) const { return (ITreeItem **)PrgpvGetElementsStop(OUT (void ***)pppTreeItemStop); }
-	void DeleteTreeItem(PA_DELETING ITreeItem * paTreeItem);
-	void DeleteAllTreeItems();
-
-	void ForEach_ClearFlagTreeItem(UINT kfFlagTreeItem) const;
-	void ForEach_SetFlagTreeItem(UINT kfFlagTreeItem) const;
-	void RemoveAllTreeItemsMatchingFlag(UINT kfFlagTreeItem);
-
-	void ForEach_SetFlagTreeItemAboutBeingDeleted() const;
-	void RemoveAllTreeItemsAboutBeingDeleted();
-	void RemoveTreeItems(const CArrayPtrTreeItems & arraypTreeItemsToRemove);
-};
 
 #endif // ITREEITEM_H

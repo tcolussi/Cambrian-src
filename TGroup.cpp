@@ -139,18 +139,12 @@ TGroup::~TGroup()
 	}
 
 void
-TGroup::MarkForDeletion()
-	{
-	m_uFlagsTreeItem |= FTI_kfTreeItem_AboutBeingDeleted;
-	}
-
-void
-TGroup::RemoveAllReferencesToContactsAboutBeingDeleted()
+TGroup::Group_RemoveAllReferencesToContactsAboutBeingDeleted()
 	{
 	if (m_pContactWhoRecommended_YZ != NULL && m_pContactWhoRecommended_YZ->TreeItemFlags_FuIsDeleted())
 		m_pContactWhoRecommended_YZ = NULL;	// The user decided to remove the contact form his list, however to keep the group referred by the contact
 	m_arraypaMembers.DeleteAllAliasesRelatedToContactsAboutBeingDeleted();
-	RemoveAllReferencesToObjectsAboutBeingDeleted();
+	Vault_RemoveAllReferencesToObjectsAboutBeingDeleted();
 	}
 
 void
@@ -170,10 +164,9 @@ TGroup::Member_PFindOrAddContact_NZ(TContact * pContact)
 		// Add a new member to the group
 		pMember = new TGroupMember(this, pContact);
 		m_arraypaMembers.Add(pMember);
-		// add the child only if the group is visible
-		if ( m_paTreeItemW_YZ != NULL)
+		if (m_paTreeItemW_YZ != NULL)
 			{
-			pMember->TreeItemGroupMember_DisplayWithinNavigationTree();
+			pMember->TreeItemGroupMember_DisplayWithinNavigationTree();	// Display the group member to the Navigation Tree only if its group is visible
 			TreeItemW_SetTextToDisplayNameIfGenerated();
 			}
 		}
@@ -352,9 +345,9 @@ TGroup::TreeItemGroup_FCanDisplayWithinNavigationTree() const
 	}
 
 void
-TGroup::TreeItemGroup_DisplayWithinNavigationTree()
+TGroup::TreeItemGroup_DisplayWithinNavigationTree(ITreeItem * pTreeItemParent)
 	{
-	TreeItemW_DisplayWithinNavigationTree(m_pAccount);
+	TreeItemW_DisplayWithinNavigationTree((pTreeItemParent == NULL) ? m_pAccount : pTreeItemParent);
 
 	// Display the contacts which are members of the group
 	int cMessagesUnreadTotal = 0;
