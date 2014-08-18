@@ -85,7 +85,9 @@ SOURCES += \
     TApplicationBallotmaster.cpp \
     CVaultEvents.cpp \
     ApiJavaScript.cpp \
-    IApplication.cpp
+    IApplication.cpp \
+    TTabbedBrowser.cpp \
+    WLayoutTabbedBrowser.cpp
 
 
 HEADERS += \
@@ -157,7 +159,9 @@ HEADERS += \
     TApplicationBallotmaster.h \
     CVaultEvents.h \
     ApiJavaScript.h \
-    IApplication.h
+    IApplication.h \
+    TTabbedBrowser.h \
+    WLayoutTabbedBrowser.h
 
 
 FORMS +=

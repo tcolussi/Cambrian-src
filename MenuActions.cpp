@@ -667,7 +667,7 @@ const EMenuActionByte c_rgzeActionsMenuCambrian[] =
 	eMenuActionSeparator,
 	eMenuAction_DisplayWallet,
 	*/
-	//eMenuAction_DisplaySecureWebBrowsing,
+	eMenuAction_DisplaySecureWebBrowsing,
 	//eMenuIconMarketplace,
 	eMenuActionSeparator,
 	eMenuAction_Quit,
@@ -868,8 +868,10 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		g_oConfiguration.NavigationTree_DisplayWallet();
 		return;
 	case eMenuAction_DisplaySecureWebBrowsing:
-		void NavigationTree_NewBrowser();
-		NavigationTree_NewBrowser();
+		//void NavigationTree_NewBrowser();
+		//NavigationTree_NewBrowser();
+		void NavigationTree_NewTabbedBrowser();
+		NavigationTree_NewTabbedBrowser();
 		return;
 	case eMenuAction_DisplayBallotMaster:
 		void DisplayApplicationBallotMaster();

@@ -77,6 +77,7 @@ enum RTI_ENUM	// rti
 		eRTI_TApplicationBallotmaster,
 
 	eRTI_TBrowser,
+	eRTI_TTabbedBrowser,
 	eRTI_TWallet,
 	eRTI_TWalletView,
 	eRTI_TRecommendations,

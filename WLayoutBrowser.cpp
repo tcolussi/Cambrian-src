@@ -6,6 +6,7 @@
 #endif
 #include "WLayoutBrowser.h"
 #include <QWebFrame>
+#include "TTabbedBrowser.h"
 
 //	Colors to display debugging information in the Message Log
 #define d_coBrowserDebug			d_coGreen
@@ -418,3 +419,28 @@ LaunchBrowser(const QString & sName, const QString & sUrlRelative)
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
     pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}
+
+
+void
+NavigationTree_NewTabbedBrowser()
+{
+	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+	//MessageLog_AppendTextFormatCo(d_coBlack, "LaunchBrowser($p)\n", pProfile);
+	if (pProfile == NULL)
+		return;
+
+
+	CStr sName("MyTabbedBrowser");
+	CStr url1("file:///C:/Users/Cesar/.Cambrian/Apps/html5-pomodoro/index.html");
+	CStr url2("file:///C:/Users/Cesar/.Cambrian/Apps/html5-scratch/index.html");
+
+	// No browser yet, therefore allocate one
+	TTabbedBrowser * pBrowser = new TTabbedBrowser(pProfile);
+	pBrowser->SetIconAndName(eMenuAction_DisplaySecureWebBrowsing, sName);
+	pBrowser->AddTab(url1);
+	pBrowser->AddTab(url2);
+	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
+	pBrowser->TreeItemW_SelectWithinNavigationTree();
+
+	pProfile->m_arraypaBrowsers.Add(PA_CHILD pBrowser);
+}
