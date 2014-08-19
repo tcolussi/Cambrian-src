@@ -22,6 +22,7 @@ public:
 	CArrayPtrApplications m_arraypaApplications;	// Applications using the profile
 	CArrayPtrServices m_arraypaServices;			// Running services for the profile
 	CArrayPtrBrowsers m_arraypaBrowsers;			// This is a bit of a hack, however at the moment, it will work
+	CArrayPtrBrowsersTabbed m_arraypaBrowsersTabbed;
 	CStr m_strData;									// Data of the profile (this variable is used for the JAPI)
 
 private:

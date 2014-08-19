@@ -86,8 +86,9 @@ SOURCES += \
     CVaultEvents.cpp \
     ApiJavaScript.cpp \
     IApplication.cpp \
-    TTabbedBrowser.cpp \
-    WLayoutTabbedBrowser.cpp
+    WLayoutTabbedBrowser.cpp \
+    TBrowserTabs.cpp \
+    TBrowserTab.cpp
 
 
 HEADERS += \
@@ -160,8 +161,9 @@ HEADERS += \
     CVaultEvents.h \
     ApiJavaScript.h \
     IApplication.h \
-    TTabbedBrowser.h \
-    WLayoutTabbedBrowser.h
+    WLayoutTabbedBrowser.h \
+    TBrowserTabs.h \
+    TBrowserTab.h
 
 
 FORMS +=

@@ -67,6 +67,7 @@ TProfile::~TProfile()
 	m_arraypaApplications.DeleteAllTreeItems();
 	m_arraypaBrowsers.DeleteAllTreeItems();
 	m_arraypaServices.DeleteAllRuntimeObjects();
+	m_arraypaBrowsersTabbed.DeleteAllRuntimeObjects();
 	}
 
 //	Generate a pair of keys for the profile.
@@ -164,7 +165,7 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Applications, INOUT_F_UNCH_S &m_arraypaApplications, IApplication::S_PaAllocateApplication_YZ, this);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Services, INOUT &m_arraypaServices, IService::S_PaAllocateService_YZ, this);
 	pXmlExchanger->XmlExchangeObjects('B', INOUT &m_arraypaBrowsers, TBrowser::S_PaAllocateBrowser, this);
-
+	pXmlExchanger->XmlExchangeObjects('R', INOUT &m_arraypaBrowsersTabbed, TBrowserTabs::S_PaAllocateBrowserTabbed, this);
 	pXmlExchanger->XmlExchangeStr("Data", INOUT_F_UNCH_S &m_strData);
 	}
 
