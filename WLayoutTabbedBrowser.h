@@ -8,9 +8,9 @@
 // Custom web view to reference its tree item
 class WWebViewTabbed : public QWebView
 {
+public:
 	TBrowserTab *m_pTab;
 
-public:
 	WWebViewTabbed(TBrowserTab *pTab);
 	void load ( const QUrl & url);
 };
@@ -41,6 +41,7 @@ public:
 public slots:
 	void SL_WebViewTitleChanged(const QString & title);
 	void SL_AddTab(bool checked);
+	void SL_TabCloseRequested(int index);
 
 
 };

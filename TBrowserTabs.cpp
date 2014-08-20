@@ -17,6 +17,7 @@ TBrowserTabs::TBrowserTabs(TProfile * pProfile)
 TBrowserTabs::~TBrowserTabs()
 	{
 	TRACE1("TBrowserTabs::~TBrowserTabs(0x$p)\n", this);
+	m_arraypaTabs.DeleteAllRuntimeObjects();
 	MainWindow_DeleteLayout(PA_DELETING m_pawLayoutBrowser);
 	}
 
@@ -42,6 +43,9 @@ TBrowserTabs::AddTab()
 
 	if ( m_pawLayoutBrowser)
 		m_pawLayoutBrowser->AddTab(pBrowserTab);
+
+	//if ( m_paTreeItemW_YZ != NULL)
+	//	pBrowserTab->TreeItemW_DisplayWithinNavigationTree(this);
 
 	return pBrowserTab;
 	}
@@ -108,22 +112,30 @@ TBrowserTabs::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 void
 TBrowserTabs::TreeItem_GotFocus()
 	{
-	m_pawLayoutBrowser = new WLayoutTabbedBrowser(this);
-	MainWindow_SetCurrentLayout(IN m_pawLayoutBrowser);
-
-	// add tabs added before the layout was initialized
-	TBrowserTab **ppBrowserTabStop;
-	TBrowserTab **ppBrowserTab = m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);
-	while(ppBrowserTab != ppBrowserTabStop)
+	MessageLog_AppendTextFormatCo(d_coChocolate, "TBrowserTabs::TreeItem_GotFocus()");
+	if ( m_pawLayoutBrowser == NULL)
 		{
-		TBrowserTab *pBrowserTab = *ppBrowserTab++;
-		m_pawLayoutBrowser->AddTab(pBrowserTab);
+		m_pawLayoutBrowser = new WLayoutTabbedBrowser(this);
+
+		// add tabs added before the layout was initialized
+		TBrowserTab **ppBrowserTabStop;
+		TBrowserTab **ppBrowserTab = m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);
+		while(ppBrowserTab != ppBrowserTabStop)
+			{
+			TBrowserTab *pBrowserTab = *ppBrowserTab++;
+			m_pawLayoutBrowser->AddTab(pBrowserTab);
+			CStr text("Tab");
+			pBrowserTab->m_strNameDisplayTyped = text;
+			//pBrowserTab->TreeItemW_DisplayWithinNavigationTree(this);
+			}
 		}
+	MainWindow_SetCurrentLayout(IN m_pawLayoutBrowser);
 	}
 
 void
 TBrowserTabs::TreeItemBrowser_DisplayWithinNavigationTree()
 	{
+	MessageLog_AppendTextFormatCo(d_coChocolate, "TBrowserTabs::TreeItemBrowser_DisplayWithinNavigationTree()");
 	TreeItemW_DisplayWithinNavigationTree((m_pProfile->m_paTreeItemW_YZ != NULL) ?  m_pProfile : NULL);
 	TreeItemW_SetIcon(eMenuAction_DisplaySecureWebBrowsing);
 	}

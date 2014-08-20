@@ -22,10 +22,11 @@ class TBrowserTabs : public ITreeItem
 
 protected:
 	TProfile * m_pProfile;
-	CArrayPtrBrowserTabs m_arraypaTabs;
 	WLayoutTabbedBrowser *m_pawLayoutBrowser;
 
 public:
+	CArrayPtrBrowserTabs m_arraypaTabs;
+
 	TBrowserTabs(TProfile * pProfile);
 	~TBrowserTabs();
 
