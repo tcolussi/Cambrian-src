@@ -431,14 +431,14 @@ NavigationTree_NewTabbedBrowser()
 
 
 	CStr sName("MyTabbedBrowser");
-	CStr url1("file:///C:/Users/Cesar/.Cambrian/Apps/html5-pomodoro/index.html");
-	CStr url2("file:///C:/Users/Cesar/.Cambrian/Apps/html5-scratch/index.html");
+	//CStr url1("file:///C:/Users/Cesar/.Cambrian/Apps/html5-pomodoro/index.html");
+	//CStr url2("file:///C:/Users/Cesar/.Cambrian/Apps/html5-scratch/index.html");
 
 	// No browser yet, therefore allocate one
 	TBrowserTabs * pBrowser = new TBrowserTabs(pProfile);
 	pBrowser->SetIconAndName(eMenuAction_DisplaySecureWebBrowsing, sName);
-	pBrowser->AddTab(url1);
-	pBrowser->AddTab(url2);
+	//pBrowser->AddTab(url1);
+	//pBrowser->AddTab(url2);
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 	pBrowser->TreeItemW_SelectWithinNavigationTree();
 

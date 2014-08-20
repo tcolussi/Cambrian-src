@@ -102,7 +102,7 @@ TBrowserTabs::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		{
 	case eMenuAction_Close:
 		MainWindow_SetCurrentLayout(NULL);
-		m_pProfile->m_arraypaBrowsers.DeleteTreeItem(PA_DELETING this);
+		m_pProfile->m_arraypaBrowsersTabbed.DeleteTreeItem(PA_DELETING this);
 		return ezMenuActionNone;
 	default:
 		return ITreeItem::TreeItem_EDoMenuAction(eMenuAction);
@@ -115,7 +115,7 @@ TBrowserTabs::TreeItem_GotFocus()
 	MessageLog_AppendTextFormatCo(d_coChocolate, "TBrowserTabs::TreeItem_GotFocus()");
 	if ( m_pawLayoutBrowser == NULL)
 		{
-		m_pawLayoutBrowser = new WLayoutTabbedBrowser(this);
+		m_pawLayoutBrowser = new WLayoutTabbedBrowser(this, m_pProfile);
 
 		// add tabs added before the layout was initialized
 		TBrowserTab **ppBrowserTabStop;
@@ -128,7 +128,13 @@ TBrowserTabs::TreeItem_GotFocus()
 			pBrowserTab->m_strNameDisplayTyped = text;
 			//pBrowserTab->TreeItemW_DisplayWithinNavigationTree(this);
 			}
+
+		// add default tab if there was none
+		if ( m_arraypaTabs.GetSize() == 0)
+			AddTab();
 		}
+
+
 	MainWindow_SetCurrentLayout(IN m_pawLayoutBrowser);
 	}
 
