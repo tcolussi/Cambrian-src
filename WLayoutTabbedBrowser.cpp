@@ -8,9 +8,10 @@ WLayoutTabbedBrowser::WLayoutTabbedBrowser(TBrowserTabs *pBrowserTabs, TProfile 
 
 	// tab widget
 	m_pTabWidget = new QTabWidget(this);
-	m_pTabWidget->setTabsClosable(true);
+	//m_pTabWidget->setTabsClosable(true);
 	m_pTabWidget->setTabShape(QTabWidget::Triangular);
 	m_pTabWidget->setMovable(true);
+	m_pTabWidget->setStyleSheet("QTabBar::tab { height: 23px; width: 150px; color: rgb(100, 100, 100) }");
 	QObject::connect(m_pTabWidget, &QTabWidget::tabCloseRequested, this, &WLayoutTabbedBrowser::SL_TabCloseRequested);
 
 	// add tab button
@@ -41,7 +42,10 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 
 	int iTab = m_pTabWidget->addTab(paWebView, "New tab");
 	m_pTabWidget->setCurrentIndex(iTab);
-	m_pTabWidget->setTabsClosable(true);
+
+	// make it closable only if there are two or more tabs
+	if ( m_pTabWidget->count() > 1)
+		m_pTabWidget->setTabsClosable(true);
 
 	return m_arraypaWebViews.Add(paWebView);
 }
@@ -89,10 +93,10 @@ void WLayoutTabbedBrowser::SL_TabCloseRequested(int index)
 	delete pTabPage;
 
 	if ( m_pTabWidget->count() == 0 )
-		{
 		SL_AddTab(true);
+
+	if ( m_pTabWidget->count() == 1)
 		m_pTabWidget->setTabsClosable(false);
-		}
 	}
 
 
@@ -123,25 +127,25 @@ WWebViewTabbed::WWebViewTabbed(TBrowserTab *pTab, TProfile *pProfile) : QSplitte
 	m_pwEdit->setParent(this);
 	poLayout->addWidget(m_pwEdit);
 
-	connect(m_pwEdit, &WEdit::returnPressed, this, &WWebViewTabbed::SL_NavigateToAddress );
-	connect(m_pwButtonBack, &WButtonIconForToolbar::clicked, this, &WWebViewTabbed::SL_GoBack);
+	connect(m_pwEdit,          &WEdit::returnPressed,           this, &WWebViewTabbed::SL_NavigateToAddress );
+	connect(m_pwButtonBack,    &WButtonIconForToolbar::clicked, this, &WWebViewTabbed::SL_GoBack);
 	connect(m_pwButtonForward, &WButtonIconForToolbar::clicked, this, &WWebViewTabbed::SL_GoForward);
 
 	m_pwWebView = new QWebView(this);
-	connect(m_pwWebView, &QWebView::urlChanged, this, &WWebViewTabbed::SL_UrlChanged);
+	connect(m_pwWebView, &QWebView::urlChanged,   this, &WWebViewTabbed::SL_UrlChanged);
 	connect(m_pwWebView, &QWebView::titleChanged, this, &WWebViewTabbed::SL_WebViewTitleChanged);
+	connect(m_pwWebView, &QWebView::loadFinished, this, &WWebViewTabbed::SL_Loaded);
 
 	//	QScriptEngine
-	/*
+
 	m_paCambrian = new OJapiCambrian(pProfile, this);
 
 	QWebPage * poPage = m_pwWebView->page();
 	m_poFrame = poPage->mainFrame();
 	SL_InitJavaScript();
-	connect(m_poFrame, SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(SL_InitJavaScript()));
+	//connect(m_poFrame, SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(SL_InitJavaScript()));
+	connect(m_poFrame, &QWebFrame::javaScriptWindowObjectCleared, this, &WWebViewTabbed::SL_InitJavaScript);
 	poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);	// Enable the context menu item named "Inspect".  This is useful for debugging web pages.
-	*/
-
 	}
 
 void WWebViewTabbed::NavigateToAddress(const CStr &strAddress)
@@ -198,6 +202,18 @@ void WWebViewTabbed::SL_GoForward()
 void WWebViewTabbed::SL_WebViewTitleChanged(const QString &title)
 	{
 	emit titleChanged(title);
+	}
+
+void WWebViewTabbed::SL_InitJavaScript()
+	{
+	m_paCambrian->m_arraypaTemp.DeleteAllRuntimeObjects();// Delete any previous temporary object
+	m_poFrame->addToJavaScriptWindowObject("Cambrian", m_paCambrian); // , QWebFrame::ScriptOwnership);
+	}
+
+void WWebViewTabbed::SL_Loaded(bool ok)
+	{
+	if ( !ok )
+		m_poFrame->setHtml("The web page doesn't exist");
 	}
 
 

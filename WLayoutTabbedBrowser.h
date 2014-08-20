@@ -3,7 +3,10 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include <QWebFrame>
 #include "TBrowserTab.h"
+#include "ApiJavaScript.h"
+
 
 class WWebViewTabbed;
 
@@ -51,6 +54,8 @@ protected:
 	WEdit * m_pwEdit;
 	WButtonIconForToolbar * m_pwButtonBack;
 	WButtonIconForToolbar * m_pwButtonForward;
+	OJapiCambrian * m_paCambrian;
+	QWebFrame * m_poFrame;
 
 public:
 	QWebView *m_pwWebView;
@@ -65,7 +70,8 @@ public slots:
 	void SL_GoBack();
 	void SL_GoForward();
 	void SL_WebViewTitleChanged(const QString & title);
-
+	void SL_InitJavaScript();
+	void SL_Loaded(bool ok);
 
 
 Q_SIGNALS:
