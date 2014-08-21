@@ -8,19 +8,19 @@ WLayoutTabbedBrowser::WLayoutTabbedBrowser(TBrowserTabs *pBrowserTabs, TProfile 
 
 	// tab widget
 	m_pTabWidget = new QTabWidget(this);
-	//m_pTabWidget->setTabsClosable(true);
+	m_pTabWidget->setTabsClosable(true);
 	m_pTabWidget->setTabShape(QTabWidget::Triangular);
 	m_pTabWidget->setMovable(true);
 	m_pTabWidget->setStyleSheet("QTabBar::tab { height: 23px; width: 150px; color: rgb(100, 100, 100) }");
 	QObject::connect(m_pTabWidget, &QTabWidget::tabCloseRequested, this, &WLayoutTabbedBrowser::SL_TabCloseRequested);
 
 	// add tab button
-	QIcon pIco(":/ico/IconHaven");
+	QIcon iconAdd(":/ico/Add");
 	QToolButton *newTabButton= new QToolButton(this);
 	m_pTabWidget->setCornerWidget(newTabButton, Qt::TopLeftCorner);
 	newTabButton->setCursor(Qt::ArrowCursor);
 	newTabButton->setAutoRaise(true);
-	newTabButton->setIcon(pIco);
+	newTabButton->setIcon(iconAdd);
 	newTabButton->setToolTip(tr("Add tab"));
 	QObject::connect(newTabButton, &QToolButton::clicked, this, &WLayoutTabbedBrowser::SL_AddTab);
 	}
@@ -42,10 +42,7 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 
 	int iTab = m_pTabWidget->addTab(paWebView, "New tab");
 	m_pTabWidget->setCurrentIndex(iTab);
-
-	// make it closable only if there are two or more tabs
-	if ( m_pTabWidget->count() > 1)
-		m_pTabWidget->setTabsClosable(true);
+	m_pTabWidget->setTabsClosable(true);
 
 	return m_arraypaWebViews.Add(paWebView);
 }
@@ -77,14 +74,16 @@ WLayoutTabbedBrowser::SL_WebViewTitleChanged(const QString &title)
 		}
 	}
 
-void WLayoutTabbedBrowser::SL_AddTab(bool checked = false)
+void
+WLayoutTabbedBrowser::SL_AddTab(bool checked = false)
 	{
 	// add the new tab using the TBrowserTabs object
 	m_pBrowserTabs->AddTab();
 	MessageLog_AppendTextFormatCo(d_coBlack, "AddTab()\n");
 	}
 
-void WLayoutTabbedBrowser::SL_TabCloseRequested(int index)
+void
+WLayoutTabbedBrowser::SL_TabCloseRequested(int index)
 	{
 	WWebViewTabbed *pTabPage = (WWebViewTabbed *) m_pTabWidget->widget(index);
 	m_pBrowserTabs->m_arraypaTabs.DeleteTreeItem(pTabPage->m_pTab);
@@ -95,8 +94,8 @@ void WLayoutTabbedBrowser::SL_TabCloseRequested(int index)
 	if ( m_pTabWidget->count() == 0 )
 		SL_AddTab(true);
 
-	if ( m_pTabWidget->count() == 1)
-		m_pTabWidget->setTabsClosable(false);
+	//if ( m_pTabWidget->count() == 1)
+	//	m_pTabWidget->setTabsClosable(false);
 	}
 
 
@@ -145,14 +144,16 @@ WWebViewTabbed::WWebViewTabbed(TBrowserTab *pTab, TProfile *pProfile) : QSplitte
 	SL_InitJavaScript();
 	//connect(m_poFrame, SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(SL_InitJavaScript()));
 	connect(m_poFrame, &QWebFrame::javaScriptWindowObjectCleared, this, &WWebViewTabbed::SL_InitJavaScript);
+	connect(m_poFrame, &QWebFrame::iconChanged,                   this, &WWebViewTabbed::SL_IconChanged);
 	poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);	// Enable the context menu item named "Inspect".  This is useful for debugging web pages.
 	}
 
-void WWebViewTabbed::NavigateToAddress(const CStr &strAddress)
+void
+WWebViewTabbed::NavigateToAddress(const CStr &strAddress)
 	{
 	Assert(m_pwWebView != NULL);
 	Assert(m_pTab != NULL);
-	// MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "WWebViewTabbed::NavigateToAddress __ $S - $S\n", &m_pTab->m_url, &strAddress);
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "WWebViewTabbed::NavigateToAddress __ $S\n", &strAddress);
 
 	// update tree item
 	if ( !m_pTab->m_url.FCompareStringsNoCase(strAddress))
@@ -172,15 +173,17 @@ void WWebViewTabbed::NavigateToAddress(const CStr &strAddress)
 	m_pwWebView->setFocus();
 	}
 
-void WWebViewTabbed::SL_NavigateToAddress()
+void
+WWebViewTabbed::SL_NavigateToAddress()
 	{
 	CStr strAddress = *m_pwEdit;
 	NavigateToAddress(strAddress);
 }
 
-void WWebViewTabbed::SL_UrlChanged(QUrl url)
+void
+WWebViewTabbed::SL_UrlChanged(QUrl url)
 	{
-	//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlue), "WWebViewTabbed::SL_URLChanged\n");
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlue), "WWebViewTabbed::SL_URLChanged\n");
 	if (m_pwEdit != NULL)
 		{
 		QString sUrl = url.toString();
@@ -189,31 +192,42 @@ void WWebViewTabbed::SL_UrlChanged(QUrl url)
 	}
 }
 
-void WWebViewTabbed::SL_GoBack()
+void
+WWebViewTabbed::SL_GoBack()
 	{
 	m_pwWebView->back();
 	}
 
-void WWebViewTabbed::SL_GoForward()
+void
+WWebViewTabbed::SL_GoForward()
 	{
 	m_pwWebView->forward();
 	}
 
-void WWebViewTabbed::SL_WebViewTitleChanged(const QString &title)
+void
+WWebViewTabbed::SL_WebViewTitleChanged(const QString &title)
 	{
 	emit titleChanged(title);
 	}
 
-void WWebViewTabbed::SL_InitJavaScript()
+void
+WWebViewTabbed::SL_InitJavaScript()
 	{
 	m_paCambrian->m_arraypaTemp.DeleteAllRuntimeObjects();// Delete any previous temporary object
 	m_poFrame->addToJavaScriptWindowObject("Cambrian", m_paCambrian); // , QWebFrame::ScriptOwnership);
 	}
 
-void WWebViewTabbed::SL_Loaded(bool ok)
+void
+WWebViewTabbed::SL_Loaded(bool ok)
 	{
 	if ( !ok )
 		m_poFrame->setHtml("The web page doesn't exist");
+	}
+
+void
+WWebViewTabbed::SL_IconChanged()
+	{
+	MessageLog_AppendTextFormatCo(d_coBlueDark, "SL_IconChanged()\n");
 	}
 
 

@@ -72,6 +72,7 @@ public slots:
 	void SL_WebViewTitleChanged(const QString & title);
 	void SL_InitJavaScript();
 	void SL_Loaded(bool ok);
+	void SL_IconChanged();
 
 
 Q_SIGNALS:
