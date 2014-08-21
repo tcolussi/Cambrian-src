@@ -112,7 +112,7 @@ TBrowserTabs::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 void
 TBrowserTabs::TreeItem_GotFocus()
 	{
-	MessageLog_AppendTextFormatCo(d_coChocolate, "TBrowserTabs::TreeItem_GotFocus()");
+	//MessageLog_AppendTextFormatCo(d_coChocolate, "TBrowserTabs::TreeItem_GotFocus()");
 	if ( m_pawLayoutBrowser == NULL)
 		{
 		m_pawLayoutBrowser = new WLayoutTabbedBrowser(this, m_pProfile);

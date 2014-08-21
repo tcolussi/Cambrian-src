@@ -5,6 +5,7 @@
 #endif
 #include "ApiJavaScript.h"
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class WLayoutBrowser  : public WLayout
 {
@@ -31,5 +32,7 @@ public slots:
 	void SL_GoForward();
 	void SL_UrlChanged(QUrl url);
 }; // WLayoutBrowser
+
+void LaunchBrowser(const QString & sName, const QString & sUrlRelative);
 
 #endif // WLAYOUTBROWSER_H

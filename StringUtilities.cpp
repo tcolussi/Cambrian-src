@@ -542,7 +542,8 @@ PszrCompareStringBeginNoCase(PSZUC pszStringCompare, PSZAC pszStringReference)
 	Assert(pszStringReference != NULL);
 	while (TRUE)
 		{
-		const CHS chStringReference = *pszStringReference++;
+		//const CHS chStringReference = *pszStringReference++;
+		const CHS chStringReference = Ch_GetCharLowercase(*pszStringReference++);
 		if (chStringReference == '\0')
 			return pszStringCompare;
 		Assert((chStringReference < 'A' || chStringReference > 'Z') && "Reference string contains uppercase characters");

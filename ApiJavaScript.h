@@ -198,7 +198,7 @@ public slots:
 	POJapiPoll build(const QString & sIdPollTemplate);
 	POJapiPoll get(const QString & sIdPoll);
 	QVariant getList();
-    void go();
+	void open();
 };
 #define POJapiAppBallotmaster		POJapi
 

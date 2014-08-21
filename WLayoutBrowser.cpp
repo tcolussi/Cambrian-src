@@ -404,7 +404,9 @@ LaunchBrowser(const QString & sName, const QString & sUrlRelative)
 	while (ppBrowser != ppBrowserStop)
 		{
 		TBrowser * pBrowser = *ppBrowser++;
-		if (pBrowser->m_strUrl.FCompareStringsExactCase(strUrl))
+		if ( pBrowser->m_strUrl.FStringBeginsWith(strUrl.PszaGetUtf8NZ()))
+		//if ( qUrlAbs.host() == qUrlCurrent.host() && qUrlAbs.path() == qUrlCurrent.path() )
+		//if (pBrowser->m_strUrl.FCompareStringsExactCase(strUrl))
 			{
 			// There is already an opened browser with the same URL, therefore select it
 			pBrowser->TreeItemW_SelectWithinNavigationTree();
@@ -429,16 +431,10 @@ NavigationTree_NewTabbedBrowser()
 	if (pProfile == NULL)
 		return;
 
+	CStr sName("Web Browser");
 
-	CStr sName("MyTabbedBrowser");
-	//CStr url1("file:///C:/Users/Cesar/.Cambrian/Apps/html5-pomodoro/index.html");
-	//CStr url2("file:///C:/Users/Cesar/.Cambrian/Apps/html5-scratch/index.html");
-
-	// No browser yet, therefore allocate one
 	TBrowserTabs * pBrowser = new TBrowserTabs(pProfile);
 	pBrowser->SetIconAndName(eMenuAction_DisplaySecureWebBrowsing, sName);
-	//pBrowser->AddTab(url1);
-	//pBrowser->AddTab(url2);
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 	pBrowser->TreeItemW_SelectWithinNavigationTree();
 
