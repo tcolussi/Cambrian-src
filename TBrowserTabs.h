@@ -22,17 +22,17 @@ class TBrowserTabs : public ITreeItem
 
 protected:
 	TProfile * m_pProfile;
-	WLayoutTabbedBrowser *m_pawLayoutBrowser;
 
 public:
+	WLayoutTabbedBrowser *m_pawLayoutBrowser;
 	CArrayPtrBrowserTabs m_arraypaTabs;
 
 	TBrowserTabs(TProfile * pProfile);
 	~TBrowserTabs();
 
 	void SetIconAndName(EMenuAction eMenuActionIcon, PSZAC pszName);
-	TBrowserTab *AddTab(CStr &sUrl);
-	TBrowserTab *AddTab();
+	TBrowserTab * AddTab(CStr &sUrl);
+	TBrowserTab * AddTab();
 	int GetTabsCount();
 
 	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject

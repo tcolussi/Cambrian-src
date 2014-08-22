@@ -3,6 +3,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include "WLayoutTabbedBrowser.h"
 
 class TBrowserTabs;
 
@@ -14,11 +15,13 @@ protected:
 	TBrowserTabs * m_pBrowserTabs;
 
 public:
+	WWebViewTabbed * m_pwWebViewTab;
 	TBrowserTab(TBrowserTabs * pBrowserTabs);
 	CStr m_url;
 
 public:
 	void SetUrl(CStr &sUrl);
+	void Show();
 
 
 	// IRuntimeObject interface

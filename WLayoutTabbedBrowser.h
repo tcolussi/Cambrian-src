@@ -5,11 +5,11 @@
 #endif
 #include <QWebFrame>
 #include "TBrowserTab.h"
-#include "ApiJavaScript.h"
 
 
 class WWebViewTabbed;
-
+class TBrowserTabs;
+class TBrowserTab;
 
 class CArrayPtrCWebViews : public CArray
 {
@@ -24,12 +24,13 @@ class WLayoutTabbedBrowser : public WLayout
 {
 	Q_OBJECT
 
-	QTabWidget * m_pTabWidget;
 	CArrayPtrCWebViews  m_arraypaWebViews;
-	TBrowserTabs *m_pBrowserTabs;
 	TProfile * m_pProfile;
+	TBrowserTabs *m_pBrowserTabs;
 
 public:
+	QTabWidget * m_pTabWidget;
+
 	WLayoutTabbedBrowser(TBrowserTabs *pBrowserTabs, TProfile * pProfile);
 	~WLayoutTabbedBrowser();
 

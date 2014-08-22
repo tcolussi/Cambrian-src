@@ -30,24 +30,34 @@ TBrowserTabs::SetIconAndName(EMenuAction eMenuActionIcon, PSZAC pszName)
 TBrowserTab*
 TBrowserTabs::AddTab(CStr &sUrl)
 	{
-	TBrowserTab* pTab = AddTab();
-	pTab->m_url = sUrl;
-	return pTab;
-	}
+	// special case: use the first new tab to set the first non null url
+	TBrowserTab *pBrowserTab = (TBrowserTab*) m_arraypaTabs.PvGetElementFirst_YZ();
+	if ( m_arraypaTabs.GetSize() == 1 && !sUrl.FIsEmptyString() &&  pBrowserTab->m_url.FIsEmptyString() )
+		{
+		pBrowserTab->SetUrl(sUrl);
+		}
+	else
+		{
+		TBrowserTab *pBrowserTab = new TBrowserTab(this);
+		pBrowserTab->m_url = sUrl;
 
-TBrowserTab*
-TBrowserTabs::AddTab()
-	{
-	TBrowserTab *pBrowserTab = new TBrowserTab(this);
-	m_arraypaTabs.Add(pBrowserTab);
-
-	if ( m_pawLayoutBrowser)
-		m_pawLayoutBrowser->AddTab(pBrowserTab);
+		m_arraypaTabs.Add(pBrowserTab);
+		if ( m_pawLayoutBrowser)
+			m_pawLayoutBrowser->AddTab(pBrowserTab);
+		}
 
 	//if ( m_paTreeItemW_YZ != NULL)
 	//	pBrowserTab->TreeItemW_DisplayWithinNavigationTree(this);
 
 	return pBrowserTab;
+	}
+
+TBrowserTab*
+TBrowserTabs::AddTab()
+	{
+	CStr url;
+	TBrowserTab* pTab = AddTab(url);
+	return pTab;
 	}
 
 int

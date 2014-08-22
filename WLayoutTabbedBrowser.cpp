@@ -1,4 +1,7 @@
 #include "WLayoutTabbedBrowser.h"
+#include "TBrowserTabs.h"
+#include "TBrowserTab.h"
+#include "ApiJavaScript.h"
 
 WLayoutTabbedBrowser::WLayoutTabbedBrowser(TBrowserTabs *pBrowserTabs, TProfile * pProfile)
 	{
@@ -33,10 +36,14 @@ int
 WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 	{
 	Assert(pTBrowserTab != NULL);
+	Assert(pTBrowserTab->m_pwWebViewTab == NULL); // new TreeItem shouldn't already have a tab view
 
 	WWebViewTabbed *paWebView = new WWebViewTabbed(pTBrowserTab, m_pProfile);
+	pTBrowserTab->m_pwWebViewTab = paWebView;
 	if ( !pTBrowserTab->m_url.FIsEmptyString() )
 		paWebView->NavigateToAddress(pTBrowserTab->m_url );
+
+	//MessageLog_AppendTextFormatCo(d_coBlue, "WLayoutTabbedBrowser::AddTab($S)\n", &pTBrowserTab->m_url);
 
 	QObject::connect(paWebView, SIGNAL(titleChanged(QString)), this, SLOT(SL_WebViewTitleChanged(QString)) );
 
@@ -153,7 +160,7 @@ WWebViewTabbed::NavigateToAddress(const CStr &strAddress)
 	{
 	Assert(m_pwWebView != NULL);
 	Assert(m_pTab != NULL);
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "WWebViewTabbed::NavigateToAddress __ $S\n", &strAddress);
+	//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "WWebViewTabbed::NavigateToAddress __ $S\n", &strAddress);
 
 	// update tree item
 	if ( !m_pTab->m_url.FCompareStringsNoCase(strAddress))
@@ -183,7 +190,7 @@ WWebViewTabbed::SL_NavigateToAddress()
 void
 WWebViewTabbed::SL_UrlChanged(QUrl url)
 	{
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlue), "WWebViewTabbed::SL_URLChanged\n");
+	//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlue), "WWebViewTabbed::SL_URLChanged\n");
 	if (m_pwEdit != NULL)
 		{
 		QString sUrl = url.toString();

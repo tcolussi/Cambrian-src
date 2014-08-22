@@ -1,16 +1,31 @@
 #include "TBrowserTab.h"
 
 TBrowserTab::TBrowserTab(TBrowserTabs *pBrowserTabs)
-{
+	{
 	Assert(pBrowserTabs != NULL);
 	Assert(pBrowserTabs->EGetRuntimeClass() == RTI(TBrowserTabs));
 	m_pBrowserTabs = pBrowserTabs;
-}
+	m_pwWebViewTab = NULL;
+	}
 
 void
 TBrowserTab::SetUrl(CStr &sUrl)
 	{
 	m_url = sUrl;
+	if ( m_pwWebViewTab != NULL)
+		{
+		m_pwWebViewTab->NavigateToAddress(sUrl);
+	}
+}
+
+void TBrowserTab::Show()
+	{
+	Assert(m_pwWebViewTab != NULL);
+	Assert(m_pBrowserTabs != NULL);
+	Assert(m_pBrowserTabs->m_pawLayoutBrowser != NULL);
+	Assert(m_pBrowserTabs->m_pawLayoutBrowser->m_pTabWidget != NULL);
+
+	m_pBrowserTabs->m_pawLayoutBrowser->m_pTabWidget->setCurrentWidget(m_pwWebViewTab);
 	}
 
 POBJECT TBrowserTab::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject *piParent) const

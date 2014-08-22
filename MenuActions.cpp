@@ -667,7 +667,7 @@ const EMenuActionByte c_rgzeActionsMenuCambrian[] =
 	eMenuActionSeparator,
 	eMenuAction_DisplayWallet,
 	*/
-	eMenuAction_DisplaySecureWebBrowsing,
+	//eMenuAction_DisplaySecureWebBrowsing,
 	//eMenuIconMarketplace,
 	eMenuActionSeparator,
 	eMenuAction_Quit,
