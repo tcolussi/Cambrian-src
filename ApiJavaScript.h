@@ -303,11 +303,14 @@ public:
 	QString name();
 	void name(const QString & sName);
 	int count();
+	OJapiList members();
 
 	Q_OBJECT
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name WRITE name)
 	Q_PROPERTY(int count READ count)
+	Q_PROPERTY(OJapiList members READ members)
+
 
 public slots:
 	void addPeer(POJapiContact pContactAdd);
