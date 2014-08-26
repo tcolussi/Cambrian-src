@@ -14,6 +14,31 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+//	XCP is an abbreviation for "eXtensible Cambrian Protocol".
+//	In a nutshell, this protocol is a layer taking care of end-to-end encryption between clients, as well as automatically
+//	splitting large pieces of data into smaller xmpp-stanzas when the data does not fit in the recommended xmpp-stanza size of 4 KiB.
+#define d_chXCP_					'_'
+#define d_szXCP_					"_"
+
+//	The following #define are for the XCP APIs which are shared among multiple .cpp files
+#define d_chXCPe_ApiRequest									'a'
+#define d_szXCPe_ApiRequest_s						d_szXCP_"a n='$s'"
+#define d_szXCPe_ApiRequestGroup_s_h				d_szXCP_"a n='$s' g='{h|}'"
+#define d_szXCPe_ApiRequest_close					d_szXCP_"a"
+	#define d_chXCPa_Api_strName								'n'		// Name of the function (API) to call
+	#define d_chXCPa_Api_shaGroupID								'g'		// Group (if any) where the API is related
+#define d_chXCPe_ApiReply									'A'
+#define d_szXCPe_ApiReply_s							d_szXCP_"A n='$s'"
+#define d_szXCPe_ApiReply_close						d_szXCP_"A"
+	#define d_chXCPa_Api_eErrorCode								'e'	// Store the error code EErrorXcpApi
+	#define d_chXCPa_Api_strxErrorData							'd'
+	#define d_szXCPa_Api_ErrorCodeAndErrorData_i_s				" e='$i' d='^s'"
+
+#define d_szXCPe_Api_bsA							d_szXCP_"$b n='$s'^A"	// Generic formatting of an API response
+#define d_szXCPe_Api_b								d_szXCP_"$b"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	#defines for events
 #define d_szEventDebug_strContactSource					"_CONTACTSOURCE"	// Add an extra field to the base class IEvent to include the contact who transmitted the event.  This field is useful to debug group chat.
 #define d_szEventDebug_strVersion						"_VERSION"			// Add the Cambrian version when the event was created (sent or received).  Again, this is useful to save time by avoiding debugging old events received before a given bugfix.
 
@@ -23,22 +48,17 @@
 #define d_szEvent_Attribute_tsOther_t					" o='$t'"
 
 //	Shorter for the timestamps
-#define _tsI		d_szEvent_Attribute_tsEventID_t
-#define _tsO		d_szEvent_Attribute_tsOther_t
+#define _tsI											d_szEvent_Attribute_tsEventID_t
+#define _tsO											d_szEvent_Attribute_tsOther_t
 
-//	XCP is an abbreviation for "eXtensible Cambrian Protocol".
-//	In a nutshell, this protocol is a layer taking care of end-to-end encryption between clients, as well as automatically
-//	splitting large pieces of data into smaller xmpp-stanzas when the data does not fit in the recommended xmpp-stanza size of 4 KiB.
-#define d_chXCP_					'_'
-#define d_szXCP_					"_"
-
-//	Essentially, there are 3 reserved attributes by the Cambrian Protocol ('i', 'o' and 'g')
+//	Essentially, there are 4 reserved attributes by the Cambrian Protocol ('i', 'o', 'g' and 'G')
 //	The following attributes 'make sense' for the receiver of the XCP data.
 #define d_chXCPa_tsEventID				d_chEvent_Attribute_tsEventID
 #define d_szXCPa_tsEventID_t			d_szEvent_Attribute_tsEventID_t
 #define d_chXCPa_tsOther				d_chEvent_Attribute_tsOther
 #define d_szXCPa_tsOther_t				d_szEvent_Attribute_tsOther_t
 #define d_chXCPa_pContactGroupSender	'g'		// Pointer of the contact who sent the event/message to the group.  Of course, this attribute is present only when receiving a group message
+#define d_chXCPa_IEvent_uFlagsEvent		'G'		// Rare attribute indicating some bits of IEvent::m_uFlagsEvent are serialized.  Since 'g' is already reserved by the XCP protocol, then 'G' is used for flaGs.
 
 
 //	The enumeration EEventClass is used to serialize and unserialize events.
@@ -105,6 +125,10 @@ enum EEventClass
 		#define d_chXCPa_CEventDownloader_bin85DataReceived		'd'	// Data was received so far.  This value is used when saving the downloader to disk to resume the download later.
 		#define d_chXCPa_CEventDownloader_tsForwarded			'f'	// Timestamt for a forwarded event
 		#define d_szXCPa_CEventDownloader_tsForwarded_t			" f='$t'"
+
+	eEventClass_eUpdaterSent							= _USZU1('U'),
+	eEventClass_eUpdaterReceived						= _USZU1('u'),
+	eEventClass_eUpdaterReceived_class					= eEventClass_eUpdaterReceived | eEventClass_kfReceivedByRemoteClient,
 
 	eEventClass_eWalletTransactionSent				= _USZU1('W'),
 	eEventClass_eWalletTransactionReceived			= _USZU1('w'),
@@ -193,6 +217,7 @@ public:
 	void BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters);
 
 	void BinXmlAppendXcpApiRequestOpen(PSZAC pszApiName);
+	void BinXmlAppendXcpApiRequestOpenGroup(PSZAC pszApiName, const TGroup * pGroup);
 	void BinXmlAppendXcpApiRequestClose();
 	void BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters);
 	void BinXmlAppendXcpApiRequest_Group_Profile_Get(PSZUC pszGroupIdentifier);
@@ -239,6 +264,14 @@ class CBinXcpStanzaTypeMessage : public CBinXcpStanza
 {
 public:
 	CBinXcpStanzaTypeMessage() : CBinXcpStanza(eStanzaType_eMessage) { }
+};
+
+class CBinXcpStanzaTypeSynchronize : public CBinXcpStanzaTypeMessage
+{
+public:
+	CBinXcpStanzaTypeSynchronize(ITreeItemChatLogEvents * pContactOrGroup);
+protected:
+	void BinXmlAppendXcpApiTimestamps(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsOtherLastSynchronized);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -297,13 +330,19 @@ public:
 	enum
 		{
 		FE_kzDefault				= 0x0000,
-		FE_kfEventOutOfSync			= 0x0001,	// The event is out of sync, and therefore display a little icon to show to the user
-		FE_kfEventDeliveryConfirmed	= 0x0002,	// The event was delivered and its checkmark was displayed.  This flag should be eventually removed, however it is a workaround a Qt bug in the QTextEdit
-		FE_kfEventProtocolWarning	= 0x0004,	// Therew was a minor error while transmitting the event.  This bit is set to give a second chance to retry, however to prevent an infinite loop to retry over and over
-		FE_kfEventProtocolError		= 0x0008,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
-		FE_kfEventDeleted			= 0x0010,	// The event was marked as deleted and therefore should not be saved
+		FE_kfReplacing				= 0x0001,	// The event is replacing another [previous] event (for instance, the event contains the text replacing an older event).  To find the old event, use CEventUpdater.
+		FE_kfReplaced				= 0x0002,	// The event has been replaced by another event (for instance, the text was edited, and therefore another event contains the updated text).  The flags FE_kfReplacing and FE_kfReplaced are not mutually exclusive, as an event may replacing another event, which in turn was replaced by a more recent event.
+
+		FE_kmSerializeMask			= 0x000F,
+
+		FE_kfEventHidden			= 0x0010,	// The event should not be displayed in the Chat Log, typically when an event replaces another event.
+		FE_kfEventDeleted			= 0x0020,	// The event was marked as deleted and therefore should not be saved
+		FE_kfEventOutOfSync			= 0x0040,	// The event is out of sync, and therefore display a little icon to show to the user
+		FE_kfEventDeliveryConfirmed	= 0x0080,	// The event was delivered and its checkmark was displayed.  This flag should be eventually removed, however it is a workaround a Qt bug in the QTextEdit
+		FE_kfEventProtocolWarning	= 0x0100,	// Therew was a minor error while transmitting the event.  This bit is set to give a second chance to retry, however to prevent an infinite loop to retry over and over
+		FE_kfEventProtocolError		= 0x0200,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
 		};
-	mutable UINT m_uFlagsEvent;				// Flags related to the event (not serialized)
+	mutable UINT m_uFlagsEvent;				// Flags related to the event.  Most of those flags are never serialized, however under rare cases some bits are serialized.
 	#ifdef d_szEventDebug_strContactSource
 	CStr m_strDebugContactSource;				// Contact JID who transmitted the event
 	#endif
@@ -334,7 +373,7 @@ public:
 	BOOL Event_FIsEventBelongsToGroup() const;
 	BOOL Event_FIsEventTypeSent() const;
 	BOOL Event_FIsEventTypeReceived() const;
-	void Event_SetCompletedTimestamp();
+	BOOL Event_FSetCompletedTimestamp();
 	void Event_SetCompletedAndUpdateChatLog(QTextEdit * pwEditChatLog);
 	void Event_SetCompletedAndUpdateWidgetWithinParentChatLog();
 	void Event_UpdateWidgetWithinParentChatLog();
@@ -362,6 +401,7 @@ public:
 
 	void Event_WriteToSocket();
 	void Event_WriteToSocketIfReady();
+	const TIMESTAMP * PtsGetTimestampChronology() const;
 
 protected:
 	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const;
@@ -374,7 +414,8 @@ public:
 	static EEventClass S_EGetEventClassFromXmlStanzaXCP(IN const CXmlNode * pXmlNodeEventsStanza, INOUT TContact * pContact, INOUT ITreeItemChatLogEvents * pChatLogEvents, INOUT CBinXcpStanza * pbinXmlStanzaReply);
 	static IEvent * S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEventID);
 	static IEvent * S_PaAllocateEvent_YZ(const CXmlNode * pXmlNodeEvent, const TIMESTAMP * ptsEventID);
-	static int S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort = d_zNA);
+	static NCompareResult S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort = d_zNA);
+	static NCompareResult S_NCompareSortEventsByChronology(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort = d_zNA);
 }; // IEvent
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -405,9 +446,15 @@ public:
 	void EventsSerializeForDisk(INOUT CBinXcpStanza * pbinXmlEvents) const;
 	void EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITreeItemChatLogEvents * pParent);
 	CEventMessageTextReceived * PFindEventMessageReceivedByTimestamp(TIMESTAMP tsOther) const;
+	IEvent * PFindEventReplacedBy(int iEventReplacing) const;
 	IEvent * PFindEventByID(TIMESTAMP tsEventID) const;
 	void SortEventsByIDs();
 	BOOL FEventsSortedByIDs() const;
+	void AppendEventsSortedByIDs(IN_MOD_SORT CArrayPtrEvents * parraypEventsUnsorted);
+	void SortEventsByChronology();
+	void GroupEventsBySender();
+
+	IEvent * PAllocateEvent_YZ(const CXmlNode * pXmlNodeEvent, TIMESTAMP tsEventID, TIMESTAMP tsOther);
 	void DeleteAllEvents();
 	void DeleteAllEventsReceivedHavingDuplicateTsOther();
 	void ForEach_DetachFromObjectsAboutBeingDeleted() const;
@@ -473,6 +520,7 @@ public:
 	virtual EEventClass EGetEventClassForXCP() const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	void MessageResendUpdate(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate);
+	CEventMessageTextSent * PFindEventMostRecent_NZ() CONST_OBJECT;
 };
 
 class CEventMessageTextReceived : public IEventMessageText
@@ -681,6 +729,42 @@ public:
 	CEventHelp(PSZUC pszHtmlHelp);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eHelp_class; }
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+};
+
+
+//	Interface to indicate an event was replaced by another event.
+//	A typical use is a message edited by the user.
+class IEventUpdater : public IEvent
+{
+public:
+	TIMESTAMP m_tsEventIdOld;	// ID of the old message to update
+	TIMESTAMP m_tsEventIdNew;	// ID of the new message containing the text data
+
+public:
+	IEventUpdater(const TIMESTAMP * ptsEventID);
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
+};
+
+//	Event indicating a message was replaced by another one.
+//	This event is used when a message is edited
+class CEventUpdaterSent : public IEventUpdater
+{
+public:
+	static const EEventClass c_eEventClass = eEventClass_eUpdaterSent;
+	CEventUpdaterSent(const TIMESTAMP * ptsEventID) : IEventUpdater(ptsEventID) { }
+	CEventUpdaterSent(const IEvent * pEventOld);
+	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
+	virtual EEventClass EGetEventClassForXCP() const { return eEventClass_eUpdaterReceived_class; }
+};
+
+class CEventUpdaterReceived : public IEventUpdater
+{
+public:
+	static const EEventClass c_eEventClass = eEventClass_eUpdaterReceived_class;
+	CEventUpdaterReceived(const TIMESTAMP * ptsEventID) : IEventUpdater(ptsEventID) { }
+	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
+	virtual EEventClass EGetEventClassForXCP() const { return CEventUpdaterSent::c_eEventClass; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

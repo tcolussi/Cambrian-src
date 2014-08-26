@@ -176,7 +176,7 @@ WLayoutApplicationMayanX::SL_SocketConnected()
 	SHashSha1 hashNonce;
 	HashSha1_InitRandom(OUT &hashNonce);
 	CBin bin;
-	bin.BinAppendTextSzv_VE(
+	bin.BinAppendText_VE(
 		"GET / HTTP/1.1\r\n"
 		"Upgrade: websocket\r\n"
 		"Connection: Upgrade\r\n"
@@ -256,7 +256,7 @@ OSocketWeb::SL_Connected()
 	SHashSha1 hashNonce;
 	HashSha1_InitRandom(OUT &hashNonce);
 	CBin bin;
-	bin.BinAppendTextSzv_VE(
+	bin.BinAppendText_VE(
 		"GET / HTTP/1.1\r\n"
 		"Upgrade: websocket\r\n"
 		"Connection: Upgrade\r\n"

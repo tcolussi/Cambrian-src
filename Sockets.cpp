@@ -244,7 +244,9 @@ void
 CSocketXmpp::Socket_WriteXmlPresence()
 	{
 	Assert(m_pAccount != NULL);
-	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><" d_szCambrianProtocol_xcp " v='1'/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
+	#pragma GCC warning			"[Warning] Compiling SocietyPro with XCP version 2!"
+	#define d_szVersion			"2"
+	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><" d_szCambrianProtocol_xcp " v='"d_szVersion"'/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
 	}
 
 void
@@ -1452,7 +1454,7 @@ CSocketXmpp::SL_SocketDataAvailableForReading()
 				if (memcmp(pszuDataBufferXmlStop, c_szaXmlStreamClose, 16) != 0)
 					{
 					MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Remaining $I bytes in buffer: $s\n", m_binBufferIncomingData.CbGetData() - (pszuDataBufferXmlStop - pszuDataBuffer), pszuDataBufferXmlStop);
-					m_binBufferIncomingData.DataRemoveUntil(pszuDataBufferXmlStop);
+					m_binBufferIncomingData.DataRemoveUntilPointer(pszuDataBufferXmlStop);
 					goto EnsureValidString;
 					}
 				// We received "</stream:stream>, therefore close the stream

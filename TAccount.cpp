@@ -165,7 +165,7 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 					// We have found our contact
 					if (pContact->TreeItemFlags_FuIsInvisible())
 						{
-						Assert(pContact->m_paTreeItemW_YZ == NULL);	// An invisible contact should not appear in the Navigation Tree
+						Endorse(pContact->m_paTreeItemW_YZ != NULL);	// Typically an invisible contact should not appear in the Navigation Tree, however there are situations where it is. For instance, if the contact was just deleted, or if displayed into the list of "Deleted Items"
 						if (eFindContact & eFindContact_kfMakeVisible)
 							pContact->TreeItemContact_DisplayWithinNavigationTreeAndClearInvisibleFlag();
 						}
@@ -203,16 +203,17 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 	return NULL;
 	} // Contact_PFindByJID()
 
-/*
+
+//	May return NULL
 TContact *
 TAccountXmpp::Contact_PFindByJIDorAllocate(PSZUC pszContactJID, PSZUC pszContactName)
 	{
-	TContact * pContact = Contact_PFindByJID(pszContactJID, eFindContactCreate);
+	TContact * pContact = Contact_PFindByJID(pszContactJID, eFindContact_zDefault);
 	if (pContact == NULL)
 		pContact = TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszContactJID, pszContactName);
 	return pContact;
 	}
-*/
+
 
 TContact *
 TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(PSZUC pszContactJID, PSZUC pszContactNameDisplay)

@@ -641,7 +641,7 @@ CHashTable::GetAllElements(OUT CArrayPtrHashElement * parraypHashElements) const
 	{
 	Assert(parraypHashElements != NULL);
 	AssertValid();
-	parraypHashElements->SetAllocSize(m_cHashElements);
+	parraypHashElements->PrgpvAllocateElementsEmpty(m_cHashElements);
 	Assert(parraypHashElements->GetSize() == 0);
 	ForEachHashElement((PFn_EnumHashElement)S_PFn_EnumHashElementGetAll, INOUT (LPARAM)parraypHashElements);
 	Assert(parraypHashElements->GetSize() == m_cHashElements);

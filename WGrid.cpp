@@ -111,8 +111,8 @@ void
 WGrid::RowsAdd(const CArray & arraypData)
 	{
 	int cRowsAdd = arraypData.GetSize();
-	CGridRow ** prgpaRowsData = (CGridRow **)m_arraypaRowsData.PrgpvSetSizeGrowBy(cRowsAdd);
-	CGridRow ** prgpRowsDisplay = (CGridRow **)m_arraypRowsDisplay.PrgpvSetSizeGrowBy(cRowsAdd);
+	CGridRow ** prgpaRowsData = (CGridRow **)m_arraypaRowsData.PrgpvAllocateElementsAppend(cRowsAdd);
+	CGridRow ** prgpRowsDisplay = (CGridRow **)m_arraypRowsDisplay.PrgpvAllocateElementsAppend(cRowsAdd);
 
 	PVDATAROW * prgpvDataRowsAdd = arraypData.PrgpvGetElements();
 	while (cRowsAdd-- > 0)

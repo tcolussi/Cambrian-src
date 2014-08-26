@@ -203,13 +203,13 @@ void
 IEventWalletTransaction::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
-	g_strScratchBufferStatusBar.BinAppendTextSzv_VE(
+	g_strScratchBufferStatusBar.BinAppendText_VE(
 		Event_FIsEventTypeSent() ?
 		"<img src=':/ico/Bitcoin' valign='bottom' style='valign:bottom'/> You sent <b>{Am}</b> to <b>$s</b>" :
 		"<img src=':/ico/Bitcoin' valign='bottom' style='valign:bottom'/> You received <b>{Am}</b> from <b>$s</b>",
 		-m_amtQuantity, ChatLog_PszGetNickNameOfContact());
 	if (!m_strComment.FIsEmptyString())
-		g_strScratchBufferStatusBar.BinAppendTextSzv_VE(": <i>$S</i>", &m_strComment);
+		g_strScratchBufferStatusBar.BinAppendText_VE(": <i>$S</i>", &m_strComment);
 	/*
 	QTextFrameFormat oTextFrameFormat;
 	oTextFrameFormat.setBorder(1);
@@ -431,7 +431,7 @@ CVaultEventsForContact::XmlSerializeVault(IOUT CBin * pbinXml)
 		if (EventsEncryptCb() == 0)
 			return;	// Nothing to serialize
 		}
-	pbinXml->BinAppendTextSzv_VE("<"d_szXmlElementVault" "d_szXmlAttributeContact"='{h|}'>{B|}</"d_szXmlElementVault">\n", &m_hashContact, &m_binEventsEncrypted);
+	pbinXml->BinAppendText_VE("<"d_szXmlElementVault" "d_szXmlAttributeContact"='{h|}'>{B|}</"d_szXmlElementVault">\n", &m_hashContact, &m_binEventsEncrypted);
 	}
 
 EError
@@ -495,7 +495,7 @@ void
 TWallet::SerializeXmlToDisk()
 	{
 	CBin binXml;
-	binXml.BinAppendTextSzv_VE("<$s "d_szXmlAttributeSalt"='{h|}'>\n", c_szaWallet, &m_hashSalt); // Name of the wallet
+	binXml.BinAppendText_VE("<$s "d_szXmlAttributeSalt"='{h|}'>\n", c_szaWallet, &m_hashSalt); // Name of the wallet
 	// Serialize each vault
 	CVaultEventsForContact ** ppVaultStop;
 	CVaultEventsForContact ** ppVault = m_arraypaVaults.PrgpGetVaultsStop(OUT &ppVaultStop);
@@ -504,7 +504,7 @@ TWallet::SerializeXmlToDisk()
 		CVaultEventsForContact * pVault = *ppVault++;
 		pVault->XmlSerializeVault(INOUT &binXml);
 		}
-	binXml.BinAppendTextSzv_VE("</$s>", c_szaWallet);
+	binXml.BinAppendText_VE("</$s>", c_szaWallet);
 	if (binXml.FAssignFileSizeAndMd5(INOUT_F_UNCH &m_hashMd5LastSave))
 		{
 		// Encrypt the file with the password

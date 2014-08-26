@@ -374,7 +374,7 @@ TBrowser::TreeItem_GotFocus()
 
 TBrowser::~TBrowser()
 	{
-	TRACE1("TBrowser::~TBrowser(0x$p)\n", this);
+	TRACE3("TBrowser::~TBrowser(0x$p, $S) - $S", this, &m_strNameDisplayTyped, &m_strUrl);
 	MainWindow_DeleteLayout(PA_DELETING m_pawLayoutBrowser);
 	//delete m_pawLayoutBrowser;
 	}

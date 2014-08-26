@@ -84,13 +84,6 @@ ITreeItemChatLogEvents::ChatLog_FindText()
 	{
 	ChatLog_PwGetLayout_NZ()->WidgetFindText_Show();
 	}
-/*
-void
-ITreeItemChatLogEvents::ChatLog_DisplayNewEvent(IEvent * pEvent)
-	{
-	ChatLog_PwGetLayout_NZ()->ChatLog_EventAppend(pEvent);
-	}
-*/
 
 WChatLog *
 ITreeItemChatLogEvents::ChatLog_PwGet_YZ() const
@@ -591,7 +584,7 @@ TContact::Contact_FIsInvitationRecommended()
 	}
 
 void
-TContact::Vault_AllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, WChatLog * pwChatLog)
+TContact::Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, WChatLog * pwChatLog)
 	{
 	Assert(pXmlNodeMessageStanza != NULL);
 	Assert(pszuMessageBody != NULL);
@@ -663,7 +656,7 @@ TContact::Vault_PAllocateEventFileReceived(const CXmlNode * pXmlNodeStreamInitia
 */
 
 //	Display the content of the stanza to the local user.
-//	Return pointer to the message which was added to the chat history.
+//	Return pointer to the message body which was added to the chat history.
 //	Return NULL if the message body was empty.
 PSZUC
 WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStanza)
@@ -676,7 +669,7 @@ WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStan
 		{
 		m_pwChatLog_NZ->ChatLog_ChatStateComposerRemove(m_pContactParent_YZ);	// When receiving a message, assume the remote user (contact) stopped typing (composing)
 		//m_pwChatLog->ChatLog_EventDisplay(m_pContactParent_YZ->Event_PAllocateEventMessageReceived_YZ(pXmlNodeMessageStanza, pszuMessageBody));
-		m_pContactParent_YZ->Vault_AllocateEventMessageReceivedAndDisplayToChatLog(pXmlNodeMessageStanza, pszuMessageBody, m_pwChatLog_NZ);
+		m_pContactParent_YZ->Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(pXmlNodeMessageStanza, pszuMessageBody, m_pwChatLog_NZ);
 		const CXmlNode  * pXmlNodeRequest = pXmlNodeMessageStanza->PFindElement("request");
 		if (pXmlNodeRequest != NULL)
 			{

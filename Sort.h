@@ -8,6 +8,8 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+typedef INT_P	NCompareResult;		// Use the 'native' integer which is capable to store a pointer, therefore making the sorting of pointers quick and efficient
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	typedef PFn_NCompareSortElements()
 //
@@ -20,12 +22,12 @@
 //	PARAMETERS
 //	The lParamCompareSort is an additional parameter to perform a comparison between two elements.
 //
-typedef int (* PFn_NCompareSortElements)(PCVOID pvElementA, PCVOID pvElementB, LPARAM lParamCompareSort);
+typedef NCompareResult (* PFn_NCompareSortElements)(PCVOID pvElementA, PCVOID pvElementB, LPARAM lParamCompareSort);
 
 	// Helpers for functions implementing interface PFn_NCompareSortElements()
-	int NCompareSortBytesZ(const BYTE * prgbzSortKeyA, const BYTE * prgbzSortKeyB);
-	int NCompareSortStringAsciiNoCase(PSZAC pszStringA, PSZAC pszStringB);
-	int NCompareSortStringIntegerAscii(PSZUC pszStringA, PSZUC pszStringB);
+	NCompareResult NCompareSortBytesZ(const BYTE * prgbzSortKeyA, const BYTE * prgbzSortKeyB);
+	NCompareResult NCompareSortStringAsciiNoCase(PSZAC pszStringA, PSZAC pszStringB);
+	NCompareResult NCompareSortStringIntegerAscii(PSZUC pszStringA, PSZUC pszStringB);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Returned values for GetSortOrder()
@@ -38,8 +40,8 @@ enum ESortOrder
 	};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-ESortOrder Sort_EGetSortedOrder(PCVOID prgpvElements[], int cElements, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-BOOL Sort_FIsSortedAscending(PCVOID prgpvElements[], int cElements, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-BOOL Sort_FIsSortedDescending(PCVOID prgpvElements[], int cElements, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-void Sort_DoSorting(INOUT PCVOID prgpvElements[], const int cElements, BOOL fSortAscending, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-void Sort_DoReverseIdenticalElements(INOUT PCVOID prgpvElements[], const int cElements, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
+ESortOrder Sort_EGetSortedOrder(PCVOID prgpvElements[], int cElements, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+BOOL Sort_FIsSortedAscending(PCVOID prgpvElements[], int cElements, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+BOOL Sort_FIsSortedDescending(PCVOID prgpvElements[], int cElements, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+void Sort_DoSorting(INOUT PCVOID prgpvElements[], const int cElements, BOOL fSortAscending, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+void Sort_DoReverseIdenticalElements(INOUT PCVOID prgpvElements[], const int cElements, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);

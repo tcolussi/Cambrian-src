@@ -67,7 +67,7 @@ void
 ISocketTask::Socket_WriteStanzaIqSet_Gso(PSZAC pszFmtTemplate, ...)
 	{
 	g_strScratchBufferSocket.Empty();
-	g_strScratchBufferSocket.BinAppendTextSzv_VE("<iq type='set' from='^J' to='^J' id='$p'>", m_pAccount, m_pContact, UGetStanzaId());
+	g_strScratchBufferSocket.BinAppendText_VE("<iq type='set' from='^J' to='^J' id='$p'>", m_pAccount, m_pContact, UGetStanzaId());
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszFmtTemplate);
 	g_strScratchBufferSocket.BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);

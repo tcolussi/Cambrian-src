@@ -129,6 +129,7 @@ typedef int ENUM;					// Generic enumeration type
 
 
 typedef LU64 TIMESTAMP;		// ts	- Unique value to identify  events in a chronological order.  The timestamp is typically initialized with QDateTime::currentMSecsSinceEpoch().
+	const TIMESTAMP c_tsMax	= 0x7FFFFFFF00000000;	// Maximum value allowed for a timestamp.  This value is used for sorting events by timestamps where the event should be at the end of the array.  This large hexadecimal value represents Jun 28, 292278994 (year 292,278,994!!!)
 	#define d_ts_pNULL_AssignToNow		NULL	// NULL pointer indicating the timestamp will be initialized with QDateTime::currentMSecsSinceEpoch()
 	#define d_ts_zNULL			(TIMESTAMP)0	// Empty/null timestamp.  This #define is used when pushing a zero timestamp onto the stack when compiling 32-bit executable, otherwise the stack will not be aligned properly.
 	#define d_ts_zNA			(TIMESTAMP)0	// Similar as d_ts_zNULL, however indicates the timestamp is unused, and therefore not applicable.

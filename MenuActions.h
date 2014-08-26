@@ -60,7 +60,8 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_Contact_SubMenuView_Recommendations,	// View the recommendations made by the contact
 	eMenuAction_Contact_SubMenuView_Transactions,		// Display the (Bitcoin) transactions related to the contact
 
-	eMenuAction_Synchronize,
+	eMenuAction_SynchronizeWithContact,
+	eMenuAction_SynchronizeWithGroup,
 
 	eMenuAction_Group,
 	eMenuAction_GroupNew,

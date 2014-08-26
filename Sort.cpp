@@ -15,17 +15,17 @@ ESortOrder
 Sort_EGetSortedOrder(
 	PCVOID prgpvElements[],			// IN: Array of pointers to verify the sorting
 	int cElements,					// IN: Number of elements in array
-	PFn_NCompareSortElements pfnSortCompare,	// IN: Comparison routine
+	PFn_NCompareSortElements pfnCompareSort,	// IN: Comparison routine
 	LPARAM lParamCompare)			// IN: Optional parameter to the comparison routine
 	{
 	Assert(prgpvElements != NULL);
 	Assert(cElements >= 0);
-	Assert(pfnSortCompare != NULL);
+	Assert(pfnCompareSort != NULL);
 	ESortOrder eSortOrder = eSortOrder_kmBoth;	// Pretent the array is sorted until otherwise
 	PCVOID * ppvElement = prgpvElements;
 	while (--cElements > 0)
 		{
-		int nResult = pfnSortCompare(*ppvElement, *(ppvElement+1), lParamCompare);
+		NCompareResult nResult = pfnCompareSort(*ppvElement, *(ppvElement+1), lParamCompare);
 		if (nResult < 0)
 			{
 			eSortOrder = (ESortOrder)(eSortOrder & ~eSortOrder_kfDescending);
@@ -50,16 +50,16 @@ BOOL
 Sort_FIsSortedAscending(
 	PCVOID prgpvElements[],			// IN: Array of pointers to verify the sorting
 	int cElements,					// IN: Number of elements in array
-	PFn_NCompareSortElements pfnSortCompare,	// IN: Comparison routine
+	PFn_NCompareSortElements pfnCompareSort,	// IN: Comparison routine
 	LPARAM lParamCompare)			// IN: Optional parameter to the comparison routine
 	{
 	Assert(prgpvElements != NULL);
 	Assert(cElements >= 0);
-	Assert(pfnSortCompare != NULL);
+	Assert(pfnCompareSort != NULL);
 	PCVOID * ppvElement = prgpvElements;
 	while (--cElements > 0)
 		{
-		if (pfnSortCompare(*ppvElement, *(ppvElement+1), lParamCompare) > 0)
+		if (pfnCompareSort(*ppvElement, *(ppvElement+1), lParamCompare) > 0)
 			return FALSE;
 		ppvElement++;
 		}
@@ -73,16 +73,16 @@ BOOL
 Sort_FIsSortedDescending(
 	PCVOID prgpvElements[],			// IN: Array of pointers to verify the sorting
 	int cElements,					// IN: Number of elements in array
-	PFn_NCompareSortElements pfnSortCompare,	// IN: Comparison routine
+	PFn_NCompareSortElements pfnCompareSort,	// IN: Comparison routine
 	LPARAM lParamCompare)			// IN: Optional parameter to the comparison routine
 	{
 	Assert(prgpvElements != NULL);
 	Assert(cElements >= 0);
-	Assert(pfnSortCompare != NULL);
+	Assert(pfnCompareSort != NULL);
 	PCVOID * ppvElement = prgpvElements;
 	while (--cElements > 0)
 		{
-		if (pfnSortCompare(*ppvElement, *(ppvElement+1), lParamCompare) < 0)
+		if (pfnCompareSort(*ppvElement, *(ppvElement+1), lParamCompare) < 0)
 			return FALSE;
 		ppvElement++;
 		}
@@ -96,25 +96,25 @@ VOID
 Sort_DoReverseIdenticalElements(
 	PCVOID prgpvElements[],			// INOUT: Array of pointers to sort
 	int cElements,					// IN: Number of elements in the array
-	PFn_NCompareSortElements pfnSortCompare,	// IN: Comparison routine
+	PFn_NCompareSortElements pfnCompareSort,	// IN: Comparison routine
 	LPARAM lParamCompare)			// IN: Optional parameter to the comparison routine
 	{
 	#ifdef DEBUG_WANT_ASSERT
 	const int cElementsOld = cElements;
-	const ESortOrder eSortOlderOld = Sort_EGetSortedOrder(prgpvElements, cElements, pfnSortCompare, lParamCompare);
+	const ESortOrder eSortOlderOld = Sort_EGetSortedOrder(prgpvElements, cElements, pfnCompareSort, lParamCompare);
 	#endif
 
 	PCVOID * ppvElement = prgpvElements;
 	while (--cElements > 0)
 		{
-		if (pfnSortCompare(*ppvElement, *(ppvElement+1), lParamCompare) == 0)
+		if (pfnCompareSort(*ppvElement, *(ppvElement+1), lParamCompare) == 0)
 			{
 			// We have identical elements, so find how many of them to reverse them
 			PCVOID * ppvElementStart = ppvElement;
 			PCVOID * ppvElementStop = ppvElement + 2;
 			while (--cElements > 0)
 				{
-				if (pfnSortCompare(*ppvElementStart, *ppvElementStop, lParamCompare) != 0)
+				if (pfnCompareSort(*ppvElementStart, *ppvElementStop, lParamCompare) != 0)
 					break;
 				ppvElementStop++;
 				}
@@ -130,7 +130,7 @@ Sort_DoReverseIdenticalElements(
 			} // if
 		ppvElement++;
 		} // while
-	Assert(Sort_EGetSortedOrder(prgpvElements, cElementsOld, pfnSortCompare, lParamCompare) == eSortOlderOld);
+	Assert(Sort_EGetSortedOrder(prgpvElements, cElementsOld, pfnCompareSort, lParamCompare) == eSortOlderOld);
 	} // Sort_DoReverseIdenticalElements()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,7 +147,7 @@ inline void _MergeSortedArraysFast(
 	PCVOID prgpvSrc2[],				// IN: Source array 2
 	int cElementsSrc2,				// IN: Number of elements in source array 2
 	PCVOID prgpvDst[],				// OUT: Resulting sorted array
-	PFn_NCompareSortElements pfnSortCompare,	// IN: Comparison routine
+	PFn_NCompareSortElements pfnCompareSort,	// IN: Comparison routine
 	LPARAM lParamCompare)			// IN: Optional parameter to the comparison routine
 	{
 	while (TRUE)
@@ -165,7 +165,7 @@ inline void _MergeSortedArraysFast(
 			return;
 			}
 		// Compare two elements
-		if (pfnSortCompare(*prgpvSrc1, *prgpvSrc2, lParamCompare) <= 0)
+		if (pfnCompareSort(*prgpvSrc1, *prgpvSrc2, lParamCompare) <= 0)
 			{
 			*prgpvDst++ = *prgpvSrc1++;
 			cElementsSrc1--;
@@ -197,12 +197,12 @@ Sort_DoSorting(
 	PCVOID prgpvElements[],			// INOUT: Array of pointers to sort
 	const int cElements,			// IN: Number of elements to sort
 	BOOL fSortAscending,			// IN: TRUE => Sort ascending, FALSE => Sort descending
-	PFn_NCompareSortElements pfnSortCompare,	// IN: Comparison routine
+	PFn_NCompareSortElements pfnCompareSort,	// IN: Comparison routine
 	LPARAM lParamCompare)			// IN: Optional parameter to the comparison routine
 	{
 	Assert(prgpvElements != NULL);
 	Assert(cElements >= 0);
-	Assert(pfnSortCompare != NULL);
+	Assert(pfnCompareSort != NULL);
 	if (cElements <= 1)
 		return;		// An empty array or an array with one element is already sorted
 	PCVOID * pargpvElementsTemp = new PCVOID[cElements];	// Allocate temporary storage
@@ -230,7 +230,7 @@ Sort_DoSorting(
 				ppvSrc1, cElementsGroupForward,
 				ppvSrc2, cElementsGroupForward,
 				OUT ppvDst,
-				pfnSortCompare, lParamCompare);
+				pfnCompareSort, lParamCompare);
 			ppvSrc1 += cElementsGroupDivision;
 			ppvSrc2 += cElementsGroupDivision;
 			ppvDst += cElementsGroupDivision;
@@ -251,7 +251,7 @@ Sort_DoSorting(
 				ppvSrc1, cElementsGroupForward,
 				ppvSrc2, cElementsRemain,
 				OUT ppvDst,
-				pfnSortCompare, lParamCompare);
+				pfnCompareSort, lParamCompare);
 			}
 		if (cElements <= cElementsGroupDivision)
 			break;
@@ -272,8 +272,8 @@ Sort_DoSorting(
 			memcpy(OUT prgpvElements, IN prgpvElementsDestination, cElements * sizeof(PCVOID));
 			}
 		// Verify for consistency
-		Assert(Sort_FIsSortedAscending(IN prgpvElements, cElements, pfnSortCompare, lParamCompare));
-		Assert(Sort_EGetSortedOrder(prgpvElements, cElements, pfnSortCompare, lParamCompare) & eSortOrder_kfAscending);
+		Assert(Sort_FIsSortedAscending(IN prgpvElements, cElements, pfnCompareSort, lParamCompare));
+		Assert(Sort_EGetSortedOrder(prgpvElements, cElements, pfnCompareSort, lParamCompare) & eSortOrder_kfAscending);
 		}
 	else
 		{
@@ -298,16 +298,16 @@ Sort_DoSorting(
 				*ppvLastRev = pvTemp;
 				}
 			}
-		Sort_DoReverseIdenticalElements(INOUT prgpvElements, cElements, pfnSortCompare, lParamCompare);
-		Assert(Sort_FIsSortedDescending(IN prgpvElements, cElements, pfnSortCompare, lParamCompare));
-		Assert(Sort_EGetSortedOrder(prgpvElements, cElements, pfnSortCompare, lParamCompare) & eSortOrder_kfDescending);
+		Sort_DoReverseIdenticalElements(INOUT prgpvElements, cElements, pfnCompareSort, lParamCompare);
+		Assert(Sort_FIsSortedDescending(IN prgpvElements, cElements, pfnCompareSort, lParamCompare));
+		Assert(Sort_EGetSortedOrder(prgpvElements, cElements, pfnCompareSort, lParamCompare) & eSortOrder_kfDescending);
 		} // if...else
 	delete pargpvElementsTemp;
 	} // Sort_DoSorting()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Compare two Ascii strings for sorting purpose.  The comparison is NOT case sensitive.
-int
+NCompareResult
 NCompareSortStringAsciiNoCase(PSZAC pszStringA, PSZAC pszStringB)
 	{
 	if (pszStringA == NULL)

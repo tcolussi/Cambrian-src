@@ -160,6 +160,7 @@ public:
 	void Contact_PresenceUpdate(const CXmlNode * pXmlNodeStanzaPresence);
 	void Contact_AllocateNewFromGlobalInvitation();
 	TContact * Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact);
+	TContact * Contact_PFindByJIDorAllocate(PSZUC pszContactJID, PSZUC pszContactName);
 	TContact * Contact_PFindByIdentifierGroupSender_YZ(const CXmlNode * pXmlNodeEvent) CONST_MCC;
 	TContact * Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEvent, CHS chAttributeName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest) CONST_MCC;
 	void Contact_AddToNavigationTree(PA_CHILD TContact * paContact);

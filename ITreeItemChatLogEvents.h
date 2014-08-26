@@ -75,7 +75,6 @@ public:
 	PSZUC ChatLog_PszGetPathFolderDownload() const;
 	inline int ChatLog_GetCountMessagesUnread() const { return m_cMessagesUnread; }
 	void ChatLog_EventEditMessageSent(CEventMessageTextSent * pEventMessageSent);
-	void ChatLog_DisplayNewEvent(IEvent * pEvent);
 	void ChatLog_ScrollToLastMessage();
 	void ChatLog_FindText();
 	void ChatLog_ChatStateIconUpdate(EChatState eChatState, TContact * pContact);
