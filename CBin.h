@@ -105,6 +105,7 @@ public:
 	void BinAppendTextBytesKiBPercent(L64 cbBytesReceived, L64 cbBytesTotal);
 	void BinAppendTextBytesKiBPercentProgress(L64 cbBytesReceived, L64 cbBytesTotal);
 	void BinAppendTimestamp(TIMESTAMP ts);
+	void BinAppendTimestampSpace(TIMESTAMP ts);
 	PSZR BinAppendTextUntilCharacterPszr(PSZUC pszuSource, UINT chCopyUntil);
 	void BinAppendTextFromCharacter(PSZUC pszuSource, UINT chCopyFrom);
 	void BinUtf8AppendStringW(PSZWC pszwString);
@@ -139,11 +140,14 @@ public:
 	void BinAppendXmlElementInt(PSZAC pszElementName, int nElementValue);
 	void BinAppendXmlElementBinaryBase64(PSZAC pszElementName, const CBin & binElementValue);
 	void BinAppendXmlForSelfClosingElement();
+	void BinAppendXmlForSelfClosingElementQuote();
+	void BinAppendXmlForSelfClosingElementQuoteTruncateAtOffset(const SOffsets * pOffsets);
 
 	void BinAppendXmlNode(const CXmlNode * pXmlNode);
 	void BinAppendXmlNodeNoWhiteSpaces(const CXmlNode * pXmlNode);
 	void BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding);
-	PSZU BinAppendTextSzv_VE(PSZAC pszFmtTemplate, ...);
+	void BinAppendTextOffsets_VE(OUT SOffsets * pOffsets, PSZAC pszFmtTemplate, ...);
+	void BinAppendText_VE(PSZAC pszFmtTemplate, ...);
 	PSZU BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs);
 	void BinAppendStringBase16FromBinaryData(const void * pvBinaryData, int cbBinaryData);
 	void BinAppendTextFormattedFromFingerprintBinary(const void * pvFingerprintBinary, int cbFingerprintBinary);
@@ -168,18 +172,18 @@ public:
 
 	int CbGetDataAfterOffset(int ibData, int cbDataMax, OUT int * pcbDataRemaining) const;
 	PVOID PvGetDataAtOffset(int ibData) const;
-	PVOID TruncateDataPv(UINT cbDataKeep);
-	void TruncateData(UINT cbDataKeep);
-	void TruncateDataAt(const void * pvDataEnd);
-	void DataRemoveUntil(const void * pvDataStart);
+	PVOID DataTruncateAtOffsetPv(UINT cbDataKeep);
+	void DataTruncateAtOffset(UINT cbDataKeep);
+	void DataTruncateAtPointer(const void * pvDataEnd);
+	void DataRemoveUntilPointer(const void * pvDataStart);
+	void RemoveData(int ibData, int cbData);
+	void RemoveBytesFromEnd(int cbData);
 	void InsertData(int ibData, const void * pvData, int cbData);
 	void InsertDataAtBeginning(const void * pvData, int cbData);
 	void InsertByteAtBeginning(BYTE bData);
 	int  IbFindData(const void * pvData, int cbData) const;
 	int  IbFindDataAfterString(PSZAC pszString) const;
-	void RemoveData(int ibData, int cbData);
 	void SubstituteData(int ibRepl, int cbRepl, const void* pvSubst, int cbSubst);
-	void RemoveBytesFromEnd(int cbData);
 
 	BOOL FCompareBinary(const CBin & binCompare) const;
 	BOOL FCompareBinary(const QByteArray & arraybCompare) const;
@@ -215,7 +219,7 @@ public:
 
 private:
 	static SHeaderWithData * S_PaAllocateBytes(int cbDataAlloc);
-	friend class CStr;
+	friend class CStr;	// To access CBin::m_paData
 }; // CBin
 
 #endif // CBIN_H

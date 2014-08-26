@@ -660,7 +660,7 @@ MainWindow_SystemTrayNewMessageArrived(TContact * pContactFrom, PSZUC pszMessage
 		TContact * pContact = *ppContact++;
 		Assert(pContact != NULL);
 		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-		strTip.BinAppendTextSzv_VE("$i unread messages from $s\n", pContact->ChatLog_GetCountMessagesUnread(), pContactFrom->TreeItem_PszGetNameDisplay());
+		strTip.BinAppendText_VE("$i unread messages from $s\n", pContact->ChatLog_GetCountMessagesUnread(), pContactFrom->TreeItem_PszGetNameDisplay());
 		}
 	strTip.TrimTailingWhiteSpacesNZ();
 	g_poSystemTrayIcon->setToolTip(strTip);

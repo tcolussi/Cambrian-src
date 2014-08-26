@@ -18,7 +18,7 @@
 #else
 	#define _cbAllocSizeExtra	32		// Always add 32 more bytes for each allocations (to reduce the number of allocations)
 #endif
-#define _cbAllocSizeExtraForBinAppendTextSzv	20	// Allocate an extra 20 bytes when calling BinAppendTextSzv_VE() or BinAppendTextSzv_VL()
+#define _cbAllocSizeExtraForBinAppendText	20	// Allocate an extra 20 bytes when calling BinAppendText_VE() or BinAppendTextSzv_VL()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	S_PaAllocateBytes(), static
@@ -381,9 +381,9 @@ CBin::PvGetDataAtOffset(int ibData) const
 	return NULL;
 	}
 
-//	Same as TruncateData() however return pointer to where the data was truncated (or return NULL if there is an error because the offset is out of range)
+//	Same as DataTruncateAtOffset() however return pointer to where the data was truncated (or return NULL if there is an error because the offset is out of range)
 PVOID
-CBin::TruncateDataPv(UINT cbDataKeep)
+CBin::DataTruncateAtOffsetPv(UINT cbDataKeep)
 	{
 	if (m_paData != NULL)
 		{
@@ -402,7 +402,7 @@ CBin::TruncateDataPv(UINT cbDataKeep)
 //	the buffer as long as no other data is appended to the bin.
 //
 void
-CBin::TruncateData(UINT cbDataKeep)
+CBin::DataTruncateAtOffset(UINT cbDataKeep)
 	{
 	if (m_paData != NULL)
 		{
@@ -416,7 +416,7 @@ CBin::TruncateData(UINT cbDataKeep)
 //
 //	SEE ALSO: CStr::StringTruncateAt()
 void
-CBin::TruncateDataAt(const void * pvDataEnd)
+CBin::DataTruncateAtPointer(const void * pvDataEnd)
 	{
 	Assert(FIsPointerAddressWithinBinaryObject(pvDataEnd));
 	Assert(m_paData != NULL);
@@ -437,7 +437,7 @@ CBin::TruncateDataAt(const void * pvDataEnd)
 //	Remove data until reaching the pointer.
 //	In other words pvDataStart will be the new beginning of the binary data.
 void
-CBin::DataRemoveUntil(const void * pvDataStart)
+CBin::DataRemoveUntilPointer(const void * pvDataStart)
 	{
 	Assert(FIsPointerAddressWithinBinaryObject(pvDataStart));
 	Assert(m_paData != NULL);
@@ -475,7 +475,7 @@ CBin::BinEnsureContentHasNoNullTerminatorAndIsTerminatedWithVirtualNullTerminato
 			"Data Remain ($I bytes): $s\n",
 			cbRemoved, m_paData->rgbData,  m_paData->cbData - cbRemoved, pchNullTerminatorLast);
 		#endif
-		DataRemoveUntil(pchNullTerminatorLast);
+		DataRemoveUntilPointer(pchNullTerminatorLast);
 		}
 	Assert(pchData == m_paData->rgbData);
 	pchData[m_paData->cbData] = '\0';	// Insert the virtual null-terminator
@@ -963,9 +963,9 @@ void
 CBin::BinAppendTextBytesKiB(L64 cbBytes)
 	{
 	if (cbBytes < 100000)
-		BinAppendTextSzv_VE((cbBytes > 0) ? "$L bytes" : "? bytes", cbBytes);
+		BinAppendText_VE((cbBytes > 0) ? "$L bytes" : "? bytes", cbBytes);
 	else
-		BinAppendTextSzv_VE("$L KiB", cbBytes / 1024);
+		BinAppendText_VE("$L KiB", cbBytes / 1024);
 	}
 
 //	Format a string such as:
@@ -1010,6 +1010,13 @@ void
 CBin::BinAppendTimestamp(TIMESTAMP ts)
 	{
 	m_paData->cbData += Timestamp_CchToString(ts, OUT PbAllocateExtraMemory(16));
+	}
+
+void
+CBin::BinAppendTimestampSpace(TIMESTAMP ts)
+	{
+	BinAppendTimestamp(ts);
+	m_paData->rgbData[m_paData->cbData++] = ' ';	// Append an extra space
 	}
 
 //	Copy from the source string until a character or the end of the string.
@@ -1224,7 +1231,7 @@ CBin::BinAppendHtmlTextWithinTag(PSZAC pszTagHtml, PSZUC pszText)
 	Assert(pszTagHtml != NULL);
 	Assert(pszTagHtml[0] != '\0');
 	Assert(pszTagHtml[0] != '<');
-	BinAppendTextSzv_VE("<$s>{sH}</$s>", pszTagHtml, pszText, pszTagHtml);
+	BinAppendText_VE("<$s>{sH}</$s>", pszTagHtml, pszText, pszTagHtml);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1866,7 +1873,8 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chSourceHash256				'H'	// Any 256-bit value, such as SHA-256
 #define d_chSourcePvCb					'p'	// A pointer and byte count representing a binary value.  This one contains two arguments: a pointer pvData followed by cbData
 #define d_chSourcePvPv					'P'	// Two pointers (one is the beginning and the other is the end).  The nummber of bytes representing the source is the difference between the pointers.
-#define d_chSourcePCXmlNode				'N'	// Serialize the content of a CXmlNode* (at the moment only {Nf} is allowed
+#define d_chSourcePCXmlNode				'N'	// Serialize the content of a CXmlNode* (at the moment only {Nf} is allowed)
+#define d_chSourcePCXmlNodeAttribute	'A' // Interpret the content of CXmlNode* as an attribute (at the moment, only ^A is allowed)
 #define d_chSourcePCArrayPsz			'L' // Encode the content of a CArrayPsz* into an HTML list items (example: "<ul><li>example.com</li><li>cambrian.org</li></ul>")
 #define d_chSourceContactIdentifier		'i'
 #define d_chSourceJidBare				'j'
@@ -1948,12 +1956,25 @@ CBin::BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding)
 	Assert(FALSE && "Invalid Encoding!");
 	} // BinAppendDataEncoded()
 
-PSZU
-CBin::BinAppendTextSzv_VE(PSZAC pszFmtTemplate, ...)
+//	Similar as BinAppendText_VE() returning the beginning offset
+//	This offset is useful to truncate
+void
+CBin::BinAppendTextOffsets_VE(OUT SOffsets * pOffsets, PSZAC pszFmtTemplate, ...)
+	{
+	Assert(pOffsets != NULL);
+	pOffsets->ibReset = (m_paData != NULL) ? m_paData->cbData : 0;
+	va_list vlArgs;
+	va_start(OUT vlArgs, pszFmtTemplate);
+	BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
+	pOffsets->ibDataBegins = m_paData->cbData;
+	}
+
+void
+CBin::BinAppendText_VE(PSZAC pszFmtTemplate, ...)
 	{
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszFmtTemplate);
-	return BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
+	BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
 	}
 
 union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outside BinAppendTextSzv_VL() because Qt Creator' auto-complete does not handle the declaration inside of a method
@@ -1968,6 +1989,7 @@ union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outs
 	const ITreeItem * piTreeItem;
 	const TContact * pContact;
 	const TAccountXmpp * pAccount;
+	const CXmlNode * pXmlNode;
 	QDateTime * pdtuDateTime;
 	UINT uValue;
 	UINT bValue;
@@ -2015,6 +2037,7 @@ union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outs
 //		^Q - Append/encode to XML the content of QString*
 //		^Y - Append/encode to XML the content of QByteArray* (the QByteArray is always null-terminated)
 //		^N - Append/encode to XML the content of CXmlNode*
+//		^A - Append/incode an XML attribute of a CXmlNode*
 //		^L - Append an HTML list items from a CArrayPsz*
 //		^Lo
 //		^:		Append an attribute named "xmlns".  Of course this may appear as pollution in this routine, however those xmlns attributes are everywhere
@@ -2036,7 +2059,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 	{
 	Assert(pszFmtTemplate != NULL);
 	Assert(!FIsPointerAddressWithinBinaryObject(pszFmtTemplate));
-	(void)PbAllocateExtraMemory(CbAllocUtoU((PSZUC)pszFmtTemplate) + _cbAllocSizeExtraForBinAppendTextSzv);	// Pre-allocate memory for the template.  This ensures m_paData is never NULL and also optimizes the destination buffer by reducing the number of memory allocations
+	(void)PbAllocateExtraMemory(CbAllocUtoU((PSZUC)pszFmtTemplate) + _cbAllocSizeExtraForBinAppendText);	// Pre-allocate memory for the template.  This ensures m_paData is never NULL and also optimizes the destination buffer by reducing the number of memory allocations
 	Assert(m_paData != NULL);
 	_UnionForBinAppendTextSzv_VL u;
 
@@ -2233,6 +2256,11 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				break;
 			case d_chSourcePCXmlNode:	// ^N - Append/encode to XML the content of CXmlNode*
 				BinAppendXmlNode(va_arg(vlArgs, CXmlNode *));
+				break;
+			case d_chSourcePCXmlNodeAttribute:	// ^A
+				u.pXmlNode = va_arg(vlArgs, CXmlNode *);
+				if (u.pXmlNode != NULL)
+					BinAppendXmlAttributeText((PSZAC)u.pXmlNode->m_pszuTagName, u.pXmlNode->m_pszuTagValue);
 				break;
 			case d_chSourcePCArrayPsz:	// ^L
 				u.parraypsz = va_arg(vlArgs, CArrayPsz *);
@@ -2564,7 +2592,7 @@ CBin::BinAppendXmlAttributeCBin(CHS chAttributeName, const CBin & binAttributeVa
 	{
 	Assert(chAttributeName != '\0');
 	if (!binAttributeValue.FIsEmptyBinary())
-		BinAppendTextSzv_VE(" $b='{B|}'", chAttributeName, &binAttributeValue);
+		BinAppendText_VE(" $b='{B|}'", chAttributeName, &binAttributeValue);
 	}
 
 void
@@ -2573,7 +2601,7 @@ CBin::BinAppendXmlElementText(PSZAC pszElementName, PSZUC pszElementValue)
 	Assert(pszElementName != NULL);
 	Assert(pszElementName[0] != '\0');
 	if (pszElementValue != NULL && pszElementValue[0] != '\0')
-		BinAppendTextSzv_VE("<$s>^s</$s>\n", pszElementName, pszElementValue, pszElementName);
+		BinAppendText_VE("<$s>^s</$s>\n", pszElementName, pszElementValue, pszElementName);
 	}
 
 void
@@ -2590,7 +2618,7 @@ void
 CBin::BinAppendXmlElementInt(PSZAC pszElementName, int nElementValue)
 	{
 	if (nElementValue != 0)
-		BinAppendTextSzv_VE("<$s>$i</$s>\n", pszElementName, nElementValue, pszElementName);
+		BinAppendText_VE("<$s>$i</$s>\n", pszElementName, nElementValue, pszElementName);
 	}
 
 void
@@ -2599,7 +2627,7 @@ CBin::BinAppendXmlElementBinaryBase64(PSZAC pszElementName, const CBin & binElem
 	Assert(pszElementName != NULL);
 	Assert(pszElementName[0] != '\0');
 	if (!binElementValue.FIsEmptyBinary())
-		BinAppendTextSzv_VE("<$s>{B/}</$s>\n", pszElementName, &binElementValue, pszElementName);
+		BinAppendText_VE("<$s>{B/}</$s>\n", pszElementName, &binElementValue, pszElementName);
 	}
 
 void
@@ -2608,9 +2636,27 @@ CBin::BinAppendXmlForSelfClosingElement()
 	BinAppendBinaryData("/>\n", 3);	// Close the XML element
 	}
 
+void
+CBin::BinAppendXmlForSelfClosingElementQuote()
+	{
+	BinAppendText("'/>");
+	}
+
+void
+CBin::BinAppendXmlForSelfClosingElementQuoteTruncateAtOffset(const SOffsets * pOffsets)
+	{
+	Assert(pOffsets != NULL);
+	Assert(pOffsets->ibReset <= pOffsets->ibDataBegins);
+	Assert(m_paData != NULL);
+	if (m_paData->cbData == pOffsets->ibDataBegins)
+		m_paData->cbData = pOffsets->ibReset;
+	else
+		BinAppendXmlForSelfClosingElementQuote();
+	}
+
 //	Create a string containing multiple XML attributes, ready to be inserted in the file.
 //
-//	This method is very similar to BinAppendTextSzv_VE() with the exception the empty values are ignored.
+//	This method is very similar to BinAppendText_VE() with the exception the empty values are ignored.
 PSZUC
 CBin::PszAppendVirtualXmlAttributes(PSZAC pszFmtTemplateAttributes, ...) CONST_TEMPORARY_MODIFIED
 	{

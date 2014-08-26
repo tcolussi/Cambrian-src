@@ -41,6 +41,14 @@ TContact::Contact_MarkForDeletion()
 		m_pAccount->Contact_RosterUnsubscribe(this);	// Remove the contact from the roster
 	}
 
+BOOL
+TContact::Contact_FCanBePermenentlyDeleted() const
+	{
+	if (m_paoJapiContact != NULL)
+		return FALSE;
+	return TreeItemFlags_FuIsInvisible();
+	}
+
 CChatConfiguration *
 TContact::PGetConfiguration() const
 	{
@@ -213,7 +221,7 @@ const EMenuActionByte c_rgzeActionsMenuContact[] =
 	eMenuAction_ContactRemove,
 	eMenuAction_ContactInvite,
 	eMenuAction_ContactPing,
-	eMenuAction_Synchronize,			// Synchronize
+	eMenuAction_SynchronizeWithContact,
 	eMenuActionSeparator,
 	eMenuAction_TreeItemRecommended,
 	eMenuAction_ContactProperties,
@@ -296,9 +304,6 @@ TContact::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		return ezMenuActionNone;
 	case eMenuAction_ContactPing:
 		Xmpp_Ping();
-		return ezMenuActionNone;
-	case eMenuAction_Synchronize:
-		Xcp_Synchronize();
 		return ezMenuActionNone;
 	case eMenuAction_ContactProperties:
 		DisplayDialogProperties();
@@ -809,7 +814,7 @@ CArrayPtrContacts::PFindContactByNameDisplay(PSZUC pszContactNameDisplay, const 
 //
 //	INTERFACE NOTES
 //	This static method must have an interface compatible with PFn_NCompareSortElements().
-int
+NCompareResult
 TContact::S_NCompareSortContactsByNameDisplay(TContact * pContactA, TContact * pContactB, LPARAM lParamCompareSort)
 	{
 	Assert(lParamCompareSort == d_zNA);

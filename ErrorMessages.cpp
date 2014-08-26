@@ -103,10 +103,10 @@ CErrorMessage::SetErrorCodeFormatted(EError err, ...)
 	switch (err)
 		{
 	case errParseXmlPrematureEof_i:
-		pszFmtTemplate = "Unexpected end of XML file at line $i";
+		pszFmtTemplate = "Unexpected end of XML data at line $i";
 		break;
 	case errParseXmlPrematureEofForCDATA_i:
-		pszFmtTemplate = "Premature end of XML file while looking for termination of <![CDATA[ from line $i";
+		pszFmtTemplate = "Premature end of XML data while looking for termination of <![CDATA[ from line $i";
 		break;
 	case errParseXmlElementMismatch_ssi:
 		pszFmtTemplate = "The closing element <$s> does not match its opening element <$s> from line $i";

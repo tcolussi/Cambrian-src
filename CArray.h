@@ -9,12 +9,12 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-
+/*
 #define ARRAY_SORT
 #ifdef ARRAY_SORT
 	#include "Sort.h"
 #endif
-
+*/
 /////////////////////////////////////////////////////////////////////
 //	class CArray
 //
@@ -64,10 +64,10 @@ public:
 	void * PvGetElementLast_YZ() const;
 	void * PvGetElementUnique_YZ() const;
 
-	void ** SetSizeUnsafe(int cElements);
-	void ** SetAllocSize(int cElementsAlloc);
-	void ** SetAllocSize(const CArray * parray);
-	void ** PrgpvSetSizeGrowBy(int cElementsAllocGrowBy);
+	void ** PrgpvAllocateElementsSetSize(int cElements);
+	void ** PrgpvAllocateElementsEmpty(int cElementsAlloc);
+	void ** PrgpvAllocateElementsEmpty(const CArray * parray);
+	void ** PrgpvAllocateElementsAppend(int cElementsAllocGrowBy);
 	void RemoveAllElements();
 	void FreeExtra();
 
@@ -134,23 +134,21 @@ public:
 	int ShiftElementBy(int iElement, int diShift);
 
 	// Sorting
-#ifdef ARRAY_SORT
-	ESortOrder EGetSortedOrder(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA) const;
-	BOOL FIsSortedAscending(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA) const;
-	BOOL FIsSortedDescending(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA) const;
-	void DoSortAscending(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-	void DoSortDescending(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-	void DoSort(BOOL fSortAscending, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-	void Sort(BOOL fSortAscending, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-	void Sort(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-	void SortNeverReverse(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-	void ToggleSort(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
+	ESortOrder EGetSortedOrder(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA) const;
+	BOOL FIsSortedAscending(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA) const;
+	BOOL FIsSortedDescending(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA) const;
+	void DoSortAscending(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+	void DoSortDescending(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+	void DoSort(BOOL fSortAscending, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+	void Sort(BOOL fSortAscending, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+	void Sort(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+	void SortNeverReverse(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+	void ToggleSort(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
 	//VOID SortByStringsW(PFn_PszwGetString pfnPszwGetString);
-	//VOID SortByKey(PFn_PvAllocateSortKey pfnPvAllocateSortKey, PFn_NCompareSortElements pfnSortCompare);
-	void MergeAppend(const void * pvElement, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-	void MergeAppend(const CArray * pArrayAppend, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-	int BinarySearch(const void * pvElement, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare = d_zNA);
-#endif
+	//VOID SortByKey(PFn_PvAllocateSortKey pfnPvAllocateSortKey, PFn_NCompareSortElements pfnCompareSort);
+	void MergeAppend(const void * pvElement, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+	void MergeAppend(const CArray * pArrayAppend, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+	int BinarySearch(const void * pvElement, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
 
 private:
 	static SHeaderWithData * S_PaAllocateElements(int cElementsAlloc);

@@ -66,6 +66,7 @@ public:
 	int UEventsRemaining(IEvent * pEvent) const;
 	int UCountEventsReceivedByOtherGroupMembersSinceTimestampEventID(TIMESTAMP tsEventID, TContact * pContactExclude) CONST_MCC;
 	int UCountEventsReceivedByOtherGroupMembersSinceTimestampOther(TIMESTAMP tsOther) CONST_MCC;
+	int UGetEventsSinceTimestamp(TIMESTAMP tsEventID, OUT CArrayPtrEvents * parraypEvents) CONST_MCC;
 
 	inline IEvent * PGetEventLast_YZ() const { return m_arraypaEvents.PGetEventLast_YZ(); }
 	inline IEvent * PFindEventByID(TIMESTAMP tsEventID) const { return m_arraypaEvents.PFindEventByID(tsEventID); }
@@ -73,6 +74,9 @@ public:
 	IEvent * PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * pContactGroupSender) CONST_MCC;
 	IEvent * PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) CONST_MCC;
 	IEvent * PFindEventNextReceivedByOtherGroupMembers(TIMESTAMP tsEventID, TContact * pContactExclude, OUT int * pcEventsRemaining) CONST_MCC;
+	IEvent * PFindEventReplacedBy(IEvent * pEventReplacing) CONST_MCC;
+	IEvent * PFindEventReplacing(IEvent * pEventReplaced) CONST_MCC;
+
 	CEventDownloader * PFindEventDownloaderMatchingEvent(const IEvent * pEvent) const;
 
 	CDataXmlLargeEvent * PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanza * pbinXcpStanza);

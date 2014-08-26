@@ -27,14 +27,14 @@ CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 		if (pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted)
 			continue;	// Don't serialize deleted events
 		EEventClass eEventClass = pEvent->EGetEventClass();
-		pbinXmlEvents->BinAppendTextSzv_VE("<$U" _tsI, eEventClass, pEvent->m_tsEventID);
+		pbinXmlEvents->BinAppendText_VE("<$U" _tsI, eEventClass, pEvent->m_tsEventID);
 		pbinXmlEvents->BinAppendXmlEventCoreDataWithClosingElement(pEvent, eEventClass);
 		/*
 		pEvent->XmlSerializeCore(IOUT pbinXmlEvents);
 		if ((eEventClass & eEventClass_kfSerializeDataAsXmlElement) == 0)
 			pbinXmlEvents->BinAppendXmlForSelfClosingElement();
 		else
-			pbinXmlEvents->BinAppendTextSzv_VE("</$U>\n", eEventClass);
+			pbinXmlEvents->BinAppendText_VE("</$U>\n", eEventClass);
 		*/
 		} // while
 	pbinXmlEvents->BinAppendText("</"d_szVault_Event">");
@@ -160,9 +160,9 @@ CVaultEvents::WriteEventsToDiskIfModified()
 		int cEvents = m_arraypaEvents.GetSize();
 		CBinXcpStanzaTypeInfo binXmlEvents;
 		binXmlEvents.PvSizeAlloc(100 + 64 * cEvents);	// Pre-allocate about 64 bytes per event.  This estimate will reduce the number of memory re-allocations.
-		binXmlEvents.BinAppendTextSzv_VE("<E v='1' c='$i'>\n", cEvents);
+		binXmlEvents.BinAppendText_VE("<E v='1' c='$i'>\n", cEvents);
 		m_arraypaEvents.EventsSerializeForDisk(INOUT &binXmlEvents);
-		binXmlEvents.BinAppendTextSzv_VE("</E>");
+		binXmlEvents.BinAppendText_VE("</E>");
 		if (binXmlEvents.BinFileWriteE(m_sPathFileName) == errSuccess)
 			m_pEventLastSaved = pEventLastSaved;
 		}
@@ -248,4 +248,141 @@ CVaultEvents::UCountEventsReceivedByOtherGroupMembersSinceTimestampOther(TIMESTA
 			}
 		}
 	return cEventsReceived;
+	}
+
+//	Return all events since a timestamp
+int
+CVaultEvents::UGetEventsSinceTimestamp(TIMESTAMP tsEventID, OUT CArrayPtrEvents * parraypEvents) CONST_MCC
+	{
+	Endorse(tsEventID == d_ts_zNA);	// Return all events since the beginning
+	Assert(parraypEvents != NULL);
+	IEvent ** ppEventStop;
+	IEvent ** ppEventFirst = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	IEvent ** ppEventCompare = ppEventStop;	// Search the array from the end, as the event to search is likely to be a recent one
+	while (ppEventCompare != ppEventFirst)
+		{
+		IEvent * pEvent = *--ppEventCompare;
+		AssertValidEvent(pEvent);
+		Assert(pEvent->m_tsEventID > d_tsOther_kmReserved);
+		if (pEvent->m_tsEventID <= tsEventID)
+			{
+			ppEventCompare++;
+			break;
+			}
+		} // while
+	const int cEventsSinceStimestamp = (ppEventStop - ppEventCompare);
+	Assert(cEventsSinceStimestamp >= 0);
+	IEvent ** ppEventDst = (IEvent **)parraypEvents->PrgpvAllocateElementsSetSize(cEventsSinceStimestamp);
+	while (ppEventCompare != ppEventStop)
+		{
+		*ppEventDst++ = *ppEventCompare++;	// Copy the values to the array
+		}
+	return cEventsSinceStimestamp;
+	}
+
+/*
+//	Return the event which was replaced by the new replacing event
+//	Return NULL if unable to find the old event, or if the vault policies to not allow the editing an old event.
+IEvent *
+CArrayPtrEvents::PFindEventReplacedBy(int iEventReplacing) const
+	{
+	Assert(iEventReplacing >= 0);
+	Assert(iEventReplacing < GetSize());
+	Assert(m_paArrayHdr != NULL);
+	IEvent ** ppEventFirst = (IEvent **)m_paArrayHdr->rgpvData;
+	IEvent ** ppEventStop = ppEventFirst + iEventReplacing;
+	IEvent * pEventReplacing = *ppEventStop;
+	//Assert(pEventReplacing->m_uFlagsEvent & IEvent::FE_kfReplacing);
+	if ((pEventReplacing->m_uFlagsEvent & IEvent::FE_kfReplacing) == 0)
+		{
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "PFindEventReplacedBy($i) - Event ID $t is missing flag IEvent::FE_kfReplacing\n", iEventReplacing, pEventReplacing->m_tsEventID);
+		}
+	const EEventClass eEventClassUpdater = pEventReplacing->Event_FIsEventTypeSent() ? eEventClass_eUpdaterSent : eEventClass_eUpdaterReceived;	// Which updater to search for
+	while (ppEventFirst < ppEventStop)
+		{
+		// Find the updater which should be right before the replacing event
+		IEvent * pEvent = *--ppEventStop;
+		if (pEvent->EGetEventClass() == eEventClassUpdater)
+			{
+			// Search the event matching the ID
+			TIMESTAMP tsEventIdOld = ((CEventUpdaterSent *)pEvent)->m_tsEventIdOld;
+			while (ppEventFirst < ppEventStop)
+				{
+				pEvent = *--ppEventStop;
+				if (pEvent->m_tsEventID == tsEventIdOld)
+					{
+					// Since the event has been replaced, update its flag
+					pEvent->m_uFlagsEvent |= IEvent::FE_kfReplaced;
+					return pEvent;
+					}
+				if (pEvent->m_tsEventID < tsEventIdOld)
+					break;	// Since all events are sorted, then there is no need to search further
+				} // while
+			} // if
+		} // while
+	return NULL;
+	}
+*/
+
+//	Return the event which was replaced by the new replacing event
+IEvent *
+CVaultEvents::PFindEventReplacedBy(IEvent * pEventReplacing) CONST_MCC
+	{
+	Assert(pEventReplacing != NULL);
+	int iEventReplacing = m_arraypaEvents.FindElementI(pEventReplacing);
+	if (iEventReplacing > 0)
+		{
+		// Find the updater which should be right before the event
+		CEventUpdaterSent * pEventUpdater = (CEventUpdaterSent *)m_arraypaEvents.PvGetElementAt(iEventReplacing - 1);
+		if (pEventUpdater->EGetEventClass() == eEventClass_eUpdaterSent)
+			{
+			return PFindEventByID(pEventUpdater->m_tsEventIdOld);
+			}
+		}
+	return NULL;
+	}
+
+IEvent *
+CVaultEvents::PFindEventReplacing(IEvent * pEventReplaced) CONST_MCC
+	{
+	Assert(pEventReplaced != NULL);
+	Assert(pEventReplaced->m_uFlagsEvent & IEvent::FE_kfReplaced);
+	IEvent * pEventReplacing = pEventReplaced;
+	const EEventClass eEventClassUpdater = pEventReplaced->Event_FIsEventTypeSent() ? CEventUpdaterSent::c_eEventClass : CEventUpdaterReceived::c_eEventClass;	// Which updater to search for
+	// Attempt to find the most recent updater, this is done by searching from the end
+	IEvent ** ppEventStop;
+	IEvent ** ppEventFirst = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	IEvent ** ppEventCompare = ppEventStop;	// Search the array from the end, as the event to search is likely to be a recent one
+	while (ppEventCompare != ppEventFirst)
+		{
+		IEventUpdater * pEventUpdater = (IEventUpdater *)*--ppEventCompare;
+		if (pEventUpdater->EGetEventClass() != eEventClassUpdater)
+			continue;
+		if (pEventUpdater->m_tsEventIdOld == pEventReplacing->m_tsEventID)
+			{
+			IEvent ** ppEventReplacing = ppEventCompare + 1;	// The replacing event is always after the updater
+			if (ppEventReplacing < ppEventStop)
+				{
+				pEventReplacing = *ppEventReplacing;
+				Assert(pEventReplacing->m_tsEventID == pEventUpdater->m_tsEventIdNew);
+				MessageLog_AppendTextFormatSev(eSeverityNoise, "Event ID $t is replacing event $t\n", pEventReplacing->m_tsEventID, pEventReplaced->m_tsEventID);
+				// Search forward for chained events
+				while (ppEventCompare < ppEventStop)
+					{
+					pEventUpdater = (IEventUpdater *)*ppEventCompare++;
+					if (pEventUpdater->EGetEventClass() != eEventClassUpdater)
+						continue;
+					if (pEventUpdater->m_tsEventIdOld == pEventReplacing->m_tsEventID && ppEventCompare < ppEventStop)
+						{
+						pEventReplacing = *ppEventCompare++;
+						MessageLog_AppendTextFormatSev(eSeverityNoise, "Event ID $t is chain replacing event $t\n", pEventReplacing->m_tsEventID, pEventReplaced->m_tsEventID);
+						}
+					} // while
+				goto Done;
+				}
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Event ID $t is replacing event $t which cannot be found\n", pEventUpdater->m_tsEventIdNew, pEventReplaced->m_tsEventID);
+			}
+		} // while
+	Done:
+	return pEventReplacing;
 	}

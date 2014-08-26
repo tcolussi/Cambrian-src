@@ -77,7 +77,8 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Recommendations" _ "s=View the recommendations made by the peer" _ "i=Reputation" _,	// eMenuAction_Contact_SubMenuView_Recommendations
 	"Bitcoin Transactions" _ "s=Display the Bitcoin transactions related to the peer" _ "i=Bitcoin" _, // eMenuAction_Contact_SubMenuView_Transactions
 
-	"Synchronize with Peer" _ "i=OutOfSync" _ "s=Make sure me and my peer are up-to-date with the messages sent to each other" _, // eMenuAction_Synchronize
+	"Synchronize with Peer" _ "i=OutOfSync" _ "s=Make sure me and my peer are up-to-date with the messages sent to each other" _, // eMenuAction_SynchronizeWithContact
+	"Synchronize with Group" _ "i=OutOfSync" _ "s=Make sure I am up-to-date with all messages sent and received with other group members" _, // eMenuAction_SynchronizeWithGroup
 
 	"Group" _ "i=Group" _, // eMenuAction_Group
 	"<New Group...>" _ "i=GroupAdd" _, // eMenuAction_GroupNew

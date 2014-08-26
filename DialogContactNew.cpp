@@ -76,7 +76,7 @@ DialogContactNew::SL_EditUsername_textChanged(const QString & sUsernames)
 						// The contact JID is the same as the account
 						coUsername = d_coRed;
 						}
-					strUsernamesHtml.BinAppendTextSzv_VE("<font color='$c'>$s</font><br/>", coUsername, pszUsername);
+					strUsernamesHtml.BinAppendText_VE("<font color='$c'>$s</font><br/>", coUsername, pszUsername);
 					}
 				if (ch == '\0')
 					break;	// We are done
@@ -284,9 +284,9 @@ WLayoutContactNew::SL_EditUsername_textChanged(const QString & sUsernames)
 						}
 					#ifdef DEBUG_
 					if (paInvitation != NULL)
-						strUsernamesHtml.BinAppendTextSzv_VE("DisplayName: $S,", &paInvitation->m_strNameDisplay);
+						strUsernamesHtml.BinAppendText_VE("DisplayName: $S,", &paInvitation->m_strNameDisplay);
 					#endif
-					strUsernamesHtml.BinAppendTextSzv_VE("$s: <b><font color='$c'>^s</font></b><br/>", pszUsernameIntro, coUsername, pszUsername);
+					strUsernamesHtml.BinAppendText_VE("$s: <b><font color='$c'>^s</font></b><br/>", pszUsernameIntro, coUsername, pszUsername);
 					if (pszUsernameAllocate != NULL)
 						m_arraypaszContacts.AddStringAllocate(pszUsernameAllocate);
 					delete paInvitation;

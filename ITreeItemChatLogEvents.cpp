@@ -147,6 +147,10 @@ ITreeItemChatLogEvents::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	{
 	switch (eMenuAction)
 		{
+	case eMenuAction_SynchronizeWithContact:
+	case eMenuAction_SynchronizeWithGroup:
+		XcpApi_Invoke_Synchronize();
+		return ezMenuActionNone;
 	case eMenuAction_FindText:
 		ChatLog_FindText();
 		return ezMenuActionNone;
@@ -228,7 +232,18 @@ ITreeItemChatLogEvents::Vault_PFindEventLastMessageTextSentMatchingText(const CS
 			if (pEvent->EGetEventClass() == CEventMessageTextSent::c_eEventClass)
 				{
 				if (pEvent->m_strMessageText.FCompareBinary(strMessageText))
+					{
+					/*
+					// We have an event matching the text, however this event may have been a replacement
+					if (pEvent->m_uFlagsEvent & IEvent::FE_kfReplacing)
+						{
+						IEvent * pEventReplacing = m_paVaultEvents->PFindEventReplacing(pEvent);
+						if (pEventReplacing != NULL)
+							return (CEventMessageTextSent *)pEventReplacing;
+						}
+					*/
 					return pEvent;
+					}
 				break;
 				}
 			} // while
@@ -373,11 +388,32 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			Xmpp_QueryVersion();
 			goto Done;
 			}
+		if (PszrCompareStringBeginCommand(pszCommand, "sr"))
+			{
+			// Reset the synchronization timestamps (this is useful for debugging, so there is no need to quit the application, delete the Chat Log, and restart again)
+			m_tsEventIdLastSentCached = d_ts_zNA;
+			if (fIsContact)
+				{
+				((TContact *)this)->m_tsOtherLastSynchronized = d_ts_zNA;
+				}
+			else
+				{
+				TGroupMember ** ppMemberStop;
+				TGroupMember ** ppMember = ((TGroup *)this)->m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);
+				while (ppMember != ppMemberStop)
+					{
+					TGroupMember * pMember = *ppMember++;
+					Assert(pMember != NULL);
+					Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
+					pMember->m_tsOtherLastSynchronized = d_ts_zNA;
+					}
+				}
+			XcpApi_Invoke_Synchronize();
+			goto Done;
+			}
 		if (PszrCompareStringBeginCommand(pszCommand, "sync"))
 			{
-			//XcpApi_Invoke_Synchronize();
-			if (fIsContact)
-				((TContact *)this)->Xcp_Synchronize();
+			XcpApi_Invoke_Synchronize();
 			goto Done;
 			}
 

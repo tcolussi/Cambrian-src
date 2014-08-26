@@ -689,7 +689,7 @@ CXmlNode::SerializeToBinUtf8(IOUT CBin * pbinUtf8, UINT uSerializeFlags) const
 
 		#ifdef DEBUG
 		if (uSerializeFlags & STBF_kfDebugLParam)
-			pbinUtf8->BinAppendTextSzv_VE("\t\t <!-- lParam=0x$p ($i) -->", m_lParam, m_lParam);
+			pbinUtf8->BinAppendText_VE("\t\t <!-- lParam=0x$p ($i) -->", m_lParam, m_lParam);
 		#endif
 		if (uSerializeFlags & STBF_kfCRLF)
 			pbinUtf8->BinAppendCRLF();
@@ -1497,7 +1497,7 @@ CXmlNode::_SortNodes(CXmlNode ** ppNodeHead, CXmlSortContext * pXmlSortContext)
 		}
 	if (cNodes <= 1)
 		return;	// The list is too short to be sorted
-	SORTKEY ** ppSortKey = (SORTKEY **)pXmlSortContext->m_array.SetSizeUnsafe(cNodes);
+	SORTKEY ** ppSortKey = (SORTKEY **)pXmlSortContext->m_array.PrgpvAllocateElementsSetSize(cNodes);
 	PFn_PSortKeyAllocateForElement pfnPSortKeyAllocateForElement = pXmlSortContext->m_pfnPSortKeyAllocateForElement;
 	CAllocator * pAllocator = &pXmlSortContext->m_allocator;
 	pAllocator->RecycleBuffer();

@@ -228,6 +228,18 @@ TGroup::Member_PFindOrAllocate_NZ(PSZUC pszMemberJID)
 	return pMember;
 	} // Member_PFindOrAllocate_NZ()
 
+
+//	Fetch the name of the contact if necessary (the attribute is 'n')
+TContact *
+TGroup::Member_PFindOrAddContact_YZ(PSZUC pszContactJID, const CXmlNode * pXmlNodeContactName)
+	{
+	// First of all, find the contact
+	TContact * pContact = m_pAccount->Contact_PFindByJIDorAllocate(pszContactJID, IN pXmlNodeContactName->PszuFindAttributeValue('n'));
+	if (pContact != NULL)
+		(void)Member_PFindOrAddContact_NZ(pContact);
+	return pContact;
+	}
+
 void
 TGroup::Members_GetContacts(IOUT CArrayPtrContacts * parraypContacts) const
 	{
@@ -279,6 +291,8 @@ const EMenuActionByte c_rgzeActionsMenuContactGroup[] =
 	eMenuActionSeparator,
 	eMenuAction_GroupRename,
 	eMenuAction_GroupDelete,
+	eMenuActionSeparator,
+	eMenuAction_SynchronizeWithGroup,
 	eMenuActionSeparator,
 	eMenuAction_TreeItemRecommended,
 	eMenuAction_GroupProperties,

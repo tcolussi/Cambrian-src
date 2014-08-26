@@ -210,4 +210,13 @@ struct SBlobPvCb
 	int cb;
 	};
 
+//	Structure to hold two offsets.
+//	The motivation for this structure is to determine how to truncate a blob if there is no real data in it.
+//	This structure is used when formatting XML where the opening element is added to the blob, however if nothing was added to the element, then the blob is truncated to its original state.
+struct SOffsets
+	{
+	int ibReset;		// Where to truncate if the blob does not contain any data
+	int ibDataBegins;	// Where the actual data begins
+	};
+
 #endif // STRINGUTILITIES_H

@@ -8,9 +8,9 @@
 #endif
 #include "IEventBallot.h"
 #ifdef DEBUG
-	//#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
+	#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
-	//#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
+	#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
 #endif
 
 CHS
@@ -109,6 +109,11 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 	case eEventClass_eWalletTransactionReceived:
 		return new CEventWalletTransactionReceived(ptsEventID);
 
+	case eEventClass_eUpdaterSent:
+		return new CEventUpdaterSent(ptsEventID);
+	case eEventClass_eUpdaterReceived:
+		return new CEventUpdaterReceived(ptsEventID);
+
 	case eEventClass_eDownloader:
 		return new CEventDownloader(ptsEventID);
 
@@ -129,15 +134,31 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 //
 //	INTERFACE NOTES
 //	This static method must have an interface compatible with PFn_NCompareSortElements().
-int
+NCompareResult
 IEvent::S_NCompareSortEventsByIDs(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort)
 	{
 	Assert(lParamCompareSort == d_zNA);
+	return NCompareSortTimestamps(pEventA->m_tsEventID, pEventB->m_tsEventID);
+	/*
 	if (pEventA->m_tsEventID < pEventB->m_tsEventID)
 		return -1;
 	if (pEventA->m_tsEventID > pEventB->m_tsEventID)
 		return +1;
 	return 0;	// This should be very rare, as all m_tsEventID are unique
+	*/
+	}
+
+NCompareResult
+IEvent::S_NCompareSortEventsByChronology(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort)
+	{
+	Assert(lParamCompareSort == d_zNA);
+	return NCompareSortTimestamps(*pEventA->PtsGetTimestampChronology(), *pEventB->PtsGetTimestampChronology());
+	}
+
+const TIMESTAMP *
+IEvent::PtsGetTimestampChronology() const
+	{
+	return (EGetEventClass() & eEventClass_kfReceivedByRemoteClient) ? &m_tsOther : &m_tsEventID;
 	}
 
 //	Base constructor for all events.
@@ -202,7 +223,7 @@ IEvent::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	Assert(pbinXmlAttributes != NULL);
 	Endorse(pbinXmlAttributes->m_pContact == NULL);	// NULL => Serialize to disk
 	Assert(FALSE && "No need to call this virtual method");
-	return eXml_zAttributesOnly;	// By default, there is no XML elements
+	return eXml_zAttributesOnly;	// By default, there is no XML element
 	}
 
 //	XmlUnserializeCore(), virtual
@@ -302,25 +323,27 @@ IEvent::Event_FIsEventTypeReceived() const
 	return ((EGetEventClass() & eEventClass_kfReceivedByRemoteClient) != 0);
 	}
 
-void
-IEvent::Event_SetCompletedTimestamp()
+//	Return TRUE if the event was modified
+BOOL
+IEvent::Event_FSetCompletedTimestamp()
 	{
 	if (m_tsOther > d_tsOther_kmReserved)
 		{
 		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t\t\t Event_SetCompleted() - m_tsOther $t remains unchanged for EventID $t.\n", m_tsOther, m_tsEventID);
-		return;	// The task already completed, so keep the first timestamp.  This is likely to be a duplicate message.
+		return FALSE;	// The task already completed, so keep the first timestamp.  This is likely to be a duplicate message.
 		}
 	m_tsOther = Timestamp_GetCurrentDateTime();
 	m_pVaultParent_NZ->SetModified();		// This line is important so the modified event is always saved to disk (otherwise an event may be updated, however not serialized because ITreeItemChatLogEvents will never know the event was updated)
 	Assert(Event_FHasCompleted());
+	return TRUE;
 	}
 
 void
 IEvent::Event_SetCompletedAndUpdateChatLog(QTextEdit * pwEditChatLog)
 	{
 	Endorse(pwEditChatLog == NULL);		// Don't update the event in the Chat Log, typically because there is no Chat Log.  The events may be loaded in memory, however not displayed in any Chat Log.
-	Event_SetCompletedTimestamp();
-	ChatLog_UpdateEventWithinWidget(pwEditChatLog);
+	if (Event_FSetCompletedTimestamp())
+		ChatLog_UpdateEventWithinWidget(pwEditChatLog);
 	}
 
 void
@@ -381,7 +404,7 @@ IEvent::ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const
 				return pEventDownloader->ChatLog_GetTextBlockRelatedToDocument(poDocument);
 				}
 			}
-		MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Unable to find text block matching event of class $U [i=$t, o=$t]\n", eEventClass, m_tsEventID, m_tsOther);
+		MessageLog_AppendTextFormatSev(eSeverityWarning, "ChatLog_GetTextBlockRelatedToDocument() - Unable to find text block matching event of class $U [i=$t, o=$t]\n", eEventClass, m_tsEventID, m_tsOther);
 		}
 	return oTextBlock;
 	}
@@ -398,7 +421,8 @@ IEvent::ChatLog_UpdateEventWithinWidget(QTextEdit * pwEditChatLog)
 	{
 	if (pwEditChatLog != NULL)
 		{
-		OCursorSelectBlock oCursor(ChatLog_GetTextBlockRelatedToWidget(pwEditChatLog));
+		//OCursorSelectBlock oCursor(ChatLog_GetTextBlockRelatedToWidget(pwEditChatLog));
+		OCursorSelectBlock oCursor(this, pwEditChatLog);
 		ChatLogUpdateTextBlock(INOUT &oCursor);
 		}
 	}
@@ -523,7 +547,7 @@ IEvent::Socket_WriteXmlIqError_VE_Gso(PSZAC pszErrorType, PSZUC pszErrorID, PSZA
 		return;	// Do not attempt to send an error code if the socket object was not yet create.  This is the case when attempting to cancel an event (such as declining a file offer) from a previous session where there was never any attempt to connect with that account (a rare case, however nor worth a crash).
 		}
 	g_strScratchBufferSocket.Empty();
-	g_strScratchBufferSocket.BinAppendTextSzv_VE("<iq type='error' id='^s' from='^J' to='^J'><error type='$s'>", pszErrorID, mu_parentowner.pTreeItem->m_pAccount, mu_parentowner.pTreeItem, pszErrorType);
+	g_strScratchBufferSocket.BinAppendText_VE("<iq type='error' id='^s' from='^J' to='^J'><error type='$s'>", pszErrorID, mu_parentowner.pTreeItem->m_pAccount, mu_parentowner.pTreeItem, pszErrorType);
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszFmtTemplate);
 	g_strScratchBufferSocket.BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
@@ -551,13 +575,13 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 		{
 		// The event was received (typically a message typed by someone else)
 		if (dts < -10 * d_ts_cMinutes && dts > -15 * d_ts_cDays)
-			pbinTextHtml->BinAppendTextSzv_VE("[$T] ", dts);
+			pbinTextHtml->BinAppendText_VE("[$T] ", dts);
 		#if 0
-		pbinTextHtml->BinAppendTextSzv_VE("<span title='Message was sent {T_} before you received it'>[{T-}] </span>", dts);
+		pbinTextHtml->BinAppendText_VE("<span title='Message was sent {T_} before you received it'>[{T-}] </span>", dts);
 		#endif
 		pTreeItemNickname = (m_pContactGroupSender_YZ != NULL) ? m_pContactGroupSender_YZ : m_pVaultParent_NZ->m_pParent;	// Use the name of the group sender (if any, otherwise the name of the contact)
 		}
-	pbinTextHtml->BinAppendTextSzv_VE("<span title='^Q'>[^Q] </span>", &sDateTime, &sTime);
+	pbinTextHtml->BinAppendText_VE("<span title='^Q'>[^Q] </span>", &sDateTime, &sTime);
 	if (m_uFlagsEvent & FE_kfEventProtocolError)
 		{
 		pbinTextHtml->BinAppendText(" <img src=':/ico/Error' title='XCP Protocol Error: One of the peers has an old version of SocietyPro and cannot process this event because its type is unknown'/> ");
@@ -566,7 +590,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 		{
 		// The message was sent by the user
 		if (dts > 5 * d_ts_cMinutes)
-			pbinTextHtml->BinAppendTextSzv_VE("[$T] ", dts);
+			pbinTextHtml->BinAppendText_VE("[$T] ", dts);
 		if (Event_FHasCompleted())
 			{
 			if ((m_uFlagsEvent & FE_kfEventDeliveryConfirmed) == 0)
@@ -578,7 +602,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 		pTreeItemNickname = PGetAccount_NZ();	// Use the name of the user
 		}
 	#ifdef DEBUG_DISPLAY_TIMESTAMPS
-	pbinTextHtml->BinAppendTextSzv_VE("<code>[i=<b>$t</b> o=<b>$t</b>] </code>", m_tsEventID, m_tsOther);
+	pbinTextHtml->BinAppendText_VE("<code>[i=<b>$t</b> o=<b>$t</b>] </code>", m_tsEventID, m_tsOther);
 	#ifdef d_szEventDebug_strContactSource
 	if (!m_strDebugContactSource.FIsEmptyString())
 		{
@@ -587,14 +611,17 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 			if (m_pContactGroupSender_YZ->m_strJidBare.FCompareStringsNoCase(m_strDebugContactSource))
 				goto SkipSource;
 			}
-		pbinTextHtml->BinAppendTextSzv_VE(" <img src=':/ico/Exchange' title='This event was forwarded by ^S, however originally written by ^j'/> ", &m_strDebugContactSource, m_pContactGroupSender_YZ);
+		pbinTextHtml->BinAppendText_VE(" <img src=':/ico/Exchange' title='This event was forwarded by ^S, however originally written by ^j'/> ", &m_strDebugContactSource, m_pContactGroupSender_YZ);
 		SkipSource:;
 		}
 	#endif
 	#endif
 	if (m_uFlagsEvent & FE_kfEventOutOfSync)
 		pbinTextHtml->BinAppendText(" <img src=':/ico/OutOfSync' title='Out of Sync' /> ");
-	pbinTextHtml->BinAppendTextSzv_VE(c_szHtmlTemplateNickname, pTreeItemNickname->ChatLog_PszGetNickname());
+	pbinTextHtml->BinAppendText_VE(c_szHtmlTemplateNickname, pTreeItemNickname->ChatLog_PszGetNickname());
+
+	if (m_uFlagsEvent & (FE_kfReplaced | FE_kfReplacing))
+		pbinTextHtml->BinAppendText(" <img src=':/ico/Pencil' title='Edited' /> ");	// Any event replaced or replacing anotehr one displays the 'edited' icon
 	} // _BinHtmlInitWithTime()
 
 
@@ -620,12 +647,12 @@ IEvent::_BinHtmlAppendHyperlinkToLocalFile(INOUT CBin * pbinTextHtml, PSZUC pszF
 		{
 		// We have a full path, so it is appropriate to create an hyperlink
 		PSZAC pszClass = fDisabled ? "class="d_szClassForChatLog_HyperlinkDisabled : NULL;
-		pbinTextHtml->BinAppendTextSzv_VE("<a $s href='"d_szSchemeCambrian":{t_},"d_szActionForEvent_HyperlinkFile"'>^s</a>", pszClass, m_tsEventID, pszFileNameOnly);
+		pbinTextHtml->BinAppendText_VE("<a $s href='"d_szSchemeCambrian":{t_},"d_szActionForEvent_HyperlinkFile"'>^s</a>", pszClass, m_tsEventID, pszFileNameOnly);
 		}
 	else
 		{
 		// We a relative path, so display the filename in bold
-		pbinTextHtml->BinAppendTextSzv_VE("<b>$s</b>", pszFileNameOnly);
+		pbinTextHtml->BinAppendText_VE("<b>$s</b>", pszFileNameOnly);
 		}
 	}
 
@@ -661,7 +688,7 @@ IEvent::_BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfH
 void
 IEvent::_BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfHyperlink, PSZAC pszButtonName) const
 	{
-	pbinTextHtml->BinAppendTextSzv_VE(" " _nbsp " <a class="d_szClassForChatLog_ButtonHtml" href='"d_szSchemeCambrian":{t_},$b'>[" _nbsp2 "$s" _nbsp2 "]</a>", m_tsEventID, chActionOfHyperlink, pszButtonName);
+	pbinTextHtml->BinAppendText_VE(" " _nbsp " <a class="d_szClassForChatLog_ButtonHtml" href='"d_szSchemeCambrian":{t_},$b'>[" _nbsp2 "$s" _nbsp2 "]</a>", m_tsEventID, chActionOfHyperlink, pszButtonName);
 	}
 
 void
@@ -1183,10 +1210,44 @@ CEventFileReceived::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor *
 	} // HyperlinkClicked()
 
 
+IEventUpdater::IEventUpdater(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
+	{
+	m_uFlagsEvent |= FE_kfEventHidden;
+	// There is no real need to initialize those values because they will be initialized anyway, however for debugging purpose it is useful to set them to zeroes.
+	m_tsEventIdOld = d_ts_zNULL;
+	m_tsEventIdNew = d_ts_zNULL;
+	}
+
+EXml
+IEventUpdater::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
+	{
+	pbinXmlAttributes->BinAppendXmlAttributeTimestamp('O', IN m_tsEventIdOld);
+	pbinXmlAttributes->BinAppendXmlAttributeTimestamp('N', IN m_tsEventIdNew);
+	return eXml_zAttributesOnly;
+	}
+
+void
+IEventUpdater::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
+	{
+	pXmlNodeElement->UpdateAttributeValueTimestamp('O', OUT_F_UNCH &m_tsEventIdOld);
+	pXmlNodeElement->UpdateAttributeValueTimestamp('N', OUT_F_UNCH &m_tsEventIdNew);
+	}
+
+CEventUpdaterSent::CEventUpdaterSent(const IEvent * pEventOld) : IEventUpdater(d_ts_pNULL_AssignToNow)
+	{
+	m_uFlagsEvent |= FE_kfEventHidden;
+	m_tsEventIdOld = pEventOld->m_tsEventID;
+	m_tsEventIdNew = Timestamp_GetCurrentDateTime();
+	Assert(m_tsEventIdOld < m_tsEventIdNew);
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Method to notify the contact (or group) a message was edited
 void
 CEventMessageTextSent::MessageResendUpdate(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate)
 	{
+	Assert(pwLayoutChatLogUpdate != NULL);
+	#if 0
 	m_strMessageText = strMessageUpdated;
 	m_uFlagsMessage |= FM_kfMessageUpdated;
 	m_tsOther = d_tsOther_ezEventNeverSent;	// Pretend the message was never sent.  This will trigger a new task to resend the message
@@ -1194,6 +1255,40 @@ CEventMessageTextSent::MessageResendUpdate(const CStr & strMessageUpdated, INOUT
 	//ChatLog_UpdateEventWithinWidget(pwLayoutChatLogUpdate->m_pwChatLog);
 	pwLayoutChatLogUpdate->m_pwChatLog_NZ->ChatLog_EventUpdate(this);
 	Event_WriteToSocketIfReady();
+	#else
+	// Always create the updater before the event.  This way, it is easy to find
+	CEventUpdaterSent * pEventUpdater = new CEventUpdaterSent(this);
+	CEventMessageTextSent * pEventMessageUpdated = new CEventMessageTextSent(IN &pEventUpdater->m_tsEventIdNew);
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "Event ID $t: pEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing\n", pEventMessageUpdated->m_tsEventID);
+	pEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing;
+	pEventMessageUpdated->m_strMessageText = strMessageUpdated;
+	/*
+	CEventMessageTextSent * pEventMessageUpdated = new CEventMessageTextSent(strMessageUpdated);
+	pEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing;
+	CEventUpdaterSent * pEventUpdater = new CEventUpdaterSent(this, pEventMessageUpdated);
+	*/
+	pEventUpdater->EventAddToVault(m_pVaultParent_NZ);
+	pEventMessageUpdated->EventAddToVault(m_pVaultParent_NZ);
+	pEventUpdater->Event_WriteToSocket();
+	pwLayoutChatLogUpdate->m_pwChatLog_NZ->ChatLog_EventDisplay(IN pEventMessageUpdated);
+	#endif
+	}
+
+CEventMessageTextSent *
+CEventMessageTextSent::PFindEventMostRecent_NZ() CONST_OBJECT
+	{
+	if (m_uFlagsEvent & IEvent::FE_kfReplaced)
+		{
+		// The event was replaced, therefore attempt to find its most updated version
+		IEvent * pEventReplacing = m_pVaultParent_NZ->PFindEventReplacing(this);
+		if (pEventReplacing != NULL)
+			{
+			if (pEventReplacing->EGetEventClass() == CEventMessageTextSent::c_eEventClass)
+				return (CEventMessageTextSent *)pEventReplacing;
+			}
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find replacing event for Event ID $t\n", m_tsEventID);
+		}
+	return this;
 	}
 
 void
@@ -1661,6 +1756,33 @@ CArrayPtrEvents::FEventsSortedByIDs() const
 	}
 
 void
+CArrayPtrEvents::AppendEventsSortedByIDs(IN_MOD_SORT CArrayPtrEvents * parraypEventsUnsorted)
+	{
+	parraypEventsUnsorted->SortEventsByIDs();	// First sort the array
+	MergeAppend(IN parraypEventsUnsorted, (PFn_NCompareSortElements)IEvent::S_NCompareSortEventsByIDs);	// Then merge it with the current array
+	}
+
+void
+CArrayPtrEvents::SortEventsByChronology()
+	{
+	Sort((PFn_NCompareSortElements)IEvent::S_NCompareSortEventsByChronology);
+	}
+
+
+NCompareResult
+S_NCompareSortEventsBySender(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort)
+	{
+	Assert(lParamCompareSort == d_zNA);
+	return ((INT_P)pEventA->m_pContactGroupSender_YZ - (INT_P)pEventB->m_pContactGroupSender_YZ);
+	}
+
+void
+CArrayPtrEvents::GroupEventsBySender()
+	{
+	Sort((PFn_NCompareSortElements)S_NCompareSortEventsBySender);
+	}
+
+void
 CArrayPtrEvents::DeleteAllEvents()
 	{
 	IEvent ** ppEventStop;
@@ -1758,7 +1880,7 @@ CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanz
 	{
 	if (m_tsContact == d_ts_zNULL)
 		m_tsContact = pXmlNodeExtraData->TsGetAttributeValueTimestamp_ML(d_chXCPa_PingTime);
-	Event_SetCompletedTimestamp();
+	(void)Event_FSetCompletedTimestamp();
 	}
 
 //	CEventPing::IEvent::ChatLogUpdateTextBlock()
@@ -1766,17 +1888,17 @@ void
 CEventPing::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
-	g_strScratchBufferStatusBar.BinAppendTextSzv_VE("Pinging <b>^s</b>...", ChatLog_PszGetNickNameOfContact());
+	g_strScratchBufferStatusBar.BinAppendText_VE("Pinging <b>^s</b>...", ChatLog_PszGetNickNameOfContact());
 	const TIMESTAMP_DELTA dtsResponse = m_tsOther - m_tsEventID;
 	if (dtsResponse > 0)
 		{
-		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("  response time: <b>$L</b> ms", dtsResponse);
+		g_strScratchBufferStatusBar.BinAppendText_VE("  response time: <b>$L</b> ms", dtsResponse);
 		const TIMESTAMP_DELTA dtsClockDifference = m_tsContact - (m_tsEventID + m_tsOther) / 2;
 		if (dtsClockDifference > -1000 * d_ts_cDays && dtsClockDifference < 1000 * d_ts_cDays)
-			g_strScratchBufferStatusBar.BinAppendTextSzv_VE(" (clock difference: $T)", dtsClockDifference);	// Display the clock difference only if it is less than 1000 days (about 3 years).  Typically the clock difference should be a few seconds for systems connected to the UTC server, otherwise it may be a few at most a few minutes
+			g_strScratchBufferStatusBar.BinAppendText_VE(" (clock difference: $T)", dtsClockDifference);	// Display the clock difference only if it is less than 1000 days (about 3 years).  Typically the clock difference should be a few seconds for systems connected to the UTC server, otherwise it may be a few at most a few minutes
 		}
 	if (!m_strError.FIsEmptyString())
-		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("  <b>(error: ^S)</b>", &m_strError);
+		g_strScratchBufferStatusBar.BinAppendText_VE("  <b>(error: ^S)</b>", &m_strError);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushDebugPurple);
 	}
 
@@ -1800,7 +1922,7 @@ CEventVersion::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpSt
 	m_strVersion = pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Version);
 	m_strClient	= pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Client);
 	m_strOperatingSystem = pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Platform);
-	Event_SetCompletedTimestamp();
+	(void)Event_FSetCompletedTimestamp();
 	}
 
 void
@@ -1821,13 +1943,13 @@ void
 CEventVersion::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
-	g_strScratchBufferStatusBar.BinAppendTextSzv_VE(m_strVersion.FIsEmptyString() ? "Querying which version <b>^s</b> is using..." : "<b>^s</b> is running <b>^S</b> version <b>^S</b> on ^S", ChatLog_PszGetNickNameOfContact(), &m_strClient, &m_strVersion, &m_strOperatingSystem);
+	g_strScratchBufferStatusBar.BinAppendText_VE(m_strVersion.FIsEmptyString() ? "Querying which version <b>^s</b> is using..." : "<b>^s</b> is running <b>^S</b> version <b>^S</b> on ^S", ChatLog_PszGetNickNameOfContact(), &m_strClient, &m_strVersion, &m_strOperatingSystem);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushDebugPurple);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DEBUG_WANT_ASSERT
-//	Make sure the event points to valid data in memory.
+//	Make sure the event object points to valid data in memory.
 //	This is done by calling a virtual method.  If the object is not valid, then its vtable will point to garbage data and the application will crash.
 void
 AssertValidEvent(const IEvent * pEvent)

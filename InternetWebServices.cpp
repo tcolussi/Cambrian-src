@@ -16,7 +16,7 @@ CInternetRequestWebMethodXml::MethodNameCreate(PSZAC pszMethodName, PSZAC pszAtt
 
 	(void)PvSizeAlloc(3000);	// Allocate 3 KB, enough for the typical request for a web method
 	Assert(FIsEmptyBinary());
-	BinAppendTextSzv_VE("<$s $s>", pszMethodName, pszAttributes);
+	BinAppendText_VE("<$s $s>", pszMethodName, pszAttributes);
 
 	// Remember the method name, so ew may close the request
 	m_pszMethodName = pszMethodName;
@@ -26,7 +26,7 @@ void
 CInternetRequestWebMethodXml::MethodNameClose()
 	{
 	Assert(m_pszMethodName != NULL && "Method name invalid");
-	BinAppendTextSzv_VE("</$s>", m_pszMethodName);
+	BinAppendText_VE("</$s>", m_pszMethodName);
 	#ifdef DEBUG
 	AssertValidUtf8(PbGetData());
 	#endif
@@ -42,7 +42,7 @@ void
 CInternetRequestWebMethodXml::MethodNameOpen(PSZAC pszFmtHeader, PSZAC pszMethodName)
 	{
 	m_pszMethodName = pszMethodName;
-	BinAppendTextSzv_VE(pszFmtHeader, pszMethodName);
+	BinAppendText_VE(pszFmtHeader, pszMethodName);
 	m_fMethodClosed = FALSE;
 	}
 
@@ -52,7 +52,7 @@ CInternetRequestWebMethodXml::MethodNameClose(PSZAC pszFmtFooter)
 	if (m_fMethodClosed)
 		return;
 	m_fMethodClosed = TRUE;
-	BinAppendTextSzv_VE(pszFmtFooter, m_pszMethodName);
+	BinAppendText_VE(pszFmtFooter, m_pszMethodName);
 	}
 
 

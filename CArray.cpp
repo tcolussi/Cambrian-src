@@ -267,16 +267,17 @@ CArray::PvGetElementUnique_YZ() const
 
 //	Initialize he array to hold cElements
 void **
-CArray::SetSizeUnsafe(int cElements)
+CArray::PrgpvAllocateElementsSetSize(int cElements)
 	{
-	Assert(cElements > 0);
-	SetAllocSize(cElements);
-	m_paArrayHdr->cElements = cElements;
-	return (void **)&m_paArrayHdr->rgpvData;
+	Assert(cElements >= 0);
+	void ** ppvElementFirst = PrgpvAllocateElementsEmpty(cElements);
+	if (ppvElementFirst != NULL)
+		m_paArrayHdr->cElements = cElements;
+	return ppvElementFirst;
 	}
 
 /////////////////////////////////////////////////////////////////////
-//	SetAllocSize()
+//	PrgpvAllocateElementsEmpty()
 //
 //	Fast method to allocate memory to hold a number of elements.
 //	
@@ -293,7 +294,7 @@ CArray::SetSizeUnsafe(int cElements)
 //
 //	Return pointer to the beginning of the array as GetData() would.
 void **
-CArray::SetAllocSize(int cElementsAlloc)
+CArray::PrgpvAllocateElementsEmpty(int cElementsAlloc)
 	{
 	if (m_paArrayHdr == NULL)
 		{
@@ -314,10 +315,10 @@ CArray::SetAllocSize(int cElementsAlloc)
 	}
 
 void **
-CArray::SetAllocSize(const CArray * parray)
+CArray::PrgpvAllocateElementsEmpty(const CArray * parray)
 	{
 	Assert(parray != NULL);
-	return SetAllocSize(parray->GetSize());
+	return PrgpvAllocateElementsEmpty(parray->GetSize());
 	}
 
 /////////////////////////////////////////////////////////////////////
@@ -325,7 +326,7 @@ CArray::SetAllocSize(const CArray * parray)
 //
 //	Return pointer where the data should be added.
 void **
-CArray::PrgpvSetSizeGrowBy(int cElementsAllocGrowBy)
+CArray::PrgpvAllocateElementsAppend(int cElementsAllocGrowBy)
 	{
 	Assert(cElementsAllocGrowBy >= 0);
 	if (cElementsAllocGrowBy > 0)
@@ -358,7 +359,7 @@ CArray::PrgpvSetSizeGrowBy(int cElementsAllocGrowBy)
 	if (m_paArrayHdr != NULL)
 		return (void **)&m_paArrayHdr->rgpvData;
 	return NULL;
-	} // PrgpvSetSizeGrowBy()
+	} // PrgpvAllocateElementsAppend()
 
 
 /////////////////////////////////////////////////////////////////////
@@ -887,7 +888,7 @@ CArray::Copy(const CArray * pArraySrc)
 	int cElementsSrc = pArraySrc->GetSize();
 	if (cElementsSrc > 0)
 		{
-		SetAllocSize(cElementsSrc);
+		PrgpvAllocateElementsEmpty(cElementsSrc);
 		Assert(GetSize() == 0);
 		Assert(m_paArrayHdr->rgpvData != pArraySrc->m_paArrayHdr->rgpvData);	
 		memcpy(OUT m_paArrayHdr->rgpvData, pArraySrc->m_paArrayHdr->rgpvData, cElementsSrc * sizeof(void *));
@@ -969,7 +970,7 @@ CArray::SetDataRaw(PCVOID prgpvData[], int cElements)
 		Assert(m_paArrayHdr->cElementsAlloc >= cElements);
 
 		if (m_paArrayHdr == NULL || m_paArrayHdr->cElementsAlloc < cElements)
-			SetAllocSize(cElements);
+			PrgpvAllocateElementsEmpty(cElements);
 		Assert(m_paArrayHdr != NULL);
 		m_paArrayHdr->cElements = cElements;
 		if (prgpvData != NULL)
@@ -1450,28 +1451,25 @@ CArray::ShiftElementBy(int iElement, int diShift)
 	} // ShiftElementBy()
 
 
-#ifdef ARRAY_SORT
-
 /////////////////////////////////////////////////////////////////////
 //	Generic routine to determine if an array is sorted ascending, descending or both.
 ESortOrder
-CArray::EGetSortedOrder(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare) const
+CArray::EGetSortedOrder(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare) const
 	{
 	if (m_paArrayHdr == NULL)
 		return eSortOrder_kmBoth;	// An empty array is always sorted both ways
-	return ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+	return ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 	}
-
 
 /////////////////////////////////////////////////////////////////////
 //	Return TRUE if the array is sorted in ascending order
 //
 BOOL
-CArray::FIsSortedAscending(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare) const
+CArray::FIsSortedAscending(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare) const
 	{
 	if (m_paArrayHdr == NULL)
 		return TRUE;	// An empty array is always sorted
-	return ::Sort_FIsSortedAscending(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+	return ::Sort_FIsSortedAscending(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 	}
 
 
@@ -1479,11 +1477,11 @@ CArray::FIsSortedAscending(PFn_NCompareSortElements pfnSortCompare, LPARAM lPara
 //	Return TRUE if the array is sorted in descending order
 //
 BOOL
-CArray::FIsSortedDescending(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare) const
+CArray::FIsSortedDescending(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare) const
 	{
 	if (m_paArrayHdr == NULL)
 		return TRUE;	// An empty array is always sorted
-	return ::Sort_FIsSortedDescending(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+	return ::Sort_FIsSortedDescending(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 	}
 
 
@@ -1493,11 +1491,11 @@ CArray::FIsSortedDescending(PFn_NCompareSortElements pfnSortCompare, LPARAM lPar
 //	Sort the array according to the comparison routine.
 //
 void
-CArray::DoSortAscending(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare)
+CArray::DoSortAscending(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare)
 	{
 	if (m_paArrayHdr == NULL)
 		return;	// Nothing to do
-	::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, TRUE, pfnSortCompare, lParamCompare);
+	::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, TRUE, pfnCompareSort, lParamCompare);
 	}
 
 
@@ -1505,34 +1503,34 @@ CArray::DoSortAscending(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCo
 //	DoSortDescending()
 //
 void
-CArray::DoSortDescending(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare)
+CArray::DoSortDescending(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare)
 	{
 	if (m_paArrayHdr == NULL)
 		return;	// Nothing to do
-	::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, FALSE, pfnSortCompare, lParamCompare);
+	::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, FALSE, pfnCompareSort, lParamCompare);
 	}
 
 
 /////////////////////////////////////////////////////////////////////
 //	Routine to sort either ascending or descending.
 void
-CArray::DoSort(BOOL fSortAscending, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare)
+CArray::DoSort(BOOL fSortAscending, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare)
 	{
 	if (m_paArrayHdr == NULL)
 		return;	// Nothing to do
-	::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, fSortAscending, pfnSortCompare, lParamCompare);
+	::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, fSortAscending, pfnCompareSort, lParamCompare);
 	}
 
 /////////////////////////////////////////////////////////////////////
 //	Routine to sort either ascending or descending.
 //	If the array is already sorted, then no sorting is done.
 void
-CArray::Sort(BOOL fSortAscending, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare)
+CArray::Sort(BOOL fSortAscending, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare)
 	{
 	if (m_paArrayHdr == NULL)
 		return;	// Nothing to do
 	// Determine how the array is sorted
-	ESortOrder eSortOrder = ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+	ESortOrder eSortOrder = ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 	if (fSortAscending)
 		{
 		if (eSortOrder & eSortOrder_kfAscending)
@@ -1546,61 +1544,61 @@ CArray::Sort(BOOL fSortAscending, PFn_NCompareSortElements pfnSortCompare, LPARA
 	if (eSortOrder == eSortOrder_kzNone)
 		{
 		// We need to sort the whole array
-		::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, fSortAscending, pfnSortCompare, lParamCompare);
+		::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, fSortAscending, pfnCompareSort, lParamCompare);
 		}
 	else
 		{
 		// Array is already sorted, but in the opposite order
-		::Sort_DoReverseIdenticalElements(m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+		::Sort_DoReverseIdenticalElements(m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 		Reverse(); // Reverse the order of each element
 		}
 	#ifdef DEBUG
 	if (fSortAscending)
-		Assert(FIsSortedAscending(pfnSortCompare, lParamCompare));
+		Assert(FIsSortedAscending(pfnCompareSort, lParamCompare));
 	else
-		Assert(FIsSortedDescending(pfnSortCompare, lParamCompare));
+		Assert(FIsSortedDescending(pfnCompareSort, lParamCompare));
 	#endif
 	} // Sort()
 
 /////////////////////////////////////////////////////////////////////
 //	Sort the array in the ascending order
 void
-CArray::Sort(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare)
+CArray::Sort(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare)
 	{
 	if (m_paArrayHdr == NULL)
 		return;	// Nothing to do
 	// Determine how the array is sorted
-	ESortOrder eSortOrder = ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+	ESortOrder eSortOrder = ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 	if (eSortOrder & eSortOrder_kfAscending)
 		return;	// Array is already sorted
 	if (eSortOrder == eSortOrder_kzNone)
 		{
 		// We need to sort the whole array
-		::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, TRUE, pfnSortCompare, lParamCompare);
+		::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, TRUE, pfnCompareSort, lParamCompare);
 		}
 	else
 		{
 		// Array is already sorted, but in the opposite order
-		::Sort_DoReverseIdenticalElements(m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+		::Sort_DoReverseIdenticalElements(m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 		Reverse(); // Reverse the order of each element
-		Assert(FIsSortedAscending(pfnSortCompare, lParamCompare));
+		Assert(FIsSortedAscending(pfnCompareSort, lParamCompare));
 		}
 	}
 
 //	Similar to Sort() but never call Reverse() if the array is sorted in opposite order
 //	This method is used to preserve the order of the objects having identical keys.
 void
-CArray::SortNeverReverse(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare)
+CArray::SortNeverReverse(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare)
 	{
 	if (m_paArrayHdr == NULL)
 		return;	// Nothing to do
 	// Determine how the array is already sorted
-	ESortOrder eSortOrder = ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+	ESortOrder eSortOrder = ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 	if (eSortOrder & eSortOrder_kfAscending)
 		return;	// Array is already sorted
 	// We need to sort the whole array
-	::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, TRUE, pfnSortCompare, lParamCompare);
-	Assert(FIsSortedAscending(pfnSortCompare, lParamCompare));
+	::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, TRUE, pfnCompareSort, lParamCompare);
+	Assert(FIsSortedAscending(pfnCompareSort, lParamCompare));
 	}
 
 /////////////////////////////////////////////////////////////////////
@@ -1611,20 +1609,20 @@ CArray::SortNeverReverse(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamC
 //	- If the array is not sorted, then sort ascending.
 //
 void
-CArray::ToggleSort(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare)
+CArray::ToggleSort(PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare)
 	{
 	if (m_paArrayHdr == NULL)
 		return;	// Nothing to do
 	// Determine how the array is sorted
-	ESortOrder eSortOrder = ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+	ESortOrder eSortOrder = ::Sort_EGetSortedOrder(IN m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 	if (eSortOrder == eSortOrder_kzNone)
 		{
 		// Sort the array in ascending order
-		::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, TRUE, pfnSortCompare, lParamCompare);
+		::Sort_DoSorting(INOUT m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, TRUE, pfnCompareSort, lParamCompare);
 		}
 	else
 		{
-		::Sort_DoReverseIdenticalElements(m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnSortCompare, lParamCompare);
+		::Sort_DoReverseIdenticalElements(m_paArrayHdr->rgpvData, m_paArrayHdr->cElements, pfnCompareSort, lParamCompare);
 		Reverse(); // Reverse the order of each element
 		}
 	}
@@ -1634,10 +1632,10 @@ CArray::ToggleSort(PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare
 //	routine to determine its position.
 //
 void
-CArray::MergeAppend(const void * pvElement, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare)
+CArray::MergeAppend(const void * pvElement, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare)
 	{
 	Endorse(pvElement == NULL);
-	Assert(pfnSortCompare != NULL);
+	Assert(pfnCompareSort != NULL);
 	if (m_paArrayHdr != NULL)
 		{
 		int cElementCount = m_paArrayHdr->cElements;
@@ -1645,7 +1643,7 @@ CArray::MergeAppend(const void * pvElement, PFn_NCompareSortElements pfnSortComp
 		for (int i = 0; i < cElementCount; i++, ppvSrc++)
 			{
 			//	Insert at the end of the elements
-			if (pfnSortCompare(pvElement, *ppvSrc, lParamCompare) > 0)
+			if (pfnCompareSort(pvElement, *ppvSrc, lParamCompare) > 0)
 				{
 				InsertElementAt(i, pvElement);
 				return;
@@ -1653,7 +1651,7 @@ CArray::MergeAppend(const void * pvElement, PFn_NCompareSortElements pfnSortComp
 			}
 		}
 	Add(pvElement);
-	Assert(FIsSortedAscending(pfnSortCompare, lParamCompare));
+	Assert(FIsSortedAscending(pfnCompareSort, lParamCompare));
 	}
 
 /////////////////////////////////////////////////////////////////////
@@ -1666,12 +1664,12 @@ CArray::MergeAppend(const void * pvElement, PFn_NCompareSortElements pfnSortComp
 //	-  The appended element will always be appended to the end of the array if the comparison routine considers them equals.
 //
 void
-CArray::MergeAppend(const CArray * pArrayAppend, PFn_NCompareSortElements pfnSortCompare, LPARAM lParamCompare)
+CArray::MergeAppend(const CArray * pArrayAppend, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare)
 	{
 	Assert(pArrayAppend != NULL);
-	Assert(pfnSortCompare != NULL);
-	Assert(pArrayAppend->FIsSortedAscending(pfnSortCompare, lParamCompare));
-	Assert(FIsSortedAscending(pfnSortCompare, lParamCompare));
+	Assert(pfnCompareSort != NULL);
+	Assert(pArrayAppend->FIsSortedAscending(pfnCompareSort, lParamCompare));
+	Assert(FIsSortedAscending(pfnCompareSort, lParamCompare));
 
 	int cElementsAppend = pArrayAppend->GetSize();
 	if (cElementsAppend == 0)
@@ -1711,7 +1709,7 @@ CArray::MergeAppend(const CArray * pArrayAppend, PFn_NCompareSortElements pfnSor
 			break;
 			}
 		// Compare two elements
-		if (pfnSortCompare(*prgpvSrc1, *prgpvSrc2, lParamCompare) <= 0)
+		if (pfnCompareSort(*prgpvSrc1, *prgpvSrc2, lParamCompare) <= 0)
 			{
 			*prgpvDst++ = *prgpvSrc1++;
 			cElements--;
@@ -1726,11 +1724,8 @@ CArray::MergeAppend(const CArray * pArrayAppend, PFn_NCompareSortElements pfnSor
 	ValidateHeapPointer(m_paArrayHdr);
 	delete m_paArrayHdr;	// Delete previous array
 	m_paArrayHdr = paArrayHdrMerged;
-	Assert(FIsSortedAscending(pfnSortCompare, lParamCompare));
+	Assert(FIsSortedAscending(pfnCompareSort, lParamCompare));
 	} // MergeAppend()
-
-#endif // ARRAY_SORT
-
 
 
 /////////////////////////////////////////////////////////////////////

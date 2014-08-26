@@ -8,8 +8,8 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.0.3"
-#define d_szwApplicationVersion		   L"0.1.0.3"
+#define d_szApplicationVersion			"0.1.0.6"
+#define d_szwApplicationVersion		   L"0.1.0.6"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -265,6 +265,7 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #define DEBUG_WANT_ASSERT	// We want Assert() in the release build
 
 #include "ErrorCodes.h"
+#include "Sort.h"
 #include "StringsShared.h"
 #include "StringUtilities.h"
 #include "StringNumeric.h"

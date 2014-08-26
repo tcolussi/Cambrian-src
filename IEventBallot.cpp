@@ -82,7 +82,7 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	while (ppChoice != ppChoiceStop)
 		{
 		_CEventBallotChoice * pChoice = *ppChoice++;
-		pbinXmlAttributes->BinAppendTextSzv_VE("<" d_szAPIe_BallotChoice_S "/>", &pChoice->m_strQuestion);
+		pbinXmlAttributes->BinAppendText_VE("<" d_szAPIe_BallotChoice_S "/>", &pChoice->m_strQuestion);
 		}
 	pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotChoices ">");
 
@@ -95,7 +95,7 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 		while (ppVote != ppVoteStop)
 			{
 			_CEventBallotVote * pVote = *ppVote++;
-			pbinXmlAttributes->BinAppendTextSzv_VE("<" d_szAPIe_BallotVote_p_u_ts_str "/>",  pVote->m_pContact, pVote->m_ukmChoices, pVote->m_tsVote, &pVote->m_strComment);
+			pbinXmlAttributes->BinAppendText_VE("<" d_szAPIe_BallotVote_p_u_ts_str "/>",  pVote->m_pContact, pVote->m_ukmChoices, pVote->m_tsVote, &pVote->m_strComment);
 			}
 		pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotVotes ">");
 		}
@@ -173,9 +173,9 @@ IEventBallot::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MA
 	CBin * pbinHtmlBallot = &g_strScratchBufferStatusBar;
 	_BinHtmlInitWithTime(OUT pbinHtmlBallot);
 	BOOL fBallotSent = Event_FIsEventTypeSent();
-	pbinHtmlBallot->BinAppendTextSzv_VE(fBallotSent ? "Sending Ballot: <b>^S</b>" : "Please vote on the following:<br/><b>^S</b>", &m_strTitle);
+	pbinHtmlBallot->BinAppendText_VE(fBallotSent ? "Sending Ballot: <b>^S</b>" : "Please vote on the following:<br/><b>^S</b>", &m_strTitle);
 	if (!m_strDescription.FIsEmptyString())
-		pbinHtmlBallot->BinAppendTextSzv_VE("<br/><i>$S</i>", &m_strDescription);
+		pbinHtmlBallot->BinAppendText_VE("<br/><i>$S</i>", &m_strDescription);
 
 	UINT rgcVotes[d_cBallotChoicesMax];	// Count how many votes for each choice
 	InitToZeroes(OUT rgcVotes, sizeof(rgcVotes));
@@ -224,7 +224,7 @@ IEventBallot::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MA
 			else
 				pszHtmlBullet = fuChoiceSelectd ? c_szHtmlBulletLarge : c_szHtmlBulletSmall;
 			}
-		pbinHtmlBallot->BinAppendTextSzv_VE("<br/> ^_^_ $s ^S", pszHtmlBullet, &pChoice->m_strQuestion);
+		pbinHtmlBallot->BinAppendText_VE("<br/> ^_^_ $s ^S", pszHtmlBullet, &pChoice->m_strQuestion);
 		iChoice++;
 		} // while
 
@@ -234,7 +234,7 @@ IEventBallot::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MA
 		{
 		_CEventBallotVote * pVote = *ppVote++;
 		TIMESTAMP_DELTA dts = pVote->m_tsVote - m_tsEventID;	// Calculate how long it took for the user to respond (vote)
-		pbinHtmlBallot->BinAppendTextSzv_VE("<br/>[$T] ^j voted: ", dts, pVote->m_pContact);
+		pbinHtmlBallot->BinAppendText_VE("<br/>[$T] ^j voted: ", dts, pVote->m_pContact);
 		m_arraypaChoices.BinHtmlAppendVoteChoices(INOUT pbinHtmlBallot, pVote->m_ukmChoices, pVote->m_strComment);
 		} // while
 
@@ -272,13 +272,13 @@ CArrayPtrBallotChoices::BinHtmlAppendVoteChoices(INOUT CBin * pbinHtml, UINT_BAL
 				pbinHtml->BinAppendText(" +");	// Display multiple choices with a + sign
 			fPreviousChoices = TRUE;
 			_CEventBallotChoice * pChoice = (_CEventBallotChoice *)m_paArrayHdr->rgpvData[iChoice];
-			pbinHtml->BinAppendTextSzv_VE(" ^S", &pChoice->m_strQuestion);
+			pbinHtml->BinAppendText_VE(" ^S", &pChoice->m_strQuestion);
 			}
 		iChoice++;
 		ukfChoiceMask <<= 1;
 		}
 	if (!strComment.FIsEmptyString())
-		pbinHtml->BinAppendTextSzv_VE("<br/><b><i>^S</i></b>", &strComment);
+		pbinHtml->BinAppendText_VE("<br/><b><i>^S</i></b>", &strComment);
 	}
 
 //	IEventBallot::IEvent::HyperlinkGetTooltipText()
@@ -439,7 +439,7 @@ CEventBallotReceived::UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditT
 
 	// Send the selected choices to the ballot creator
 	CBinXcpStanzaTypeInfo binXcpStanza(this);
-	binXcpStanza.BinAppendTextSzv_VE("<" d_szXCP_"x" _tsI d_szAPIa_CEventBallotReceived_uxVotedChoice_ux d_szAPIa_CEventBallotReceived_strNote "/>", m_tsOther, m_ukmChoices, &m_strComment);	// TODO: rewrite this with more elegant code!
+	binXcpStanza.BinAppendText_VE("<" d_szXCP_"x" _tsI d_szAPIa_CEventBallotReceived_uxVotedChoice_ux d_szAPIa_CEventBallotReceived_strNote "/>", m_tsOther, m_ukmChoices, &m_strComment);	// TODO: rewrite this with more elegant code!
 	binXcpStanza.XcpSendStanzaToContact(PGetContactForReply_YZ());
 }
 

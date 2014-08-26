@@ -42,10 +42,12 @@ void
 WChatInput::EditEventText(CEventMessageTextSent * pEventEdit)
 	{
 	m_pEventEdit = pEventEdit;
-	if (pEventEdit != NULL)
+	if (m_pEventEdit != NULL)
 		{
 		Assert(pEventEdit->EGetEventClass() == eEventClass_eMessageTextSent);
-		setPlainText(pEventEdit->m_strMessageText);
+		m_pEventEdit = pEventEdit->PFindEventMostRecent_NZ();
+		Assert(m_pEventEdit->EGetEventClass() == eEventClass_eMessageTextSent);
+		setPlainText(m_pEventEdit->m_strMessageText);	// Use text from the most recent message
 		moveCursor(QTextCursor::End);
 		setFocus();
 		}
@@ -114,9 +116,10 @@ WChatInput::event(QEvent * pEvent)
 					{
 					m_strTextLastWritten = strText;
 					if (m_pEventEdit == NULL)
-						eUserCommand = pContactOrGroup->Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV strText);
+						eUserCommand = pContactOrGroup->Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV strText);	// This is the typical case of a new message
 					else
 						{
+						// The user was editing an existing message
 						m_pEventEdit->MessageResendUpdate(strText, INOUT m_pwLayoutChatLog);
 						m_pEventEdit = NULL;
 						}
@@ -138,6 +141,10 @@ WChatInput::event(QEvent * pEvent)
 					{
 					//EditEventText(pContactOrGroup->Vault_PGetEventLastMessageSentEditable_YZ());
 					m_pEventEdit = pContactOrGroup->Vault_PFindEventLastMessageTextSentMatchingText(IN m_strTextLastWritten);
+					if (m_pEventEdit != NULL)
+						{
+						MessageLog_AppendTextFormatSev(eSeverityNoise, "Editing Event ID $t\n", m_pEventEdit->m_tsEventID);
+						}
 					setPlainText(m_strTextLastWritten);
 					moveCursor(QTextCursor::End);
 					return true;

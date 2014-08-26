@@ -51,7 +51,7 @@ TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpSt
 	while (ppContact != ppContactStop)
 		{
 		TContact * pContact = *ppContact++;
-		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_Recommendation_TContact_p_str "/>", pContact, &pContact->m_strNameDisplayTyped);	// Need to fix this for a real name of the contact (not what was typed for the Navigation Tree)
+		pbinXcpStanzaReply->BinAppendText_VE("<" d_szAPIe_Recommendation_TContact_p_str "/>", pContact, &pContact->m_strNameDisplayTyped);	// Need to fix this for a real name of the contact (not what was typed for the Navigation Tree)
 		}
 	pbinXcpStanzaReply->BinAppendText("</" d_szAPIe_Recommendations_TContacts "><" d_szAPIe_Recommendations_TGroups ">");
 	CArrayPtrGroups arraypaGroupsRecommended;
@@ -63,7 +63,7 @@ TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpSt
 		TGroup * pGroup = *ppGroup++;
 		Assert(pGroup != NULL);
 		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-		pbinXcpStanzaReply->BinAppendTextSzv_VE("<" d_szAPIe_Recommendation_TGroup_h_str_i "/>", &pGroup->m_hashGroupIdentifier, &pGroup->m_strNameDisplayTyped, pGroup->m_arraypaMembers.GetSize());
+		pbinXcpStanzaReply->BinAppendText_VE("<" d_szAPIe_Recommendation_TGroup_h_str_i "/>", &pGroup->m_hashGroupIdentifier, &pGroup->m_strNameDisplayTyped, pGroup->m_arraypaMembers.GetSize());
 		}
 	pbinXcpStanzaReply->BinAppendText( "</" d_szAPIe_Recommendations_TGroups "></" d_szAPIe_Recommendations_ ">");
 	} // XcpApiProfile_RecommendationsSerialize()

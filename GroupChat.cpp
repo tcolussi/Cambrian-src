@@ -50,7 +50,7 @@ CEventGroupMemberJoin::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock)
 	{
 	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
 	if (m_pMember != NULL)
-		g_strScratchBufferStatusBar.BinAppendTextSzv_VE("invited <b>$s</b> to join the group", m_pMember->TreeItem_PszGetNameDisplay());
+		g_strScratchBufferStatusBar.BinAppendText_VE("invited <b>$s</b> to join the group", m_pMember->TreeItem_PszGetNameDisplay());
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushSilver);
 	}
 
@@ -139,6 +139,8 @@ CBinXcpStanza::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(con
 	if (pEvent->m_pContactGroupSender_YZ != m_pContact)
 		{
 		Endorse(pEvent->m_pContactGroupSender_YZ == NULL);	// The event was sent, or was received on a 1-to-1 conversation.  If this pointer is NULL, then the method BinAppendXmlAttributeOfContactIdentifier() will ignore it
+		if (m_pContact != NULL && m_pContact->m_cVersionXCP == 2)
+			return;		// XCC Version 2.0 no longer needs to transmit the group sender
 		BinAppendXmlAttributeOfContactIdentifier(d_chXCPa_pContactGroupSender, pEvent->m_pContactGroupSender_YZ);
 		}
 	}

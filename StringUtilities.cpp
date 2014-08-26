@@ -1835,7 +1835,8 @@ Timestamp_CchToString(TIMESTAMP ts, OUT CHU pszTimestamp[16])
 	return cchTimestamp;
 	} // Timestamp_CchToString()
 
-//	Routine to parse a timestamp and return the pointer where the parsing stopped
+//	Routine to parse a timestamp and return the pointer where the parsing stopped.
+//	The parsing will stop as soon as there is a non-base85 character, including a whitespace
 PCHRO
 Timestamp_PchFromString(OUT_UNTIL_STOP TIMESTAMP * pts, PSZUC pszTimestamp)
 	{
@@ -1855,6 +1856,47 @@ Timestamp_PchFromString(OUT_UNTIL_STOP TIMESTAMP * pts, PSZUC pszTimestamp)
 			}
 		} // while
 	} // Timestamp_PchFromString()
+
+//	Same as above, except the leading white spaces are skipped
+PCHRO
+Timestamp_PchFromStringSkipWhiteSpaces(OUT_UNTIL_STOP TIMESTAMP * pts, PSZUC pszTimestamp)
+	{
+	Assert(pszTimestamp != NULL);
+	while (Ch_FIsWhiteSpace(*pszTimestamp))
+		pszTimestamp++;
+	return Timestamp_PchFromString(OUT_UNTIL_STOP pts, pszTimestamp);
+	}
+
+//	Return TRUE if there was a valid non-zero timestamp in *ppszmTimestamps
+//	Return FALSE if there is no more timestamps in *ppszmTimestamps
+BOOL
+Timestamp_FGetNextTimestamp(OUT_F_UNCH TIMESTAMP * pts, INOUT PSZUC * ppszmTimestamps)
+	{
+	Assert(pts != NULL);
+	Assert(ppszmTimestamps != NULL);
+	PSZUC pszTimestamp = *ppszmTimestamps;
+	while (Ch_FIsWhiteSpace(*pszTimestamp))
+		pszTimestamp++;
+
+	TIMESTAMP ts = 0;	// Use a variable on the stack for performance
+	while (TRUE)
+		{
+		const BYTE mvbMapValue = c_mapbbBase85[(BYTE)*pszTimestamp++];
+		if (mvbMapValue < 85)
+			ts = ts * 85 + mvbMapValue;
+		else
+			{
+			Timestamp_DebugValidate_ML(ts);
+			*ppszmTimestamps = pszTimestamp - 1;	// Return the pointer where the parsing stopped (if successful, this points to a null-terminator)
+			if (ts > 0)
+				{
+				*pts = ts;
+				return TRUE;
+				}
+			return FALSE;
+			}
+		} // while
+	}
 
 //	Same as above, except an error is displayed to the Message Log
 TIMESTAMP
@@ -2891,7 +2933,7 @@ TEST_Base64()
 				pszValue = (char *)szString;
 				}
 			} // switch
-		str.BinAppendTextSzv_VE("$s$s", (ch++ % 32) ? ", " : ",\n\t", pszValue);
+		str.BinAppendText_VE("$s$s", (ch++ % 32) ? ", " : ",\n\t", pszValue);
 		} // while
 	str.BinAppendStringWithNullTerminator("\n};");
 	MessageLog_AppendTextFormatCo(d_coBlack, "$S\n", &str);
@@ -2994,7 +3036,7 @@ TEST_Base85()
 				pszValue = (char *)szString;
 				}
 			} // switch
-		str.BinAppendTextSzv_VE("$s$s", (ch++ % 32) ? ", " : ",\n\t", pszValue);
+		str.BinAppendText_VE("$s$s", (ch++ % 32) ? ", " : ",\n\t", pszValue);
 		} // while
 	str.BinAppendStringWithNullTerminator("\n};");
 	MessageLog_AppendTextFormatCo(d_coBlack, "$S\n", &str);
@@ -3154,7 +3196,7 @@ TEST_GenerateTableAsciiFlags()
 			} // switch
 
 		int chPrintable = (ch >= ' ' && ch <= '~') ? ch : ' ';
-		strTable.BinAppendTextSzv_VE("\n\t$S, // 0x$x   $i  $b", &strValue, ch, ch, chPrintable);
+		strTable.BinAppendText_VE("\n\t$S, // 0x$x   $i  $b", &strValue, ch, ch, chPrintable);
 		ch++;
 		} // while
 	strTable.BinAppendStringWithNullTerminator("\n};");
@@ -3223,10 +3265,10 @@ TEST_GenerateTableLowersase()
 		if (ch >= 'A' && ch <= 'Z')
 			chLowercase = Ch_ToLowercase(ch);
 		if (Ch_FIsAlphaNumeric(chLowercase))
-			strTable.BinAppendTextSzv_VE("'$b'", chLowercase);
+			strTable.BinAppendText_VE("'$b'", chLowercase);
 		else
-			strTable.BinAppendTextSzv_VE("$i", chLowercase);
-		strTable.BinAppendTextSzv_VE((ch++ % 32) ? ", " : ",\n\t");
+			strTable.BinAppendText_VE("$i", chLowercase);
+		strTable.BinAppendText_VE((ch++ % 32) ? ", " : ",\n\t");
 		} // while
 	strTable.BinAppendStringWithNullTerminator("\n};");
 	MessageLog_AppendTextFormatCo(d_coBlack, "$S\n", &strTable);

@@ -71,6 +71,7 @@ public:
 	void Member_Remove_UI(PA_DELETING TGroupMember * pMember);
 	TGroupMember * Member_PFindOrAddContact_NZ(TContact * pContact);
 	TGroupMember * Member_PFindOrAllocate_NZ(PSZUC pszMemberJID);
+	TContact * Member_PFindOrAddContact_YZ(PSZUC pszContactJID, const CXmlNode * pXmlNodeContactName);
 	void Members_BroadcastChatState(EChatState eChatState) const;
 	void Members_GetContacts(IOUT CArrayPtrContacts * parraypContacts) const;
 

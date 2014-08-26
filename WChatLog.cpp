@@ -99,7 +99,8 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 	OCursorSelectBlock oCursor(m_oTextBlockComposing);
 	QTextBlock oTextBlockEvent;	// Text block for each event to insert
 	IEvent ** ppEventStop;
-	IEvent ** ppEvent = arraypEvents.PrgpGetEventsStop(OUT &ppEventStop) + iEventStart;
+	IEvent ** ppEventFirst = arraypEvents.PrgpGetEventsStop(OUT &ppEventStop) + iEventStart;
+	IEvent ** ppEvent = ppEventFirst;
 	if (!m_fDisplayAllMessages)
 		{
 		// For performance, limit the display to the last 100 events
@@ -143,12 +144,101 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 			oCursor.AppendBlockBlank();
 			}
 		oTextBlockEvent = oCursor.block();	// Get the current block under the cursor
-		Assert(oTextBlockEvent.userData() == NULL);
+		Endorse(oTextBlockEvent.userData() == NULL);
+
+		if (pEvent->m_uFlagsEvent & IEvent::FE_kfReplacing)
+			{
+			MessageLog_AppendTextFormatSev(eSeverityComment, "Attempting to replace Event ID $t\n", pEvent->m_tsEventID);
+			QTextBlock oTextBlockUpdate;
+			QTextBlock oTextBlockTemp = document()->lastBlock();
+			IEvent * pEventOld = pEvent;
+			const EEventClass eEventClassUpdater = pEvent->Event_FIsEventTypeSent() ? CEventUpdaterSent::c_eEventClass : CEventUpdaterReceived::c_eEventClass;	// Which updater to search for
+			// The event is replacing an older event.  This code is a bit complex because the Chat Log may not display all events and therefore we need to find the most recent block displaying the most recent event.
+			IEvent ** ppEventStop;
+			IEvent ** ppEventFirst = pEvent->m_pVaultParent_NZ->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+			IEvent ** ppEventCompare = ppEventStop;	// Search the array from the end, as the event to search is likely to be a recent one
+			while (ppEventFirst < ppEventCompare)
+				{
+				// Find the updater which should be right before the replacing event
+				IEvent * pEventTemp = *--ppEventCompare;
+				TryAgain:
+				if (pEventTemp == pEventOld && ppEventFirst < ppEventCompare)
+					{
+					CEventUpdaterSent * pEventUpdater = (CEventUpdaterSent *)*--ppEventCompare;	// Get the updater which is just before the event
+					if (pEventUpdater->EGetEventClass() != eEventClassUpdater)
+						{
+						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Missing Updater for Event ID $t.  Found class '$U' with Event ID $t\n", pEventTemp->m_tsEventID, pEventUpdater->EGetEventClass(), pEventUpdater->m_tsEventID);
+						continue;
+						}
+					const TIMESTAMP tsEventIdOld = pEventUpdater->m_tsEventIdOld;
+					MessageLog_AppendTextFormatSev(eSeverityNoise, "\t [$i] Found updater: $t  ->  $t\n", ppEventCompare - ppEventFirst, pEventUpdater->m_tsEventIdNew, tsEventIdOld);
+					// Now, search for the block containing the replacement event
+					while (oTextBlockTemp.isValid())
+						{
+						OTextBlockUserDataEvent * pUserData = (OTextBlockUserDataEvent *)oTextBlockTemp.userData();
+						if (pUserData != NULL)
+							{
+							TIMESTAMP_DELTA dtsEvent = (pUserData->m_pEvent->m_tsEventID - tsEventIdOld);
+							MessageLog_AppendTextFormatCo(d_coPurple, "Comparing block Event ID $t with $t: dtsEvent = $T\n", pUserData->m_pEvent->m_tsEventID, tsEventIdOld, dtsEvent);
+							if (dtsEvent <= 0)
+								{
+								if (dtsEvent == 0)
+									{
+									MessageLog_AppendTextFormatSev(eSeverityNoise, "\t Found matching textblock for replacement: Event ID $t  ->  $t\n", pEventOld->m_tsEventID, tsEventIdOld);
+									oTextBlockUpdate = oTextBlockTemp;
+									}
+								break;
+								}
+							}
+						oTextBlockTemp = oTextBlockTemp.previous();
+						} // while
+					// Keep searching in case there are chained updated events
+					while (ppEventFirst < ppEventCompare)
+						{
+						pEventTemp = *--ppEventCompare;
+						if (pEventTemp->m_tsEventID == tsEventIdOld)
+							{
+							MessageLog_AppendTextFormatSev(eSeverityNoise, "\t [$i] Found chained replacement: Event ID $t  -> $t\n", ppEventCompare - ppEventFirst, pEvent->m_tsEventID, tsEventIdOld);
+							pEventTemp->m_uFlagsEvent |= IEvent::FE_kfReplaced;
+							pEventOld = pEventTemp;
+							goto TryAgain;
+							}
+						} // while
+					} // if
+				} // while
+			if (oTextBlockUpdate.isValid())
+				{
+				MessageLog_AppendTextFormatSev(eSeverityNoise, "\t Event ID $t is updating its old Event ID $t\n", pEvent->m_tsEventID, pEventOld->m_tsEventID);
+				if (pSocket != NULL && pEvent->m_tsOther == d_tsOther_ezEventNeverSent)
+					pEvent->Event_WriteToSocket();	// TODO: This code has to be moved to tasks
+				OCursorSelectBlock oCursorEventOld(oTextBlockUpdate);
+				pEvent->ChatLogUpdateTextBlock(INOUT &oCursorEventOld);
+				continue;
+				}
+			/*
+			IEvent * pEventReplaced = PFindEventReplacedBy(pEvent);
+			if (pEventReplaced != NULL)
+				{
+				MessageLog_AppendTextFormatSev(eSeverityNoise, "Updating old Event ID $t with the content of Event ID $t\n", pEventReplaced->m_tsEventID, pEvent->m_tsEventID);
+				QTextBlock oTextBlockOld = pEventReplaced->ChatLog_GetTextBlockRelatedToDocument(document());
+				if (oTextBlockOld.isValid())
+					{
+					OCursorSelectBlock oCursorEventOld(oTextBlockOld);
+					pEvent->ChatLogUpdateTextBlock(INOUT &oCursorEventOld);
+					}
+				continue;
+				}
+			*/
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Event ID $t is replacing another event which cannot be found\n", pEvent->m_tsEventID);
+			} // if (replacing)
 		oTextBlockEvent.setUserData(PA_CHILD new OTextBlockUserDataEvent(pEvent));		// Assign an event for each text block
 		if (pSocket != NULL && pEvent->m_tsOther == d_tsOther_ezEventNeverSent)
-			pEvent->Event_WriteToSocket();
+			pEvent->Event_WriteToSocket();	// TODO: This code has to be moved to tasks
 		pEvent->ChatLogUpdateTextBlock(INOUT &oCursor);
-		oCursor.AppendBlockBlank();
+		if ((pEvent->m_uFlagsEvent & IEvent::FE_kfEventHidden) == 0)
+			oCursor.AppendBlockBlank();	// If the event is visible, then add a new text block (otherwise it will reuse the same old block)
+		else
+			oTextBlockEvent.setUserData(NULL);	// Since we are reusing the same block, delete its userdata so we may assing another OTextBlockUserDataEvent
 		} // while
 	m_oTextBlockComposing = oCursor.block();
 	ChatLog_ChatStateTextUpdate(INOUT oCursor);

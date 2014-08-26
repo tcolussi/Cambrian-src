@@ -74,6 +74,7 @@ private:
 	~TContact();
 public:
 	void Contact_MarkForDeletion();
+	BOOL Contact_FCanBePermenentlyDeleted() const;
 	void Contact_UpdateFlagCannotBeDeleted();
 	inline void _ClearFlags() { m_uFlagsContact = 0; }
 	inline void SetFlagContactAsUnsolicited() { m_uFlagsContact |= FC_kfContactUnsolicited; }
@@ -98,7 +99,7 @@ public:
 	virtual const QBrush & ChatLog_OGetBrushForNewMessageReceived();
 	virtual void Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const;
 	virtual void Vault_GetEventsForChatLog(OUT CArrayPtrEvents * parraypEventsChatLog) CONST_MCC;
-	void Vault_AllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, WChatLog * pwChatLog);
+	void Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, WChatLog * pwChatLog);
 	CEventFileReceived * Vault_PAllocateEventFileReceived(const CXmlNode * pXmlNodeStreamInitiation);
 
 	void XmppRosterSubscribe();
@@ -151,7 +152,7 @@ public:
 
 public:
 	static IXmlExchange * S_PaAllocateContact(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
-	static int S_NCompareSortContactsByNameDisplay(TContact * pContactA, TContact * pContactB, LPARAM lParamCompareSort = d_zNA);
+	static NCompareResult S_NCompareSortContactsByNameDisplay(TContact * pContactA, TContact * pContactB, LPARAM lParamCompareSort = d_zNA);
 	friend class WLayoutChatLog;	// Access m_uFlagsContact
 	friend class IContactAlias;
 	friend class CArrayPtrContacts;

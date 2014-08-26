@@ -126,6 +126,7 @@ TProfile::DeleteContact(PA_DELETING TContact * paContactDelete)
 	{
 	Assert(paContactDelete != NULL);
 	Assert(paContactDelete->EGetRuntimeClass() == RTI(TContact));
+	BOOL fDeletePermanently = paContactDelete->Contact_FCanBePermenentlyDeleted();
 	paContactDelete->Contact_MarkForDeletion();
 	RemoveAllReferencesToObjectsAboutBeingDeleted();
 	paContactDelete->TreeItemFlags_SerializeToDisk_Yes();	// Serialize the deleted contact so it does not reappear
@@ -136,6 +137,8 @@ TProfile::DeleteContact(PA_DELETING TContact * paContactDelete)
 	delete paContactDelete->TreeItemW_RemoveFromNavigationTree();
 	//paContactDelete->m_pAccount->m_arraypaContacts.DeleteTreeItem(PA_DELETING paContactDelete);	// Delete the contact object and remove it from the Navigation Tree
 	*/
+	if (fDeletePermanently)
+		paContactDelete->m_pAccount->m_arraypaContacts.DeleteTreeItem(PA_DELETING paContactDelete);	// Delete the contact object and remove it from the Navigation Tree
 	}
 
 //	TProfile::IRuntimeObject::PGetRuntimeInterface()
