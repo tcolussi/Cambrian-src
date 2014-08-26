@@ -196,6 +196,21 @@ OJapiGroup::count()
 	return m_pGroup->m_arraypaMembers.GetSize();
 	}
 
+OJapiList
+OJapiGroup::members()
+	{
+	CListVariants oList(m_poCambrian);
+	TGroupMember **ppGroupMemberStop;
+	TGroupMember **ppGroupMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(&ppGroupMemberStop);
+	while ( ppGroupMember != ppGroupMemberStop )
+	{
+		TGroupMember *pGroupMember = *ppGroupMember++;
+		oList.AddContact(pGroupMember->m_pContact);
+	}
+
+	return oList;
+	}
+
 void
 OJapiGroup::addPeer(QObject *pContactAdd)
 	{

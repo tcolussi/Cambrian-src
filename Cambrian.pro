@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 TARGET = SocietyPro
 TEMPLATE = app
 
+
 PRECOMPILED_HEADER = PreCompiledHeaders.h
 
 SOURCES += \
@@ -85,7 +86,10 @@ SOURCES += \
     TApplicationBallotmaster.cpp \
     CVaultEvents.cpp \
     ApiJavaScript.cpp \
-    IApplication.cpp
+    IApplication.cpp \
+    WLayoutTabbedBrowser.cpp \
+    TBrowserTabs.cpp \
+    TBrowserTab.cpp
 
 
 HEADERS += \
@@ -157,7 +161,10 @@ HEADERS += \
     TApplicationBallotmaster.h \
     CVaultEvents.h \
     ApiJavaScript.h \
-    IApplication.h
+    IApplication.h \
+    WLayoutTabbedBrowser.h \
+    TBrowserTabs.h \
+    TBrowserTab.h
 
 
 FORMS +=

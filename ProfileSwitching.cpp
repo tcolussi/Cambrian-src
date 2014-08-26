@@ -232,6 +232,16 @@ TProfile::TreeItemProfile_DisplayApplicationsWithinNavigationTree()
 		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 		}
 
+	TBrowserTabs ** ppBrowserTabsStop;
+	TBrowserTabs ** ppBrowserTabs = m_arraypaBrowsersTabbed.PrgpGetBrowsersStop(&ppBrowserTabsStop);
+	while(ppBrowserTabs != ppBrowserTabsStop)
+		{
+		TBrowserTabs * pBrowserTabs = *ppBrowserTabs++;
+		Assert(pBrowserTabs->EGetRuntimeClass() == RTI(TBrowserTabs));
+		pBrowserTabs->TreeItemBrowser_DisplayWithinNavigationTree();
+		}
+
+
 	TreeItemW_ExpandAccordingToSavedState();
 	}
 

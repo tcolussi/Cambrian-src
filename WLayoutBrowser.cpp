@@ -6,6 +6,8 @@
 #endif
 #include "WLayoutBrowser.h"
 #include <QWebFrame>
+#include "TBrowserTabs.h"
+#include "WLayoutTabbedBrowser.h"
 
 //	Colors to display debugging information in the Message Log
 #define d_coBrowserDebug			d_coGreen
@@ -380,7 +382,7 @@ TBrowser::~TBrowser()
 	}
 
 
-void
+/*void
 LaunchBrowser(const QString & sName, const QString & sUrlRelative)
     {
     //EMessageBoxInformation("opening page $Q", &sUrl);
@@ -403,7 +405,9 @@ LaunchBrowser(const QString & sName, const QString & sUrlRelative)
 	while (ppBrowser != ppBrowserStop)
 		{
 		TBrowser * pBrowser = *ppBrowser++;
-		if (pBrowser->m_strUrl.FCompareStringsExactCase(strUrl))
+		if ( pBrowser->m_strUrl.FStringBeginsWith(strUrl.PszaGetUtf8NZ()))
+		//if ( qUrlAbs.host() == qUrlCurrent.host() && qUrlAbs.path() == qUrlCurrent.path() )
+		//if (pBrowser->m_strUrl.FCompareStringsExactCase(strUrl))
 			{
 			// There is already an opened browser with the same URL, therefore select it
 			pBrowser->TreeItemW_SelectWithinNavigationTree();
@@ -417,4 +421,84 @@ LaunchBrowser(const QString & sName, const QString & sUrlRelative)
 	pBrowser->SetNameAndUrl(sName, strUrl);
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
     pBrowser->TreeItemW_SelectWithinNavigationTree();
+	}*/
+
+void
+LaunchBrowser(const QString & sName, const QString & sUrlRelative)
+	{
+	//EMessageBoxInformation("opening page $Q", &sUrl);
+	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser($Q, $Q)\n", &sName, &sUrlRelative);
+
+	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+	//MessageLog_AppendTextFormatCo(d_coBlack, "LaunchBrowser($p)\n", pProfile);
+	if (pProfile == NULL)
+		return;
+
+	//MessageLog_AppendTextFormatCo(d_coAqua, "pProfile ($p)\n", pProfile);
+	//MessageLog_AppendTextFormatCo(d_coAqua, "pProfile->m_pConfigurationParent ($p)\n", pProfile->m_pConfigurationParent);
+
+	CStr strUrlRelative(sUrlRelative);
+	CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrlRelative);//"Apps/Test/index.htm");
+
+	// find a browser with tabs already opened
+	TBrowserTabs ** ppBrowserStop;
+	TBrowserTabs ** ppBrowser = pProfile->m_arraypaBrowsersTabbed.PrgpGetBrowsersStop(OUT &ppBrowserStop);
+	while (ppBrowser != ppBrowserStop)
+		{
+		// There is already an opened browser with the same URL, therefore select it
+		TBrowserTabs * pBrowser = *ppBrowser++;
+
+		// find an open tab for the selected url
+		TBrowserTab **ppBrowserTabStop;
+		TBrowserTab **ppBrowserTab;
+		ppBrowserTab = pBrowser->m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);
+		while ( ppBrowserTab != ppBrowserTabStop)
+			{
+			TBrowserTab *pBrowserTab = *ppBrowserTab++;
+			if ( pBrowserTab->m_url.FStringBeginsWith(strUrl.PszaGetUtf8NZ()))
+				{
+				pBrowserTab->Show();
+				pBrowser->TreeItemW_SelectWithinNavigationTree();
+				return;
+				}
+			}
+
+		// add new tab
+		pBrowser->AddTab(strUrl);
+		return;
+		}
+
+	// add new browser
+	CStr sTreeItemName("Web Browser");
+
+	TBrowserTabs * pBrowser = new TBrowserTabs(pProfile);
+	pBrowser->SetIconAndName(eMenuAction_DisplaySecureWebBrowsing, sTreeItemName);
+	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
+	pBrowser->TreeItemW_SelectWithinNavigationTree();
+	pBrowser->AddTab(strUrl);
+
+	pProfile->m_arraypaBrowsersTabbed.Add(PA_CHILD pBrowser);
 	}
+
+
+void
+NavigationTree_NewTabbedBrowser()
+{
+	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+	//MessageLog_AppendTextFormatCo(d_coBlack, "LaunchBrowser($p)\n", pProfile);
+	if (pProfile == NULL)
+		return;
+
+	CStr sName("Web Browser");
+	//CStr url1("file:///C:/Users/Cesar/.Cambrian/Apps/html5-pollmaster/index.html");
+	//CStr url2("file:///C:/Users/Cesar/.Cambrian/Apps/html5-pomodoro/index.html");
+
+	TBrowserTabs * pBrowser = new TBrowserTabs(pProfile);
+	pBrowser->SetIconAndName(eMenuAction_DisplaySecureWebBrowsing, sName);
+	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
+	pBrowser->TreeItemW_SelectWithinNavigationTree();
+	//pBrowser->AddTab(url1);
+	//pBrowser->AddTab(url2);
+
+	pProfile->m_arraypaBrowsersTabbed.Add(PA_CHILD pBrowser);
+}

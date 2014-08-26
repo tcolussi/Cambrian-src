@@ -77,6 +77,8 @@ enum RTI_ENUM	// rti
 		eRTI_TApplicationBallotmaster,
 
 	eRTI_TBrowser,
+	eRTI_TBrowserTab,
+	eRTI_TBrowserTabs,
 	eRTI_TWallet,
 	eRTI_TWalletView,
 	eRTI_TRecommendations,
@@ -292,6 +294,7 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "IEvent.h"
 #include "SocketTasks.h"
 #include "TBrowser.h"
+#include "TBrowserTabs.h"
 #include "CVaultEvents.h"
 #include "ITreeItemChatLogEvents.h"
 #include "GroupChat.h"

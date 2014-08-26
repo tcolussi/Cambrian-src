@@ -462,10 +462,11 @@ OJapiPoll::stop()
         m_pBallot->m_tsStopped = Timestamp_GetCurrentDateTime();
 	}
 
-void OJapiAppBallotmaster::go()
+void OJapiAppBallotmaster::open()
     {
-    CStr strUrl = (PSZUC)"file:///C:/Users/Cesar/.Cambrian/Apps/Ballotmaster/default.htm";
-	MessageLog_AppendTextFormatCo(d_coGreen, "OJapiAppBallotmaster::go($S)", &strUrl);
+	LaunchBrowser("Ballotmaster", "Apps/html5-pollmaster/index.html");
+	//CStr strUrl = (PSZUC)"file:///C:/Users/Cesar/.Cambrian/Apps/Ballotmaster/default.htm";
+	//MessageLog_AppendTextFormatCo(d_coGreen, "OJapiAppBallotmaster::go($S)", &strUrl);
 	//m_pBallotmaster->m_pawLayoutBrowser->NavigateToAddress(strUrl);
     }
 

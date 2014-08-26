@@ -106,7 +106,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Navshell Header"   _ "s=Apps/navshell-header/index.html"		_"i=Browser" _,
 	"Office Kingpin"    _ "s=Apps/html5-office-kingpin/index.html"	_"i=Browser" _,
 	"Pomodoro"          _ "s=Apps/html5-pomodoro/index.html"		_"i=Browser" _,
-	"JAPI Tests"        _ "s=Apps/html5-japi-tests/index.html"		_"i=Browser" _,
+	"JAPI Tests"        _ "s=Apps/japi/test/test.html"              _"i=Browser" _,
 	"Scratch"           _ "s=Apps/html5-scratch/index.html"			_"i=Browser" _,
 	"HTML5 xik"         _ "s=Apps/html5-xik/index.html"				_"i=Browser" _,
 	"Group Manager"		_ "s=Apps/html5-group-manager/index.html"	_"i=Browser" _,
@@ -869,8 +869,10 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		g_oConfiguration.NavigationTree_DisplayWallet();
 		return;
 	case eMenuAction_DisplaySecureWebBrowsing:
-		void NavigationTree_NewBrowser();
-		NavigationTree_NewBrowser();
+		//void NavigationTree_NewBrowser();
+		//NavigationTree_NewBrowser();
+		void NavigationTree_NewTabbedBrowser();
+		NavigationTree_NewTabbedBrowser();
 		return;
 	case eMenuAction_DisplayBallotMaster:
 		void DisplayApplicationBallotMaster();
