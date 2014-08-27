@@ -244,8 +244,12 @@ void
 CSocketXmpp::Socket_WriteXmlPresence()
 	{
 	Assert(m_pAccount != NULL);
+	#if 1
+	#define d_szVersion			"1"	// Keep the old XCp version 1 until version 2 is fully working
+	#else
 	#pragma GCC warning			"[Warning] Compiling SocietyPro with XCP version 2!"
 	#define d_szVersion			"2"
+	#endif
 	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><" d_szCambrianProtocol_xcp " v='"d_szVersion"'/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
 	}
 
