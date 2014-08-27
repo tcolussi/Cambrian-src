@@ -14,7 +14,7 @@ WLayoutTabbedBrowser::WLayoutTabbedBrowser(TBrowserTabs *pBrowserTabs, TProfile 
 	m_pTabWidget->setTabsClosable(true);
 	m_pTabWidget->setTabShape(QTabWidget::Triangular);
 	//m_pTabWidget->setMovable(true);
-	m_pTabWidget->setStyleSheet("QTabBar::tab { height: 23px; width: 150px; color: rgb(100, 100, 100) } QTabBar::tab:last {width: 45px}");
+	m_pTabWidget->setStyleSheet("QTabBar::tab { height: 23px; width: 150px; color: rgb(100, 100, 100) } QTabBar::tab:last {width: 40px}");
 	//m_pTabWidget->tabBar()->tabButton(0, QTabBar::RightSide)->resize(0,0);
 	QObject::connect(m_pTabWidget, &QTabWidget::tabCloseRequested, this, &WLayoutTabbedBrowser::SL_TabCloseRequested);
 	QObject::connect(m_pTabWidget, &QTabWidget::currentChanged, this, &WLayoutTabbedBrowser::SL_CurrentChanged);
@@ -269,12 +269,12 @@ WaTabWidget::addPlusButtonTab()
 	// add tab to act as a [plus button]
 	QTabBar *pTabBar = tabBar();
 	int index = pTabBar->addTab("");
-	QIcon iconAdd(":/ico/Add");
+	//QIcon iconAdd(":/ico/Add");
 
-	QString strName = iconAdd.name();
-	MessageLog_AppendTextFormatCo(d_coBlack, "WaTabWidget::addPlusButtonTab - Icon: $Q\n", &strName );
+	//QString strName = iconAdd.name();
+	//MessageLog_AppendTextFormatCo(d_coBlack, "WaTabWidget::addPlusButtonTab - Icon: $Q\n", &strName );
 
-	pTabBar->setTabIcon(index, iconAdd);
+	//pTabBar->setTabIcon(index, iconAdd);
 
 	QWidget *pButton = pTabBar->tabButton(pTabBar->count(), QTabBar::RightSide);
 	if ( pButton)		pButton->resize(0, 0);
