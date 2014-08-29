@@ -64,10 +64,16 @@ WLayoutTabbedBrowser::GetTabsCount()
 	return m_arraypaWebViews.GetSize();
 	}
 
-QWebView*
+int WLayoutTabbedBrowser::CurrentTabIndex()
+	{
+	// returns -1 if there are no tabs
+	return m_pTabWidget->currentIndex();
+	}
+
+WWebViewTabbed*
 WLayoutTabbedBrowser::getTab(int i)
 	{
-	return (QWebView*) m_arraypaWebViews.PvGetElementAtSafe_YZ(i);
+	return (WWebViewTabbed*) m_arraypaWebViews.PvGetElementAtSafe_YZ(i);
 	}
 
 
@@ -99,10 +105,12 @@ WLayoutTabbedBrowser::SL_TabCloseRequested(int index)
 	{
 	MessageLog_AppendTextFormatCo(d_coBlueDark, "WLayoutBrowser::SL_TabCloseRequested($i)\n", index);
 	WWebViewTabbed *pTabPage = (WWebViewTabbed *) m_pTabWidget->widget(index);
-	m_pBrowserTabs->m_arraypaTabs.DeleteTreeItem(pTabPage->m_pTab);
 
+	//m_pBrowserTabs->m_arraypaTabs.DeleteTreeItem(pTabPage->m_pTab);
+	m_pBrowserTabs->DeleteTab(pTabPage->m_pTab);
+	m_arraypaWebViews.RemoveElementFastF(pTabPage);
 	m_pTabWidget->removeTab(index);
-	//delete pTabPage;
+	delete pTabPage;
 
 	if ( m_pTabWidget->count() == 0 )
 		SL_AddTab( true );
@@ -268,13 +276,14 @@ WaTabWidget::addPlusButtonTab()
 	{
 	// add tab to act as a [plus button]
 	QTabBar *pTabBar = tabBar();
-	int index = pTabBar->addTab("");
+	//int index =
+	pTabBar->addTab("");
+
 	//QIcon iconAdd(":/ico/Add");
+	//pTabBar->setTabIcon(index, iconAdd);
 
 	//QString strName = iconAdd.name();
 	//MessageLog_AppendTextFormatCo(d_coBlack, "WaTabWidget::addPlusButtonTab - Icon: $Q\n", &strName );
-
-	//pTabBar->setTabIcon(index, iconAdd);
 
 	QWidget *pButton = pTabBar->tabButton(pTabBar->count(), QTabBar::RightSide);
 	if ( pButton)		pButton->resize(0, 0);
@@ -311,7 +320,7 @@ WaTabWidget::WaTabWidget(QWidget *parent) : QTabWidget(parent)
 int
 WaTabWidget::addTab(QWidget *widget, const QString &label)
 	{
-	QTabBar *pTabBar = tabBar();
+	//QTabBar *pTabBar = tabBar();
 
 	// remove [plus button]
 	//pTabBar->removeTab( count() );
@@ -329,7 +338,7 @@ WaTabWidget::addTab(QWidget *widget, const QString &label)
 void
 WaTabWidget::removeTab(int index)
 {
-	QTabBar *pTabBar = tabBar();
+	//QTabBar *pTabBar = tabBar();
 
 	// remove [plus button]
 	//pTabBar->removeTab( count()  );
@@ -367,10 +376,10 @@ WaTabWidget::count()
 
 
 /////////////////////////////////////////////////////////////////////////
-
+/*
 void
 WaTabBar::movePlusButton()
-	{/*
+	{
 	int size = 0;
 	for(int i=0; i < count(); i++)
 		{
@@ -383,15 +392,15 @@ WaTabBar::movePlusButton()
 		plusButton->move(w-54, 0);
 	else
 		plusButton->move(size, 0);
-	*/}
-
+	}
+*/
+/*
 void
 WaTabBar::reinitializePlusButton()
 	{
-	int iPos = addTab("+");
+	addTab("+");
 	}
 
-/*
 void
 WaTabBar::tabLayoutChange()
 	{

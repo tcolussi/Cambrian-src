@@ -22,6 +22,9 @@ public:
 public:
 	void SetUrl(CStr &sUrl);
 	void Show();
+	void NavigateForward();
+	void NavigateBack();
+	void NavigateReload();
 
 
 	// IRuntimeObject interface

@@ -126,7 +126,7 @@ OJapiProfile::PFindProfileByID(const QString & sIdProfile) const
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oProfile(this), m_oApps(this), m_oMe(this)
+OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oProfile(this), m_oApps(this), m_oMe(this), m_capi(pProfile)
 	{
 	m_pProfile = pProfile;
 	m_paAppBallotmaster = NULL;
@@ -207,6 +207,11 @@ POJapiMe
 OJapiCambrian::me()
 	{
 	return &m_oMe;
+	}
+
+POCapiTabs OJapiCambrian::capi()
+	{
+	return &m_capi;
 	}
 
 void

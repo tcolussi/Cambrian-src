@@ -42,7 +42,8 @@ public:
 
 	int AddTab(TBrowserTab *pTBrowserTab);
 	int GetTabsCount();
-	QWebView* getTab(int i);
+	int CurrentTabIndex();
+	WWebViewTabbed* getTab(int i);
 
 public slots:
 	void SL_WebViewTitleChanged(const QString & title);
@@ -108,8 +109,8 @@ public:
 class WaTabBar : public QTabBar
 {
 	QPushButton *plusButton;
-	void movePlusButton();
-	void reinitializePlusButton();
+	//void movePlusButton();
+	//void reinitializePlusButton();
 
 /*protected:
 	void tabLayoutChange();

@@ -58,6 +58,27 @@ TBrowserTabs::AddTab()
 	CStr url;
 	TBrowserTab* pTab = AddTab(url);
 	return pTab;
+}
+
+TBrowserTab *TBrowserTabs::GetCurrentBrowserTab()
+	{
+	int nIndex = m_pawLayoutBrowser->CurrentTabIndex();
+	if ( nIndex >= 0 )
+		{
+		WWebViewTabbed *pWebView = m_pawLayoutBrowser->getTab(nIndex);
+		Assert(pWebView != NULL);
+		Assert(pWebView->m_pTab != NULL);
+		return pWebView->m_pTab;
+		}
+
+	return NULL;
+}
+
+void TBrowserTabs::DeleteTab(TBrowserTab *pBrowserTab)
+	{
+	Assert(pBrowserTab != NULL);
+	if ( m_arraypaTabs.FindElementF(pBrowserTab))
+		m_arraypaTabs.DeleteTreeItem(pBrowserTab);
 	}
 
 int

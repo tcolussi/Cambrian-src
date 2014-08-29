@@ -26,6 +26,21 @@ void TBrowserTab::Show()
 	Assert(m_pBrowserTabs->m_pawLayoutBrowser->m_pTabWidget != NULL);
 
 	m_pBrowserTabs->m_pawLayoutBrowser->m_pTabWidget->setCurrentWidget(m_pwWebViewTab);
+}
+
+void TBrowserTab::NavigateForward()
+	{
+	m_pwWebViewTab->m_pwWebView->forward();
+	}
+
+void TBrowserTab::NavigateBack()
+	{
+	m_pwWebViewTab->m_pwWebView->back();
+	}
+
+void TBrowserTab::NavigateReload()
+	{
+	m_pwWebViewTab->m_pwWebView->reload();
 	}
 
 POBJECT TBrowserTab::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject *piParent) const

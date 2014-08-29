@@ -7,6 +7,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+// HTML js API
 class OJapi;	
 	class OJapiCambrian;
 	class OJapiApps;
@@ -20,6 +21,14 @@ class OJapi;
 
 	class OJapiContact;
 	class OJapiGroup;
+
+
+// QML js API
+class OCapiCambrian;
+class OCapiTabs;
+
+
+
 
 class CListVariants : public QVariantList
 {
@@ -48,6 +57,46 @@ public:
 };
 
 #define OJapiList	QVariant	// Every list is stored as a QVariant, however it makes more sense to specify OJapiList than QVariant because QVariant may be used for other purposes
+
+
+///////////////////////////////////////  CAPI   //////////////////////////////////////////////////////
+
+
+class OCapiTabs: public OJapi
+{
+	TProfile * m_pProfile;
+
+public:
+	OCapiTabs(TProfile *pProfile);
+	Q_OBJECT
+
+public slots:
+	void back();
+	void forward();
+	void reload();
+
+protected:
+	TBrowserTabs * GetBrowserOpen();
+	TBrowserTab  * GetCurrentTab();
+};
+#define POCapiTabs		POJapi
+
+
+
+class OCapiCambrian : public OJapi
+{
+	Q_OBJECT
+	TProfile * m_pProfile;
+	OCapiTabs  m_Tabs;
+
+public:
+	POCapiTabs tabs();
+
+	OCapiCambrian(TProfile *pProfile);
+	Q_PROPERTY(POCapiTabs tabs READ tabs)
+};
+#define POCapiCambrian	POJapi
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core object shared with OPoll and OPollResults
@@ -333,6 +382,7 @@ protected:
     OJapiApps m_oApps;
 	OJapiMe m_oMe;
 	OJapiAppBallotmaster * m_paAppBallotmaster;
+	OCapiCambrian m_capi;
 
 public:
 	OJapiCambrian(TProfile * pProfile, QObject * pParent);
@@ -344,6 +394,8 @@ public:
 	POJapiAppBallotmaster polls();
 	POJapiMe me();
 
+	POCapiCambrian capi();
+
 public:
 	Q_OBJECT
 	Q_PROPERTY(QVariant Settings READ Settings)
@@ -351,10 +403,12 @@ public:
 	Q_PROPERTY(POJapiAppBallotmaster polls READ polls)
 	Q_PROPERTY(POJapiApps apps READ apps)
 	Q_PROPERTY(POJapiMe me READ me)
+	Q_PROPERTY(POCapiCambrian capi READ capi)
 
 public slots:
 	void SendBitcoin(int n);
 	void MessageSendTo(const QString & sContactTo, const QString & sMessage);
 };
+
 
 #endif // APIJAVASCRIPT_H

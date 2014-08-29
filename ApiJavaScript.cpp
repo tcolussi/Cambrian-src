@@ -4,6 +4,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "ApiJavaScript.h"
+#include "TApplicationBallotmaster.h"
 
 
 OJapiApps::OJapiApps(OJapiCambrian * poCambrian)
@@ -362,3 +363,82 @@ CListVariants::AddAudience(TGroup *pGroup)
 	}
 
 //////////////////////////////////////////////////////////////////////////////////
+
+
+OCapiTabs::OCapiTabs(TProfile *pProfile)
+	{
+	m_pProfile = pProfile;
+	//MessageLog_AppendTextFormatCo(d_coRed, "pProfile = $p - OCapiTabs::ctor\n", m_pProfile);
+	}
+
+void OCapiTabs::back()
+	{
+	TBrowserTab *pTab = GetCurrentTab();
+	if ( pTab != NULL)
+		pTab->NavigateBack();
+	}
+
+
+void OCapiTabs::forward()
+	{
+	TBrowserTab *pTab = GetCurrentTab();
+	if ( pTab != NULL)
+		pTab->NavigateForward();
+	}
+
+void OCapiTabs::reload()
+	{
+	QObject *pObj = QObject::sender();
+	if ( pObj ){
+	QString qObjName = pObj->objectName();
+	MessageLog_AppendTextFormatCo(d_coRed, "Object is $Q\n", &qObjName );
+	}
+	else
+	MessageLog_AppendTextFormatCo(d_coRed, "Object is {NULL}\n");
+
+
+	TBrowserTab *pTab = GetCurrentTab();
+	if ( pTab != NULL)
+		pTab->NavigateReload();
+	}
+
+TBrowserTabs*
+OCapiTabs::GetBrowserOpen()
+	{
+	//MessageLog_AppendTextFormatCo(d_coRed, "pProfile = $p - OCapiTabs::GetBrowserOpen\n", m_pProfile);
+	// find a browser with tabs already opened
+	TBrowserTabs ** ppBrowserStop;
+	TBrowserTabs ** ppBrowser = m_pProfile->m_arraypaBrowsersTabbed.PrgpGetBrowsersStop(OUT &ppBrowserStop);
+	while (ppBrowser != ppBrowserStop)
+		{
+		TBrowserTabs * pBrowser = *ppBrowser++;
+		return pBrowser;
+		}
+	return NULL;
+	}
+
+TBrowserTab*
+OCapiTabs::GetCurrentTab()
+	{
+	TBrowserTabs *pBrowser = GetBrowserOpen();
+	if ( pBrowser != NULL)
+		{
+		TBrowserTab *pTab = pBrowser->GetCurrentBrowserTab();
+		return pTab;
+		}
+	return NULL;
+	}
+
+/////////////////////////////////////////////////////
+
+
+OCapiCambrian::OCapiCambrian(TProfile *pProfile) : m_Tabs(pProfile)
+	{
+	m_pProfile = pProfile;
+	//MessageLog_AppendTextFormatCo(d_coRed, "pProfile = $p - OCapiCambrian::ctor\n", m_pProfile);
+	}
+
+POCapiTabs OCapiCambrian::tabs()
+	{
+	return &m_Tabs;
+	}
