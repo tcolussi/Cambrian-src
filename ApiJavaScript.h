@@ -90,10 +90,10 @@ class OCapiCambrian : public OJapi
 	OCapiTabs  m_Tabs;
 
 public:
-	POCapiTabs tabs();
+	POCapiTabs tab();
 
 	OCapiCambrian(TProfile *pProfile);
-	Q_PROPERTY(POCapiTabs tabs READ tabs)
+	Q_PROPERTY(POCapiTabs tab READ tab)
 };
 #define POCapiCambrian	POJapi
 

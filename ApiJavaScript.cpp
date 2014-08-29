@@ -438,7 +438,7 @@ OCapiCambrian::OCapiCambrian(TProfile *pProfile) : m_Tabs(pProfile)
 	//MessageLog_AppendTextFormatCo(d_coRed, "pProfile = $p - OCapiCambrian::ctor\n", m_pProfile);
 	}
 
-POCapiTabs OCapiCambrian::tabs()
+POCapiTabs OCapiCambrian::tab()
 	{
 	return &m_Tabs;
 	}
