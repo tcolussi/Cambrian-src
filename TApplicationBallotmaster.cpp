@@ -464,7 +464,8 @@ OJapiPoll::stop()
 
 void OJapiAppBallotmaster::open()
     {
-	LaunchBrowser("Ballotmaster", "Apps/html5-pollmaster/index.html");
+	LaunchApplication("Ballotmaster");
+	//LaunchBrowser("Ballotmaster", "Apps/html5-pollmaster/index.html");
 	//CStr strUrl = (PSZUC)"file:///C:/Users/Cesar/.Cambrian/Apps/Ballotmaster/default.htm";
 	//MessageLog_AppendTextFormatCo(d_coGreen, "OJapiAppBallotmaster::go($S)", &strUrl);
 	//m_pBallotmaster->m_pawLayoutBrowser->NavigateToAddress(strUrl);
@@ -645,3 +646,18 @@ OPolls::save(QString sXmlPolls)
 	m_pBallotmaster->ApiBallotSave(strXmlPolls);
 	}
 */
+
+
+const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name)
+{
+	//MessageLog_AppendTextFormatCo(d_coRed, "sizeof=$i\n", sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo) );
+	for(int i=0; i < sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo); i++)
+	{
+	const SApplicationHtmlInfo *pInfo = &c_rgApplicationHtmlInfo[i];
+	if ( FCompareStringsNoCase( (PSZUC) pInfo->pszName, (PSZUC) name ) )
+		{
+		return pInfo;
+		}
+	}
+	return NULL;
+}

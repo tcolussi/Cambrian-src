@@ -34,5 +34,6 @@ public slots:
 }; // WLayoutBrowser
 
 void LaunchBrowser(const QString & sName, const QString & sUrlRelative);
+void LaunchApplication(const QString & sName);
 
 #endif // WLAYOUTBROWSER_H

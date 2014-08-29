@@ -10,6 +10,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include "WLayoutBrowser.h"
 
 #define _			d_sz0	// Use the underscore as a separator between menu actions (this is much simpler to read than d_sz0)
 
@@ -100,7 +101,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Display Certificates" _ "s=Display the certificates securing (encrypting) the communication" _ "i=Certificate" _, // eMenuAction_DisplayCertificates
 	"Ballots" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
 
-    "Developer Apps"    _ "i=Browser" _, // eMenuAction_WikiSubMenu
+	"Developer Apps"    _ "i=Browser" _, // eMenuAction_WikiSubMenu
 	"Navshell Peers"	_ "s=Apps/navshell-contacts/index.html"		_"i=Browser" _,
 	"Navshell Sidebar"  _ "s=Apps/navshell-stack/index.html"		_"i=Browser" _,
 	"Navshell Header"   _ "s=Apps/navshell-header/index.html"		_"i=Browser" _,
@@ -889,8 +890,9 @@ MainWindow_MenuActionExecute(QAction * pAction)
     case eMenuAction_WikiHtml5Xik:
 	case eMenuAction_WikiGroupManager:
 	case eMenuAction_WikiBallotMaster:
-		void LaunchBrowser(const QString & sName, const QString & sUrl);
-		LaunchBrowser( pAction->text(), pAction->statusTip());
+		//void LaunchBrowser(const QString & sName, const QString & sUrl);
+		//LaunchBrowser( pAction->text(), "");
+		LaunchApplication(pAction->text());
         return;
 	/*
 	case eMenuIconMarketplace:

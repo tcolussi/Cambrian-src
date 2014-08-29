@@ -21,10 +21,19 @@ struct SApplicationHtmlInfo
 
 const SApplicationHtmlInfo c_rgApplicationHtmlInfo[] =
 {
-	{ "Ballotmaster", "Apps/Ballotmaster/index.html" },
-	{ "NavShell Peers", "Apps/navshell-contacts/index.html" },
-	{ "Office Kingpin", "Apps/html5-office-kingpin/index.html" }
+	{"Navshell Peers"	 , "Apps/navshell-contacts/index.html"		},
+	{"Navshell Sidebar"  , "Apps/navshell-stack/index.html"			},
+	{"Navshell Header"   , "Apps/navshell-header/index.html"		},
+	{"Office Kingpin"    , "Apps/html5-office-kingpin/index.html"	},
+	{"Pomodoro"          , "Apps/html5-pomodoro/index.html"			},
+	{"JAPI Tests"        , "Apps/japi/test/test.html"				},
+	{"Scratch"           , "Apps/html5-scratch/index.html"			},
+	{"HTML5 xik"         , "Apps/html5-xik/index.html"				},
+	{"Group Manager"	 , "Apps/html5-group-manager/index.html"	},
+	{"Ballotmaster"		 , "Apps/html5-pollmaster/index.html"		},
 };
+
+const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name);
 
 class CApplicationHtmlBallotmaster
 	{

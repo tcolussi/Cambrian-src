@@ -388,18 +388,26 @@ void OCapiTabs::forward()
 
 void OCapiTabs::reload()
 	{
-	QObject *pObj = QObject::sender();
-	if ( pObj ){
-	QString qObjName = pObj->objectName();
-	MessageLog_AppendTextFormatCo(d_coRed, "Object is $Q\n", &qObjName );
-	}
-	else
-	MessageLog_AppendTextFormatCo(d_coRed, "Object is {NULL}\n");
-
-
 	TBrowserTab *pTab = GetCurrentTab();
 	if ( pTab != NULL)
 		pTab->NavigateReload();
+}
+
+void OCapiTabs::location(const QString &sUrl)
+	{
+	TBrowserTab *pTab = GetCurrentTab();
+	CStr url(sUrl);
+
+	const SApplicationHtmlInfo *pInfo = ApplicationGetInfo(url.PszaGetUtf8NZ());
+	if ( pInfo != NULL)
+		{
+		url = "file:///" + m_pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
+		}
+
+	if ( pTab != NULL)
+		{
+		pTab->SetUrl(url);
+		}
 	}
 
 TBrowserTabs*

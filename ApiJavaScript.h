@@ -74,6 +74,7 @@ public slots:
 	void back();
 	void forward();
 	void reload();
+	void location(const QString & sName);
 
 protected:
 	TBrowserTabs * GetBrowserOpen();
