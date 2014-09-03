@@ -41,6 +41,7 @@ public:
 	~WLayoutTabbedBrowser();
 
 	int AddTab(TBrowserTab *pTBrowserTab);
+	void RemoveTab(int index);
 	int GetTabsCount();
 	int CurrentTabIndex();
 	WWebViewTabbed* getTab(int i);
@@ -52,6 +53,8 @@ public slots:
 	void SL_CurrentChanged(int index);
 
 };
+
+
 
 // Custom web view to reference its tree item
 class WWebViewTabbed : public QSplitter

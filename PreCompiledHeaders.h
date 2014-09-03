@@ -243,10 +243,13 @@ class OJapiContact;
 class OJapiGroup;
 
 #define POJapi				QObject *	// Every object exposed to the JavaScript engine must be stored as QVariant.  Fortunately QVariant accepts a QObject * however since QObject * is quite generic, we #define a new type of object to distinguish between those for JavaScript and those used by Qt, such as QWdiget. It makes the code easier to read.  BTW: Using a typedef does not work, as the compiler no longer recognizes the QObject *.
+#define POCapi				QObject *
 
 //	The following pointers are declared in this file because they will be used by TContact and TGroup.  The motivation for such a design is to have a mechanism to know which TContact and TGroup are used by JavaScript and consequently not delete them while in use, otherwise there will be a crash.
 #define POJapiContact		POJapi
 #define POJapiGroup			POJapi
+#define POJapiProfile		POJapi
+#define POJapiBrowserTab	POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 extern const QBrush c_brushGreenSuperPale;

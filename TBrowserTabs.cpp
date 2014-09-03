@@ -38,7 +38,7 @@ TBrowserTabs::AddTab(CStr &sUrl)
 		}
 	else
 		{
-		TBrowserTab *pBrowserTab = new TBrowserTab(this);
+		pBrowserTab = new TBrowserTab(this);
 		pBrowserTab->m_url = sUrl;
 
 		m_arraypaTabs.Add(pBrowserTab);
@@ -60,9 +60,13 @@ TBrowserTabs::AddTab()
 	return pTab;
 }
 
-TBrowserTab *TBrowserTabs::GetCurrentBrowserTab()
+TBrowserTab *TBrowserTabs::PGetCurrentBrowserTab_YZ()
 	{
-	int nIndex = m_pawLayoutBrowser->CurrentTabIndex();
+	int nIndex = -1;
+
+	if ( m_pawLayoutBrowser)
+		nIndex = m_pawLayoutBrowser->CurrentTabIndex();
+
 	if ( nIndex >= 0 )
 		{
 		WWebViewTabbed *pWebView = m_pawLayoutBrowser->getTab(nIndex);
@@ -72,12 +76,13 @@ TBrowserTab *TBrowserTabs::GetCurrentBrowserTab()
 		}
 
 	return NULL;
-}
+	}
 
-void TBrowserTabs::DeleteTab(TBrowserTab *pBrowserTab)
+void TBrowserTabs::DeleteTab(int index)
 	{
-	Assert(pBrowserTab != NULL);
-	if ( m_arraypaTabs.FindElementF(pBrowserTab))
+	TBrowserTab *pBrowserTab = (TBrowserTab *)m_arraypaTabs.PvGetElementAtSafe_YZ(index);
+	if ( pBrowserTab != NULL)
+		m_pawLayoutBrowser->RemoveTab(index);
 		m_arraypaTabs.DeleteTreeItem(pBrowserTab);
 	}
 

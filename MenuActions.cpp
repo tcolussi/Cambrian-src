@@ -876,8 +876,9 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		NavigationTree_NewTabbedBrowser();
 		return;
 	case eMenuAction_DisplayBallotMaster:
-		void DisplayApplicationBallotMaster();
-		DisplayApplicationBallotMaster();
+		//void DisplayApplicationBallotMaster();
+		//DisplayApplicationBallotMaster();
+		LaunchApplication("ballotmaster");
 		return;
 
     case eMenuAction_WikiNavShellContacts:

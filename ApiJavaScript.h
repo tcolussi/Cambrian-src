@@ -24,10 +24,12 @@ class OJapi;
 
 
 // QML js API
-class OCapiCambrian;
-class OCapiTabs;
-
-
+class OCapiRootGUI;
+class OJapiTabs;
+class OJapiProfile;
+class OJapiProfilesList;
+class OJapiBrowserTab;
+class OJapiBrowsersList;
 
 
 class CListVariants : public QVariantList
@@ -62,41 +64,115 @@ public:
 ///////////////////////////////////////  CAPI   //////////////////////////////////////////////////////
 
 
-class OCapiTabs: public OJapi
+class OJapiBrowserTab: public OJapi
 {
-	TProfile * m_pProfile;
+	TBrowserTab *m_pTab;
+	OJapiBrowsersList *m_pBrowsersListParent;
+	Q_OBJECT
+
+	const QString title();
 
 public:
-	OCapiTabs(TProfile *pProfile);
-	Q_OBJECT
+	OJapiBrowserTab(TBrowserTab *pTab, OJapiBrowsersList *pBrowsersList);
+
+	Q_PROPERTY(QString title READ title)
 
 public slots:
 	void back();
 	void forward();
 	void reload();
-	void location(const QString & sName);
-
-protected:
-	TBrowserTabs * GetBrowserOpen();
-	TBrowserTab  * GetCurrentTab();
+	void close();
+	void openApp(const QString &url);
+	void openUrl(const QString &url);
 };
-#define POCapiTabs		POJapi
+#define POJapiBrowserTab POJapi
 
 
 
-class OCapiCambrian : public OJapi
+
+class OJapiBrowsersList: public OJapi
 {
 	Q_OBJECT
-	TProfile * m_pProfile;
-	OCapiTabs  m_Tabs;
+
+protected:
+	POJapiBrowserTab PGetCurrentTab_YZ();
+	TBrowserTabs* PGetBrowser_YZ();
 
 public:
-	POCapiTabs tab();
+	OJapiProfile *m_poJapiProfileParent;
+	OJapiBrowsersList(OJapiProfile *poProfile);
 
-	OCapiCambrian(TProfile *pProfile);
-	Q_PROPERTY(POCapiTabs tab READ tab)
+	Q_PROPERTY(POJapiBrowserTab current READ PGetCurrentTab_YZ)
+
+public slots:
+	QVariantList listBrowsers();
+	POJapiBrowserTab newBrowser();
+
 };
-#define POCapiCambrian	POJapi
+#define POJapiBrowsersList POJapi
+
+
+
+class OJapiProfile : public OJapi
+{
+	OJapiBrowsersList m_oBrowsersList;
+	Q_OBJECT
+
+public:
+	TProfile *m_pProfile;
+
+	OJapiProfile(TProfile *pProfile);
+	QString id();
+	QString name();
+	POJapiBrowsersList browsers();
+
+	Q_PROPERTY(QString name READ name)
+	Q_PROPERTY(QString id READ id)
+	Q_PROPERTY(POJapiBrowsersList browsers READ browsers)
+
+public slots:
+	void destroy();
+
+};
+#define POJapiProfile	POJapi
+
+
+
+class OJapiProfilesList : public OJapi
+{
+	Q_OBJECT
+	OCapiRootGUI * m_pRootGui;
+
+public:
+	OJapiProfilesList(OCapiRootGUI *pRootGui);
+
+	TProfile *PGetCurrentProfile();
+	POJapiProfile currentProfile();
+	void setCurrentProfile(POJapiProfile poJapiProfile);
+
+	Q_PROPERTY(POJapiProfile current READ currentProfile WRITE setCurrentProfile)
+
+public slots:
+	QVariantList list();
+	POJapiProfile create(const QString & name);
+};
+#define POJapiProfilesList	POJapi
+
+
+
+class OCapiRootGUI : public OJapi
+{
+	Q_OBJECT
+	OJapiProfilesList m_oProfiles;
+
+public:
+	OCapiRootGUI();
+	POJapiProfilesList roles();
+
+	Q_PROPERTY(POJapiProfilesList roles READ roles)
+};
+#define POCapiRootGUI	POJapi
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -270,24 +346,6 @@ public slots:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class OJapiProfile : public QObject
-{
-	Q_OBJECT
-public:
-	OJapiProfile(OJapiCambrian * poCambrian);
-	virtual ~OJapiProfile();
-
-public slots:
-	QString CreateNew(const QString & sNameProfile);
-	void SwitchTo(const QString & sIdProfile);
-	QString DataGet(const QString & sIdProfile);
-	void DataUpdate(const QString & sIdProfile, const QString & sDataProfile);
-
-protected:
-	TProfile * PFindProfileByID(const QString & sIdProfile) const;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiApps : public OJapi
 {
     OJapiCambrian * m_poCambrian;
@@ -379,32 +437,29 @@ public:
 
 protected:
 	OSettings m_oSettings;
-	OJapiProfile m_oProfile;
     OJapiApps m_oApps;
 	OJapiMe m_oMe;
 	OJapiAppBallotmaster * m_paAppBallotmaster;
-	OCapiCambrian m_capi;
+	OCapiRootGUI m_capi;
 
 public:
 	OJapiCambrian(TProfile * pProfile, QObject * pParent);
 	virtual ~OJapiCambrian();
 	QVariant Settings();
-	QVariant Profile();
 
 	POJapiApps apps();
 	POJapiAppBallotmaster polls();
 	POJapiMe me();
 
-	POCapiCambrian capi();
+	POCapiRootGUI capi();
 
 public:
 	Q_OBJECT
 	Q_PROPERTY(QVariant Settings READ Settings)
-	Q_PROPERTY(QVariant Profile READ Profile)
 	Q_PROPERTY(POJapiAppBallotmaster polls READ polls)
 	Q_PROPERTY(POJapiApps apps READ apps)
 	Q_PROPERTY(POJapiMe me READ me)
-	Q_PROPERTY(POCapiCambrian capi READ capi)
+	Q_PROPERTY(POCapiRootGUI capi READ capi)
 
 public slots:
 	void SendBitcoin(int n);

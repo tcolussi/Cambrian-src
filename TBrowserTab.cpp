@@ -6,6 +6,11 @@ TBrowserTab::TBrowserTab(TBrowserTabs *pBrowserTabs)
 	Assert(pBrowserTabs->EGetRuntimeClass() == RTI(TBrowserTabs));
 	m_pBrowserTabs = pBrowserTabs;
 	m_pwWebViewTab = NULL;
+	m_paoJapiBrowser = NULL;
+	}
+
+TBrowserTab::~TBrowserTab()
+	{
 	}
 
 void
@@ -16,7 +21,7 @@ TBrowserTab::SetUrl(CStr &sUrl)
 		{
 		m_pwWebViewTab->NavigateToAddress(sUrl);
 	}
-}
+	}
 
 void TBrowserTab::Show()
 	{
@@ -26,7 +31,7 @@ void TBrowserTab::Show()
 	Assert(m_pBrowserTabs->m_pawLayoutBrowser->m_pTabWidget != NULL);
 
 	m_pBrowserTabs->m_pawLayoutBrowser->m_pTabWidget->setCurrentWidget(m_pwWebViewTab);
-}
+	}
 
 void TBrowserTab::NavigateForward()
 	{

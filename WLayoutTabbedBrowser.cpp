@@ -58,6 +58,20 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 	return m_arraypaWebViews.Add(paWebView);
 }
 
+void WLayoutTabbedBrowser::RemoveTab ( int index )
+	{
+	WWebViewTabbed *pWebView = (WWebViewTabbed *)m_arraypaWebViews.PvGetElementAtSafe_YZ(index);
+	if ( pWebView )
+		{
+		m_arraypaWebViews.RemoveElementAt(index);	// remove from array
+		m_pTabWidget->removeTab(index);				// remove from tab widget
+		delete pWebView;
+
+		if ( m_pTabWidget->count() == 0 )
+			m_pBrowserTabs->AddTab();
+		}
+	}
+
 int
 WLayoutTabbedBrowser::GetTabsCount()
 	{
@@ -67,7 +81,9 @@ WLayoutTabbedBrowser::GetTabsCount()
 int WLayoutTabbedBrowser::CurrentTabIndex()
 	{
 	// returns -1 if there are no tabs
-	return m_pTabWidget->currentIndex();
+	if ( m_pTabWidget )
+		return m_pTabWidget->currentIndex();
+	return -1;
 	}
 
 WWebViewTabbed*
@@ -96,7 +112,7 @@ void
 WLayoutTabbedBrowser::SL_AddTab(bool checked = false)
 	{
 	MessageLog_AppendTextFormatCo(d_coBluePastel, "WLayoutBrowser::SL_AddTab($i)\n", checked);
-	// add the new tab using the TBrowserTabs object
+	// add the new tab using the TBrowserTabs object /*???*/
 	m_pBrowserTabs->AddTab();
 	}
 
@@ -104,19 +120,7 @@ void
 WLayoutTabbedBrowser::SL_TabCloseRequested(int index)
 	{
 	MessageLog_AppendTextFormatCo(d_coBlueDark, "WLayoutBrowser::SL_TabCloseRequested($i)\n", index);
-	WWebViewTabbed *pTabPage = (WWebViewTabbed *) m_pTabWidget->widget(index);
-
-	//m_pBrowserTabs->m_arraypaTabs.DeleteTreeItem(pTabPage->m_pTab);
-	m_pBrowserTabs->DeleteTab(pTabPage->m_pTab);
-	m_arraypaWebViews.RemoveElementFastF(pTabPage);
-	m_pTabWidget->removeTab(index);
-	delete pTabPage;
-
-	if ( m_pTabWidget->count() == 0 )
-		SL_AddTab( true );
-
-	//if ( m_pTabWidget->count() == 1)
-	//	m_pTabWidget->setTabsClosable(false);
+	m_pBrowserTabs->DeleteTab(index);
 }
 
 void WLayoutTabbedBrowser::SL_CurrentChanged(int index)

@@ -59,75 +59,10 @@ OSettings::AudioEnabled(bool fEnable)
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiProfile::OJapiProfile(OJapiCambrian * poCambrian) : QObject(poCambrian)
-	{
-	}
 
-OJapiProfile::~OJapiProfile()
-	{
-	MessageLog_AppendTextFormatCo(d_coYellowDirty, "OJapiProfile::~OJapiProfile()\n");
-	}
-
-QString
-OJapiProfile::CreateNew(const QString & sNameProfile)
-	{
-	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OJapiProfile::CreateNew($Q)\n", &sNameProfile);
-	TProfile * pProfile = new TProfile(&g_oConfiguration);	// At the moment, there is only one configuration object, so use the global variable
-	g_oConfiguration.m_arraypaProfiles.Add(PA_CHILD pProfile);
-	pProfile->m_strNameProfile = sNameProfile;
-	pProfile->GenerateKeys();
-	pProfile->TreeItemProfile_DisplayContactsWithinNavigationTree();
-	pProfile->TreeItemW_EnsureVisible();
-	return sNameProfile;	// Until we have the keys generated, return the name fo the profile as its identifier (this is good enough for proof of concept)
-	}
-
-void
-OJapiProfile::SwitchTo(const QString & sIdProfile)
-	{
-	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OJapiProfile::SwitchTo($Q)\n", &sIdProfile);
-	}
-
-//	Return the profile data, such as email, telephone, picture and so on.
-//	The profile data is stored in the configuration file.
-QString
-OJapiProfile::DataGet(const QString & sIdProfile)
-	{
-	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OJapiProfile::DataGet($Q)\n", &sIdProfile);
-	TProfile * pProfile = PFindProfileByID(sIdProfile);
-	if (pProfile != NULL)
-		return pProfile->m_strData;
-	return c_sEmpty;
-	}
-
-void
-OJapiProfile::DataUpdate(const QString & sIdProfile, const QString & sDataProfile)
-	{
-	MessageLog_AppendTextFormatCo(d_coBrowserDebug, "OJapiProfile::DataUpdate($Q): $Q\n", &sIdProfile, &sDataProfile);
-	TProfile * pProfile = PFindProfileByID(sIdProfile);
-	if (pProfile != NULL)
-		pProfile->m_strData = sDataProfile;
-	}
-
-TProfile *
-OJapiProfile::PFindProfileByID(const QString & sIdProfile) const
-	{
-	// At the moment, the profile identifier is the profile name
-	CStr strNameProfile = sIdProfile;
-	TProfile ** ppProfileStop;
-	TProfile ** ppProfile = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfileStop);
-	while (ppProfile != ppProfileStop)
-		{
-		TProfile * pProfile = *ppProfile++;
-		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
-		if (pProfile->m_strNameProfile.FCompareStringsNoCase(strNameProfile))
-			return pProfile;
-		}
-	MessageLog_AppendTextFormatCo(d_coBrowserDebugWarning, "OJapiProfile::PFindProfileByID($Q) - Unable to find profile matching identifier!\n", &sIdProfile);
-	return NULL;
-	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oProfile(this), m_oApps(this), m_oMe(this), m_capi(pProfile)
+OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oApps(this), m_oMe(this)
 	{
 	m_pProfile = pProfile;
 	m_paAppBallotmaster = NULL;
@@ -157,14 +92,6 @@ OJapiCambrian::Settings()
 	return v;
 	}
 
-QVariant
-OJapiCambrian::Profile()
-	{
-	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiCambrian::Profile()\n");
-	QVariant v;
-	v.setValue(&m_oProfile);
-	return v;
-	}
 
 POJapiAppBallotmaster
 OJapiCambrian::polls()
@@ -210,7 +137,8 @@ OJapiCambrian::me()
 return &m_oMe;
 }
 
-POCapiTabs OJapiCambrian::capi()
+POCapiRootGUI
+OJapiCambrian::capi()
 	{
 	return &m_capi;
 	}
