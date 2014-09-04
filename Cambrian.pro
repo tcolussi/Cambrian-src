@@ -109,6 +109,7 @@ HEADERS += \
     DialogInvitations.h \
     EnumerationMap.h \
     ErrorCodes.h \
+	ApiJavaScript.h \
     ErrorMessages.h \
     FilePathUtilities.h \
     GroupChat.h \
@@ -160,7 +161,6 @@ HEADERS += \
     Identities.h \
     TApplicationBallotmaster.h \
     CVaultEvents.h \
-    ApiJavaScript.h \
     IApplication.h \
     WLayoutTabbedBrowser.h \
     TBrowserTabs.h \

@@ -1,3 +1,6 @@
+#ifndef PRECOMPILEDHEADERS_H
+	#include "PreCompiledHeaders.h"
+#endif
 #include "TBrowserTab.h"
 
 TBrowserTab::TBrowserTab(TBrowserTabs *pBrowserTabs)

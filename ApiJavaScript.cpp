@@ -58,7 +58,7 @@ OJapiMe::groups()
 			} // while
 		*/
 		} // while
-	MessageLog_AppendTextFormatCo(d_coBlack, "Groups List length end = $i\n", oList.length());
+	MessageLog_AppendTextFormatCo(d_coRed, "OJapiMe::groups() (length = $i)\n", oList.length());
 	return oList;
 	}
 
@@ -154,7 +154,7 @@ OJapiMe::getGroup(const QString & sId)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 POJapiGroup
-TGroup::POJapiGet(OJapiCambrian * poCambrian)
+TGroup::POJapiGet(OJapiCambrian * poCambrian) CONST_MCC
 	{
 	if (m_paoJapiGroup == NULL)
 		m_paoJapiGroup = new OJapiGroup(this, poCambrian);
@@ -267,6 +267,7 @@ OJapiGroup::destroy()
 		return;
 	m_pGroup->m_pAccount->m_arraypaGroups.DeleteRuntimeObject(m_pGroup);
 	m_pGroup = NULL;
+
 	*/
 	}
 
@@ -414,7 +415,7 @@ OJapiBrowserTab::openApp(const QString & appName)
 	if ( pInfo != NULL )
 		{
 		/*???*/
-		CStr url = "file:///" + m_pBrowsersListParent->m_poJapiProfileParent->m_pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
+		CStr url = "file:///" + m_pBrowsersListParent->m_poJapiProfileParent_NZ->m_pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
 		m_pTab->SetUrl(url);
 		}
 	}
@@ -441,7 +442,8 @@ TBrowserTab::POJapiGet(OJapiBrowsersList *pBrowsersList)
 
 OJapiBrowsersList::OJapiBrowsersList(OJapiProfile *poProfile)
 	{
-	m_poJapiProfileParent	= poProfile;
+	Assert(poProfile != NULL);
+	m_poJapiProfileParent_NZ = poProfile;
 	}
 
 POJapiBrowserTab
@@ -461,7 +463,7 @@ OJapiBrowsersList::PGetCurrentTab_YZ()
 TBrowserTabs*
 OJapiBrowsersList::PGetBrowser_YZ()
 	{
-	return (TBrowserTabs*) m_poJapiProfileParent->m_pProfile->m_arraypaBrowsersTabbed.PvGetElementFirst_YZ();
+	return (TBrowserTabs*) m_poJapiProfileParent_NZ->m_pProfile->m_arraypaBrowsersTabbed.PvGetElementFirst_YZ();
 	}
 
 QVariantList
@@ -486,7 +488,7 @@ POJapiBrowserTab
 OJapiBrowsersList::newBrowser()
 	{
 	TBrowserTabs *pBrowserTabs = PGetBrowser_YZ();
-	TProfile *pProfile = m_poJapiProfileParent->m_pProfile;
+	TProfile *pProfile = m_poJapiProfileParent_NZ->m_pProfile;
 
 	if ( !pBrowserTabs )
 		{
@@ -544,8 +546,14 @@ OJapiProfile::browsers()
 void
 OJapiProfile::destroy()
 	{
-	// TODO
-	}
+// TODO
+}
+
+QString OJapiProfile::doNothing()
+{
+return "Hola mundo";
+}
+
 
 
 
@@ -572,7 +580,7 @@ void
 OJapiProfilesList::setCurrentProfile(POJapiProfile poJapiProfile)
 	{
 	/*??? Need to check for the proper type (OJapiProfile) */
-	OJapiProfile *pProfile = (OJapiProfile*) poJapiProfile;
+	OJapiProfile *pProfile = qobject_cast<OJapiProfile*>(poJapiProfile);
 	MessageLog_AppendTextFormatCo(d_coRed, "setCurrentProfile $p\n", pProfile);
 
 	if ( pProfile != NULL )
@@ -583,6 +591,7 @@ QVariantList
 OJapiProfilesList::list()
 	{
 	QVariantList list;
+	MessageLog_AppendTextFormatCo(d_coRed, "OJapiProfilesList::list() \n");
 
 	TProfile **ppProfilesStop;
 	TProfile **ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(&ppProfilesStop);

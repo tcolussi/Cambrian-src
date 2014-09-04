@@ -99,7 +99,7 @@ protected:
 	TBrowserTabs* PGetBrowser_YZ();
 
 public:
-	OJapiProfile *m_poJapiProfileParent;
+	OJapiProfile *m_poJapiProfileParent_NZ;
 	OJapiBrowsersList(OJapiProfile *poProfile);
 
 	Q_PROPERTY(POJapiBrowserTab current READ PGetCurrentTab_YZ)
@@ -132,6 +132,7 @@ public:
 
 public slots:
 	void destroy();
+	QString doNothing();
 
 };
 #define POJapiProfile	POJapi

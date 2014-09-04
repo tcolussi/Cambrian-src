@@ -1,3 +1,6 @@
+#ifndef PRECOMPILEDHEADERS_H
+	#include "PreCompiledHeaders.h"
+#endif
 #include "WLayoutTabbedBrowser.h"
 #include "TBrowserTabs.h"
 #include "TBrowserTab.h"
