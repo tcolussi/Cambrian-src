@@ -22,7 +22,7 @@ TBrowserTabs::~TBrowserTabs()
 	}
 
 void
-TBrowserTabs::SetIconAndName(EMenuAction eMenuActionIcon, PSZAC pszName)
+TBrowserTabs::SetIconAndName(EMenuAction /*eMenuActionIcon*/, PSZAC pszName)
 	{
 	m_strNameDisplayTyped.BinInitFromStringWithNullTerminator(pszName);
 	}

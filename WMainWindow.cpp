@@ -19,7 +19,7 @@
 	//#define DEBUG_DISABLE_TIMER		// Useful for debugging the code booting the application without displaying the connection notifications in the Message Log
 #endif
 
-
+QString g_sPathHtmlApplications;	// Where the HTML applications are located (typically this is a sub-folder where SocietyPro.exe is installed, however for developers, they may change the Registry value to anotehr folder)
 #ifdef Q_OS_WIN
 HWND g_hwndMainWindow;							// Win-32 handle of the main window.  This handle is used by the MessageLog.
 #endif
@@ -92,6 +92,12 @@ MainWindow_SetIdleState(EIdleState eIdleState)
 		}
 	Configuration_GlobalSettingsPresenceUpdate(eMenuAction);
 	g_uPreferences = uPreferences;
+	}
+
+QString
+MainWindow_SGetPathOfApplication(const QString & sPathRelativeApplication)
+	{
+	return g_sPathHtmlApplications + sPathRelativeApplication;
 	}
 
 void
@@ -438,6 +444,11 @@ WMainWindow::SettingsRestore()
 
 	void ApiWebSocket_Init(UINT uPort);
 	ApiWebSocket_Init(oSettings.value("Port").toUInt());
+
+	g_sPathHtmlApplications = oSettings.value("Apps").toString();
+	if (g_sPathHtmlApplications.isEmpty())
+		g_sPathHtmlApplications = QCoreApplication::applicationFilePath() + "/Apps/";
+
 	#ifdef DEBUG
 	return;		// Don't save the path if running a debug build
 	#endif

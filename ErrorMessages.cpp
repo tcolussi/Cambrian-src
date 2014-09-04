@@ -36,6 +36,8 @@ CoxFromSeverity(ESeverity eSeverity)
 		return d_coBlack;
 	case eSeverityWarning:
 		return COX_MakeBold(d_coOrange);
+	case eSeverityWarningToErrorLog:
+		return COX_MakeBold(d_coOrangeDark);
 	case eSeverityErrorWarning:
 		return COX_MakeBold(d_coRed);
 	case eSeverityErrorAssert:
@@ -174,7 +176,7 @@ CErrorMessage::FDisplayToMessageLog()
 		return FALSE;
 	(void)PszuGetErrorDescriptionReFormatted();
 	MessageLog_AppendTextFormatSev(m_eSeverity, "$S\n\t$S\n", &m_strErrorDescription, &m_strErrorDetails);
-	if (m_eSeverity >= eSeverityErrorWarning)
+	if (m_eSeverity >= eSeverityWarningToErrorLog)
 		{
 		#ifdef DEBUG
 		MessageLog_Show();
@@ -806,14 +808,14 @@ MessageLog_AppendTextFormatSev(ESeverity eSeverity, PSZAC pszFmtTemplate, ...)
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszFmtTemplate);
 	g_oMessageLog.AppendTextFormat_VL(CoxFromSeverity(eSeverity), pszFmtTemplate, vlArgs);
-	if (eSeverity >= eSeverityErrorWarning)
+	if (eSeverity >= eSeverityWarningToErrorLog)
 		{
 		#ifdef DEBUG
 		MessageLog_Show();		// Any error automatically shows the Message Log
 		#endif
 		va_start(OUT vlArgs, pszFmtTemplate);
 		CStr strError;
-		ErrorLog_AddNewMessage((eSeverity == eSeverityErrorWarning) ? "Message Log Error" : "Message Log Critical Error", strError.Format_VL(pszFmtTemplate, vlArgs));
+		ErrorLog_AddNewMessage((eSeverity != eSeverityErrorAssert) ? "Message Log Error" : "Message Log Critical Error", strError.Format_VL(pszFmtTemplate, vlArgs));
 		}
 	}
 

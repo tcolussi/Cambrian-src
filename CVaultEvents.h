@@ -54,6 +54,7 @@ public:
 	~CVaultEvents();
 	inline void SetNotModified() { m_pEventLastSaved = m_arraypaEvents.PGetEventLast_YZ(); }
 	inline void SetModified() { m_pEventLastSaved = NULL; }
+	void EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD CEventUpdaterSent * paEventUpdater = NULL);
 	void EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const;
 	void EventsUnserialize(const CXmlNode * pXmlNodeEvents);
 	void EventsUnserialize(PSZUC pszXmlNodeEvents);
@@ -77,9 +78,10 @@ public:
 	IEvent * PFindEventReplacedBy(IEvent * pEventReplacing) CONST_MCC;
 	IEvent * PFindEventReplacing(IEvent * pEventReplaced) CONST_MCC;
 
+	#ifdef SUPPORT_XCP_VERSION_1
 	CEventDownloader * PFindEventDownloaderMatchingEvent(const IEvent * pEvent) const;
-
 	CDataXmlLargeEvent * PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanza * pbinXcpStanza);
+	#endif
 }; // CVaultEvents
 
 #endif // CVAULTEVENTS_H

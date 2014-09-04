@@ -34,9 +34,6 @@
 	#define d_chXCPa_Api_strxErrorData							'd'
 	#define d_szXCPa_Api_ErrorCodeAndErrorData_i_s				" e='$i' d='^s'"
 
-#define d_szXCPe_Api_bsA							d_szXCP_"$b n='$s'^A"	// Generic formatting of an API response
-#define d_szXCPe_Api_b								d_szXCP_"$b"
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	#defines for events
 #define d_szEventDebug_strContactSource					"_CONTACTSOURCE"	// Add an extra field to the base class IEvent to include the contact who transmitted the event.  This field is useful to debug group chat.
@@ -81,8 +78,10 @@ enum EEventClass
 		#define d_chXCPa_MessageTextComposing_State				's'	// Attribute to indicate the state of the 'composing' event.  If this attribute is not present, it means the user is just typing.
 		#define d_chXCPv_MessageTextComposing_State_Paused		'p'	// The user paused, or stopped typing for 10 seconds.
 		#define d_chXCPv_MessageTextComposing_State_Deleting	'd'	// NYI: The user is currently deleting what he typed.  This indicates the user is a bit hesitant about what to reply.
+		/*
 		#define d_szXCPe_MessageTextComposingStarted			"<Y/>"
 		#define d_szXCPe_MessageTextComposingPaused				"<Y s='p'/>"
+		*/
 
 	eEventClass_eMessageTextSent					= _USZU1('T'),
 	eEventClass_eMessageTextReceived				= _USZU1('t'),
@@ -118,6 +117,7 @@ enum EEventClass
 	eEventClass_eGroupMemberJoins					= _USZU2(_g_, 'j'),
 	eEventClass_eGroupMemberInvited_class			= eEventClass_eGroupMemberJoins,
 
+	#ifdef SUPPORT_XCP_VERSION_1
 	eEventClass_eDownloader							= _USZU2('d', 'l'),
 	eEventClass_eDownloader_class					= _USZU2('d', 'l') | eEventClass_kfNeverSerializeToXCP | eEventClass_kfReceivedByRemoteClient,	// The downloader is saved to disk and its class never serialized for XCP.
 		#define d_szXCPe_CEventDownloader_i_tsO		"dl s='$i'" _tsO		// At the moment, the downloader class will only send 32 bit of data, hence $i
@@ -125,6 +125,7 @@ enum EEventClass
 		#define d_chXCPa_CEventDownloader_bin85DataReceived		'd'	// Data was received so far.  This value is used when saving the downloader to disk to resume the download later.
 		#define d_chXCPa_CEventDownloader_tsForwarded			'f'	// Timestamt for a forwarded event
 		#define d_szXCPa_CEventDownloader_tsForwarded_t			" f='$t'"
+	#endif
 
 	eEventClass_eUpdaterSent							= _USZU1('U'),
 	eEventClass_eUpdaterReceived						= _USZU1('u'),
@@ -183,6 +184,8 @@ enum EStanzaType
 	eStanzaType_eBroadcast			// The stanza is broadcasted by the server to every contact on the roster
 	};
 
+#define DEBUG_XCP_TASKS				// Extra code to use tasks to transmit data via the XMPP protocol so we can test this code path.  This is done by lowering the threshold to split XMPP stanzas into tasks.
+
 //	Object to store information necessary to send an XCP stanza.
 //	An XCP Stanza is an XML within a XMPP message.
 class CBinXcpStanza : public CBin
@@ -191,6 +194,9 @@ public:
 	EStanzaType m_eStanzaType;	// How to send the XCP stanza.
 	TContact * m_pContact;		// Contact to send the XCP stanza
 	int m_ibXmlApiReply;		// Offset where the XML of the API reply is (this field is useful to append errors to the object)
+	#ifdef DEBUG_XCP_TASKS
+	int m_cbStanzaThresholdBeforeSplittingIntoTasks;	// Threshold before splitting an XMPP stanza into tasks
+	#endif
 protected:
 	CBinXcpStanza(EStanzaType eStanzaType);
 public:
@@ -207,30 +213,36 @@ public:
 
 	BOOL XcpApi_FIsXmlElementOpened() const { return (m_ibXmlApiReply > 0); }
 	BOOL XcpApi_FIsXmlElementClosedBecauseOfError() const { return (m_ibXmlApiReply == 0); }
-	void XcpApi_Execute(const CXmlNode * pXmlNodeApiData);
-	void XcpApi_ExecuteCore(BOOL fApiRequest, PSZUC pszApiName, const CXmlNode * pXmlNodeApiData);
+	void XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList);
+	void XcpApi_ExecuteApiName(BOOL fResponseToApiCall, PSZUC pszApiName, const CXmlNode * pXmlNodeApiData);
+	void XcpApi_ExecuteTask(const CXmlNode * pXmlNodeTask);
 	void BinXmlAppendXcpElementForApiRequest_ElementOpen(PSZUC pszApiName);
 	void BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters);
 	void BinXmlAppendXcpElementForApiRequest_ElementClose();
 	void BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData);
-
-	void BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters);
+	void BinXmlAppendXospApiEventData(IEvent * pEvent, PSZUC pszxmlEventData);
 
 	void BinXmlAppendXcpApiRequestOpen(PSZAC pszApiName);
 	void BinXmlAppendXcpApiRequestOpenGroup(PSZAC pszApiName, const TGroup * pGroup);
 	void BinXmlAppendXcpApiRequestClose();
+
+	void BinXmlAppendXcpApiCall_SendEventToContact(TContact * pContact, IEvent * pEvent, CEventUpdaterSent * pEventUpdater = NULL);
+	void BinXmlAppendXcpApiCall_NewMessage_Open();
+	void BinXmlAppendXcpApiCall_NewMessage_Close();
+
 	void BinXmlAppendXcpApiRequest(PSZAC pszApiName, PSZUC pszXmlApiParameters);
 	void BinXmlAppendXcpApiRequest_Group_Profile_Get(PSZUC pszGroupIdentifier);
 
-	void BinXmlAppendXcpApiSynchronize_RequestCreate(TGroupMember * pMember = NULL);
-	void BinXmlAppendXcpApiSynchronize_Execute(BOOL fApiRequest, const CXmlNode * pXmlNodeApiData);
+	void BinXmlAppendXcpApiMessageSynchronization(CHS chApiName, const CXmlNode * pXmlNodeApiData);
 
 	void BinXmlSerializeEventForDisk(const IEvent * pEvent);
-	void BinXmlSerializeEventForXcp(const IEvent * pEvent);
+	void BinXmlSerializeEventForXcp_ObsoleteProtocolVersion1(const IEvent * pEvent);
 	void BinXmlSerializeEventForXcpCore(const IEvent * pEvent, TIMESTAMP tsOther);
 
+	void XcpSendTaskDataToContact(TContact * pContact, const CTaskSendReceive * pTaskUpload, int ibData = 0);
+
 	void XcpSendStanzaToContactOrGroup(const ITreeItemChatLogEvents * pContactOrGroup) CONST_MCC;
-	void XcpSendStanzaToContact(TContact * pContact) CONST_MCC;
+	void XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC;
 	void XcpSendStanza() CONST_MCC;
 
 	void XmppWriteStanzaToSocket();
@@ -250,6 +262,7 @@ public:
 	static const int c_cbStanzaMaxSize		= 10000;	// Hard limit on the stanza size
 	static const int c_cbStanzaMaxPayload	= 8000;		// Split any stanza having a payload larger than 8000 bytes, as Cambrian reserved 2000 bytes for the XMPP header. Sure some XMPP clients may have JIDs of 3071 bytes, however those clients won't be able to communicate with the Cambrian Protocol.
 	static const int c_cbStanzaMaxBinary	= 6400;		// Since binary data is transmitted in Base85, the encoding of 6400 bytes requires 25% more space (6400 * 1.25 = 8000)
+	static const int c_cbStanzaThresholdBeforeSplittingIntoTasks = 8200;	// This value is slightly higher than c_cbStanzaMaxPayload so there may be smaller data sent along with the payload
 }; // CBinXcpStanza
 
 
@@ -519,7 +532,7 @@ public:
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const;
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
-	void MessageResendUpdate(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate);
+	void EventUpdateMessageText(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate);
 	CEventMessageTextSent * PFindEventMostRecent_NZ() CONST_OBJECT;
 };
 
@@ -767,6 +780,7 @@ public:
 	virtual EEventClass EGetEventClassForXCP() const { return CEventUpdaterSent::c_eEventClass; }
 };
 
+#ifdef SUPPORT_XCP_VERSION_1
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Class to download a large event.
 //	This class is a hybrid between an event and the core of the XCP protocol.
@@ -807,6 +821,7 @@ public:
 	~CListaDataXmlLargeEvents();
 	void DeleteIdleNodes();
 };
+#endif
 
 #ifdef DEBUG_WANT_ASSERT
 	void AssertValidEvent(const IEvent * pEvent);

@@ -4,6 +4,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+#if 0
 //	The enumeration ETaskClass is used to serialize and unserialize tasks and determine what type of task it is.
 enum ETaskClass
 	{
@@ -38,6 +39,8 @@ public:
 	void DeleteTask(PA_DELETING ITask * paTask);
 	void DeleteAllTasks();
 	ITask * PFindTaskByID(TIMESTAMP tsTaskID, ETaskClass eTaskClass) const;
+
+	void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);
 };
 
 class CTaskSend : public ITask
@@ -58,6 +61,46 @@ public:
 public:
 	CTaskReceive(const TIMESTAMP * ptsTaskID);
 	virtual ETaskClass EGetTaskClass() const { return eTaskClass_CTaskReceive; }
+};
+#endif
+
+
+//	The same class is used to send and receive.
+//	The only difference is the task to receive uses m_cbTotal
+class CTaskSendReceive
+{
+public:
+	TIMESTAMP m_tsTaskID;		// Identifier of the task
+	CTaskSendReceive * m_pNext;	// Next task in the queue
+	CBin m_binData;				// Data to transmit
+	int m_cbTotal;				// Total expected amount of data to receive
+	enum { c_cbTotal_Send = -1 };	// Value to indicate the task is to send
+
+public:
+	CTaskSendReceive();
+	void InitTaskSend();
+	BOOL FIsTaskSend() const { return (m_cbTotal < 0); }
+
+};
+
+class CListTasksSendReceive
+{
+public:
+	CTaskSendReceive * m_plistTasks;	// Linked list of tasks
+
+public:
+	CListTasksSendReceive() { m_plistTasks = NULL; }
+	void AddTaskSend(INOUT CTaskSendReceive * pTask);
+	void AddTaskReceive(INOUT CTaskSendReceive * pTask);
+	void DeleteTask(PA_DELETING CTaskSendReceive * paTask);
+	void DeleteAllTasks();
+	CTaskSendReceive * PFindTaskSend(TIMESTAMP tsTaskID) const;
+	CTaskSendReceive * PFindTaskReceive(TIMESTAMP tsTaskID) const;
+	void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);
+	void SerializeToXml(IOUT CBin * pbinXmlTasks);
+	void UnserializeFromXml(const CXmlNode * pXmlNodeElementTask);
+	void SentTasksToContact(TContact * pContact);
+	void DisplayTasksToMessageLog();
 };
 
 #endif // SOCKETTASKS_H

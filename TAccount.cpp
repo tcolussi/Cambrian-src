@@ -179,8 +179,8 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 							else
 								MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "Peer $S: Updating resource from '$S' to '$s'\n", &pContact->m_strJidBare, &pContact->m_strRessource, pszResource);
 							//pContact->Xcp_ServiceDiscovery();	// The resource changed, therefore query the remote client for its capabilities
-							pContact->SetFlagXcpComposingSendTimestampsOfLastKnownEvents();	// Each time the resource change, re-send the timestamps of the last known events so we give an opportunity to synchronie
-							pContact->m_cVersionXCP = 0;	// Also, reset the XCP version, to make sure the device connects properly
+							pContact->SetFlagXcpComposingSendTimestampsOfLastKnownEvents();	// Each time the resource change, re-send the timestamps of the last known events so we give an opportunity to synchronize
+							//pContact->m_cVersionXCP = 0;	// Also, reset the XCP version, to make sure the device connects properly
 							}
 						pContact->m_strRessource.InitFromStringU(pszResource);
 						}
@@ -399,7 +399,7 @@ void
 TAccountXmpp::OnTimerNetworkIdle()
 	{
 	m_arraypContactsComposing.RemoveAllContactsComposingWhoAreIdle();
-	m_listaDataXmlLargeEvents.DeleteIdleNodes();
+//	m_listaDataXmlLargeEvents.DeleteIdleNodes();
 	if (Socket_FIsConnected())
 		m_paSocket->Socket_WriteXmlPingToServerIfIdle();
 	}

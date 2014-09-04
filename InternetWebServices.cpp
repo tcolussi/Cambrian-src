@@ -14,7 +14,7 @@ CInternetRequestWebMethodXml::MethodNameCreate(PSZAC pszMethodName, PSZAC pszAtt
 	Assert(pszMethodName != NULL);
 	Assert(*pszMethodName != '\0');
 
-	(void)PvSizeAlloc(3000);	// Allocate 3 KB, enough for the typical request for a web method
+	(void)PvAllocateMemoryAndEmpty(3000);	// Allocate 3 KB, enough for the typical request for a web method
 	Assert(FIsEmptyBinary());
 	BinAppendText_VE("<$s $s>", pszMethodName, pszAttributes);
 

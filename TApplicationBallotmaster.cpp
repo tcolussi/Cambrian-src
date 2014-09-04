@@ -464,7 +464,7 @@ OJapiPoll::stop()
 
 void OJapiAppBallotmaster::open()
     {
-	LaunchBrowser("Ballotmaster", "Apps/html5-pollmaster/index.html");
+	LaunchBrowser("Ballotmaster", "html5-pollmaster/index.html");
 	//CStr strUrl = (PSZUC)"file:///C:/Users/Cesar/.Cambrian/Apps/Ballotmaster/default.htm";
 	//MessageLog_AppendTextFormatCo(d_coGreen, "OJapiAppBallotmaster::go($S)", &strUrl);
 	//m_pBallotmaster->m_pawLayoutBrowser->NavigateToAddress(strUrl);

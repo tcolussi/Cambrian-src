@@ -172,7 +172,7 @@ CBin::FIsPointerAddressWithinBinaryObject(const void * pvData) const
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	PvSizeAlloc()
+//	PvAllocateMemoryAndEmpty()
 //
 //	Allocate a block of memory to hold a desired number of bytes.
 //
@@ -187,7 +187,7 @@ CBin::FIsPointerAddressWithinBinaryObject(const void * pvData) const
 //	Return pointer to the buffer of the binary data.
 //
 void *
-CBin::PvSizeAlloc(int cbDataAlloc)
+CBin::PvAllocateMemoryAndEmpty(int cbDataAlloc)
 	{
 	Assert(cbDataAlloc >= 0);
 	if (m_paData == NULL)
@@ -208,10 +208,26 @@ CBin::PvSizeAlloc(int cbDataAlloc)
 	return m_paData->rgbData;
 	}
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	PvSizeAllocGrowBy()
+//	Allocate bytes for the bin and set its size to cbData.
+//	The method may expand or truncate the bin if necessary.
 //
-//	Allocate more bytes to the bin without changing its data size.
+//	Return pointer to newly allocated buffer.
+void *
+CBin::PvAllocateMemoryAndSetSize(int cbData)
+	{
+	void * pv = PvAllocateMemoryAndEmpty(cbData);
+	if (m_paData != NULL)
+		m_paData->cbData = cbData;
+	return pv;
+	}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	PvAllocateMemoryToGrowBy()
+//
+//	Allocate more bytes to the blob without changing its data size.
 //
 //	PERFORMANCE NOTES
 //	To avoid unnecessary memory allocations and copying data,
@@ -228,7 +244,7 @@ CBin::PvSizeAlloc(int cbDataAlloc)
 //	PbAllocateExtraMemory() this method does the same but return pointer pointer to the END of the bin.
 //
 void *
-CBin::PvSizeAllocGrowBy(int cbDataGrowBy)
+CBin::PvAllocateMemoryToGrowBy(int cbDataGrowBy)
 	{
 	Assert(cbDataGrowBy >= 0);
 	if (m_paData != NULL)
@@ -251,53 +267,8 @@ CBin::PvSizeAllocGrowBy(int cbDataGrowBy)
 			}
 		return m_paData->rgbData;
 		}
-	return PvSizeAlloc(cbDataGrowBy + _cbAllocSizeExtra);
+	return PvAllocateMemoryAndEmpty(cbDataGrowBy + _cbAllocSizeExtra);
 	}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	PvSizeAllocGrowTo()
-//
-//	Grow the allocation of the bin to make sure it can hold cbAlloc bytes.
-//	This routine is similar to PvSizeAllocGrowBy() since it preserves the
-//	content of the bin.
-//
-//	Return pointer to the buffer of the bin.
-//
-void *
-CBin::PvSizeAllocGrowTo(int cbAlloc)
-	{
-	Assert(cbAlloc >= 0);
-	if (m_paData != NULL)
-		{
-		if (cbAlloc > m_paData->cbAlloc)
-			{
-			int cbDataOld = m_paData->cbData;
-			SHeaderWithData * paHeader = S_PaAllocateBytes(cbAlloc + cbDataOld + 16);
-			memcpy(OUT paHeader->rgbData, IN m_paData->rgbData, cbDataOld);
-			ValidateHeapPointer(m_paData);
-			delete m_paData;
-			m_paData = paHeader;
-			m_paData->cbData = cbDataOld;
-			}
-		return m_paData->rgbData;
-		}
-	return PvSizeAlloc(cbAlloc);
-	}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Allocate bytes for the bin and set its size to cbData.
-//	The method may expand or truncate the bin if necessary.
-//
-//	Return pointer to newly allocated buffer.
-void *
-CBin::PvSizeInit(int cbData)
-	{
-	void * pv = PvSizeAlloc(cbData);
-	if (m_paData != NULL)
-		m_paData->cbData = cbData;
-	return pv;
-	}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Allocate more storage to the blob and return pointer to the end of the blob.
@@ -309,7 +280,7 @@ BYTE *
 CBin::PbAllocateExtraMemory(int cbAllocGrowBy)
 	{
 	Assert(cbAllocGrowBy >= 0);
-	BYTE * pbData = (BYTE *)PvSizeAllocGrowBy(cbAllocGrowBy);
+	BYTE * pbData = (BYTE *)PvAllocateMemoryToGrowBy(cbAllocGrowBy);
 	Assert(m_paData != NULL);
 	return (pbData + m_paData->cbData);
 	}
@@ -318,7 +289,7 @@ BYTE *
 CBin::PbAllocateExtraData(int cbDataGrowBy)
 	{
 	Assert(cbDataGrowBy >= 0);
-	BYTE * pbData = (BYTE *)PvSizeAllocGrowBy(cbDataGrowBy);
+	BYTE * pbData = (BYTE *)PvAllocateMemoryToGrowBy(cbDataGrowBy);
 	Assert(m_paData != NULL);
 	const int cbData = m_paData->cbData;
 	m_paData->cbData += cbDataGrowBy;
@@ -329,7 +300,7 @@ BYTE *
 CBin::PbAllocateExtraDataWithVirtualNullTerminator(int cbDataGrowBy)
 	{
 	Assert(cbDataGrowBy >= 0);
-	BYTE * pbData = (BYTE *)PvSizeAllocGrowBy(cbDataGrowBy + sizeof(CHU));
+	BYTE * pbData = (BYTE *)PvAllocateMemoryToGrowBy(cbDataGrowBy + sizeof(CHU));
 	Assert(m_paData != NULL);
 	const int cbData = m_paData->cbData;
 	m_paData->cbData += cbDataGrowBy;
@@ -412,7 +383,7 @@ CBin::DataTruncateAtOffset(UINT cbDataKeep)
 	}
 
 //	Truncate the binary to have its end of buffer at pvDataEnd.
-//	This method is used with PbAllocateExtraMemory() and/or PvSizeAllocGrowBy().
+//	This method is used with PbAllocateExtraMemory() and/or PvAllocateMemoryToGrowBy().
 //
 //	SEE ALSO: CStr::StringTruncateAt()
 void
@@ -496,7 +467,7 @@ CBin::BinInitFromBinaryData(const void * pvData, int cbData)
 	Assert(!FIsPointerAddressWithinBinaryObject(pvData));
 	if (cbData > 0)
 		{
-		(void)PvSizeAlloc(cbData);
+		(void)PvAllocateMemoryAndEmpty(cbData);
 		Assert(m_paData != NULL);
 		Assert(m_paData->cbData == 0);
 		memcpy(OUT m_paData->rgbData, IN pvData, cbData);
@@ -527,7 +498,7 @@ CBin::BinInitFromBinaryDataWithExtraVirtualZeroes(const void * pvData, int cbDat
 	Assert(cbExtraVirtualZeroes > 0);
 	Assert(!FIsPointerAddressWithinBinaryObject(pvData));
 
-	BYTE * pbDst = (BYTE *)PvSizeAlloc(cbData + cbExtraVirtualZeroes);
+	BYTE * pbDst = (BYTE *)PvAllocateMemoryAndEmpty(cbData + cbExtraVirtualZeroes);
 	Assert(m_paData != NULL);
 	Assert(m_paData->cbData == 0);
 	m_paData->cbData = cbData;				// Set the data size
@@ -1424,7 +1395,7 @@ CBin::BinAppendXmlTextU(PSZUC pszText)
 		return;	// Nothing to do
 	if (pszText[0] == d_chuXmlAlreadyEncoded)
 		{
-		// The content of pszuString is already XML encoded, so just copy it to the bin
+		// The content of pszuString is already XML encoded, so just copy it to the blob
 		BinAppendText((PSZAC)pszText + 1);
 		return;
 		}
@@ -1603,7 +1574,7 @@ CBin::BinInitFromCBinWithVirtualNullTerminator(const CBin * pbinSrc)
 	if (pDataSrc != NULL)
 		{
 		const int cbData = pDataSrc->cbData;
-		BYTE * pbDst = (BYTE *)PvSizeAlloc(cbData + sizeof(BYTE));	// Allocate memory for the data and the null-terminator
+		BYTE * pbDst = (BYTE *)PvAllocateMemoryAndEmpty(cbData + sizeof(BYTE));	// Allocate memory for the data and the null-terminator
 		memcpy(OUT pbDst, IN pDataSrc->rgbData, cbData);
 		pbDst[cbData] = '\0';		// Append the null-terminator
 		m_paData->cbData = cbData;
@@ -1799,7 +1770,7 @@ CBin::BinFileReadE(const QString & sFileName)
 	if (oFile.open(QIODevice::ReadOnly))
 		{
 		UINT cbFileLength = oFile.size();
-		char * prgbBuffer = (char *)PvSizeAlloc(cbFileLength + sizeof(CHW));	// Allocate room for a unicode null-terminator
+		char * prgbBuffer = (char *)PvAllocateMemoryAndEmpty(cbFileLength + sizeof(CHW));	// Allocate room for a unicode null-terminator
 		UINT cbDataRead = oFile.read(OUT prgbBuffer, cbFileLength);
 		eFileError = oFile.error();	// Get the file error (if any)
 		oFile.close();	// Close the file
@@ -1948,7 +1919,7 @@ CBin::BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding)
 		if (cbData > 0)
 			{
 			Assert((int)strlenU(pvData) == cbData);
-			(void)PvSizeAllocGrowBy(cbData + 32);	// Since we already know the length of the string, use it to allocate enough memory to hold the string and encode a few extra entities
+			(void)PvAllocateMemoryToGrowBy(cbData + 32);	// Since we already know the length of the string, use it to allocate enough memory to hold the string and encode a few extra entities
 			BinAppendUrlPercentEncode((PSZUC)pvData);
 			}
 		return;

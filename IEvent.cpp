@@ -8,9 +8,9 @@
 #endif
 #include "IEventBallot.h"
 #ifdef DEBUG
-	//#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
+	#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
-	//#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
+	#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
 #endif
 
 CHS
@@ -114,8 +114,10 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 	case eEventClass_eUpdaterReceived:
 		return new CEventUpdaterReceived(ptsEventID);
 
+	#ifdef SUPPORT_XCP_VERSION_1
 	case eEventClass_eDownloader:
 		return new CEventDownloader(ptsEventID);
+	#endif
 
 	case eEventClass_eBallotSent:
 		return new CEventBallotSent(ptsEventID);
@@ -392,6 +394,7 @@ IEvent::ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const
 		}
 	if (!oTextBlock.isValid())
 		{
+		#ifdef SUPPORT_XCP_VERSION_1
 		// We were unable to find a text block matching the event, however is is possible the event is hidden within a CEventDownloader.
 		EEventClass eEventClass = EGetEventClass();
 		if (eEventClass != CEventDownloader::c_eEventClass)
@@ -404,7 +407,8 @@ IEvent::ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const
 				return pEventDownloader->ChatLog_GetTextBlockRelatedToDocument(poDocument);
 				}
 			}
-		MessageLog_AppendTextFormatSev(eSeverityWarning, "ChatLog_GetTextBlockRelatedToDocument() - Unable to find text block matching event of class $U [i=$t, o=$t]\n", eEventClass, m_tsEventID, m_tsOther);
+		#endif
+		MessageLog_AppendTextFormatSev(eSeverityWarning, "ChatLog_GetTextBlockRelatedToDocument() - Unable to find text block matching event of class $U [i=$t, o=$t]\n", EGetEventClass(), m_tsEventID, m_tsOther);
 		}
 	return oTextBlock;
 	}
@@ -568,7 +572,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	const QDateTime dtlMessage = QDateTime::fromMSecsSinceEpoch(m_tsEventID).toLocalTime();
 	const QString sTime = dtlMessage.toString("hh:mm");
 	const QString sDateTime = dtlMessage.toString(Qt::SystemLocaleLongDate); // DefaultLocaleLongDate);
-	(void)pbinTextHtml->PvSizeAlloc(300);	// Empty the binary object and also pre-allocate 300 bytes of memory to avoid unnecessary memory re-allocations
+	(void)pbinTextHtml->PvAllocateMemoryAndEmpty(300);	// Empty the binary object and also pre-allocate 300 bytes of memory to avoid unnecessary memory re-allocations
 	TIMESTAMP_DELTA dts = m_tsOther - m_tsEventID;
 	const EEventClass eEventClass = EGetEventClass();
 	if (eEventClass & eEventClass_kfReceivedByRemoteClient)
@@ -1244,34 +1248,22 @@ CEventUpdaterSent::CEventUpdaterSent(const IEvent * pEventOld) : IEventUpdater(d
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Method to notify the contact (or group) a message was edited
 void
-CEventMessageTextSent::MessageResendUpdate(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate)
+CEventMessageTextSent::EventUpdateMessageText(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate)
 	{
 	Assert(pwLayoutChatLogUpdate != NULL);
-	#if 0
-	m_strMessageText = strMessageUpdated;
-	m_uFlagsMessage |= FM_kfMessageUpdated;
-	m_tsOther = d_tsOther_ezEventNeverSent;	// Pretend the message was never sent.  This will trigger a new task to resend the message
-	Assert(!Event_FHasCompleted());
-	//ChatLog_UpdateEventWithinWidget(pwLayoutChatLogUpdate->m_pwChatLog);
-	pwLayoutChatLogUpdate->m_pwChatLog_NZ->ChatLog_EventUpdate(this);
-	Event_WriteToSocketIfReady();
-	#else
-	// Always create the updater before the event.  This way, it is easy to find
+	// Always create the updater before the event.  This way, it is easy to find when updating the Chat Log
 	CEventUpdaterSent * pEventUpdater = new CEventUpdaterSent(this);
 	CEventMessageTextSent * pEventMessageUpdated = new CEventMessageTextSent(IN &pEventUpdater->m_tsEventIdNew);
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "Event ID $t: pEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing\n", pEventMessageUpdated->m_tsEventID);
 	pEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing;
 	pEventMessageUpdated->m_strMessageText = strMessageUpdated;
+	m_pVaultParent_NZ->EventAddAndDispatchToContacts(pEventMessageUpdated);
 	/*
-	CEventMessageTextSent * pEventMessageUpdated = new CEventMessageTextSent(strMessageUpdated);
-	pEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing;
-	CEventUpdaterSent * pEventUpdater = new CEventUpdaterSent(this, pEventMessageUpdated);
-	*/
 	pEventUpdater->EventAddToVault(m_pVaultParent_NZ);
 	pEventMessageUpdated->EventAddToVault(m_pVaultParent_NZ);
 	pEventUpdater->Event_WriteToSocket();
+	*/
 	pwLayoutChatLogUpdate->m_pwChatLog_NZ->ChatLog_EventDisplay(IN pEventMessageUpdated);
-	#endif
 	}
 
 CEventMessageTextSent *
@@ -1911,7 +1903,9 @@ CEventVersion::CEventVersion()
 EXml
 CEventVersion::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
-	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><query xmlns='jabber:iq:version'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
+	//pbinXmlAttributes->BinXmlAppendXospApiEventData(this, "test");
+
+	//pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><query xmlns='jabber:iq:version'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
 	return eXml_zAttributesOnly;
 	}
 

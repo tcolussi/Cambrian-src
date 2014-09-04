@@ -189,7 +189,7 @@ TGroup::Member_Add_UI(TContact * pContact)
 		// Create an event in the Chat Log
 		/*
 		CEventGroupMemberJoin * pEvent = new CEventGroupMemberJoin(pContact);
-		Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEvent);
+		Vault_AddEventToChatLogAndSendToContacts(PA_CHILD pEvent);
 		*/
 		}
 	TreeItemW_SelectWithinNavigationTreeExpanded();

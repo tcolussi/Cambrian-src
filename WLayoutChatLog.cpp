@@ -174,30 +174,6 @@ TContact::ChatLogContact_RemoveInvitationMessage()
 		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_ChatStateTextUpdate();	// The invitation message is appended with the 'Chat State'
 	}
 
-void
-TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
-	{
-	Assert(pXmlNodeXmppXcp != NULL);
-	Assert(m_pAccount != NULL);
-	Endorse(m_paTreeItemW_YZ == NULL);	// We may process stanzas (receive XMPP messages) for a contact not in the Navigation Tree
-	m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;
-//	m_uFlagsContact &= ~FC_kfNoCambrianProtocol;		// Any stanza received containing <xcp> is assumed the client software of the contact understands the Cambrian Protocol
-
-	// Attempt to decrypt the data and verify the signature
-	PSZU pszDataEncrypted = pXmlNodeXmppXcp->m_pszuTagValue;
-	if (pszDataEncrypted != NULL)
-		{
-		CXmlTree oXmlTree;
-		oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
-		#if 0
-		MessageLog_AppendTextFormatCo(d_coGrayDark, "XCP Received($S):\n", &m_strJidBare);
-		MessageLog_AppendTextFormatCo(d_coBlack, "$B\n", &oXmlTree.m_binXmlFileData);
-		#endif
-		if (oXmlTree.EParseFileDataToXmlNodes_ML() == errSuccess)
-			Xcp_ProcessStanzasAndUnserializeEvents(IN &oXmlTree);
-		}
-	} // XmppXcp_ProcessStanza()
-
 
 //	Display the stanza message to the GUI
 void
@@ -640,7 +616,9 @@ TContact::Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNo
 				}
 			}
 		}
-	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEvent);
+	//Vault_AddEventToChatLogAndSendToContacts(PA_CHILD pEvent);
+	pEvent->EventAddToVault(PA_PARENT Vault_PGet_NZ());
+	pwChatLog->ChatLog_EventDisplay(IN pEvent);
 	} // Event_AllocateEventMessageReceivedAndDisplayToChatLog()
 
 /*
@@ -833,7 +811,7 @@ DDialogSendBitcoin::SL_ButtonSendBitcoins()
 	IEventWalletTransaction * pEvent = new CEventWalletTransactionSent(NULL);
 	pEvent->m_amtQuantity = m_pwEditQuantity->text().toDouble() * -d_cSatoshisPerBitcoin;	// Use a negative value to indicate a withdraw
 	pEvent->m_strComment = *m_pwEditComment;
-	pContact->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEvent);
+	pContact->Vault_AddEventToChatLogAndSendToContacts(PA_CHILD pEvent);
 	TWallet::S_SaveAll();		// Save all wallets (in case of a crash)
 	pContact->TreeItem_GotFocus();	// Refresh the layout
 	close();

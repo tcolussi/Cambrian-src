@@ -21,7 +21,7 @@ BOOL g_fIgnoreAllAsserts;
 CStr g_strAssertLast;	// Remember the content of the last assertion.  This is to prevent the same assertion to be displayed over and over again, as a long loop could have the same assertion failure several thousand times
 
 #ifdef DEBUG
-	#define DEBUG_ASSERT_NON_BLOCKING	// Comment this line to have a blocking Assert().  A blocking Assert() is useful to step into the debugger at the moment the assertion fails.
+	//#define DEBUG_ASSERT_NON_BLOCKING	// Comment this line to have a blocking Assert().  A blocking Assert() is useful to step into the debugger at the moment the assertion fails.
 #else
 	#define DEBUG_ASSERT_NON_BLOCKING	// On a release build, NEVER allow an assert to block
 #endif
@@ -107,8 +107,6 @@ DDialogAssertionFailure::SL_ShowErrorLog()
 	}
 
 #endif // DEBUG_ASSERT_NON_BLOCKING
-
-#define d_coOrangeDark			MAKE_QRGB(200, 64, 0)
 
 /////////////////////////////////////////////////////////////////////
 //	Return TRUE to break into the debugger

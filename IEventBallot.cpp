@@ -436,15 +436,16 @@ CEventBallotReceived::UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditT
 	m_strComment = strComments;
 	m_pVaultParent_NZ->SetModified();
 	ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree();
-
+	/*
 	// Send the selected choices to the ballot creator
 	CBinXcpStanzaTypeInfo binXcpStanza(this);
 	binXcpStanza.BinAppendText_VE("<" d_szXCP_"x" _tsI d_szAPIa_CEventBallotReceived_uxVotedChoice_ux d_szAPIa_CEventBallotReceived_strNote "/>", m_tsOther, m_ukmChoices, &m_strComment);	// TODO: rewrite this with more elegant code!
 	binXcpStanza.XcpSendStanzaToContact(PGetContactForReply_YZ());
-}
+	*/
+	}
 
 
-CEventBallotPoll::CEventBallotPoll(const TIMESTAMP *ptsEventID) : CEventBallotSent ( ptsEventID )
+CEventBallotPoll::CEventBallotPoll(const TIMESTAMP * ptsEventID) : CEventBallotSent (ptsEventID)
     {
     m_tsStarted = d_ts_zNA;
     m_tsStopped = d_ts_zNA;

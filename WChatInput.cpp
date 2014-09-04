@@ -120,7 +120,7 @@ WChatInput::event(QEvent * pEvent)
 					else
 						{
 						// The user was editing an existing message
-						m_pEventEdit->MessageResendUpdate(strText, INOUT m_pwLayoutChatLog);
+						m_pEventEdit->EventUpdateMessageText(strText, INOUT m_pwLayoutChatLog);
 						m_pEventEdit = NULL;
 						}
 					ChatStateComposingCancelTimer((BOOL)eUserCommand);	// After sending a message, cancel (reset) the timer to, so a new 'composing' notification will be sent when the user starts typing again. BTW, there is no need to send a 'pause' command since receiving a text message automatically implies a pause.

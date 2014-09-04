@@ -61,7 +61,7 @@ public:
 	CChatConfiguration * PGetConfiguration() const;
 
 	CVaultEvents * Vault_PGet_NZ();
-	void Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD IEvent * paEvent);
+	void Vault_AddEventToChatLogAndSendToContacts(PA_CHILD IEvent * paEvent);
 	void Vault_SetNotModified();
 	void Vault_SetModified();
 	IEvent * Vault_PFindEventByID(TIMESTAMP tsEventID) CONST_MCC;

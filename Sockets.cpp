@@ -244,13 +244,16 @@ void
 CSocketXmpp::Socket_WriteXmlPresence()
 	{
 	Assert(m_pAccount != NULL);
-	#if 1
-	#define d_szVersion			"1"	// Keep the old XCp version 1 until version 2 is fully working
+	/*
+	#if 0
+	#define d_szVersion			"1"	// Keep the old XCP version 1 until version 2 is fully working
 	#else
 	#pragma GCC warning			"[Warning] Compiling SocietyPro with XCP version 2!"
 	#define d_szVersion			"2"
 	#endif
-	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><" d_szCambrianProtocol_xcp " v='"d_szVersion"'/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
+	*/
+	//Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><"d_szCambrianProtocol_xcp"/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
+	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());	// Temporary disable the XOSP protocol
 	}
 
 void
@@ -298,6 +301,7 @@ CSocketXmpp::Socket_WriteXmlAuth()
 
 static FLAGS_SOCKET_STATE s_uFlagsSocketStatePrevious;	// Remember the previous value to avoid dumping too many entries in the Message Log
 
+//	2014-Sep-01: I think this method is obsolete
 void
 CSocketXmpp::Socket_ProcessAllPendingTasks()
 	{
@@ -315,6 +319,8 @@ CSocketXmpp::Socket_ProcessAllPendingTasks()
 		return;	// We are not connected, so we have to wait
 		}
 	Assert(Socket_FuIsReadyToSendMessages());
+	// Our socket is ready to send XMPP messages, therefore check if there is any contact to dispatch messages (TBD)
+	#if 0
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = m_pAccount->m_arraypEventsUnsent.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
@@ -322,6 +328,7 @@ CSocketXmpp::Socket_ProcessAllPendingTasks()
 		IEvent * pEvent = *ppEvent++;
 		pEvent->Event_WriteToSocket();
 		}
+	#endif
 	}
 
 /*
@@ -890,7 +897,7 @@ CSocketXmpp::OnEventXmppStanzaIq()
 			/*
 			TContact * pContact = PFindContactFromStanza();
 			if (pContact != NULL)
-				pContact->Vault_InitEventForVaultAndDisplayToChatLog(new CEventVersion(pXmlNodeQuery));
+				pContact->Vault_AddEventToChatLogAndSendToContacts(new CEventVersion(pXmlNodeQuery));
 			*/
 			return;
 			}
@@ -1272,20 +1279,8 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 			if (pContact != NULL)
 				pContact->XmppXcp_ProcessStanza(pXmlNodeXCP);
 			else
-				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "XMPP Stanza contains an invalid peer:\n^N", m_pXmlNodeStanzaCurrent_YZ);	// This happens when the stanza is incomplete and the JID is not adequate to create a new contact
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "XMPP Stanza contains an invalid contact:\n^N", m_pXmlNodeStanzaCurrent_YZ);	// This happens when the stanza is incomplete and the JID is not adequate to create a new contact
 			return;
-			}
-		const CXmlNode * pXmlAttributeVersion = pXmlNodeXCP->PFindAttribute('v');
-		if (pXmlAttributeVersion != NULL)
-			{
-			// Fetch the XCP version
-			if (pContact != NULL)
-				{
-				pContact->m_cVersionXCP = NStringToNumber_ZZR_ML(pXmlAttributeVersion->m_pszuTagValue);
-				MessageLog_AppendTextFormatSev(eSeverityComment, "Peer ^j is supporting XCP version $i\n", pContact, pContact->m_cVersionXCP);
-				}
-			//else
-			//	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "No peer for stanza: ^N", m_pXmlNodeStanzaCurrent_YZ);
 			}
 		}
 

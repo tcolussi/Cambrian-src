@@ -1237,7 +1237,7 @@ AssertValidUtf8(IN PSZUC pszuUtf8)
 	else
 		{
 		// The string is more than 1 MB, so allocate it on the heap
-		pszwTemp = (CHW *)binTemp.PvSizeAlloc(cchu * sizeof(CHW));
+		pszwTemp = (CHW *)binTemp.PvAllocateMemoryAndEmpty(cchu * sizeof(CHW));
 		}
 
 	const CHU * pszuError;
@@ -2191,7 +2191,7 @@ CStr::TransformContentToMd5Hex(PSZAC pszFmtTemplate, ...)
 void
 CBin::BinInitFromCalculatingHashSha1(const CBin & binData)
 	{
-	SHashSha1 * pHashSha1 = (SHashSha1 *)PvSizeInit(sizeof(SHashSha1));
+	SHashSha1 * pHashSha1 = (SHashSha1 *)PvAllocateMemoryAndSetSize(sizeof(SHashSha1));
 	HashSha1_CalculateFromBinary(OUT pHashSha1, IN binData.PvGetData(), binData.CbGetData());
 	Assert(CbGetData() == sizeof(SHashSha1));
 	}

@@ -49,10 +49,9 @@ public:
 	inline ~CBin() { delete m_paData; }
 	BOOL FIsEmptyBinary() const;
 
-	void * PvSizeAlloc(int cbDataAlloc);
-	void * PvSizeAllocGrowBy(int cbDataGrowBy);
-	void * PvSizeAllocGrowTo(int cbAlloc);
-	void * PvSizeInit(int cbData);
+	void * PvAllocateMemoryAndEmpty(int cbDataAlloc);
+	void * PvAllocateMemoryAndSetSize(int cbData);
+	void * PvAllocateMemoryToGrowBy(int cbDataGrowBy);
 	BYTE * PbAllocateExtraMemory(int cbAllocGrowBy);
 	BYTE * PbAllocateExtraData(int cbDataGrowBy);
 	BYTE * PbAllocateExtraDataWithVirtualNullTerminator(int cbDataGrowBy);

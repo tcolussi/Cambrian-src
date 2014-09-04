@@ -312,6 +312,7 @@ int
 WaTabWidget::addTab(QWidget *widget, const QString &label)
 	{
 	QTabBar *pTabBar = tabBar();
+	Assert(pTabBar != NULL);
 
 	// remove [plus button]
 	//pTabBar->removeTab( count() );
@@ -330,6 +331,7 @@ void
 WaTabWidget::removeTab(int index)
 {
 	QTabBar *pTabBar = tabBar();
+	Assert(pTabBar != NULL);
 
 	// remove [plus button]
 	//pTabBar->removeTab( count()  );
@@ -389,6 +391,7 @@ void
 WaTabBar::reinitializePlusButton()
 	{
 	int iPos = addTab("+");
+	Assert(iPos >= 0);
 	}
 
 /*

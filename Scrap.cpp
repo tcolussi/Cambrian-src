@@ -155,3 +155,80 @@ WNavigationTreeCaption::eventFilter(QObject * obj, QEvent *event)
 		}
 	return QWidget::eventFilter(obj, event);
 	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Core method to serialize the data for an XCP API request.
+void
+CBinXcpStanza::BinXmlAppendXcpElementForApiRequest_AppendApiParameterData(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters)
+	{
+	Assert(pszApiName != NULL);
+	Assert(pXmlNodeApiParameters != NULL);
+	Assert(XcpApi_FIsXmlElementOpened());
+	Assert(m_pContact != NULL);
+	TAccountXmpp * pAccount = m_pContact->m_pAccount;
+	Assert(pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
+	MessageLog_AppendTextFormatSev(eSeverityComment, "Processing API '$s' with the following parameters: ^N\n", pszApiName, pXmlNodeApiParameters);
+
+	/*
+	if (FCompareStringsNoCase(pszApiName, c_szaApi_Synchronize))
+		{
+		BinXmlAppendXcpApiSynchronize_OnReply(pXmlNodeApiParameters);
+		return;
+		}
+	*/
+	if (FCompareStringsNoCase(pszApiName, c_szaApi_Group_Profile_Get))
+		{
+		PSZUC pszProfileIdentifier = pXmlNodeApiParameters->m_pszuTagValue;
+		TGroup * pGroup = pAccount->Group_PFindByIdentifier_YZ(pszProfileIdentifier, INOUT this, TAccountXmpp::eFindGroupOnly);
+		if (pGroup != NULL)
+			{
+			pGroup->XcpApiGroup_ProfileSerialize(INOUT this);
+			return;
+			}
+		Assert(XcpApi_FIsXmlElementClosedBecauseOfError());
+		return;
+		}
+	if (FCompareStringsNoCase(pszApiName, c_szaApi_Contact_Recommendations_Get))
+		{
+		pAccount->m_pProfileParent->XcpApiProfile_RecommendationsSerialize(INOUT this); // Return all the recommendations related to the profile
+		return;
+		}
+
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unknown API '$s'\n", pszApiName);
+	} // BinXmlAppendXcpElementForApiRequest_AppendApiParameterData()
+
+
+//	Method to unserialize the data from BinXmlAppendXcpElementForApiRequest_AppendApiParameterData().
+//	Although the reply typically does not need the object CBinXcpStanza, the reply may necessitate the CBinXcpStanza to make additional request.
+//	For instance, when unserializing a group, the method may need to query information about new group members to fetch the contact profile.
+void
+CBinXcpStanza::BinXmlAppendXcpElementForApiReply(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters)
+	{
+	Assert(pszApiName != NULL);
+	Assert(pXmlNodeApiParameters != NULL);
+	Assert(m_pContact != NULL);
+	MessageLog_AppendTextFormatSev(eSeverityComment, "BinXmlAppendXcpElementForApiReply($s):\n^N\n", pszApiName, pXmlNodeApiParameters);
+	TAccountXmpp * pAccount = m_pContact->m_pAccount;
+	Assert(pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
+	if (FCompareStringsNoCase(pszApiName, (PSZUC)c_szaApi_Group_Profile_Get))
+		{
+		// We received a profile information
+		PSZUC pszGroupIdentifier = pXmlNodeApiParameters->PszuFindAttributeValue_NZ(d_chAPIa_TGroup_shaIdentifier);
+		//MessageLog_AppendTextFormatCo(d_coRed, "BinXmlAppendXcpElementForApiReply($s) - Group '$s'\n", pszApiName, pszGroupIdentifier);
+		TGroup * pGroup = pAccount->Group_PFindByIdentifier_YZ(pszGroupIdentifier, INOUT this, TAccountXmpp::eFindGroupOnly);
+		if (pGroup != NULL)
+			{
+			pGroup->XcpApiGroup_ProfileUnserialize(IN pXmlNodeApiParameters, INOUT this);
+			}
+		return;
+		}
+	if (FCompareStringsNoCase(pszApiName, (PSZUC)c_szaApi_Contact_Recommendations_Get))
+		{
+		// We received new recommendations from the contact
+		const_cast<CXmlNode *>(pXmlNodeApiParameters)->RemoveEmptyElements();
+		m_pContact->Contact_RecommendationsUpdateFromXml(IN pXmlNodeApiParameters);
+		return;
+		}
+
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unknown API: $s\n^N", pszApiName, pXmlNodeApiParameters);
+	}

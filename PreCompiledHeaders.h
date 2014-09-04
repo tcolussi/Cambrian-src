@@ -8,12 +8,13 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.0.6"
-#define d_szwApplicationVersion		   L"0.1.0.6"
+#define d_szApplicationVersion			"0.1.0.8"
+#define d_szwApplicationVersion		   L"0.1.0.8"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
 //#define DEBUG_IMPORT_OLD_CONFIG_XML
+#define SUPPORT_XCP_VERSION_1			// For backward compatibility, support XCP 1
 
 #ifndef PRECOMPILEDHEADERS_H
 #define PRECOMPILEDHEADERS_H
@@ -33,7 +34,7 @@
 #elif defined(Q_OS_LINUX)
 	#define d_szOS		"Linux"
 #else
-	#define d_szOS		"Other"
+	#define d_szOS		"Unknown OS"
 #endif
 
 #include "DataTypesAndMacros.h"
@@ -211,10 +212,13 @@ class ISocketUI;
 class CSocketCore;
 	class CSocketXmpp;
 
+class CTaskSendReceive;
+/*
 class ITask;
 	class CTaskDownloader;
 	class CTaskFileUpload;
 	class CTaskFileDownload;
+*/
 
 class IEvent;
 	class IEventMessageText;
@@ -233,7 +237,9 @@ class IEvent;
 		class CEventBallotSent;
 		class CEventBallotReceived;
         class CEventBallotPoll;
-
+	class IEventUpdater;
+		class CEventUpdaterSent;
+		class CEventUpdaterReceived;
 
 class CVaultEvents;
 

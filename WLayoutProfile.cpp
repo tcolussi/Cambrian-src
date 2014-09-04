@@ -177,7 +177,7 @@ void
 CStr::InitWithRandomUsername(const CStr & strUsernameBase, UINT uRandomValue)
 	{
 	PSZUC pszUsernameBase = strUsernameBase;
-	PSZU pszUsernameRandom = (PSZU)PvSizeAlloc(strUsernameBase.CbGetData() + 32);
+	PSZU pszUsernameRandom = (PSZU)PvAllocateMemoryAndEmpty(strUsernameBase.CbGetData() + 32);
 	CHU * pchUsernameRandom = pszUsernameRandom;
 	while (TRUE)
 		{

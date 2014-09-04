@@ -139,8 +139,6 @@ CBinXcpStanza::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(con
 	if (pEvent->m_pContactGroupSender_YZ != m_pContact)
 		{
 		Endorse(pEvent->m_pContactGroupSender_YZ == NULL);	// The event was sent, or was received on a 1-to-1 conversation.  If this pointer is NULL, then the method BinAppendXmlAttributeOfContactIdentifier() will ignore it
-		if (m_pContact != NULL && m_pContact->m_cVersionXCP == 2)
-			return;		// XCC Version 2.0 no longer needs to transmit the group sender
 		BinAppendXmlAttributeOfContactIdentifier(d_chXCPa_pContactGroupSender, pEvent->m_pContactGroupSender_YZ);
 		}
 	}

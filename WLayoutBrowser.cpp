@@ -437,8 +437,9 @@ LaunchBrowser(const QString & sName, const QString & sUrlRelative)
 	//MessageLog_AppendTextFormatCo(d_coAqua, "pProfile ($p)\n", pProfile);
 	//MessageLog_AppendTextFormatCo(d_coAqua, "pProfile->m_pConfigurationParent ($p)\n", pProfile->m_pConfigurationParent);
 
-	CStr strUrlRelative(sUrlRelative);
-	CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrlRelative);//"Apps/Test/index.htm");
+	//CStr strUrlRelative(sUrlRelative);
+	//CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrlRelative);//"Apps/Test/index.htm");
+	CStr strUrl = MainWindow_SGetPathOfApplication(sUrlRelative);
 
 	// find a browser with tabs already opened
 	TBrowserTabs ** ppBrowserStop;

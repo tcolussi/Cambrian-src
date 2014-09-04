@@ -507,7 +507,7 @@ void
 DDialogBallotSend::SL_ButtonBallotSend()
 	{
 	// Always create a new ballot when the user click on send (there is no such thing as re-sending an old ballot)
-	m_pContactOrGroup->Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD PaAllocateBallot());
+	m_pContactOrGroup->Vault_AddEventToChatLogAndSendToContacts(PA_CHILD PaAllocateBallot());
 	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
 	}
 

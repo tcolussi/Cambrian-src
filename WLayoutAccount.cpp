@@ -40,7 +40,7 @@ WLayoutAccountAlias::WLayoutAccountAlias(TAccountAlias * pAlias)
 	pLayout->Layout_PwAddRowLabelEditReadOnlyFingerprint("Certificate Fingerprint:", *pAccount->Certificate_PGetBinaryFingerprint());
 
 	WTable * pTableContacts = new WTable(this);
-	pTableContacts->SetColumns_VEZ("Display Name", "Peer JID", "Subscription", "Invisible?", "Resource", "XCP", "File Name Chat History", NULL);
+	pTableContacts->SetColumns_VEZ("Display Name", "JID", "Subscription", "Invisible?", "Resource", "Protocol", "Sync", "File Name Chat History", NULL);
 	TContact ** ppContactStop;
 	TContact ** ppContact = pAccount->m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
 	while (ppContact != ppContactStop)
@@ -55,7 +55,8 @@ WLayoutAccountAlias::WLayoutAccountAlias(TAccountAlias * pAlias)
 		oRow.AddData(pContact->XmppRoster_PszGetSubscription());
 		oRow.AddData(pContact->TreeItemFlags_FuIsInvisible() ? (PSZUC)"Yes" : NULL);
 		oRow.AddData(pContact->m_strRessource);
-		oRow.AddInt(pContact->m_cVersionXCP);
+		oRow.AddData(pContact->Contact_FuCommunicateViaXosp() ? (PSZUC)"XOSP" : pContact->Contact_FuCommunicateViaXmppOnly() ? (PSZUC)"XMPP" : NULL);
+		oRow.AddData(pContact->Contact_FuNeedSynchronizeWhenPresenceOnline() ? (PSZUC)"Yes" : NULL);
 		oRow.AddData(pContact->Vault_SGetPath());
 		pTableContacts->AppendRow(oRow);
 		}

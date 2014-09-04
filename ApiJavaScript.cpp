@@ -200,14 +200,13 @@ OJapiList
 OJapiGroup::members()
 	{
 	CListVariants oList(m_poCambrian);
-	TGroupMember **ppGroupMemberStop;
-	TGroupMember **ppGroupMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(&ppGroupMemberStop);
+	TGroupMember ** ppGroupMemberStop;
+	TGroupMember ** ppGroupMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(OUT &ppGroupMemberStop);
 	while ( ppGroupMember != ppGroupMemberStop )
-	{
-		TGroupMember *pGroupMember = *ppGroupMember++;
+		{
+		TGroupMember * pGroupMember = *ppGroupMember++;
 		oList.AddContact(pGroupMember->m_pContact);
-	}
-
+		}
 	return oList;
 	}
 
@@ -222,9 +221,7 @@ OJapiGroup::addPeer(QObject *pContactAdd)
 void
 OJapiGroup::removePeer(QObject *pContactRemove)
 	{
-
 	OJapiContact * pContact = qobject_cast<OJapiContact *>(pContactRemove); // Make sure we received an object of proper type
-
 	TGroupMember **ppGroupMemberStop;
 	TGroupMember **ppGroupMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(&ppGroupMemberStop);
 	while ( ppGroupMember != ppGroupMemberStop )

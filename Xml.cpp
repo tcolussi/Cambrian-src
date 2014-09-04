@@ -357,7 +357,8 @@ XmlDecode(INOUT PSZU pszuXml)
 			} // switch
 
 		// If we reach this line of code, we have an error in the encoding of the XML data.  The best solution is leaving the "entity" as is in the XML data.
-		Report(FALSE && "Invalid XML entity!");
+		MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "The XML entity '$s' is not valid!\n", pchuDst);
+		//Report(FALSE && "Invalid XML entity!");
 		pchuDst[0] = '&';
 		pchuDst[1] = ch;
 		pchuDst += 2;
@@ -1894,6 +1895,12 @@ CXmlTree::SetFileDataCopy(PSZUC pszuXmlFileDataStart, PSZUC pszuXmlFileDataStop)
 	m_binXmlFileData.BinInitFromBinaryDataWithVirtualNullTerminator(IN pszuXmlFileDataStart, pszuXmlFileDataStop - pszuXmlFileDataStart);
 	}
 
+CBin *
+CXmlTree::PGetBinTemporaryDuringSerializationInitAlreadyEncoded()
+	{
+	m_binXmlFileData.BinInitFromByte(d_chuXmlAlreadyEncoded);
+	return &m_binXmlFileData;
+	}
 
 EError
 CXmlTree::ELoadFile(const QString & sFileName)
@@ -2605,6 +2612,7 @@ CXmlTree::RootNodeEnsureNotEmpty()
 	} // RootNodeEnsureNotEmpty()
 
 
+//	Allocate a node
 CXmlNode *
 CXmlTree::_PAllocateElementOrAttribute(PSZAC pszaElementOrAttributeName)
 	{
@@ -2875,7 +2883,7 @@ VOID
 CXmlTree::SerializeTreeToXml(UINT uSerializeFlagsExtra) CONST_OUTPUT_BUFFER
 	{
 	Assert(m_binXmlFileData.CbGetData() == 0 && "The buffer to serialize the XML tree should be empty");
-	m_binXmlFileData.PvSizeAlloc(2000);		// Make sure we start with a minimum of 2 KB
+	m_binXmlFileData.PvAllocateMemoryAndEmpty(2000);		// Make sure we start with a minimum of 2 KB
 	/*
 	if ((uSerializeFlagsExtra & CXmlNode::STBF_kfNoHeaderXml) == 0)
 		m_binXmlFileData.InitXmlHeaderForUtf8();
@@ -3746,6 +3754,20 @@ void
 CXmlExchanger::XmlExchangeWriteAttributeRtiSz(PSZAC pszNameAttribute, RTI_ENUM rtiAttributeValue)
 	{
 	XmlExchangeWriteAttribute(pszNameAttribute, PszFromUSZU(rtiAttributeValue));
+	}
+
+CXmlNode *
+CXmlExchanger::XmlExchange_PFindElement(CHS chElementName)
+	{
+	return m_pXmlNodeSerialize->PFindElement(chElementName);
+	}
+
+CXmlNode *
+CXmlExchanger::XmlExchange_PAllocateElementFromCBinString(CHS chElementName, IN_MOD_TMP CBin & binString)
+	{
+	CXmlNode * pXmlElement = _PAllocateElement(INOUT m_pXmlNodeSerialize, IN (PSZAC)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chElementName));
+	pXmlElement->m_pszuTagValue = m_accumulatorText.PszuAllocateCopyCBinString(IN_MOD_TMP binString);
+	return pXmlElement;
 	}
 
 //	This method does NOT make a copy of pszValue
