@@ -366,20 +366,24 @@ class OJapiMe : public OJapi
 public:
 	OJapiMe(OJapiCambrian * poCambrian);
 	OJapiList groups();
-	OJapiList peerLists();
 	OJapiList peers();
+	//OJapiList peerLists();
 
 	Q_OBJECT
 	Q_PROPERTY(OJapiList groups READ groups)
-	Q_PROPERTY(OJapiList peerLists READ peerLists)
 	Q_PROPERTY(OJapiList peers READ peers)
+	//Q_PROPERTY(OJapiList peerLists READ peerLists)
 
 public slots:
-	POJapiGroup newPeerList();
-	POJapiGroup getPeerList(const QString & sId);
+	//POJapiGroup newPeerList();
+	//JapiGroup newGroup();
+	POJapiGroup newGroup(const QString & type);
+	//POJapiGroup getPeerList(const QString & sId);
 	POJapiGroup getGroup(const QString & sId);
 };
 #define POJapiMe		POJapi
+
+
 
 class OJapiContact : public OJapi
 {
@@ -399,6 +403,27 @@ public:
 #define POJapiContact		POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+//	JavaScript object to manage Groups
+class OJapiGroupList : public OJapi
+{
+	OJapiCambrian * m_poCambrian;
+	Q_OBJECT
+
+public:
+	OJapiGroupList(OJapiCambrian * poCambrian);
+
+
+	//Q_PROPERTY(OJapiList list READ list)
+
+public slots:
+	POJapiGroup build(const QString & type);
+	POJapiGroup get(const QString & sId);
+	OJapiList list();
+};
+#define POJapiGroupList	POJapi
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //	JavaScript wrapper for TGroup
 class OJapiGroup : public OJapi
 {
@@ -413,13 +438,14 @@ public:
 	void name(const QString & sName);
 	int count();
 	OJapiList members();
+	QString type();
 
 	Q_OBJECT
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name WRITE name)
+	Q_PROPERTY(QString type READ type)
 	Q_PROPERTY(int count READ count)
 	Q_PROPERTY(OJapiList members READ members)
-
 
 public slots:
 	void addPeer(POJapiContact pContactAdd);
@@ -439,11 +465,12 @@ public:
 protected:
 	OSettings m_oSettings;
     OJapiApps m_oApps;
-	OJapiMe m_oMe;
 	OJapiAppBallotmaster * m_paAppBallotmaster;
 	OCapiRootGUI m_capi;
-
+	OJapiGroupList m_oGroupList;
 public:
+	OJapiMe m_oMe;
+
 	OJapiCambrian(TProfile * pProfile, QObject * pParent);
 	virtual ~OJapiCambrian();
 	QVariant Settings();
@@ -451,7 +478,7 @@ public:
 	POJapiApps apps();
 	POJapiAppBallotmaster polls();
 	POJapiMe me();
-
+	POJapiGroupList groups();
 	POCapiRootGUI capi();
 
 public:
@@ -460,7 +487,9 @@ public:
 	Q_PROPERTY(POJapiAppBallotmaster polls READ polls)
 	Q_PROPERTY(POJapiApps apps READ apps)
 	Q_PROPERTY(POJapiMe me READ me)
+	Q_PROPERTY(POJapiGroupList groups READ groups)
 	Q_PROPERTY(POCapiRootGUI capi READ capi)
+
 
 public slots:
 	void SendBitcoin(int n);

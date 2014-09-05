@@ -475,11 +475,10 @@ TAccountXmpp::Group_PAllocate()
 	return pGroup;
 	}
 
-TGroup *TAccountXmpp::Group_PaAllocateAudience()
+TGroup *TAccountXmpp::Group_PaAllocateTemp(EGroupType eGroupType)
 	{
 	TGroup * pGroup = new TGroup(this);
-	//m_arraypaGroups.Add(PA_CHILD pGroup);
-	pGroup->m_eGroupType = eGroupType_Audience;
+	pGroup->m_eGroupType = eGroupType;
 	pGroup->GroupInitNewIdentifier();
 	return pGroup;
 	}

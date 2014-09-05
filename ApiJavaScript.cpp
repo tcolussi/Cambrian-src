@@ -44,6 +44,7 @@ OJapiMe::groups()
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
 		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Open);
+		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Audience);
 		/*
 		TGroup ** ppGroupStop;
 		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
@@ -61,7 +62,7 @@ OJapiMe::groups()
 	MessageLog_AppendTextFormatCo(d_coRed, "OJapiMe::groups() (length = $i)\n", oList.length());
 	return oList;
 	}
-
+/*
 OJapiList
 OJapiMe::peerLists()
 	{
@@ -76,7 +77,7 @@ OJapiMe::peerLists()
 	MessageLog_AppendTextFormatCo(d_coBlack, "Groups List length end = $i\n", oList.length());
 	return oList;
 	}
-
+*/
 OJapiList
 OJapiMe::peers()
 	{
@@ -104,22 +105,61 @@ OJapiMe::peers()
 		*/
 	return oList;
 }
-
+/*
 POJapiGroup
 OJapiMe::newPeerList()
 	{
 	TAccountXmpp *pAccount = (TAccountXmpp*) m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PvGetElementFirst_YZ();
 	if ( pAccount == NULL)
 		return NULL;
-	TGroup *paGroup = pAccount->Group_PaAllocateAudience();
-	m_poCambrian->m_arraypaTemp.Add(paGroup);
+	TGroup *paGroup = pAccount->Group_PaAllocateTemp(eGroupType_Audience);
+	m_poCambrian->m_arraypaTemp.Add(PA_CHILD paGroup);
 	return paGroup->POJapiGet(m_poCambrian);
 	}
 
 POJapiGroup
+OJapiMe::newGroup()
+{
+TAccountXmpp *pAccount = (TAccountXmpp*) m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PvGetElementFirst_YZ();
+	if ( pAccount == NULL)
+		return NULL;
+	TGroup *paGroup = pAccount->Group_PaAllocateTemp(eGroupType_Open);
+	m_poCambrian->m_arraypaTemp.Add(PA_CHILD paGroup);
+	return paGroup->POJapiGet(m_poCambrian);
+}
+*/
+
+POJapiGroup
+OJapiMe::newGroup(const QString &type)
+	{
+	TAccountXmpp *pAccount = (TAccountXmpp*) m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PvGetElementFirst_YZ();
+	if ( pAccount == NULL)
+		return NULL;
+
+	EGroupType eGroupType = eGroupType_Open;
+	if ( type.compare("Open", Qt::CaseInsensitive) == 0)
+		eGroupType = eGroupType_Open;
+	else if ( type.compare("Broadcast", Qt::CaseInsensitive) == 0 )
+		eGroupType = eGroupType_Audience;
+	else
+		return NULL;
+
+	TGroup *paGroup = pAccount->Group_PaAllocateTemp(eGroupType);
+	m_poCambrian->m_arraypaTemp.Add(PA_CHILD paGroup);
+	return paGroup->POJapiGet(m_poCambrian);
+	}
+
+/*
+POJapiGroup
 OJapiMe::getPeerList(const QString & sId)
 	{
+	return getGroup(sId);
+	}
+*/
 
+POJapiGroup
+OJapiMe::getGroup(const QString & sId)
+	{
 	SHashSha1 hashId ;
 	CStr strId = sId;
 	HashSha1_FInitFromStringBase85_ZZR_ML(OUT &hashId, strId);
@@ -144,12 +184,6 @@ OJapiMe::getPeerList(const QString & sId)
 
 		} // while
 	return NULL;
-	}
-
-POJapiGroup
-OJapiMe::getGroup(const QString & sId)
-	{
-	return getPeerList(sId);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,6 +246,14 @@ OJapiGroup::members()
 	return oList;
 	}
 
+QString OJapiGroup::type()
+	{
+	if ( m_pGroup->m_eGroupType == eGroupType_Audience)
+		return "Broadcast";
+	else if (m_pGroup->m_eGroupType == eGroupType_Open)
+		return "Open";
+	}
+
 void
 OJapiGroup::addPeer(QObject *pContactAdd)
 	{
@@ -245,6 +287,11 @@ OJapiGroup::save()
 	Assert(m_pGroup != NULL);
 	m_pGroup->TreeItemFlags_SerializeToDisk_Yes();
 	m_pGroup->m_pAccount->m_arraypaGroups.ElementTransferFrom(m_pGroup, INOUT &m_poCambrian->m_arraypaTemp);	// Transfer the group from 'temp' to the account
+
+	if ( m_pGroup->m_eGroupType == eGroupType_Open )
+		// for normal groups
+		m_pGroup->TreeItemW_DisplayWithinNavigationTree(m_pGroup->m_pAccount, eMenuAction_Group );
+
 	/*
 	if (m_poCambrian->m_arraypaTemp.RemoveElementFastF(m_pGroup))
 		m_pGroup->m_pAccount->m_arraypaGroups.Add(m_pGroup);
@@ -255,10 +302,13 @@ void
 OJapiGroup::destroy()
 	{
 	Assert(m_pGroup != NULL);
-	if (m_pGroup->m_eGroupType != eGroupType_Audience)
-		return;	// Don't allow a JavaScript to delete a regular group; only a 'peerlist'
+	//if (m_pGroup->m_eGroupType != eGroupType_Audience)
+	//	return;	// Don't allow a JavaScript to delete a regular group; only a 'peerlist'
+
+	m_pGroup->TreeItemGroup_RemoveFromNavigationTree();
 	m_pGroup->Group_MarkForDeletion();
 	m_poCambrian->m_arraypaTemp.ElementTransferFrom(m_pGroup, INOUT &m_pGroup->m_pAccount->m_arraypaGroups);	// Transfer the group back to the 'temp' array
+
 
 	/*
 	if ( !m_pGroup || m_pGroup->m_eGroupType != eGroupType_Audience)
@@ -620,5 +670,33 @@ POJapiProfilesList
 OCapiRootGUI::roles()
 	{
 	return &m_oProfiles;
+	}
+
+
+///////////////////////////////////////////////////////////////////////////////////
+
+OJapiGroupList::OJapiGroupList(OJapiCambrian *poCambrian)
+	{
+	m_poCambrian = poCambrian;
+	}
+
+
+POJapiGroup
+OJapiGroupList::build(const QString &type)
+	{
+	return m_poCambrian->m_oMe.newGroup(type);
+	}
+
+OJapiList
+OJapiGroupList::list()
+	{
+	return m_poCambrian->m_oMe.groups();
+	}
+
+
+POJapiGroup
+OJapiGroupList::get(const QString & sId)
+	{
+	return m_poCambrian->m_oMe.getGroup(sId);
 	}
 
