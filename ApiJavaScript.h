@@ -384,6 +384,15 @@ public slots:
 #define POJapiMe		POJapi
 
 
+class OJapiUtil : public OJapi
+{
+	Q_OBJECT
+public slots:
+	QString base64encode(const QString & sText);
+	QString base64decode(const QString & sBase64);
+};
+#define POJapiUtil	POJapi
+
 
 class OJapiContact : public OJapi
 {
@@ -468,6 +477,8 @@ protected:
 	OJapiAppBallotmaster * m_paAppBallotmaster;
 	OCapiRootGUI m_capi;
 	OJapiGroupList m_oGroupList;
+	OJapiUtil m_oUtil;
+
 public:
 	OJapiMe m_oMe;
 
@@ -480,6 +491,7 @@ public:
 	POJapiMe me();
 	POJapiGroupList groups();
 	POCapiRootGUI capi();
+	POJapiUtil util();
 
 public:
 	Q_OBJECT
@@ -489,6 +501,7 @@ public:
 	Q_PROPERTY(POJapiMe me READ me)
 	Q_PROPERTY(POJapiGroupList groups READ groups)
 	Q_PROPERTY(POCapiRootGUI capi READ capi)
+	Q_PROPERTY(POJapiUtil util READ util);
 
 
 public slots:

@@ -700,3 +700,19 @@ OJapiGroupList::get(const QString & sId)
 	return m_poCambrian->m_oMe.getGroup(sId);
 	}
 
+
+////////////////////////////////////////// Utilities /////////////////////////////////////
+
+QString
+OJapiUtil::base64encode(const QString & sText)
+	{
+	CStr strBase64;
+	strBase64.InitFromTextEncodedInBase64(sText);
+	return strBase64;
+	}
+
+QString
+OJapiUtil::base64decode(const QString &sBase64)
+	{
+	return QByteArray::fromBase64(sBase64.toUtf8());
+	}

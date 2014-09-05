@@ -149,6 +149,12 @@ OJapiCambrian::capi()
 	return &m_capi;
 	}
 
+POJapiUtil
+OJapiCambrian::util()
+	{
+	return &m_oUtil;
+	}
+
 void
 OJapiCambrian::SendBitcoin(int n)
 	{

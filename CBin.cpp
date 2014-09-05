@@ -2793,8 +2793,7 @@ CStr::InitFromTextEncodedInBase85(PSZUC pszBase85)
 	m_paData->cbData++;	// Include the virtual null-terminator as a null-terminator
 	}
 
-/*
-Not used anymore... need testing
+
 void
 CStr::InitFromTextEncodedInBase64(const CStr & strText)
 	{
@@ -2803,7 +2802,7 @@ CStr::InitFromTextEncodedInBase64(const CStr & strText)
 	BinAppendStringBase64FromStringU(strText.PszuGetDataNZ());
 	BinAppendNullTerminator();
 	}
-*/
+
 
 PSZUC
 CStr::InitFromBase64Sz(PSZUC pszBase64)
