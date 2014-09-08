@@ -477,6 +477,29 @@ OJapiPoll::getResults() CONST_MCC
 	return &m_oResults;
 	}
 
+QVariantList OJapiPoll::listAttatchments()
+	{
+	QVariantList list;
+	CEventBallotAttatchment **ppBallotAttatchmentStop;
+	CEventBallotAttatchment **ppBallotAttatchment = m_pBallot->m_arraypaAtattchments.PrgpGetAttatchmentsStop(&ppBallotAttatchmentStop);
+	while ( ppBallotAttatchment != ppBallotAttatchmentStop)
+		{
+		CEventBallotAttatchment *pBallotAttatchment = *ppBallotAttatchment++;
+		list.append(QVariant::fromValue(pBallotAttatchment->POJapiGet()));
+		}
+
+	return list;
+	}
+
+void OJapiPoll::addAttatchment(const QString &strName, const QString &strContentBase64, const QString strMimeType)
+	{
+	CEventBallotAttatchment *pAttatchment = m_pBallot->PAllocateNewAttatchment();
+	pAttatchment->m_strMimeType = strMimeType;
+	pAttatchment->m_strName = strName;
+	pAttatchment->m_binContent.BinAppendBinaryDataFromBase64(strContentBase64);
+	}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 OJapiAppBallotmaster::OJapiAppBallotmaster(OJapiCambrian * poCambrian)
 	{

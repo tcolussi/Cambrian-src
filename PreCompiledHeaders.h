@@ -228,12 +228,13 @@ class IEvent;
 		class CEventWalletTransactionSent;
 		class CEventWalletTransactionReceived;
 	class CEventPing;
-	class CEventGroupMemberJoin;
+	class CEventGroupMemberJoin;	
 	class IEventBallot;
 		class CEventBallotSent;
 		class CEventBallotReceived;
         class CEventBallotPoll;
 
+class CEventBallotAttatchment;
 
 class CVaultEvents;
 

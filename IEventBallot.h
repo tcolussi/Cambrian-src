@@ -40,6 +40,29 @@ public:
 	void DeleteAllVotes();
 };
 
+class CEventBallotAttatchment
+{
+	OJapiPollAttatchment * m_paoJapiAttatchment;
+
+public:
+	CEventBallotPoll * m_pPollParent;
+	CBin m_binContent;
+	CStr m_strName;
+	CStr m_strMimeType;
+
+	CEventBallotAttatchment(CEventBallotPoll * pPollParent);
+	CEventBallotAttatchment(CEventBallotPoll * pPollParent, const CBin & binContent, const CStr & strName, const CStr & strMimeType);
+	~CEventBallotAttatchment();
+
+	POJapi POJapiGet();
+};
+
+class CArrayPtrPollAttatchments : public CArray
+{
+public:
+	inline CEventBallotAttatchment ** PrgpGetAttatchmentsStop(OUT CEventBallotAttatchment *** pppAttatchmentsStop) const { return (CEventBallotAttatchment **)PrgpvGetElementsStop(OUT (void ***)pppAttatchmentsStop); }
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Common code for the ballot event
 class IEventBallot : public IEvent
@@ -116,11 +139,14 @@ public:
     TIMESTAMP m_tsStarted;
     TIMESTAMP m_tsStopped;
     int m_cSecondsPollLength;
+	CArrayPtrPollAttatchments m_arraypaAtattchments;
 
+	CEventBallotAttatchment *PAllocateNewAttatchment();
     CEventBallotPoll(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);
     virtual EEventClass EGetEventClass() const { return eEventClass_eBallotPoll; }
     virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
     virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
+
 };
 
 

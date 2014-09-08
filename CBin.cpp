@@ -2814,6 +2814,19 @@ CStr::InitFromBase64Sz(PSZUC pszBase64)
 	return m_paData->rgbData;
 	}
 
+
+void
+CBin::BinAppendBinaryDataFromBase64(const QString & sBase64)
+	{
+	BinAppendBinaryDataFromBase64(sBase64.toUtf8());
+	}
+
+void
+CBin::BinAppendBinaryDataFromBase64(const QByteArray & arraybDataBase64)
+	{
+	BinAppendByteArray(QByteArray::fromBase64(arraybDataBase64));
+	}
+
 //	Decode a Base64 string into binary data (the Base64 string may contain just text without any binary character)
 PSZUC
 CBin::BinAppendBinaryDataFromBase64Szv(PSZUC pszuBase64)

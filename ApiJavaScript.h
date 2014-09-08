@@ -301,8 +301,34 @@ public slots:
 	void start();
 	void stop();
 	POJapiPollResults getResults() CONST_MCC;
+
+	// attatchments sections
+	QVariantList listAttatchments();
+	void addAttatchment(const QString & sName, const QString & sContentBase64, const QString sMimeType);
 };
 #define POJapiPoll		POJapi
+
+class OJapiPollAttatchment : public OJapi
+{
+	Q_OBJECT
+	CEventBallotAttatchment *m_pBallotAttatchment;
+
+	QString name();
+	QString mimeType();
+	QString content();
+
+public:
+	OJapiPollAttatchment(CEventBallotAttatchment  *pBallotAttatchment);
+
+	Q_PROPERTY(QString name READ name)
+	Q_PROPERTY(QString type READ mimeType)
+	Q_PROPERTY(QString content READ content)
+
+public slots:
+	void destroy();
+};
+
+
 
 class OJapiAppBallotmaster : public OJapi
 {

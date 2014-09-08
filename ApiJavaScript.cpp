@@ -5,6 +5,7 @@
 #endif
 #include "ApiJavaScript.h"
 #include "TApplicationBallotmaster.h"
+#include "IEventBallot.h"
 
 
 OJapiApps::OJapiApps(OJapiCambrian * poCambrian)
@@ -715,4 +716,54 @@ QString
 OJapiUtil::base64decode(const QString &sBase64)
 	{
 	return QByteArray::fromBase64(sBase64.toUtf8());
+}
+
+///////////////////////////////////////////////////////
+QString
+OJapiPollAttatchment::name()
+	{
+	return m_pBallotAttatchment->m_strName;
 	}
+
+QString
+OJapiPollAttatchment::mimeType()
+	{
+	return m_pBallotAttatchment->m_strMimeType;
+	}
+
+QString
+OJapiPollAttatchment::content()
+	{
+	MessageLog_AppendTextFormatCo(d_coRed, "PollAttatchment::contetn()\n");
+	CStr strBase64;
+	strBase64.BinAppendStringBase64FromBinaryData(&m_pBallotAttatchment->m_binContent);
+	return strBase64;
+	}
+
+OJapiPollAttatchment::OJapiPollAttatchment(CEventBallotAttatchment *pBallotAttatchment)
+	{
+	Assert(pBallotAttatchment != NULL);
+	m_pBallotAttatchment = pBallotAttatchment;
+}
+
+void
+OJapiPollAttatchment::destroy()
+	{
+	MessageLog_AppendTextFormatCo(d_coBlack, "OJapiPollAttatchment::destroy\n");
+	CArrayPtrPollAttatchments * parraypaAtattchments = &m_pBallotAttatchment->m_pPollParent->m_arraypaAtattchments;
+	CEventBallotAttatchment **ppBallotAttatchmentStop;
+	CEventBallotAttatchment **ppBallotAttatchment = parraypaAtattchments->PrgpGetAttatchmentsStop(&ppBallotAttatchmentStop);
+	while ( ppBallotAttatchment != ppBallotAttatchmentStop)
+		{
+		CEventBallotAttatchment * pBallotAttatchment = *ppBallotAttatchment++;
+		if (pBallotAttatchment == m_pBallotAttatchment)
+			{
+			parraypaAtattchments->RemoveElementI(pBallotAttatchment);
+			delete pBallotAttatchment;
+			return;
+			}
+		}
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to destroy attatchment $S\n", &m_pBallotAttatchment->m_strName);
+}
+
+

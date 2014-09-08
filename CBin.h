@@ -161,6 +161,8 @@ public:
 	void BinAppendStringBase85FromBinaryData(const void * pvDataBinary, int cbDataBinary);
 	void BinAppendStringBase85FromBinaryData(const CBin * pbinData);
 
+	void  BinAppendBinaryDataFromBase64(const QString & sBase64);
+	void  BinAppendBinaryDataFromBase64(const QByteArray & arraybDataBase64);
 	PSZUC BinAppendBinaryDataFromBase64Szv(PSZUC pszuBase64);
 	int   BinAppendBinaryDataFromBase85SCb_ML(PSZUC pszuBase85);
 	PSZUC BinAppendBinaryDataFromBase85Szv_ML(PSZUC pszuBase85);
