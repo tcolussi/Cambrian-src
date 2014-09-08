@@ -289,8 +289,8 @@ OJapiGroup::save()
 	m_pGroup->TreeItemFlags_SerializeToDisk_Yes();
 	m_pGroup->m_pAccount->m_arraypaGroups.ElementTransferFrom(m_pGroup, INOUT &m_poCambrian->m_arraypaTemp);	// Transfer the group from 'temp' to the account
 
-	if ( m_pGroup->m_eGroupType == eGroupType_Open )
-		// for normal groups
+	// for normal groups
+	if ( m_pGroup->m_eGroupType == eGroupType_Open && m_pGroup->m_paTreeItemW_YZ == NULL )
 		m_pGroup->TreeItemW_DisplayWithinNavigationTree(m_pGroup->m_pAccount, eMenuAction_Group );
 
 	/*
@@ -630,7 +630,6 @@ OJapiProfilesList::currentProfile()
 void
 OJapiProfilesList::setCurrentProfile(POJapiProfile poJapiProfile)
 	{
-	/*??? Need to check for the proper type (OJapiProfile) */
 	OJapiProfile *pProfile = qobject_cast<OJapiProfile*>(poJapiProfile);
 	MessageLog_AppendTextFormatCo(d_coRed, "setCurrentProfile $p\n", pProfile);
 
