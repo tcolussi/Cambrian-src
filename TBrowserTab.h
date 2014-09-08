@@ -7,6 +7,7 @@
 
 class TBrowserTabs;
 class OJapiBrowsersList;
+class WWebViewTabbed;
 
 class TBrowserTab : public ITreeItem
 {
