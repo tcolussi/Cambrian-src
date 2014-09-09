@@ -250,9 +250,9 @@ OJapiGroup::members()
 QString OJapiGroup::type()
 	{
 	if ( m_pGroup->m_eGroupType == eGroupType_Audience)
-		return "Broadcast";
+		return "broadcast";
 	else if (m_pGroup->m_eGroupType == eGroupType_Open)
-		return "Open";
+		return "open";
 	}
 
 void
