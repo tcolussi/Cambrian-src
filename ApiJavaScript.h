@@ -6,6 +6,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include <QQuickImageProvider>
 
 // HTML js API
 class OJapi;	
@@ -132,8 +133,6 @@ public:
 
 public slots:
 	void destroy();
-	QString doNothing();
-
 };
 #define POJapiProfile	POJapi
 
@@ -156,8 +155,12 @@ public:
 public slots:
 	QVariantList list();
 	POJapiProfile create(const QString & name);
+
+signals:
+	void roleChanged();
 };
 #define POJapiProfilesList	POJapi
+
 
 
 
@@ -173,6 +176,15 @@ public:
 	Q_PROPERTY(POJapiProfilesList roles READ roles)
 };
 #define POCapiRootGUI	POJapi
+
+
+
+class OCapiProfileImageProvider : public QQuickImageProvider
+{
+public:
+	OCapiProfileImageProvider();
+	QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize);
+};
 
 
 

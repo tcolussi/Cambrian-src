@@ -597,14 +597,8 @@ OJapiProfile::browsers()
 void
 OJapiProfile::destroy()
 	{
-// TODO
-}
-
-QString OJapiProfile::doNothing()
-{
-return "Hola mundo";
-}
-
+	// TODO
+	}
 
 
 
@@ -634,7 +628,10 @@ OJapiProfilesList::setCurrentProfile(POJapiProfile poJapiProfile)
 	MessageLog_AppendTextFormatCo(d_coRed, "setCurrentProfile $p\n", pProfile);
 
 	if ( pProfile != NULL )
+		{
 		NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfile->m_pProfile);
+		roleChanged();
+		}
 	}
 
 QVariantList
@@ -671,6 +668,20 @@ OCapiRootGUI::roles()
 	{
 	return &m_oProfiles;
 	}
+
+
+
+OCapiProfileImageProvider::OCapiProfileImageProvider()  : QQuickImageProvider(QQuickImageProvider::Pixmap)
+	{
+	}
+
+QPixmap OCapiProfileImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+	{
+	// TODO: return current profile thumb image
+	QPixmap profilepic(":/ico/IconHaven");
+	return profilepic;
+	}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -743,7 +754,7 @@ OJapiPollAttatchment::OJapiPollAttatchment(CEventBallotAttatchment *pBallotAttat
 	{
 	Assert(pBallotAttatchment != NULL);
 	m_pBallotAttatchment = pBallotAttatchment;
-}
+	}
 
 void
 OJapiPollAttatchment::destroy()
@@ -763,6 +774,7 @@ OJapiPollAttatchment::destroy()
 			}
 		}
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to destroy attatchment $S\n", &m_pBallotAttatchment->m_strName);
-}
+	}
+
 
 
