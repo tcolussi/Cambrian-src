@@ -1,5 +1,4 @@
-//	ApiJavaScript.h
-//
+//	ApiJavaScript.h //
 //	Cambrian objects available in JavaScript
 #ifndef APIJAVASCRIPT_H
 #define APIJAVASCRIPT_H
@@ -7,6 +6,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include <QQuickImageProvider>
+#include "TApplicationBallotmaster.h"
 
 // HTML js API
 class OJapi;	
@@ -157,11 +157,30 @@ public slots:
 	POJapiProfile create(const QString & name);
 
 signals:
-	void roleChanged();
+	void roleChanged ();
 };
 #define POJapiProfilesList	POJapi
 
 
+class OJapiAppInfo : public OJapi
+{
+	Q_OBJECT
+
+	const SApplicationHtmlInfo *m_pApplicationInfo;
+
+public:
+	OJapiAppInfo(const SApplicationHtmlInfo *pApplicationInfo);
+
+	QString name();
+	QString tooltip();
+	QString launchUrl();
+	QString iconUrl();
+
+	Q_PROPERTY(QString name READ name )
+	Q_PROPERTY(QString tooltip READ tooltip )
+	Q_PROPERTY(QString launchUrl READ launchUrl )
+	Q_PROPERTY(QString iconUrl READ iconUrl )
+};
 
 
 class OCapiRootGUI : public OJapi
@@ -172,17 +191,19 @@ class OCapiRootGUI : public OJapi
 public:
 	OCapiRootGUI();
 	POJapiProfilesList roles();
+	QVariantList apps();
 
 	Q_PROPERTY(POJapiProfilesList roles READ roles)
+	Q_PROPERTY(QVariantList apps READ apps)
 };
 #define POCapiRootGUI	POJapi
 
 
 
-class OCapiProfileImageProvider : public QQuickImageProvider
+class OCapiImageProvider : public QQuickImageProvider
 {
 public:
-	OCapiProfileImageProvider();
+	OCapiImageProvider();
 	QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize);
 };
 

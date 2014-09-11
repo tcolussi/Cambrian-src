@@ -667,20 +667,88 @@ POJapiProfilesList
 OCapiRootGUI::roles()
 	{
 	return &m_oProfiles;
+}
+
+
+
+SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
+{
+	{"Navshell Peers"	 , "Apps/navshell-contacts/index.html"		, NULL },
+	{"Navshell Sidebar"  , "Apps/navshell-stack/index.html"			, NULL },
+	{"Navshell Header"   , "Apps/navshell-header/index.html"		, NULL },
+	{"Office Kingpin"    , "Apps/html5-office-kingpin/index.html"	, NULL },
+	{"Pomodoro"          , "Apps/html5-pomodoro/index.html"			, NULL },
+	{"JAPI Tests"        , "Apps/japi/test/test.html"				, NULL },
+	{"Scratch"           , "Apps/html5-scratch/index.html"			, NULL },
+	{"HTML5 xik"         , "Apps/html5-xik/index.html"				, NULL },
+	{"Group Manager"	 , "Apps/html5-group-manager/index.html"	, NULL },
+	{"Ballotmaster"		 , "Apps/html5-pollmaster/index.html"		, NULL },
+	{"Home"				 , "Apps/html5-home/index.html"				, NULL },
+};
+
+QVariantList OCapiRootGUI::apps()
+	{
+	QVariantList list;
+	for (SApplicationHtmlInfo * pInfo = &g_rgApplicationHtmlInfo[0]; pInfo != g_rgApplicationHtmlInfo + LENGTH(g_rgApplicationHtmlInfo); pInfo++)
+		{
+		if (pInfo->paoJapi == NULL)
+			pInfo->paoJapi = new OJapiAppInfo(pInfo);
+
+		list.append( QVariant::fromValue(pInfo->paoJapi) );
+		}
+
+	return list;
 	}
 
+const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name)
+{
+	//MessageLog_AppendTextFormatCo(d_coRed, "sizeof=$i\n", sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo) );
+	for(int i=0; i < sizeof(g_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo); i++)
+	{
+	const SApplicationHtmlInfo *pInfo = &g_rgApplicationHtmlInfo[i];
+	if ( FCompareStringsNoCase( (PSZUC) pInfo->pszName, (PSZUC) name ) )
+		{
+		return pInfo;
+		}
+	}
+	return NULL;
+}
 
 
-OCapiProfileImageProvider::OCapiProfileImageProvider()  : QQuickImageProvider(QQuickImageProvider::Pixmap)
+
+OCapiImageProvider::OCapiImageProvider()  : QQuickImageProvider(QQuickImageProvider::Pixmap)
 	{
 	}
 
-QPixmap OCapiProfileImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+QPixmap OCapiImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
 	{
-	// TODO: return current profile thumb image
-	QPixmap profilepic(":/ico/IconHaven");
+	/*
+	 * image://sopro/[:id:]
+	 *
+	 * expected id values
+	 *  - roles/current
+	 *	- roles/[:roleName:]
+	 *	- appInfo/[:appName:]
+	 *
+	 * TODO: return actual images
+	 */
+
+	QStringList srgParts = id.split("/", QString::SkipEmptyParts);
+	QString sFirst = srgParts.first();
+	QPixmap profilepic;
+
+	if ( sFirst.compare("roles") == 0 )
+		{
+		profilepic.load(":/ico/IconHaven");
+		}
+	else if ( sFirst.compare("appInfo") == 0 )
+		{
+		profilepic.load(":/ico/IconHaven");
+		}
+
 	return profilepic;
 	}
+
 
 
 
@@ -776,5 +844,37 @@ OJapiPollAttatchment::destroy()
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to destroy attatchment $S\n", &m_pBallotAttatchment->m_strName);
 	}
 
+
+
+
+
+OJapiAppInfo:: OJapiAppInfo(const SApplicationHtmlInfo *pApplicationInfo)
+	{
+	Assert ( pApplicationInfo != NULL );
+	m_pApplicationInfo = pApplicationInfo;
+	}
+
+QString OJapiAppInfo::name()
+	{
+	Assert ( m_pApplicationInfo != NULL );
+	return QString(m_pApplicationInfo->pszName);
+	}
+
+QString OJapiAppInfo::tooltip()
+	{
+	return "SoPro Application";
+	}
+
+QString OJapiAppInfo::launchUrl()
+	{
+	Assert ( m_pApplicationInfo != NULL );
+	return QString(m_pApplicationInfo->pszLocation);
+	}
+
+QString OJapiAppInfo::iconUrl()
+	{
+	Assert ( m_pApplicationInfo != NULL );
+	return "image://application/" + QString(m_pApplicationInfo->pszName);
+}
 
 

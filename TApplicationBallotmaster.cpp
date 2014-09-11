@@ -5,6 +5,7 @@
 #include "IEventBallot.h"
 #include "WLayoutBrowser.h"
 
+
 void
 DisplayApplicationBallotMaster()
 	{
@@ -671,16 +672,3 @@ OPolls::save(QString sXmlPolls)
 */
 
 
-const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name)
-{
-	//MessageLog_AppendTextFormatCo(d_coRed, "sizeof=$i\n", sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo) );
-	for(int i=0; i < sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo); i++)
-	{
-	const SApplicationHtmlInfo *pInfo = &c_rgApplicationHtmlInfo[i];
-	if ( FCompareStringsNoCase( (PSZUC) pInfo->pszName, (PSZUC) name ) )
-		{
-		return pInfo;
-		}
-	}
-	return NULL;
-}
