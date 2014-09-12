@@ -60,7 +60,7 @@ OJapiMe::groups()
 			} // while
 		*/
 		} // while
-	MessageLog_AppendTextFormatCo(d_coRed, "OJapiMe::groups() (length = $i)\n", oList.length());
+	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiMe::groups() (length = $i)\n", oList.length());
 	return oList;
 	}
 /*
@@ -106,6 +106,7 @@ OJapiMe::peers()
 		*/
 	return oList;
 }
+
 /*
 POJapiGroup
 OJapiMe::newPeerList()
@@ -630,7 +631,7 @@ void
 OJapiProfilesList::setCurrentProfile(POJapiProfile poJapiProfile)
 	{
 	OJapiProfile *pProfile = qobject_cast<OJapiProfile*>(poJapiProfile);
-	MessageLog_AppendTextFormatCo(d_coRed, "setCurrentProfile $p\n", pProfile);
+	//MessageLog_AppendTextFormatCo(d_coRed, "setCurrentProfile $p\n", pProfile);
 
 	if ( pProfile != NULL )
 		{
@@ -643,7 +644,7 @@ QVariantList
 OJapiProfilesList::list()
 	{
 	QVariantList list;
-	MessageLog_AppendTextFormatCo(d_coRed, "OJapiProfilesList::list() \n");
+	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiProfilesList::list() \n");
 
 	TProfile **ppProfilesStop;
 	TProfile **ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(&ppProfilesStop);
@@ -711,10 +712,19 @@ QVariantList OCapiRootGUI::apps()
 	return list;
 	}
 
-OJapiNotificationsList *OCapiRootGUI::notifications()
+POJapiNotificationsList
+OCapiRootGUI::notifications()
 	{
 	return &m_oNotificationsList;
 	}
+
+POJapiPeerRequestsList
+OCapiRootGUI::peerRequests()
+	{
+	return &m_oPeerRequestsList;
+	}
+
+
 
 const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name)
 	{
@@ -908,42 +918,50 @@ OJapiNotification::OJapiNotification(IEvent *pEvent)
 	{
 	}
 
-QString OJapiNotification::title()
+QString
+OJapiNotification::title()
 	{
 	return "Incoming File Transfer";
 	}
 
-QString OJapiNotification::text()
+QString
+OJapiNotification::text()
 	{
 	return "corp2014.pdf 4.3 Mb";
 	}
 
-QDateTime OJapiNotification::date()
+QDateTime
+OJapiNotification::date()
 	{
 	return QDateTime::currentDateTime();
 	}
 
-QString OJapiNotification::cardLink()
+QString
+OJapiNotification::cardLink()
 	{
 	return "cardLink";
 	}
 
-QString OJapiNotification::actionLabel()
+QString
+OJapiNotification::actionLabel()
 	{
 	return "ACCEPT";
 	}
 
-QString OJapiNotification::actionLink()
+QString
+OJapiNotification::actionLink()
 	{
 	return "actionLink";
 	}
 
-void OJapiNotification::clear()
+void
+OJapiNotification::clear()
 	{
 	// TODO: remove this notification from the list
 	}
 
-QVariantList OJapiNotificationsList::recent(int max)
+QVariantList
+OJapiNotificationsList::recent(int nMax)
 	{
 	QVariantList list;
 	list.append(QVariant::fromValue(new OJapiNotification()));/*??? memory leak */
@@ -953,8 +971,46 @@ QVariantList OJapiNotificationsList::recent(int max)
 	return list;
 	}
 
-void OJapiNotificationsList::clearRecent()
+void
+OJapiNotificationsList::clearRecent()
 	{
 	// TODO: remove all notifications from the list
 	}
 
+
+
+
+
+OJapiPeerRequestsList::OJapiPeerRequestsList()
+	{
+	}
+
+OJapiPeerRequestsList::~OJapiPeerRequestsList()
+	{
+	}
+
+QVariantList
+OJapiPeerRequestsList::list(int nMax)
+	{
+	QVariantList list;
+	list.append(QVariant::fromValue(new OJapiPeerRequest()));
+	list.append(QVariant::fromValue(new OJapiPeerRequest()));
+	list.append(QVariant::fromValue(new OJapiPeerRequest()));
+	list.append(QVariant::fromValue(new OJapiPeerRequest()));
+	list.append(QVariant::fromValue(new OJapiPeerRequest()));
+	return list;
+	}
+
+
+
+QString
+OJapiPeerRequest::id()
+	{
+	return "plato@xmpp.cambrian.org";
+	}
+
+QString
+OJapiPeerRequest::name()
+	{
+	return "Plato";
+	}

@@ -214,9 +214,43 @@ class OJapiNotificationsList : public OJapi
 public:
 
 public slots:
-	QVariantList recent(int max);
+	QVariantList recent(int nMax);
 	void clearRecent();
 };
+#define POJapiNotificationsList POJapi
+
+
+
+
+class OJapiPeerRequestsList : public QObject
+{
+	Q_OBJECT
+public:
+	OJapiPeerRequestsList();
+	~OJapiPeerRequestsList();
+
+
+public slots:
+	QVariantList list(int nMax);
+};
+#define POJapiPeerRequestsList POJapi
+
+
+
+
+class OJapiPeerRequest : public QObject
+{
+	Q_OBJECT
+
+public:
+	QString id();
+	QString name();
+
+	Q_PROPERTY(QString id READ id)
+	Q_PROPERTY(QString name READ name)
+};
+
+
 
 
 class OCapiRootGUI : public OJapi
@@ -224,16 +258,19 @@ class OCapiRootGUI : public OJapi
 	Q_OBJECT
 	OJapiProfilesList m_oProfiles;
 	OJapiNotificationsList m_oNotificationsList;
+	OJapiPeerRequestsList m_oPeerRequestsList;
 
 public:
 	OCapiRootGUI();
-	POJapiProfilesList roles();
 	QVariantList apps();
-	OJapiNotificationsList * notifications();
+	POJapiProfilesList roles();
+	POJapiNotificationsList notifications();
+	POJapiPeerRequestsList peerRequests();
 
-	Q_PROPERTY(POJapiProfilesList roles READ roles)
 	Q_PROPERTY(QVariantList apps READ apps)
-	Q_PROPERTY(OJapiNotificationsList* notifications READ notifications)
+	Q_PROPERTY(POJapiProfilesList roles READ roles)
+	Q_PROPERTY(POJapiNotificationsList notifications READ notifications)
+	Q_PROPERTY(POJapiPeerRequestsList peerRequests READ peerRequests)
 };
 #define POCapiRootGUI	POJapi
 
