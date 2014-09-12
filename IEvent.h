@@ -322,6 +322,8 @@ CHS ChGetCambrianActionFromUrl(PSZUC pszUrl);
 //
 class IEvent	// (event)
 {
+	POJapi m_paoJapiEvent;
+
 public:
 	CVaultEvents * m_pVaultParent_NZ;		// Pointer of the vault holding the event
 	TContact * m_pContactGroupSender_YZ;	// Pointer to the contact who sent the group event.  If this pointer is NULL, it means the event is not part of group conversation, or the event was sent by the user.
@@ -332,6 +334,7 @@ public:
 		FE_kzDefault				= 0x0000,
 		FE_kfReplacing				= 0x0001,	// The event is replacing another [previous] event (for instance, the event contains the text replacing an older event).  To find the old event, use CEventUpdater.
 		FE_kfReplaced				= 0x0002,	// The event has been replaced by another event (for instance, the text was edited, and therefore another event contains the updated text).  The flags FE_kfReplacing and FE_kfReplaced are not mutually exclusive, as an event may replacing another event, which in turn was replaced by a more recent event.
+		FE_kfArchieved				= 0x0004,	// The event is archieved
 
 		FE_kmSerializeMask			= 0x000F,
 
@@ -349,6 +352,8 @@ public:
 	#ifdef d_szEventDebug_strVersion
 	CStr m_strDebugVersion;
 	#endif
+
+	POJapi POJapiGet();
 
 public:
 	IEvent(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);

@@ -328,8 +328,31 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		return ezMenuActionNone;
 	default:
 		return ITreeItemChatLogEvents::TreeItem_EDoMenuAction(eMenuAction);
-		} // switch
-	} // TreeItem_EDoMenuAction()
+	} // switch
+}
+
+void TGroup::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon)
+	{
+	ITreeItem::TreeItemW_DisplayWithinNavigationTree(pParent_YZ, eMenuActionIcon);
+	if (m_paTreeItemW_YZ != NULL)
+		{
+		TGroupMember **ppMemberStop;
+		TGroupMember **ppMember = m_arraypaMembers.PrgpGetMembersStop(&ppMemberStop);
+		while( ppMember != ppMemberStop)
+			{
+			TGroupMember *pMember = *ppMember++;
+			pMember->TreeItemGroupMember_DisplayWithinNavigationTree();	// Display the group member to the Navigation Tree only if its group is visible
+			TreeItemW_SetTextToDisplayNameIfGenerated();
+			}
+	}
+}
+
+void TGroup::TreeItemW_DisplayWithinNavigationTree(ITreeItem *pParent_YZ)
+	{
+	ITreeItem::TreeItemW_DisplayWithinNavigationTree(pParent_YZ);
+	}
+
+ // TreeItem_EDoMenuAction()
 
 /*
 class WLayoutGroup : public WLayout

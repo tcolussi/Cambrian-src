@@ -569,7 +569,12 @@ TProfile::POJapiGet()
 		m_paoJapiProfile = new OJapiProfile(this);
 
 	return m_paoJapiProfile;
-	}
+}
+
+OJapiCambrian *TProfile::POJapiGetCambrian()
+{
+			return new OJapiCambrian(this, NULL);
+}
 
 OJapiProfile::OJapiProfile(TProfile *pProfile) : m_oBrowsersList(this)
 	{
@@ -669,22 +674,28 @@ OCapiRootGUI::roles()
 	return &m_oProfiles;
 }
 
-
+// this enum must be in sync with g_rgApplicationHtmlInfo[]
+enum EApplicationHtmlinfo
+	{
+	eApplicationHtmlInfoBallotmaster = 9,
+	};
 
 SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 {
-	{"Navshell Peers"	 , "Apps/navshell-contacts/index.html"		, NULL },
-	{"Navshell Sidebar"  , "Apps/navshell-stack/index.html"			, NULL },
-	{"Navshell Header"   , "Apps/navshell-header/index.html"		, NULL },
-	{"Office Kingpin"    , "Apps/html5-office-kingpin/index.html"	, NULL },
-	{"Pomodoro"          , "Apps/html5-pomodoro/index.html"			, NULL },
-	{"JAPI Tests"        , "Apps/japi/test/test.html"				, NULL },
-	{"Scratch"           , "Apps/html5-scratch/index.html"			, NULL },
-	{"HTML5 xik"         , "Apps/html5-xik/index.html"				, NULL },
-	{"Group Manager"	 , "Apps/html5-group-manager/index.html"	, NULL },
-	{"Ballotmaster"		 , "Apps/html5-pollmaster/index.html"		, NULL },
-	{"Home"				 , "Apps/html5-home/index.html"				, NULL },
+	{"Navshell Peers"	 , "Apps/navshell-contacts/index.html"		, PaAllocateJapiGeneric, NULL },
+	{"Navshell Sidebar"  , "Apps/navshell-stack/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"Navshell Header"   , "Apps/navshell-header/index.html"		, PaAllocateJapiGeneric, NULL },
+	{"Office Kingpin"    , "Apps/html5-office-kingpin/index.html"	, PaAllocateJapiGeneric, NULL },
+	{"Pomodoro"          , "Apps/html5-pomodoro/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"JAPI Tests"        , "Apps/japi/test/test.html"				, PaAllocateJapiGeneric, NULL },
+	{"Scratch"           , "Apps/html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"HTML5 xik"         , "Apps/html5-xik/index.html"				, PaAllocateJapiGeneric, NULL },
+	{"Group Manager"	 , "Apps/html5-group-manager/index.html"	, PaAllocateJapiGeneric, NULL },
+	{"Ballotmaster"		 , "Apps/html5-pollmaster/index.html"		, PaAllocateJapiGeneric, NULL },
+	{"Home"		         , "Apps/html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
 };
+
+SApplicationHtmlInfo * PGetApplicationHtmlInfoBallotmaster() { return &g_rgApplicationHtmlInfo[9]; }
 
 QVariantList OCapiRootGUI::apps()
 	{
@@ -692,7 +703,7 @@ QVariantList OCapiRootGUI::apps()
 	for (SApplicationHtmlInfo * pInfo = &g_rgApplicationHtmlInfo[0]; pInfo != g_rgApplicationHtmlInfo + LENGTH(g_rgApplicationHtmlInfo); pInfo++)
 		{
 		if (pInfo->paoJapi == NULL)
-			pInfo->paoJapi = new OJapiAppInfo(pInfo);
+			pInfo->paoJapi = pInfo->pfnPaAllocateJapi(pInfo);
 
 		list.append( QVariant::fromValue(pInfo->paoJapi) );
 		}
@@ -700,8 +711,13 @@ QVariantList OCapiRootGUI::apps()
 	return list;
 	}
 
+OJapiNotificationsList *OCapiRootGUI::notifications()
+	{
+	return &m_oNotificationsList;
+	}
+
 const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name)
-{
+	{
 	//MessageLog_AppendTextFormatCo(d_coRed, "sizeof=$i\n", sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo) );
 	for(int i=0; i < sizeof(g_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo); i++)
 	{
@@ -712,9 +728,7 @@ const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name)
 		}
 	}
 	return NULL;
-}
-
-
+	}
 
 OCapiImageProvider::OCapiImageProvider()  : QQuickImageProvider(QQuickImageProvider::Pixmap)
 	{
@@ -877,4 +891,70 @@ QString OJapiAppInfo::iconUrl()
 	return "image://application/" + QString(m_pApplicationInfo->pszName);
 }
 
+
+/////////////////////////////////////////////////////
+
+POJapi
+IEvent::POJapiGet()
+	{
+	if ( m_paoJapiEvent == NULL)
+		m_paoJapiEvent = new OJapiNotification();
+
+	return m_paoJapiEvent;
+	}
+
+
+OJapiNotification::OJapiNotification(IEvent *pEvent)
+	{
+	}
+
+QString OJapiNotification::title()
+	{
+	return "Incoming File Transfer";
+	}
+
+QString OJapiNotification::text()
+	{
+	return "corp2014.pdf 4.3 Mb";
+	}
+
+QDateTime OJapiNotification::date()
+	{
+	return QDateTime::currentDateTime();
+	}
+
+QString OJapiNotification::cardLink()
+	{
+	return "cardLink";
+	}
+
+QString OJapiNotification::actionLabel()
+	{
+	return "ACCEPT";
+	}
+
+QString OJapiNotification::actionLink()
+	{
+	return "actionLink";
+	}
+
+void OJapiNotification::clear()
+	{
+	// TODO: remove this notification from the list
+	}
+
+QVariantList OJapiNotificationsList::recent(int max)
+	{
+	QVariantList list;
+	list.append(QVariant::fromValue(new OJapiNotification()));/*??? memory leak */
+	list.append(QVariant::fromValue(new OJapiNotification()));
+	list.append(QVariant::fromValue(new OJapiNotification()));
+
+	return list;
+	}
+
+void OJapiNotificationsList::clearRecent()
+	{
+	// TODO: remove all notifications from the list
+	}
 

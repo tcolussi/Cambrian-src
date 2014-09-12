@@ -4,6 +4,14 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+struct SApplicationHtmlInfo;
+
+
+typedef OJapiAppInfo * (* PFn_PaAllocateJapi)(SApplicationHtmlInfo * pInfo);
+OJapiAppInfo * PaAllocateJapiGeneric(SApplicationHtmlInfo * pInfo);
+//OJapiAppInfo * PaAllocateJapiBallotMaster(SApplicationHtmlInfo * pInfo);
+
+
 //	The TApplicationHtml is a generic container for an HTML5 application.
 //	The application has access to the root "Cambrian" JavaScript object which gives access to other applications.
 //	At the moment, there is no security, so all HTML applications have full access to the JavaScript APIs.
@@ -12,6 +20,7 @@ struct SApplicationHtmlInfo
 {
 	PSZAC pszName;			// "Ballotmaster"
 	PSZAC pszLocation;		// "Apps/Ballotmaster/index.html"
+	PFn_PaAllocateJapi pfnPaAllocateJapi;
 	POJapi paoJapi;			//
 	// Icon
 	/* NYI
@@ -20,10 +29,11 @@ struct SApplicationHtmlInfo
 	*/
 };
 
-
 extern SApplicationHtmlInfo g_rgApplicationHtmlInfo[];
-
+SApplicationHtmlInfo * PGetApplicationHtmlInfoBallotmaster();
 const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name);
+
+
 
 class CApplicationHtmlBallotmaster
 	{

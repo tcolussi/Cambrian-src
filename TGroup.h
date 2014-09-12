@@ -82,10 +82,13 @@ public:
 	virtual void TreeItem_IconUpdateOnMessagesRead();								// From ITreeItem
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);					// From ITreeItem
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);			// From ITreeItem
+	void TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon);	// From ITreeItem
+	void TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ);									//
 	virtual void Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const;	// From ITreeItemChatLogEvents
 
 	bool TreeItemGroup_FCanDisplayWithinNavigationTree() const;
 	void TreeItemGroup_DisplayWithinNavigationTree(ITreeItem * pTreeItemParent = d_zDEFAULT);
+
 	void TreeItemGroup_RemoveFromNavigationTree();
 
 	void DisplayDialogProperties();

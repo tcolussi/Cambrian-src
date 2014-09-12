@@ -242,6 +242,7 @@ class CVaultEvents;
 class OJapiCambrian;
 class OJapiContact;
 class OJapiGroup;
+class OJapiAppInfo;
 
 #define POJapi				QObject *	// Every object exposed to the JavaScript engine must be stored as QVariant.  Fortunately QVariant accepts a QObject * however since QObject * is quite generic, we #define a new type of object to distinguish between those for JavaScript and those used by Qt, such as QWdiget. It makes the code easier to read.  BTW: Using a typedef does not work, as the compiler no longer recognizes the QObject *.
 #define POCapi				QObject *

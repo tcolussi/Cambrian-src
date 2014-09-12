@@ -502,7 +502,7 @@ void OJapiPoll::addAttatchment(const QString &strName, const QString &strContent
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiAppBallotmaster::OJapiAppBallotmaster(OJapiCambrian * poCambrian)
+OJapiAppBallotmaster::OJapiAppBallotmaster(OJapiCambrian * poCambrian, const SApplicationHtmlInfo *pApplicationInfo) : OJapiAppInfo(pApplicationInfo)
 	{
 	Assert(poCambrian != NULL);
 	m_pServiceBallotmaster = poCambrian->m_pProfile->PGetServiceBallotmaster_NZ();
@@ -672,3 +672,18 @@ OPolls::save(QString sXmlPolls)
 */
 
 
+OJapiAppInfo * PaAllocateJapiGeneric(SApplicationHtmlInfo * pInfo)
+	{
+	return new OJapiAppInfo(pInfo);
+	}
+/*
+OJapiAppInfo * PaAllocateJapiBallotMaster(SApplicationHtmlInfo * pInfo)
+	{
+	TProfile * pProfileParent = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+	if ( pProfileParent != NULL)
+		return new OJapiAppBallotmaster(pProfileParent->POJapiGet(), pInfo);
+	else
+		return PaAllocateJapiGeneric(pInfo);
+	}
+
+*/

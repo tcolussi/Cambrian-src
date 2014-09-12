@@ -182,19 +182,58 @@ public:
 	Q_PROPERTY(QString iconUrl READ iconUrl )
 };
 
+class OJapiNotification : public OJapi
+{
+	Q_OBJECT
+
+public:
+	OJapiNotification(IEvent *pEvent = 0);
+
+	QString title();
+	QString text();
+	QDateTime date();
+	QString cardLink();
+	QString actionLabel();
+	QString actionLink();
+
+	Q_PROPERTY(QString title READ title)
+	Q_PROPERTY(QString text READ text)
+	Q_PROPERTY(QDateTime date READ date)
+	Q_PROPERTY(QString cardLink READ cardLink)
+	Q_PROPERTY(QString actionLabel READ actionLabel)
+	Q_PROPERTY(QString actionLink READ actionLink)
+
+public slots:
+	void clear();
+};
+
+class OJapiNotificationsList : public OJapi
+{
+	Q_OBJECT
+
+public:
+
+public slots:
+	QVariantList recent(int max);
+	void clearRecent();
+};
+
 
 class OCapiRootGUI : public OJapi
 {
 	Q_OBJECT
 	OJapiProfilesList m_oProfiles;
+	OJapiNotificationsList m_oNotificationsList;
 
 public:
 	OCapiRootGUI();
 	POJapiProfilesList roles();
 	QVariantList apps();
+	OJapiNotificationsList * notifications();
 
 	Q_PROPERTY(POJapiProfilesList roles READ roles)
 	Q_PROPERTY(QVariantList apps READ apps)
+	Q_PROPERTY(OJapiNotificationsList* notifications READ notifications)
 };
 #define POCapiRootGUI	POJapi
 
@@ -363,7 +402,7 @@ public slots:
 
 
 
-class OJapiAppBallotmaster : public OJapi
+class OJapiAppBallotmaster : public OJapiAppInfo
 {
 	Q_OBJECT
 protected:
@@ -371,7 +410,7 @@ protected:
 //	TApplicationBallotmaster * m_pBallotmaster;
 
 public:
-	OJapiAppBallotmaster(OJapiCambrian * poCambrian);
+	OJapiAppBallotmaster(OJapiCambrian * poCambrian, const SApplicationHtmlInfo *pApplicationInfo);
 	~OJapiAppBallotmaster();
     POJapiPoll PGetOJapiPoll(CEventBallotPoll * pBallot);
     POJapiPoll PCreateNewPollFromTemplate(CEventBallotPoll * pPollTemplate);

@@ -97,7 +97,7 @@ POJapiAppBallotmaster
 OJapiCambrian::polls()
 	{
 	if (m_paAppBallotmaster == NULL)
-		m_paAppBallotmaster = new OJapiAppBallotmaster(this);
+		m_paAppBallotmaster = new OJapiAppBallotmaster(this, PGetApplicationHtmlInfoBallotmaster());
 	return m_paAppBallotmaster;
 	/*
 	if (FDeniedBySecurityPolicy())
