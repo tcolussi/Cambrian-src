@@ -12,6 +12,7 @@
 #else
 	#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
 #endif
+#include "XcpApi.h"
 
 CHS
 ChGetCambrianActionFromUrl(PSZUC pszUrl)
@@ -238,19 +239,17 @@ IEvent::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	Assert(FALSE && "No need to call this virtual method");
 	}
 
-void
-IEvent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
+//	XospDataE(), virtual
+//
+//	Virtual method to allow events to exchange data.  This method is called to handle both data requests and responses.
+//	Return eGui_zUpdate if the event should be updated in the Chat Log.
+EGui
+IEvent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply)
 	{
-	Assert(pXmlNodeExtraData != NULL);
-	Assert(pbinXcpStanzaReply != NULL);
-	}
-
-void
-IEvent::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
-	{
-	Assert(pXmlNodeExtraData != NULL);
-	Assert(pbinXcpStanzaReply != NULL);
-	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "IEvent::XcpExtraDataArrived($U): ^N", EGetEventClass(), pXmlNodeExtraData);	// The event must implement this virtual method
+	Assert(pXmlNodeData != NULL);
+	Assert(pbinXospReply != NULL);
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "IEvent::XospDataE($U, $t): ^N", EGetEventClass(), m_tsEventID, pXmlNodeData);	// The event must implement this virtual method if expecting to send/receive data
+	return eGui_NoUpdate;
 	}
 
 //	ChatLogUpdateTextBlock(), virtual
@@ -325,26 +324,26 @@ IEvent::Event_FIsEventTypeReceived() const
 	return ((EGetEventClass() & eEventClass_kfReceivedByRemoteClient) != 0);
 	}
 
-//	Return TRUE if the event was modified
-BOOL
-IEvent::Event_FSetCompletedTimestamp()
+//	Return eGui_zUpdate if the event was modified and should be updated to the Chat Log
+EGui
+IEvent::Event_ESetCompletedTimestamp()
 	{
 	if (m_tsOther > d_tsOther_kmReserved)
 		{
 		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t\t\t Event_SetCompleted() - m_tsOther $t remains unchanged for EventID $t.\n", m_tsOther, m_tsEventID);
-		return FALSE;	// The task already completed, so keep the first timestamp.  This is likely to be a duplicate message.
+		return eGui_NoUpdate;	// The task already completed, so keep the first timestamp.  This is likely to be a duplicate message.
 		}
 	m_tsOther = Timestamp_GetCurrentDateTime();
 	m_pVaultParent_NZ->SetModified();		// This line is important so the modified event is always saved to disk (otherwise an event may be updated, however not serialized because ITreeItemChatLogEvents will never know the event was updated)
 	Assert(Event_FHasCompleted());
-	return TRUE;
+	return eGui_zUpdate;
 	}
 
 void
 IEvent::Event_SetCompletedAndUpdateChatLog(QTextEdit * pwEditChatLog)
 	{
 	Endorse(pwEditChatLog == NULL);		// Don't update the event in the Chat Log, typically because there is no Chat Log.  The events may be loaded in memory, however not displayed in any Chat Log.
-	if (Event_FSetCompletedTimestamp())
+	if (Event_ESetCompletedTimestamp() == eGui_zUpdate)
 		ChatLog_UpdateEventWithinWidget(pwEditChatLog);
 	}
 
@@ -391,24 +390,6 @@ IEvent::ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const
 		if (pUserData != NULL && pUserData->m_pEvent == this)
 			break;
 		oTextBlock = oTextBlock.next();
-		}
-	if (!oTextBlock.isValid())
-		{
-		#ifdef SUPPORT_XCP_VERSION_1
-		// We were unable to find a text block matching the event, however is is possible the event is hidden within a CEventDownloader.
-		EEventClass eEventClass = EGetEventClass();
-		if (eEventClass != CEventDownloader::c_eEventClass)
-			{
-			// MessageLog_AppendTextFormatSev(eSeverityInformation, "Unable to find text block matching event of class $U [i=$t, o=$t]\n", eEventClass, m_tsEventID, m_tsOther);
-			CEventDownloader * pEventDownloader = m_pVaultParent_NZ->PFindEventDownloaderMatchingEvent(this);
-			if (pEventDownloader != NULL)
-				{
-				MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "Using CEventDownloader as a substitute for event of class $U [i=$t, o=$t]\n", eEventClass, m_tsEventID, m_tsOther);
-				return pEventDownloader->ChatLog_GetTextBlockRelatedToDocument(poDocument);
-				}
-			}
-		#endif
-		MessageLog_AppendTextFormatSev(eSeverityWarning, "ChatLog_GetTextBlockRelatedToDocument() - Unable to find text block matching event of class $U [i=$t, o=$t]\n", EGetEventClass(), m_tsEventID, m_tsOther);
 		}
 	return oTextBlock;
 	}
@@ -478,7 +459,7 @@ IEvent::PGetContactForReply_YZ() const
 	ITreeItemChatLogEvents * pContactOrGroup = m_pVaultParent_NZ->m_pParent;
 	if (pContactOrGroup->EGetRuntimeClass() == RTI(TContact))
 		return (TContact *)pContactOrGroup;
-	Assert(FALSE && "The event does not have a valid peer to reply");
+	Assert(FALSE && "The event does not have a valid contact to reply");
 	return NULL;
 	}
 
@@ -572,7 +553,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	const QDateTime dtlMessage = QDateTime::fromMSecsSinceEpoch(m_tsEventID).toLocalTime();
 	const QString sTime = dtlMessage.toString("hh:mm");
 	const QString sDateTime = dtlMessage.toString(Qt::SystemLocaleLongDate); // DefaultLocaleLongDate);
-	(void)pbinTextHtml->PvAllocateMemoryAndEmpty(300);	// Empty the binary object and also pre-allocate 300 bytes of memory to avoid unnecessary memory re-allocations
+	(void)pbinTextHtml->PbbAllocateMemoryAndEmpty_YZ(300);	// Empty the binary object and also pre-allocate 300 bytes of memory to avoid unnecessary memory re-allocations
 	TIMESTAMP_DELTA dts = m_tsOther - m_tsEventID;
 	const EEventClass eEventClass = EGetEventClass();
 	if (eEventClass & eEventClass_kfReceivedByRemoteClient)
@@ -715,7 +696,7 @@ IEventMessageText::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) con
 	{	
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAttribute_strText, m_strMessageText);
 	pbinXmlAttributes->BinAppendXmlAttributeUInt(d_chAttribute_uFlags, m_uFlagsMessage);
-	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<message to='^J' id='$t'><body>^S</body><request xmlns='urn:xmpp:receipts'/></message>", pbinXmlAttributes->m_pContact, m_tsEventID, &m_strMessageText);
+	//pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<message to='^J' id='$t'><body>^S</body><request xmlns='urn:xmpp:receipts'/></message>", pbinXmlAttributes->m_pContact, m_tsEventID, &m_strMessageText);
 	return eXml_zAttributesOnly;
 	}
 
@@ -876,18 +857,20 @@ EXml
 IEventFile::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	PSZUC pszFileNameOnly = m_strFileName.PathFile_PszGetFileNameOnly_NZ();
-	const BOOL fSerializingEventToDisk = pbinXmlAttributes->FSerializingEventToDisk();
-	pbinXmlAttributes->BinAppendXmlAttributeText(d_chIEventFile_Attribute_strFileName, fSerializingEventToDisk ? m_strFileName.PszuGetDataNZ() : pszFileNameOnly);	// When serializing for a contact (via XCP), only send the filename (sending the full path is a violation of privacy)
+	const BOOL fuSerializingEventToDisk = pbinXmlAttributes->FuSerializingEventToDisk();
+	pbinXmlAttributes->BinAppendXmlAttributeText(d_chIEventFile_Attribute_strFileName, fuSerializingEventToDisk ? m_strFileName.PszuGetDataNZ() : pszFileNameOnly);	// When serializing for a contact (via XCP), only send the filename (sending the full path is a violation of privacy)
 	pbinXmlAttributes->BinAppendXmlAttributeL64(d_chIEventFile_Attribute_cblFileSize, m_cblFileSize);
-	if (fSerializingEventToDisk)
+	if (fuSerializingEventToDisk)
 		pbinXmlAttributes->BinAppendXmlAttributeL64(d_chIEventFile_Attribute_cblDataTransferred, m_cblDataTransferred);	// The number of bytes transferred is serialized only to disk, never through XCP
 
+	/*
 	// Create a file offer for the contact unable to cummunicate via XCP
 	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE(
 			"<iq id='$t' type='get' to='^J'>"
 			"<si id='$t' profile='^*ft' ^:si><file ^:ft name='^s' size='$l'/>"
 				"<feature ^:fn><x ^:xd type='form'><field var='stream-method' type='list-single'><option><value>^*ib</value></option></field></x></feature>"
 			"</si></iq>", m_tsEventID, pbinXmlAttributes->m_pContact, m_tsEventID, pszFileNameOnly, m_cblFileSize);
+	*/
 	return eXml_zAttributesOnly;
 	}
 
@@ -1252,18 +1235,13 @@ CEventMessageTextSent::EventUpdateMessageText(const CStr & strMessageUpdated, IN
 	{
 	Assert(pwLayoutChatLogUpdate != NULL);
 	// Always create the updater before the event.  This way, it is easy to find when updating the Chat Log
-	CEventUpdaterSent * pEventUpdater = new CEventUpdaterSent(this);
-	CEventMessageTextSent * pEventMessageUpdated = new CEventMessageTextSent(IN &pEventUpdater->m_tsEventIdNew);
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "Event ID $t: pEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing\n", pEventMessageUpdated->m_tsEventID);
-	pEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing;
-	pEventMessageUpdated->m_strMessageText = strMessageUpdated;
-	m_pVaultParent_NZ->EventAddAndDispatchToContacts(pEventMessageUpdated);
-	/*
-	pEventUpdater->EventAddToVault(m_pVaultParent_NZ);
-	pEventMessageUpdated->EventAddToVault(m_pVaultParent_NZ);
-	pEventUpdater->Event_WriteToSocket();
-	*/
-	pwLayoutChatLogUpdate->m_pwChatLog_NZ->ChatLog_EventDisplay(IN pEventMessageUpdated);
+	CEventUpdaterSent * paEventUpdater = new CEventUpdaterSent(this);
+	CEventMessageTextSent * paEventMessageUpdated = new CEventMessageTextSent(IN &paEventUpdater->m_tsEventIdNew);
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "Event ID $t: pEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing\n", paEventMessageUpdated->m_tsEventID);
+	paEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing;
+	paEventMessageUpdated->m_strMessageText = strMessageUpdated;
+	m_pVaultParent_NZ->EventAddAndDispatchToContacts(PA_CHILD paEventMessageUpdated, PA_CHILD paEventUpdater);
+	pwLayoutChatLogUpdate->m_pwChatLog_NZ->ChatLog_EventDisplay(IN paEventMessageUpdated);
 	}
 
 CEventMessageTextSent *
@@ -1604,7 +1582,8 @@ CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * p
 		while (ppEvent != ppEventStop)
 			{
 			IEvent * pEvent = *--ppEventStop;
-			Assert(pEvent->m_tsEventID > d_tsOther_kmReserved);
+			if (pEvent->m_tsEventID <= d_tsOther_kmReserved)
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Event class '$U' tsEventID $t {tL} has a small value (tsOther $t)\n", pEvent->EGetEventClass(), pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther);
 			Endorse(pEvent->m_tsOther <= d_tsOther_kmReserved);		// tsOther may be anything
 			if (pEvent->EGetEventClass() & eEventClass_kfReceivedByRemoteClient)
 				{
@@ -1859,20 +1838,20 @@ CEventPing::CEventPing()
 	}
 
 //	CEventPing::IEvent::XmlSerializeCoreE()
-//	Send a ping request, both in XMPP and XCP.  Since the ping contains no 'data', the XCP ping is automaticaly handled by the core XCP routines handling the protocol.
 EXml
 CEventPing::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
-	pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><ping xmlns='urn:xmpp:ping'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
-	return eXml_zAttributesOnly;
+	pbinXmlAttributes->XcpApi_CallApiWithResponseToEvent(this, (PSZUC)d_szXv_ApiName_Ping);
+	return eXml_NoSerialize;	// Don't serialize a ping
 	}
 
-void
-CEventPing::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza *)
+//	CEventPing::IEvent::XospDataE()
+EGui
+CEventPing::XospDataE(const CXmlNode * pXmlNodeData, CBinXcpStanza *)
 	{
 	if (m_tsContact == d_ts_zNULL)
-		m_tsContact = pXmlNodeExtraData->TsGetAttributeValueTimestamp_ML(d_chXCPa_PingTime);
-	(void)Event_FSetCompletedTimestamp();
+		m_tsContact = pXmlNodeData->TsGetAttributeValueTimestamp_ML(d_chXv_ApiName_Ping);
+	return Event_ESetCompletedTimestamp();
 	}
 
 //	CEventPing::IEvent::ChatLogUpdateTextBlock()
@@ -1903,20 +1882,18 @@ CEventVersion::CEventVersion()
 EXml
 CEventVersion::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
-	//pbinXmlAttributes->BinXmlAppendXospApiEventData(this, "test");
-
-	//pbinXmlAttributes->XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE("<iq id='$t' type='get' to='^J'><query xmlns='jabber:iq:version'/></iq>", m_tsEventID, pbinXmlAttributes->m_pContact);
-	return eXml_zAttributesOnly;
+	pbinXmlAttributes->XcpApi_CallApiWithResponseToEvent(this, (PSZUC)d_szXv_ApiName_Version);
+	return eXml_NoSerialize;	// Don't serialize a query of a version
 	}
 
-void
-CEventVersion::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply)
+//	CEventVersion::IEvent::XospDataE()
+EGui
+CEventVersion::XospDataE(const CXmlNode * pXmlNodeData, CBinXcpStanza *)
 	{
-	Assert(pbinXcpStanzaReply != NULL);	// There is no reply to CEventVersion
-	m_strVersion = pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Version);
-	m_strClient	= pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Client);
-	m_strOperatingSystem = pXmlNodeExtraData->PszuFindAttributeValue(d_chXCPa_eVersion_Platform);
-	(void)Event_FSetCompletedTimestamp();
+	m_strVersion = pXmlNodeData->PszuFindAttributeValue(d_chXCPa_eVersion_Version);
+	m_strClient	= pXmlNodeData->PszuFindAttributeValue(d_chXCPa_eVersion_Client);
+	m_strOperatingSystem = pXmlNodeData->PszuFindAttributeValue(d_chXCPa_eVersion_Platform);
+	return Event_ESetCompletedTimestamp();
 	}
 
 void

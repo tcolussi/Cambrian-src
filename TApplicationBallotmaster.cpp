@@ -48,7 +48,7 @@ TProfile::PGetApplicationBallotmaster_NZ()
 	}
 */
 
-CBinXcpStanzaEventCopier::CBinXcpStanzaEventCopier(ITreeItemChatLogEvents * pContactOrGroup) : CBinXcpStanza(eStanzaType_zInformation)
+CBinXcpStanzaEventCopier::CBinXcpStanzaEventCopier(ITreeItemChatLogEvents * pContactOrGroup)
 	{
 	TAccountXmpp * pAccount = pContactOrGroup->m_pAccount;
 	m_pContact = m_paContact = new TContact(pAccount);	// We will serialize using a dummy contact
@@ -464,7 +464,8 @@ OJapiPoll::stop()
 
 void OJapiAppBallotmaster::open()
     {
-	LaunchBrowser("Ballotmaster", "html5-pollmaster/index.html");
+	//LaunchBrowser("Ballotmaster", "html5-pollmaster/index.html");
+	LaunchApplication("Ballotmaster");
 	//CStr strUrl = (PSZUC)"file:///C:/Users/Cesar/.Cambrian/Apps/Ballotmaster/default.htm";
 	//MessageLog_AppendTextFormatCo(d_coGreen, "OJapiAppBallotmaster::go($S)", &strUrl);
 	//m_pBallotmaster->m_pawLayoutBrowser->NavigateToAddress(strUrl);
@@ -645,3 +646,28 @@ OPolls::save(QString sXmlPolls)
 	m_pBallotmaster->ApiBallotSave(strXmlPolls);
 	}
 */
+
+
+const SApplicationHtmlInfo *
+PGetApplicationHtmlInfo(PSZAC pszNameApplication)
+	{
+	//MessageLog_AppendTextFormatCo(d_coRed, "sizeof=$i\n", sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo) );
+	const SApplicationHtmlInfo * pInfo = c_rgApplicationHtmlInfo;
+	while (pInfo != c_rgApplicationHtmlInfo + LENGTH(c_rgApplicationHtmlInfo))
+		{
+		if (FCompareStringsNoCase((PSZUC) pInfo->pszName, (PSZUC)pszNameApplication))
+			return pInfo;
+		pInfo++;
+		}
+	/*
+	for(int i=0; i < sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo); i++)
+		{
+		const SApplicationHtmlInfo *pInfo = &c_rgApplicationHtmlInfo[i];
+		if ( FCompareStringsNoCase( (PSZUC) pInfo->pszName, (PSZUC) pszNameApplication ) )
+			{
+			return pInfo;
+			}
+		}
+	*/
+	return NULL;
+	}

@@ -41,8 +41,10 @@ public:
 	~WLayoutTabbedBrowser();
 
 	int AddTab(TBrowserTab *pTBrowserTab);
+	void RemoveTab(int index);
 	int GetTabsCount();
-	QWebView* getTab(int i);
+	int CurrentTabIndex();
+	WWebViewTabbed* getTab(int i);
 
 public slots:
 	void SL_WebViewTitleChanged(const QString & title);
@@ -51,6 +53,8 @@ public slots:
 	void SL_CurrentChanged(int index);
 
 };
+
+
 
 // Custom web view to reference its tree item
 class WWebViewTabbed : public QSplitter
@@ -108,8 +112,8 @@ public:
 class WaTabBar : public QTabBar
 {
 	QPushButton *plusButton;
-	void movePlusButton();
-	void reinitializePlusButton();
+	//void movePlusButton();
+	//void reinitializePlusButton();
 
 /*protected:
 	void tabLayoutChange();

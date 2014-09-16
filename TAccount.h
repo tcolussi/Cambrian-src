@@ -182,6 +182,7 @@ public:
 	void Group_AddToNavigationTree(PA_CHILD TGroup * paGroup);
 
 	void DisplayDialogProperties();
+	void DebugDumpContacts();
 public:
 	static IXmlExchange * S_PaAllocateAccount(PVOID pvContextAllocate);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
 	friend class CArrayPtrAccountsXmpp;

@@ -16,7 +16,7 @@ TBrowserTabs::TBrowserTabs(TProfile * pProfile)
 
 TBrowserTabs::~TBrowserTabs()
 	{
-	TRACE1("TBrowserTabs::~TBrowserTabs(0x$p)\n", this);
+	TRACE1("TBrowserTabs::~TBrowserTabs(0x$p)", this);
 	m_arraypaTabs.DeleteAllRuntimeObjects();
 	MainWindow_DeleteLayout(PA_DELETING m_pawLayoutBrowser);
 	}
@@ -38,7 +38,7 @@ TBrowserTabs::AddTab(CStr &sUrl)
 		}
 	else
 		{
-		TBrowserTab *pBrowserTab = new TBrowserTab(this);
+		pBrowserTab = new TBrowserTab(this);
 		pBrowserTab->m_url = sUrl;
 
 		m_arraypaTabs.Add(pBrowserTab);
@@ -58,6 +58,32 @@ TBrowserTabs::AddTab()
 	CStr url;
 	TBrowserTab* pTab = AddTab(url);
 	return pTab;
+}
+
+TBrowserTab *TBrowserTabs::PGetCurrentBrowserTab_YZ()
+	{
+	int nIndex = -1;
+
+	if ( m_pawLayoutBrowser)
+		nIndex = m_pawLayoutBrowser->CurrentTabIndex();
+
+	if ( nIndex >= 0 )
+		{
+		WWebViewTabbed *pWebView = m_pawLayoutBrowser->getTab(nIndex);
+		Assert(pWebView != NULL);
+		Assert(pWebView->m_pTab != NULL);
+		return pWebView->m_pTab;
+		}
+
+	return NULL;
+	}
+
+void TBrowserTabs::DeleteTab(int index)
+	{
+	TBrowserTab *pBrowserTab = (TBrowserTab *)m_arraypaTabs.PvGetElementAtSafe_YZ(index);
+	if ( pBrowserTab != NULL)
+		m_pawLayoutBrowser->RemoveTab(index);
+		m_arraypaTabs.DeleteTreeItem(pBrowserTab);
 	}
 
 int

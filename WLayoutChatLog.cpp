@@ -162,7 +162,7 @@ TContact::ChatLogContact_ChatStateIconUpdate(EChatState eChatState)
 void
 TContact::ChatLogContact_ChatStateIconUpdateComposingStopped()
 	{
-	ChatLogContact_ChatStateIconUpdate(eChatState_fPaused);
+	ChatLogContact_ChatStateIconUpdate(eChatState_Paused);
 	}
 
 void
@@ -419,10 +419,7 @@ WLayoutChatLog::WidgetContactInvitation_Show()
 void
 WLayoutChatLog::Socket_WriteXmlChatState(EChatState eChatState) const
 	{
-	if (m_pContactParent_YZ != NULL)
-		m_pContactParent_YZ->Xmpp_WriteXmlChatState(eChatState);
-	else
-		m_pGroupParent_YZ->Members_BroadcastChatState(eChatState);
+	m_pContactOrGroup_NZ->Xmpp_WriteXmlChatState(eChatState);
 	}
 
 /*
@@ -449,22 +446,13 @@ public:
 };
 */
 
-WLayoutChatLog::WLayoutChatLog(ITreeItemChatLogEvents * pParent)
+WLayoutChatLog::WLayoutChatLog(ITreeItemChatLogEvents * pContactOrGroupParent)
 	{
-	Assert(pParent != NULL);
-	if (pParent->EGetRuntimeClass() == RTI(TContact))
-		{
-		m_pContactParent_YZ = (TContact *)pParent;
-		m_pGroupParent_YZ = NULL;
-		}
-	else
-		{
-		Assert(pParent->EGetRuntimeClass() == RTI(TGroup));
-		m_pContactParent_YZ = NULL;
-		m_pGroupParent_YZ =  (TGroup *)pParent;
-		}
+	Assert(pContactOrGroupParent != NULL);
+	m_pContactOrGroup_NZ = pContactOrGroupParent;
+	m_pContactParent_YZ = (pContactOrGroupParent->EGetRuntimeClass() == RTI(TContact)) ? (TContact *)pContactOrGroupParent : NULL;
 	m_pwFindText = NULL;
-	m_pwChatLog_NZ = new WChatLog(this, pParent);
+	m_pwChatLog_NZ = new WChatLog(this, pContactOrGroupParent);
 	setStretchFactor(0, 5);
 	/*
 	if (pContactParent_YZ != NULL)
@@ -689,7 +677,7 @@ WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStan
 			{
 			const CXmlNode * pXmlNodeChatState = pXmlNodeMessageStanza->PFindElementMatchingAttributeValueXmlns("http://jabber.org/protocol/chatstates");
 			if (pXmlNodeChatState != NULL)
-				m_pwChatLog_NZ->ChatLog_ChatStateIconUpdate(INOUT m_pContactParent_YZ, FCompareStrings(pXmlNodeChatState->m_pszuTagName, "composing") ? eChatState_zComposing : eChatState_fPaused);
+				m_pwChatLog_NZ->ChatLog_ChatStateIconUpdate(INOUT m_pContactParent_YZ, FCompareStrings(pXmlNodeChatState->m_pszuTagName, "composing") ? eChatState_zComposing : eChatState_Paused);
 			}
 		} // if...else
 	return pszuMessageBody;

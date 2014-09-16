@@ -432,7 +432,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 		PSZUC pszParameters =  PszrCompareStringBeginCommand(pszCommand, "api");
 		if (pszParameters != NULL && *pszParameters != '\0')
 			{
-			XcpApi_Invoke(IN pszParameters, d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
+			//XcpApi_Invoke(IN pszParameters, d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
 			goto Done;
 			}
 		pszParameters = PszrCompareStringBeginCommand(pszCommand, "sendxml");

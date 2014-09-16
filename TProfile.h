@@ -7,6 +7,8 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+#include "ApiJavaScript.h"
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,6 +26,7 @@ public:
 	CArrayPtrBrowsers m_arraypaBrowsers;			// This is a bit of a hack, however at the moment, it will work
 	CArrayPtrBrowsersTabbed m_arraypaBrowsersTabbed;
 	CStr m_strData;									// Data of the profile (this variable is used for the JAPI)
+	OJapiProfile * m_paoJapiProfile;
 
 private:
 	TContact * m_paContactDummy;		// Temporary contact necessary to implement JavaScript security and perform other tasks, such as having in-memory event vaults (the vault was designed to have a contact as its parent).
@@ -68,8 +71,9 @@ public:
 	//TApplicationBallotmaster * PGetApplicationBallotmaster_NZ();
 
 	TContact * PGetContactDummy_NZ() CONST_MCC;
-
+	POJapiProfile POJapiGet();
 	void BallotMaster_EventBallotAddAsTemplate(IEventBallot * pEventBallot);
+
 public:
 	static IXmlExchange * S_PaAllocateProfile(PVOID pConfigurationParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
 	friend class CArrayPtrProfiles;

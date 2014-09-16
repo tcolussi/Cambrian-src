@@ -74,7 +74,7 @@ WMarketplace::SL_SocketDataAvailableForReading()
 	const int cbDataAvailable = m_pSocket->bytesAvailable();	// Get how many bytes are available from the socket
 
 	CBin binData;
-	char * pbData = (char *)binData.PbAllocateExtraDataWithVirtualNullTerminator(cbDataAvailable);
+	char * pbData = (char *)binData.PbeAllocateExtraDataWithVirtualNullTerminator(cbDataAvailable);
 	const int cbDataRead = m_pSocket->read(OUT pbData, cbDataAvailable);	// Read the data from the socket
 	Assert((cbDataRead == cbDataAvailable) && "All data should be read!");
 	Assert((int)strlen(pbData) == cbDataRead);

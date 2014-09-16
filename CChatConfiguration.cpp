@@ -308,7 +308,7 @@ CChatConfiguration::XmlConfigurationSaveToFile(const QString * psPathFileSaveAs)
 	XmlConfigurationExchange(INOUT &oXmlExchanger);
 	oXmlExchanger.ReverseLinkedListsElementsAndAttributes();	// For performance, the XML nodes are appended at the beginning of each list.  To preserve the order from which they were unserialized, we need to reverse all elements and attributes
 	Endorse(oXmlExchanger.m_binXmlFileData.CbGetData() == 0);	// The buffer may have been temporary used
-	(void)oXmlExchanger.m_binXmlFileData.PvAllocateMemoryAndEmpty(m_hashMd5LastSave.cbFileSize + 2000);		// Empty any previous value and pre-allocate an extra 2 KB to prevent unnecessary memory re-allocations when serializing
+	(void)oXmlExchanger.m_binXmlFileData.PbbAllocateMemoryAndEmpty_YZ(m_hashMd5LastSave.cbFileSize + 2000);		// Empty any previous value and pre-allocate an extra 2 KB to prevent unnecessary memory re-allocations when serializing
 	oXmlExchanger.SerializeTreeToXml();
 	// Save only if there is an explicit path, or if the content of the XML changed.
 	if (psPathFileSaveAs != NULL || oXmlExchanger.m_binXmlFileData.FAssignFileSizeAndMd5(INOUT_F_UNCH &m_hashMd5LastSave))

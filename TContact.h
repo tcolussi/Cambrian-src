@@ -31,6 +31,7 @@ public:
 	int m_cVersionXCP;								// Which version of the Cambrian Protocol is supported by the contact.  This field is a temporary 'hack' to determine if an XMPP stanza should be sent through XCP or regular XMPP.
 	*/
 	TIMESTAMP m_tsOtherLastSynchronized;			// Timestamp of last synchronization
+	TIMESTAMP m_tsTaskIdDownloadedLast;				// Timestamp of the last task downloaded.  This Task ID is essential to avoid repeating/executing the same task when there is a retry to resend the task data.
 	//CListTasks m_listTasksSocket;					// Socket tasks to be dispatched when the contact becomes online
 	CListTasksSendReceive m_listaTasksSendReceive;	// Pending tasks to be completed (sent or received) when the contact becomes online
 
@@ -125,10 +126,11 @@ public:
 	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
 	void XcpApiContact_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters);
 
+	ITreeItemChatLogEvents * PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttributeGroupIdentifier);
+
 	void Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParameters);
 	void Contact_RecommendationsDisplayWithinNavigationTree(BOOL fSetFocus = FALSE);
 
-	//void BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const;
 	void Contact_AddToGroup(int iGroup);
 	EMenuAction Contact_EGetMenuActionPresence() const;
 

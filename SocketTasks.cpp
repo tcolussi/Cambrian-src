@@ -13,114 +13,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-
-#if 0
-ITask::ITask(const TIMESTAMP * ptsTaskID)
-	{
-	if (ptsTaskID == d_ts_pNULL_AssignToNow)
-		m_tsTaskID = Timestamp_GetCurrentDateTime();	// We are creating a new task, so use the current date & time as identifier of the task.
-	else
-		m_tsTaskID = *ptsTaskID;						// We are unserializing an existing task, so use its previous identifier
-	}
-
-ITask::~ITask()
-	{
-	}
-
-void
-CListTasks::DeleteTask(PA_DELETING ITask * paTask)
-	{
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "CListTasks::DeleteTask() - Task ID '$t'\n", paTask->m_tsTaskID);
-	Assert(paTask != NULL);
-	#if 0 // For testing
-	DetachNode(INOUT paTask);
-	delete paTask;
-	#endif
-	}
-
-void
-CListTasks::DeleteAllTasks()
-	{
-
-	}
-
-ITask *
-CListTasks::PFindTaskByID(TIMESTAMP tsTaskID, ETaskClass eTaskClass) const
-	{
-	ITask * pTask = (ITask *)pHead;
-	while (pTask != NULL)
-		{
-		if (pTask->m_tsTaskID == tsTaskID && pTask->EGetTaskClass() == eTaskClass)
-			break;
-		pTask = (ITask *)pTask->pNext;
-		} // while
-	return pTask;
-	}
-
-const char c_szTasks[] = "T";
-
-void
-CListTasks::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
-	{
-	if (pXmlExchanger->m_fSerializing)
-		{
-		if (pHead == NULL)
-			return;	// There is no task to serialize
-		CBin * pbinTemp = &pXmlExchanger->m_binXmlFileData;	// Use the temporary buffer
-		pbinTemp->BinInitFromByte(d_chuXmlAlreadyEncoded);
-		ITask * pTask = (ITask *)pHead;
-		while (TRUE)
-			{
-			// An object is always serialized as an element
-			MessageLog_AppendTextFormatCo(d_coRed, "Serializing task 0x$p\n", pTask);
-			pbinTemp->BinAppendText_VE("<");
-			pTask = (ITask *)pTask->pNext;
-			if (pTask == NULL)
-				break;
-			} // while
-		pXmlExchanger->XmlExchangeElementEnd(c_szTasks);
-
-
-		(void)pXmlExchanger->PAllocateElementFromCBinString('T', IN_MOD_TMP *pbinTemp);
-		/*
-
-		*/
-		return;
-		}
-	}
-#endif
-
-#if 0
-void
-TContact::XcpApiContact_TaskQueue(PA_TASK ITask * paTask)
-	{
-	m_listTasksSocket.InsertNodeAtHead(OUT paTask);
-	}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-void
-ISocketTask::Socket_WriteStanzaIqSet_Gso(PSZAC pszFmtTemplate, ...)
-	{
-	g_strScratchBufferSocket.Empty();
-	g_strScratchBufferSocket.BinAppendText_VE("<iq type='set' from='^J' to='^J' id='$p'>", m_pAccount, m_pContact, UGetStanzaId());
-	va_list vlArgs;
-	va_start(OUT vlArgs, pszFmtTemplate);
-	g_strScratchBufferSocket.BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
-	g_strScratchBufferSocket.BinAppendBinaryData("</iq>", 5);
-	PGetSocket()->Socket_WriteBin(g_strScratchBufferSocket);
-	}
-#endif
-
-/*
-CTaskSend::CTaskSend(const TIMESTAMP * ptsTaskID) : ITask(ptsTaskID)
-	{
-	}
-
-CTaskReceive::CTaskReceive(const TIMESTAMP * ptsTaskID) : CTaskSend(ptsTaskID)
-	{
-	m_cbTotal = 0;
-	}
-*/
+#include "XcpApi.h"
 
 CTaskSendReceive::CTaskSendReceive()
 	{
@@ -132,34 +25,127 @@ void
 CTaskSendReceive::InitTaskSend()
 	{
 	m_tsTaskID = Timestamp_GetCurrentDateTime();
-	m_cbTotal = c_cbTotal_Send;
+	m_cbTotal = c_cbTotal_TaskSendAndRetry;		// By default a task will be retried to be sent
 	}
 
-//	All task to be sent are appended at the end of the list, so the order is preserved
-void
-CListTasksSendReceive::AddTaskSend(INOUT CTaskSendReceive * pTaskSent)
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	To keep memory allocation low, the same list is used to hold tasks to send and receive.
+//	For efficiency, the tasks are stored in chronological order, starting with the tasks to be sent.
+
+CTaskSendReceive *
+CListTasksSendReceive::PAllocateTaskSend_YZ(BOOL fuAllocateTaskContainingSynchronization)
 	{
-	Assert(pTaskSent != NULL);
-	Assert(pTaskSent->m_pNext == NULL);
-	pTaskSent->m_pNext = m_plistTasks;	// Need to fix this (to append at the end)
-	m_plistTasks = pTaskSent;
+	if (fuAllocateTaskContainingSynchronization)
+		{
+		// Search if there is already a task with synchronization
+		const CTaskSendReceive * pTask = m_plistTasks;
+		while (pTask != NULL)
+			{
+			if (pTask->m_cbTotal == CTaskSendReceive::c_cbTotal_TaskSendAndRetrySync)
+				return NULL;
+			pTask = pTask->m_pNext;
+			}
+		}
+	CTaskSendReceive * paTaskSend = new CTaskSendReceive;
+	paTaskSend->InitTaskSend();
+	if (fuAllocateTaskContainingSynchronization)
+		paTaskSend->m_cbTotal = CTaskSendReceive::c_cbTotal_TaskSendAndRetrySync;
+
+	if (m_plistTasks == NULL)
+		{
+		// This is the typical case where there is nothing in the list
+		m_plistTasks = paTaskSend;
+		}
+	else
+		{
+		// Append the new task to send task at the end of the list, however before any task to receive
+		TIMESTAMP tsPrevious = d_ts_zNA;
+		CTaskSendReceive ** ppTaskInsert = &m_plistTasks;
+		CTaskSendReceive * pTask = m_plistTasks;
+		while (TRUE)
+			{
+			if (!pTask->FIsTaskSend())
+				break;
+			Assert(pTask->m_tsTaskID > tsPrevious);
+			tsPrevious = pTask->m_tsTaskID;
+			ppTaskInsert = &pTask->m_pNext;
+			pTask = pTask->m_pNext;
+			if (pTask == NULL)
+				break;
+			} // while
+		paTaskSend->m_pNext = *ppTaskInsert;
+		*ppTaskInsert = paTaskSend;
+		}
+	return paTaskSend;
 	}
 
-//	A new task to be downloaded is inserted at the beginning of the list so it may be accessed quickly
-void
-CListTasksSendReceive::AddTaskReceive(INOUT CTaskSendReceive * pTaskReceive)
+CTaskSendReceive *
+CListTasksSendReceive::PFindOrAllocateTaskDownload_NZ(TIMESTAMP tsTaskID, const CXmlNode * pXmlNodeTaskDownload)
 	{
-	Assert(pTaskReceive != NULL);
-	Assert(pTaskReceive->m_pNext == NULL);
-	pTaskReceive->m_pNext = m_plistTasks;
-	m_plistTasks = pTaskReceive;
+	Assert(pXmlNodeTaskDownload != NULL);
+
+	// First, search if the task is there
+	TIMESTAMP tsPrevious = d_ts_zNA;
+	CTaskSendReceive ** ppTaskInsert = &m_plistTasks;
+	CTaskSendReceive * pTask = m_plistTasks;
+	while (pTask != NULL)
+		{
+		if (!pTask->FIsTaskSend())
+			{
+			if (pTask->m_tsTaskID == tsTaskID)
+				return pTask;
+			if (pTask->m_tsTaskID > tsTaskID)
+				break;
+			}
+		else
+			{
+			Assert(pTask->m_tsTaskID > tsPrevious);
+			tsPrevious = pTask->m_tsTaskID;
+			}
+		ppTaskInsert = &pTask->m_pNext;
+		pTask = pTask->m_pNext;
+		} // while
+
+	// Th task is not found, therefore allocate it
+	pTask = new CTaskSendReceive;
+	pTask->m_tsTaskID = tsTaskID;
+	pTask->m_cbTotal = pXmlNodeTaskDownload->UFindAttributeValueDecimal_ZZR(d_chXa_TaskDataSizeTotal);
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Downloading Task ID $t of $I bytes\n", tsTaskID, pTask->m_cbTotal);
+
+	// And insert tot he list
+	pTask->m_pNext = *ppTaskInsert;
+	*ppTaskInsert = pTask;
+	return pTask;
 	}
 
+//	Delete the task matching the ID, and if not found, do nothing.
+void
+CListTasksSendReceive::DeleteTaskMatchingID(TIMESTAMP tsTaskID, BOOL fDeleteTaskToSend)
+	{
+	CTaskSendReceive ** ppTaskPrevious = &m_plistTasks;
+	CTaskSendReceive * pTask = m_plistTasks;
+	while (pTask != NULL)
+		{
+		if ((pTask->m_tsTaskID == tsTaskID) && (pTask->FIsTaskSend() == fDeleteTaskToSend))
+			{
+			MessageLog_AppendTextFormatSev(eSeverityNoise, "DeleteTaskMatchingID() - Task ID $t deleted\n", tsTaskID);
+			*ppTaskPrevious = pTask->m_pNext;	// Remove the task to delete from the linked list
+			delete pTask;
+			return;
+			}
+		ppTaskPrevious = &pTask->m_pNext;
+		pTask = pTask->m_pNext;
+		}
+	MessageLog_AppendTextFormatSev(eSeverityWarning, "DeleteTaskMatchingID() - Task ID $t not found!\n", tsTaskID);
+	}
+
+//	Delete a task from the list.
+//	Since Task IDs are broadcasted repeatedly, we need to keep the last Task ID so there is no attempt to download the same task after it was previously downloaded and executed.
 void
 CListTasksSendReceive::DeleteTask(PA_DELETING CTaskSendReceive * paTaskDelete)
 	{
 	Assert(paTaskDelete != NULL);
-	return;	// Just for debugging
 
 	if (paTaskDelete == m_plistTasks)
 		m_plistTasks = m_plistTasks->m_pNext;
@@ -185,6 +171,7 @@ CListTasksSendReceive::DeleteTask(PA_DELETING CTaskSendReceive * paTaskDelete)
 		}
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "Deleting Task ID $t\n", paTaskDelete->m_tsTaskID);
 	delete paTaskDelete;
+	DisplayTasksToMessageLog();
 	}
 
 void
@@ -204,26 +191,18 @@ CListTasksSendReceive::PFindTaskSend(TIMESTAMP tsTaskID) const
 	CTaskSendReceive * pTask = m_plistTasks;
 	while (pTask != NULL)
 		{
-		if (pTask->m_tsTaskID == tsTaskID && pTask->FIsTaskSend())
-			return pTask;
+		if (!pTask->FIsTaskSend())
+			break;
+		if (pTask->m_tsTaskID >= tsTaskID)
+			{
+			if (pTask->m_tsTaskID == tsTaskID)
+				return pTask;
+			break;
+			}
 		pTask = pTask->m_pNext;
 		}
 	return NULL;
 	}
-
-CTaskSendReceive *
-CListTasksSendReceive::PFindTaskReceive(TIMESTAMP tsTaskID) const
-	{
-	CTaskSendReceive * pTask = m_plistTasks;
-	while (pTask != NULL)
-		{
-		if (pTask->m_tsTaskID == tsTaskID && !pTask->FIsTaskSend())
-			return pTask;
-		pTask = pTask->m_pNext;
-		}
-	return NULL;
-	}
-
 
 void
 CListTasksSendReceive::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
@@ -251,7 +230,7 @@ CListTasksSendReceive::SerializeToXml(IOUT CBin * pbinXmlTasks)
 	while (pTask != NULL)
 		{
 		MessageLog_AppendTextFormatCo(d_coRed, "Serializing Task ID $t\n", pTask->m_tsTaskID);
-		pbinXmlTasks->BinAppendText_VE("\n<t i='$t' c='$i' b='{B|}'/>", pTask->m_tsTaskID, pTask->m_cbTotal, &pTask->m_binData);
+		pbinXmlTasks->BinAppendText_VE("\n<t i='$t' s='$i' _debug_sofar='$i' d='{B|}'/>", pTask->m_tsTaskID, pTask->m_cbTotal, pTask->m_binXmlData.CbGetData(), &pTask->m_binXmlData);
 		pTask = pTask->m_pNext;
 		}
 	}
@@ -268,8 +247,8 @@ CListTasksSendReceive::UnserializeFromXml(const CXmlNode * pXmlNodeElementTask)
 		*ppaTask = paTask;
 		ppaTask = &paTask->m_pNext;	// Pointer to append the next task at the end of the linked list
 		paTask->m_tsTaskID = pXmlNodeElementTask->TsGetAttributeValueTimestamp_ML('i');
-		paTask->m_cbTotal = pXmlNodeElementTask->UFindAttributeValueDecimal_ZZR('c');
-		paTask->m_binData.BinAppendBinaryDataFromBase85SCb_ML(pXmlNodeElementTask->PszuFindAttributeValue('b'));
+		paTask->m_cbTotal = pXmlNodeElementTask->UFindAttributeValueDecimal_ZZR('s');
+		paTask->m_binXmlData.BinAppendBinaryDataFromBase85SCb_ML(pXmlNodeElementTask->PszuFindAttributeValue('d'));
 		pXmlNodeElementTask = pXmlNodeElementTask->m_pNextSibling;
 		}
 
@@ -285,8 +264,13 @@ CListTasksSendReceive::DisplayTasksToMessageLog()
 	CTaskSendReceive * pTask = m_plistTasks;
 	while (pTask != NULL)
 		{
-		MessageLog_AppendTextFormatCo(d_coGreen, "\t [$T] Task ID $t: cbReceived = $I, cbData = $I\n", tsNow - pTask->m_tsTaskID, pTask->m_tsTaskID, pTask->m_cbTotal, pTask->m_binData.CbGetData());
-		MessageLog_AppendTextFormatCo(d_coGray, "$B\n", &pTask->m_binData);
+		TIMESTAMP_DELTA dts = tsNow - pTask->m_tsTaskID;
+		if (pTask->FIsTaskSend())
+			MessageLog_AppendTextFormatCo(d_coGreen, "\t [$T] Sending Task ID $t: $I bytes\n", dts, pTask->m_tsTaskID, pTask->m_binXmlData.CbGetData());
+		else
+			MessageLog_AppendTextFormatCo(d_coGreen, "\t [$T] Downloading Task ID $t: cbTotalToDownload = $I, cbDownloadedSoFar = $I\n", dts, pTask->m_tsTaskID, pTask->m_cbTotal, pTask->m_binXmlData.CbGetData());
+		if (!pTask->m_binXmlData.FIsEmptyBinary())
+			MessageLog_AppendTextFormatCo(d_coGray, "\t\t $B\n", &pTask->m_binXmlData);
 		pTask = pTask->m_pNext;
-		}
+		} // while
 	}

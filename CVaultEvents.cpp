@@ -26,16 +26,8 @@ CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 		IEvent * pEvent = *ppEvent++;
 		if (pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted)
 			continue;	// Don't serialize deleted events
-		EEventClass eEventClass = pEvent->EGetEventClass();
-		pbinXmlEvents->BinAppendText_VE("<$U" _tsI, eEventClass, pEvent->m_tsEventID);
-		pbinXmlEvents->BinAppendXmlEventCoreDataWithClosingElement(pEvent, eEventClass);
-		/*
-		pEvent->XmlSerializeCore(IOUT pbinXmlEvents);
-		if ((eEventClass & eEventClass_kfSerializeDataAsXmlElement) == 0)
-			pbinXmlEvents->BinAppendXmlForSelfClosingElement();
-		else
-			pbinXmlEvents->BinAppendText_VE("</$U>\n", eEventClass);
-		*/
+		pbinXmlEvents->BinAppendXmlEventSerializeOpen(pEvent, pEvent->m_tsEventID);
+		pbinXmlEvents->BinAppendXmlEventSerializeDataAndClose(pEvent);
 		} // while
 	pbinXmlEvents->BinAppendText("</"d_szVault_Event">");
 	}
@@ -43,7 +35,7 @@ CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 void
 CVaultEvents::XmlExchange(PSZAC pszTagNameVault, INOUT CXmlExchanger * pXmlExchanger)
 	{
-	CBinXcpStanzaTypeInfo binXcpStanza;
+	CBinXcpStanza binXcpStanza;
 	if (pXmlExchanger->m_fSerializing)
 		{
 		EventsSerializeForMemory(INOUT &binXcpStanza);
@@ -52,7 +44,7 @@ CVaultEvents::XmlExchange(PSZAC pszTagNameVault, INOUT CXmlExchanger * pXmlExcha
 	else
 		{
 		pXmlExchanger->XmlExchangeBin(pszTagNameVault, OUT &binXcpStanza);
-		MessageLog_AppendTextFormatCo(d_coRed, "CVaultEvents::XmlExchange($s) : $B\n", pszTagNameVault, IN &binXcpStanza);
+		MessageLog_AppendTextFormatCo(d_coChocolate, "CVaultEvents::XmlExchange($s) : $B\n", pszTagNameVault, IN &binXcpStanza);
 		CXmlTree oXmlTree;
 		oXmlTree.SetFileDataCopy(binXcpStanza);
 		if (oXmlTree.EParseFileDataToXmlNodes_ML() == errSuccess)
@@ -101,7 +93,7 @@ CVaultEvents::EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD 
 	if (paEvent->EGetEventClass() & eEventClass_kfNeverSerializeToXCP)
 		return;	// The event is never serialized to XOSP, therefore there is nothing else to do
 
-	CBinXcpStanzaTypeMessage binXcpStanza;			// All events are sent as XMPP 'messages' so they may be cached
+	CBinXcpStanza binXcpStanza;			// All events are sent as XMPP 'messages' so they may be cached
 	TGroup * pGroup = (TGroup *)m_pParent;
 	TContact * pContact = (TContact *)m_pParent;
 	if (pContact->EGetRuntimeClass() == RTI(TContact))
@@ -121,6 +113,8 @@ CVaultEvents::EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD 
 			TGroupMember * pMember = *ppMember++;
 			Assert(pMember != NULL);
 			Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
+			binXcpStanza.BinXmlAppendXcpApiCall_SendEventToContact(pMember->m_pContact, paEvent, paEventUpdater);
+			#if 0
 			binXcpStanza.m_pContact = pMember->m_pContact;
 			/*
 			if (binXcpStanza.m_pContact->m_cVersionXCP <= 0)
@@ -136,6 +130,7 @@ CVaultEvents::EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD 
 			binXcpStanza.BinXmlSerializeEventForXcp(IN this);
 			binXcpStanza.XcpSendStanza();	// Send the XCP stanza to the contact
 			*/
+			#endif
 			} // while
 		} // if...else
 	}
@@ -183,7 +178,7 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 		if (tsOtherLastReceived < pContact->m_tsOtherLastSynchronized || pContact->m_tsOtherLastSynchronized == d_ts_zNA)
 			{
 			if (pContact->m_tsOtherLastSynchronized != tsOtherLastReceived)
-				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastSynchronized from $t to $t for '$s'\n", pContact->m_tsOtherLastSynchronized, tsOtherLastReceived, m_pParent->TreeItem_PszGetNameDisplay());
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastSynchronized by -$T from $t ({tL}) to $t for '$s'\n", pContact->m_tsOtherLastSynchronized - tsOtherLastReceived, pContact->m_tsOtherLastSynchronized, pContact->m_tsOtherLastSynchronized, tsOtherLastReceived, m_pParent->TreeItem_PszGetNameDisplay());
 			pContact->m_tsOtherLastSynchronized = tsOtherLastReceived;
 			}
 
@@ -219,8 +214,8 @@ CVaultEvents::WriteEventsToDiskIfModified()
 	if (pEventLastSaved != m_pEventLastSaved)
 		{
 		int cEvents = m_arraypaEvents.GetSize();
-		CBinXcpStanzaTypeInfo binXmlEvents;
-		binXmlEvents.PvAllocateMemoryAndEmpty(100 + 64 * cEvents);	// Pre-allocate about 64 bytes per event.  This estimate will reduce the number of memory re-allocations.
+		CBinXospStanzaForDisk binXmlEvents;
+		binXmlEvents.PbbAllocateMemoryAndEmpty_YZ(100 + 64 * cEvents);	// Pre-allocate about 64 bytes per event.  This estimate will reduce the number of memory re-allocations.
 		binXmlEvents.BinAppendText_VE("<E v='1' c='$i'>\n", cEvents);
 		m_arraypaEvents.EventsSerializeForDisk(INOUT &binXmlEvents);
 		binXmlEvents.BinAppendText_VE("</E>");

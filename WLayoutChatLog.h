@@ -15,8 +15,8 @@ class WLayoutChatLog : public WLayout
 	Q_OBJECT
 public:
 	// Since the layout is used for contacts and groups, the pointers m_pContactParent_YZ and m_pGroupParent_YZ are mutually exclusive
+	ITreeItemChatLogEvents * m_pContactOrGroup_NZ;
 	TContact * m_pContactParent_YZ;
-	TGroup * m_pGroupParent_YZ;
 	WChatLog * m_pwChatLog_NZ;	// Widget displaying the chat history between the user and the contact
 	WChatInput * m_pwChatInput;	// Widget for the user to enter text to send to the contact
 protected:
@@ -25,8 +25,8 @@ protected:
 	//WButtonIconForToolbar * m_pwButtonSendFile;
 
 public:
-	explicit WLayoutChatLog(ITreeItemChatLogEvents * pParent);
-	inline ITreeItemChatLogEvents * PGetContactOrGroup_NZ() const { return (ITreeItemChatLogEvents *)((INT_P)m_pContactParent_YZ | (INT_P)m_pGroupParent_YZ); }	// // This cast is not elegant, however it is my response to the compiler error: conditional expression between distinct pointer types lacks a cast
+	explicit WLayoutChatLog(ITreeItemChatLogEvents * pContactOrGroupParent);
+	inline ITreeItemChatLogEvents * PGetContactOrGroup_NZ() const { return m_pContactOrGroup_NZ; }
 
 	void OnEventFocusIn();
 	BOOL FGotFocus();

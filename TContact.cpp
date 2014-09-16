@@ -23,6 +23,7 @@ TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 //	m_uFlagsContactSerialized = 0;
 	m_plistAliases = NULL;
 	m_tsOtherLastSynchronized = d_ts_zNA;
+	m_tsTaskIdDownloadedLast = d_ts_zNA;
 	m_paoJapiContact = NULL;
 	}
 
@@ -90,6 +91,12 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	m_listaTasksSendReceive.XmlExchange(INOUT pXmlExchanger);
 
 	m_strJidBare.StringTruncateAtCharacter('/');	// Remove the resource from the JID. In earlier version of the chat, the serialized JID could contain the resource.  Eventually this line should go away.
+
+	#if 0
+	if (m_uFlagsTreeItem != 0)
+		MessageLog_AppendTextFormatCo(d_coBlack, "0x$p: TContact::XmlExchange($S) m_uFlagsTreeItem = 0x$x\n", this, &m_strJidBare, m_uFlagsTreeItem);
+	//m_pAccount->DebugDumpContacts();
+	#endif
 	} // XmlExchange()
 
 // Unique file name to store the message history.  This hash is computed from the JIDs of the account and the contact, so if both are deleted and later added, the chat history is preserved.
@@ -397,6 +404,10 @@ void
 TContact::TreeItemContact_DisplayWithinNavigationTree()
 	{
 	Assert(m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
+	#if 0
+	if (m_uFlagsTreeItem != 0)
+		MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "0x$p: TreeItemContact_DisplayWithinNavigationTree($S) - m_uFlagsTreeItem = 0x$x\n", this, &m_strNameDisplayTyped, m_uFlagsTreeItem);
+	#endif
 	if (m_uFlagsTreeItem & FTI_kfObjectInvisible)
 		return;	// Don't display hidden contacts
 	TreeItemW_DisplayWithinNavigationTree(m_pAccount);
@@ -486,7 +497,7 @@ TContact::XmppRosterSubscriptionUpdate(PSZUC pszSubscription)
 		}
 	if (m_uFlagsContact != uFlagsOld)
 		{
-		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t Flags changed from 0x$x to 0x$x\n", uFlagsOld, m_uFlagsContact);
+		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t m_uFlagsContact changed from 0x$x to 0x$x\n", uFlagsOld, m_uFlagsContact);
 		TreeItemContact_UpdateIcon();
 		}
 
@@ -558,7 +569,7 @@ TContact::XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence)
 			XcpApi_Invoke_Synchronize();
 		if (m_uFlagsContact & FC_kfContactRecommendationsNeverReceived)
 			XcpApi_Invoke_RecommendationsGet();
-		m_listaTasksSendReceive.SentTasksToContact(this);	// Send any pending task
+		//m_listaTasksSendReceive.SentTasksToContact(this);	// Send any pending task
 		}
 	TreeItemContact_UpdateIcon();
 	} // XmppPresenceUpdateIcon()

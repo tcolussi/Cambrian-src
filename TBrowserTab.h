@@ -6,6 +6,7 @@
 #include "WLayoutTabbedBrowser.h"
 
 class TBrowserTabs;
+class OJapiBrowsersList;
 
 class TBrowserTab : public ITreeItem
 {
@@ -13,15 +14,20 @@ class TBrowserTab : public ITreeItem
 
 protected:
 	TBrowserTabs * m_pBrowserTabs;
+	POJapiBrowserTab m_paoJapiBrowser;
 
 public:
 	WWebViewTabbed * m_pwWebViewTab;
 	TBrowserTab(TBrowserTabs * pBrowserTabs);
+	~TBrowserTab();
 	CStr m_url;
 
 public:
 	void SetUrl(CStr &sUrl);
 	void Show();
+	void NavigateForward();
+	void NavigateBack();
+	void NavigateReload();
 
 
 	// IRuntimeObject interface
@@ -33,6 +39,8 @@ public:
 	// ITreeItem interface
 	void TreeItem_RemoveAllReferencesToObjectsAboutBeingDeleted();
 	void TreeItem_GotFocus();
+
+	POJapiBrowserTab POJapiGet(OJapiBrowsersList *pBrowsersListParent);
 
 	// static
 	static IXmlExchange * S_PaAllocateBrowser(PVOID pProfileParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()

@@ -14,7 +14,7 @@ WLayoutTabbedBrowser::WLayoutTabbedBrowser(TBrowserTabs *pBrowserTabs, TProfile 
 	m_pTabWidget->setTabsClosable(true);
 	m_pTabWidget->setTabShape(QTabWidget::Triangular);
 	//m_pTabWidget->setMovable(true);
-	m_pTabWidget->setStyleSheet("QTabBar::tab { height: 23px; width: 150px; color: rgb(100, 100, 100) } QTabBar::tab:last {width: 45px}");
+	m_pTabWidget->setStyleSheet("QTabBar::tab { height: 23px; width: 150px; color: rgb(100, 100, 100) } QTabBar::tab:last {width: 40px}");
 	//m_pTabWidget->tabBar()->tabButton(0, QTabBar::RightSide)->resize(0,0);
 	QObject::connect(m_pTabWidget, &QTabWidget::tabCloseRequested, this, &WLayoutTabbedBrowser::SL_TabCloseRequested);
 	QObject::connect(m_pTabWidget, &QTabWidget::currentChanged, this, &WLayoutTabbedBrowser::SL_CurrentChanged);
@@ -58,16 +58,38 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 	return m_arraypaWebViews.Add(paWebView);
 }
 
+void WLayoutTabbedBrowser::RemoveTab ( int index )
+	{
+	WWebViewTabbed *pWebView = (WWebViewTabbed *)m_arraypaWebViews.PvGetElementAtSafe_YZ(index);
+	if ( pWebView )
+		{
+		m_arraypaWebViews.RemoveElementAt(index);	// remove from array
+		m_pTabWidget->removeTab(index);				// remove from tab widget
+		delete pWebView;
+
+		if ( m_pTabWidget->count() == 0 )
+			m_pBrowserTabs->AddTab();
+		}
+	}
+
 int
 WLayoutTabbedBrowser::GetTabsCount()
 	{
 	return m_arraypaWebViews.GetSize();
 	}
 
-QWebView*
+int WLayoutTabbedBrowser::CurrentTabIndex()
+	{
+	// returns -1 if there are no tabs
+	if ( m_pTabWidget )
+		return m_pTabWidget->currentIndex();
+	return -1;
+	}
+
+WWebViewTabbed*
 WLayoutTabbedBrowser::getTab(int i)
 	{
-	return (QWebView*) m_arraypaWebViews.PvGetElementAtSafe_YZ(i);
+	return (WWebViewTabbed*) m_arraypaWebViews.PvGetElementAtSafe_YZ(i);
 	}
 
 
@@ -90,7 +112,7 @@ void
 WLayoutTabbedBrowser::SL_AddTab(bool checked = false)
 	{
 	MessageLog_AppendTextFormatCo(d_coBluePastel, "WLayoutBrowser::SL_AddTab($i)\n", checked);
-	// add the new tab using the TBrowserTabs object
+	// add the new tab using the TBrowserTabs object /*???*/
 	m_pBrowserTabs->AddTab();
 	}
 
@@ -98,17 +120,7 @@ void
 WLayoutTabbedBrowser::SL_TabCloseRequested(int index)
 	{
 	MessageLog_AppendTextFormatCo(d_coBlueDark, "WLayoutBrowser::SL_TabCloseRequested($i)\n", index);
-	WWebViewTabbed *pTabPage = (WWebViewTabbed *) m_pTabWidget->widget(index);
-	m_pBrowserTabs->m_arraypaTabs.DeleteTreeItem(pTabPage->m_pTab);
-
-	m_pTabWidget->removeTab(index);
-	//delete pTabPage;
-
-	if ( m_pTabWidget->count() == 0 )
-		SL_AddTab( true );
-
-	//if ( m_pTabWidget->count() == 1)
-	//	m_pTabWidget->setTabsClosable(false);
+	m_pBrowserTabs->DeleteTab(index);
 }
 
 void WLayoutTabbedBrowser::SL_CurrentChanged(int index)
@@ -268,13 +280,14 @@ WaTabWidget::addPlusButtonTab()
 	{
 	// add tab to act as a [plus button]
 	QTabBar *pTabBar = tabBar();
-	int index = pTabBar->addTab("");
-	QIcon iconAdd(":/ico/Add");
+	//int index =
+	pTabBar->addTab("");
 
-	QString strName = iconAdd.name();
-	MessageLog_AppendTextFormatCo(d_coBlack, "WaTabWidget::addPlusButtonTab - Icon: $Q\n", &strName );
+	//QIcon iconAdd(":/ico/Add");
+	//pTabBar->setTabIcon(index, iconAdd);
 
-	pTabBar->setTabIcon(index, iconAdd);
+	//QString strName = iconAdd.name();
+	//MessageLog_AppendTextFormatCo(d_coBlack, "WaTabWidget::addPlusButtonTab - Icon: $Q\n", &strName );
 
 	QWidget *pButton = pTabBar->tabButton(pTabBar->count(), QTabBar::RightSide);
 	if ( pButton)		pButton->resize(0, 0);
@@ -311,9 +324,6 @@ WaTabWidget::WaTabWidget(QWidget *parent) : QTabWidget(parent)
 int
 WaTabWidget::addTab(QWidget *widget, const QString &label)
 	{
-	QTabBar *pTabBar = tabBar();
-	Assert(pTabBar != NULL);
-
 	// remove [plus button]
 	//pTabBar->removeTab( count() );
 
@@ -325,14 +335,11 @@ WaTabWidget::addTab(QWidget *widget, const QString &label)
 	// add [plus button] tab
 	//addPlusButtonTab();
 	return iPos;
-}
+	}
 
 void
 WaTabWidget::removeTab(int index)
-{
-	QTabBar *pTabBar = tabBar();
-	Assert(pTabBar != NULL);
-
+	{
 	// remove [plus button]
 	//pTabBar->removeTab( count()  );
 	MessageLog_AppendTextFormatCo(d_coBlue, "WaTabWidget::removeTab - selIndex $i / $i\n", index, count() );
@@ -347,7 +354,7 @@ WaTabWidget::removeTab(int index)
 
 	// add [plus button] tab
 	//addPlusButtonTab();
-}
+	}
 
 void
 WaTabWidget::setTabsClosable(bool closeable)
@@ -369,10 +376,10 @@ WaTabWidget::count()
 
 
 /////////////////////////////////////////////////////////////////////////
-
+/*
 void
 WaTabBar::movePlusButton()
-	{/*
+	{
 	int size = 0;
 	for(int i=0; i < count(); i++)
 		{
@@ -385,16 +392,20 @@ WaTabBar::movePlusButton()
 		plusButton->move(w-54, 0);
 	else
 		plusButton->move(size, 0);
-	*/}
-
+	}
+*/
+/*
 void
 WaTabBar::reinitializePlusButton()
 	{
+<<<<<<< HEAD
 	int iPos = addTab("+");
 	Assert(iPos >= 0);
+=======
+	addTab("+");
+>>>>>>> d01581d0caee2f962dbf675c7db4c39ee5627e18
 	}
 
-/*
 void
 WaTabBar::tabLayoutChange()
 	{

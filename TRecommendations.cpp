@@ -116,10 +116,9 @@ CRecommendationGroup::CRecommendationGroup(PA_PARENT CArrayPtrRecommendationsWit
 void
 TContact::Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParameters)
 	{
-	Assert(pXmlNodeApiParameters != NULL);
 	m_uFlagsContact &= ~FC_kfContactRecommendationsNeverReceived;
 	m_binXmlRecommendations.Empty();
-	if (!pXmlNodeApiParameters->FIsEmptyElement())
+	if (pXmlNodeApiParameters != NULL && !pXmlNodeApiParameters->FIsEmptyElement())
 		m_binXmlRecommendations.BinAppendXmlNodeNoWhiteSpaces(pXmlNodeApiParameters);
 	//MessageLog_AppendTextFormatCo(d_coRed, "Contact_RecommendationsUpdateFromXml(): $B\n", &m_binXmlRecommendations);
 	Contact_RecommendationsDisplayWithinNavigationTree();
@@ -292,7 +291,7 @@ WLayoutRecommendations::PopulateTreeWidget()
 		}
 	else
 		{
-		CBinXcpStanzaTypeInfo binXcpStanza;
+		CBinXcpStanza binXcpStanza;
 		m_pProfile->XcpApiProfile_RecommendationsSerialize(IOUT &binXcpStanza);
 		arraypaRecommendations.AddRecommendationsAllocateNew(binXcpStanza);
 		}

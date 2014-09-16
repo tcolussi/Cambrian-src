@@ -185,6 +185,22 @@ SystemTray_Destroy()
 		}
 	}
 
+//	Special class for a drop-down menu in the main menu bar.
+//	This class is necessary for Mac because the OS does not display an empty menu, so the
+//	constructor will add an dummy menu item.
+class WMenuDropdown : public WMenu
+{
+public:
+	WMenuDropdown(PSZAC pszName);
+};
+
+WMenuDropdown::WMenuDropdown(PSZAC pszName) : WMenu(pszName)
+	{
+	#ifdef Q_OS_MAC
+	ActionAdd(eMenuAction_Quit);
+	#endif
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WMainWindow::WMainWindow() : QMainWindow()
 	{
@@ -208,9 +224,9 @@ WMainWindow::WMainWindow() : QMainWindow()
 	setGeometry(rc);
 	MessageLog_ModuleInitialize();	// Initialize/create the MessageLog/ErrorLog as early as possible in case there is an error/assert during the creation of the other widgets
 
-	g_pwMenuCambrian = new WMenu("SocietyPro");
-	g_pwMenuContacts = new WMenu("Peers");
-	g_pwMenuTools = new WMenu("Applications");
+	g_pwMenuCambrian = new WMenuDropdown("SocietyPro");
+	g_pwMenuContacts = new WMenuDropdown("Peers");
+	g_pwMenuTools = new WMenuDropdown("Applications");
 	#if 0
 	g_pwMenuAdvanced = new WMenu("test");
 	//g_pwMenuAdvanced->setTitle("test");
@@ -218,7 +234,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 	g_pwMenuBar->setCornerWidget(g_pwMenuAdvanced);
 	#else
 	//g_pwMenuAdvanced = new WMenu("Advanced");
-	g_pwMenuAdvanced = new WMenu;
+	g_pwMenuAdvanced = new WMenuDropdown(NULL);
 	g_pwMenuAdvanced->InitAsDymanicMenu();
 	WButtonIconForToolbar * pwButtonTest = new WButtonIconForToolbar(eMenuIconMenu);
 	pwButtonTest->setStyleSheet("QToolButton { border: none;  padding-top:3px; padding-right:5px; padding-bottom:3px } QToolButton::menu-indicator { image: none; }");
@@ -447,7 +463,8 @@ WMainWindow::SettingsRestore()
 
 	g_sPathHtmlApplications = oSettings.value("Apps").toString();
 	if (g_sPathHtmlApplications.isEmpty())
-		g_sPathHtmlApplications = QCoreApplication::applicationFilePath() + "/Apps/";
+		g_sPathHtmlApplications = QCoreApplication::applicationDirPath() + "/Apps/";
+	g_sPathHtmlApplications = QUrl::fromLocalFile(g_sPathHtmlApplications).toString();	// Make sure the URL begins with "file://"
 
 	#ifdef DEBUG
 	return;		// Don't save the path if running a debug build

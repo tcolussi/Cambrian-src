@@ -33,6 +33,8 @@ public:
 	void SetIconAndName(EMenuAction eMenuActionIcon, PSZAC pszName);
 	TBrowserTab * AddTab(CStr &sUrl);
 	TBrowserTab * AddTab();
+	TBrowserTab * PGetCurrentBrowserTab_YZ();
+	void DeleteTab(int index);
 	int GetTabsCount();
 
 	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject

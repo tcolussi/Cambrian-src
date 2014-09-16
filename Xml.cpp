@@ -2883,7 +2883,7 @@ VOID
 CXmlTree::SerializeTreeToXml(UINT uSerializeFlagsExtra) CONST_OUTPUT_BUFFER
 	{
 	Assert(m_binXmlFileData.CbGetData() == 0 && "The buffer to serialize the XML tree should be empty");
-	m_binXmlFileData.PvAllocateMemoryAndEmpty(2000);		// Make sure we start with a minimum of 2 KB
+	m_binXmlFileData.PbbAllocateMemoryAndEmpty_YZ(2000);		// Make sure we start with a minimum of 2 KB
 	/*
 	if ((uSerializeFlagsExtra & CXmlNode::STBF_kfNoHeaderXml) == 0)
 		m_binXmlFileData.InitXmlHeaderForUtf8();
@@ -3561,7 +3561,7 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 			{
 			*ppXmlNodeObjectStack = pXmlNodeObject;
 			IXmlExchange * paObject = pfnPaAllocatorObject(pvContextAllocate);
-			Report(paObject != NULL);
+			Assert(paObject != NULL);
 			parraypaObjects->Add(PA_CHILD paObject);
 			paObject->XmlExchange(INOUT this);
 			pXmlNodeObject = pXmlNodeObject->m_pNextSibling;

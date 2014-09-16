@@ -31,6 +31,10 @@ IService::S_PaAllocateService_YZ(POBJECT poProfileParent, const CXmlNode * pXmlN
 	return S_PaAllocateService_YZ((TProfile *)poProfileParent, ERuntimeClassFromPsz(pXmlNodeElement->PszuFindAttributeValue_NZ(c_szaApplicationClass_)));
 	}
 
+#ifndef DEBUG
+	#pragma GCC diagnostic ignored "-Wswitch"
+#endif
+
 IService *
 IService::S_PaAllocateService_YZ(TProfile * pProfileParent, RTI_ENUM rtiService)
 	{

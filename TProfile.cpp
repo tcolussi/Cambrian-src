@@ -58,6 +58,7 @@ TProfile::TProfile(CChatConfiguration * pConfigurationParent)
 	Assert(pConfigurationParent != NULL);
 	m_pConfigurationParent = pConfigurationParent;
 	m_paContactDummy = NULL;
+	m_paoJapiProfile = NULL;
 	}
 
 TProfile::~TProfile()
@@ -68,6 +69,7 @@ TProfile::~TProfile()
 	m_arraypaBrowsers.DeleteAllTreeItems();
 	m_arraypaServices.DeleteAllRuntimeObjects();
 	m_arraypaBrowsersTabbed.DeleteAllRuntimeObjects();
+	//delete m_paoJapiProfile;
 	}
 
 //	Generate a pair of keys for the profile.
@@ -325,4 +327,5 @@ TProfile::PGetContactDummy_NZ() CONST_MCC
 		m_paContactDummy = new TContact(pAccount);
 		}
 	return m_paContactDummy;
-	}
+}
+

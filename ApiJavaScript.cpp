@@ -4,6 +4,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "ApiJavaScript.h"
+#include "TApplicationBallotmaster.h"
 
 
 OJapiApps::OJapiApps(OJapiCambrian * poCambrian)
@@ -328,7 +329,7 @@ void
 CListVariants::AddGroupMatchingType(TGroup *pGroup, EGroupType eGroupType)
 	{
 	Assert(pGroup != NULL);
-	if ( pGroup->m_eGroupType == eGroupType)
+	if ( pGroup->m_eGroupType == eGroupType && !pGroup->TreeItemFlags_FuIsInvisible() )
 	{
 		append(QVariant::fromValue(pGroup->POJapiGet(m_poCambrian)));
 	}
@@ -359,3 +360,253 @@ CListVariants::AddAudience(TGroup *pGroup)
 	}
 
 //////////////////////////////////////////////////////////////////////////////////
+
+
+const QString
+OJapiBrowserTab::title()
+	{
+	return m_pTab->m_strNameDisplayTyped.ToQString();
+	}
+
+OJapiBrowserTab::OJapiBrowserTab(TBrowserTab *pTab, OJapiBrowsersList *pBrowsersListParent)
+	{
+	Assert(pTab != NULL);
+	Assert(pBrowsersListParent != NULL);
+	m_pTab = pTab;
+	m_pBrowsersListParent = pBrowsersListParent;
+	}
+
+void
+OJapiBrowserTab::back()
+	{
+	Assert(m_pTab != NULL);
+	m_pTab->NavigateBack();
+	}
+
+void
+OJapiBrowserTab::forward()
+	{
+	Assert(m_pTab != NULL);
+	m_pTab->NavigateForward();
+	}
+
+void
+OJapiBrowserTab::reload()
+	{
+	Assert(m_pTab != NULL);
+	m_pTab->NavigateReload();
+}
+
+void
+OJapiBrowserTab::close()
+	{
+	// TODO: close
+	}
+
+void
+OJapiBrowserTab::openApp(const QString & appName)
+	{
+	CStr sAppName(appName);
+	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(sAppName.PszaGetUtf8NZ());
+	if ( pInfo != NULL )
+		{
+		/*???*/
+		CStr url = "file:///" + m_pBrowsersListParent->m_poJapiProfileParent->m_pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
+		m_pTab->SetUrl(url);
+		}
+	}
+
+void
+OJapiBrowserTab::openUrl(const QString & url)
+	{
+	CStr sUrl(url);
+	m_pTab->SetUrl(sUrl);
+	}
+
+POJapiBrowserTab
+TBrowserTab::POJapiGet(OJapiBrowsersList *pBrowsersList)
+	{
+	if ( m_paoJapiBrowser == NULL)
+		m_paoJapiBrowser = new OJapiBrowserTab(this, pBrowsersList);
+
+	return m_paoJapiBrowser;
+	}
+
+
+
+
+
+OJapiBrowsersList::OJapiBrowsersList(OJapiProfile *poProfile)
+	{
+	m_poJapiProfileParent	= poProfile;
+	}
+
+POJapiBrowserTab
+OJapiBrowsersList::PGetCurrentTab_YZ()
+	{
+	TBrowserTabs *pBrowserTabs = PGetBrowser_YZ();
+	if ( pBrowserTabs != NULL)
+		{
+		TBrowserTab *pTab = pBrowserTabs->PGetCurrentBrowserTab_YZ();
+		if ( pTab != NULL )
+			return pTab->POJapiGet(this);
+		}
+
+	return NULL;
+	}
+
+TBrowserTabs*
+OJapiBrowsersList::PGetBrowser_YZ()
+	{
+	return (TBrowserTabs*) m_poJapiProfileParent->m_pProfile->m_arraypaBrowsersTabbed.PvGetElementFirst_YZ();
+	}
+
+QVariantList
+OJapiBrowsersList::listBrowsers()
+	{
+	QVariantList list;
+	TBrowserTabs *pBrowserTabs = PGetBrowser_YZ();
+	if ( pBrowserTabs )
+		{
+		TBrowserTab **ppBrowserTabStop;
+		TBrowserTab **ppBrowserTab = pBrowserTabs->m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);
+		while( ppBrowserTab != ppBrowserTabStop )
+			{
+			TBrowserTab *pBrowser = *ppBrowserTab++;
+			list.append(QVariant::fromValue(pBrowser->POJapiGet(this) ));
+			}
+		}
+	return list;
+	}
+
+POJapiBrowserTab
+OJapiBrowsersList::newBrowser()
+	{
+	TBrowserTabs *pBrowserTabs = PGetBrowser_YZ();
+	TProfile *pProfile = m_poJapiProfileParent->m_pProfile;
+
+	if ( !pBrowserTabs )
+		{
+		// create browser
+		CStr sTreeItemName("Web Browser");
+		pBrowserTabs = new TBrowserTabs(pProfile);
+		pBrowserTabs->SetIconAndName(eMenuAction_DisplaySecureWebBrowsing, sTreeItemName);
+		pProfile->m_arraypaBrowsersTabbed.Add(PA_CHILD pBrowserTabs);
+		pBrowserTabs->TreeItemBrowser_DisplayWithinNavigationTree();
+		}
+
+	// add a new tab
+	TBrowserTab *pTab = pBrowserTabs->AddTab();
+	pBrowserTabs->TreeItemW_SelectWithinNavigationTree();
+
+	return pTab->POJapiGet(this);
+	}
+
+
+
+
+
+POJapiProfile
+TProfile::POJapiGet()
+	{
+	if ( m_paoJapiProfile == NULL)
+		m_paoJapiProfile = new OJapiProfile(this);
+
+	return m_paoJapiProfile;
+	}
+
+OJapiProfile::OJapiProfile(TProfile *pProfile) : m_oBrowsersList(this)
+	{
+	m_pProfile = pProfile;
+	}
+
+QString
+OJapiProfile::id()
+	{
+	return m_pProfile->m_binKeyPublic.ToQString();
+	}
+
+QString
+OJapiProfile::name()
+	{
+	return m_pProfile->m_strNameProfile.ToQString();
+	}
+
+POJapiBrowsersList
+OJapiProfile::browsers()
+	{
+	return &m_oBrowsersList;
+	}
+
+void
+OJapiProfile::destroy()
+	{
+	// TODO
+	}
+
+
+
+
+
+OJapiProfilesList::OJapiProfilesList(OCapiRootGUI *pRootGui)
+	{
+	m_pRootGui = pRootGui;
+	}
+
+TProfile*
+OJapiProfilesList::PGetCurrentProfile()
+	{
+	return g_oConfiguration.m_pProfileSelected;
+	}
+
+POJapiProfile
+OJapiProfilesList::currentProfile()
+	{
+	return PGetCurrentProfile()->POJapiGet();
+	}
+
+void
+OJapiProfilesList::setCurrentProfile(POJapiProfile poJapiProfile)
+	{
+	/*??? Need to check for the proper type (OJapiProfile) */
+	OJapiProfile *pProfile = (OJapiProfile*) poJapiProfile;
+	MessageLog_AppendTextFormatCo(d_coRed, "setCurrentProfile $p\n", pProfile);
+
+	if ( pProfile != NULL )
+		NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfile->m_pProfile);
+	}
+
+QVariantList
+OJapiProfilesList::list()
+	{
+	QVariantList list;
+
+	TProfile **ppProfilesStop;
+	TProfile **ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(&ppProfilesStop);
+	while(ppProfiles != ppProfilesStop)
+		{
+		TProfile *pProfile = *ppProfiles++;
+		list.append( QVariant::fromValue(pProfile->POJapiGet()) );
+		//list.append( QVariant::fromValue(pProfile->m_strNameProfile.ToQString()) );
+		}
+
+	return list;
+	}
+
+POJapiProfile
+OJapiProfilesList::create(const QString &name)
+	{
+	return NULL; // TODO
+	}
+
+
+OCapiRootGUI::OCapiRootGUI() : m_oProfiles(this)
+	{
+	}
+
+POJapiProfilesList
+OCapiRootGUI::roles()
+	{
+	return &m_oProfiles;
+	}
+

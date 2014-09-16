@@ -451,7 +451,7 @@ public:
 	void TransformEvents_PA(PA_DELETING IEvent * paEventSent, INOUT PA_CHILD IEvent ** ppaEventReceived);
 };
 
-CBinXcpStanzaEventPreview::CBinXcpStanzaEventPreview(ITreeItemChatLogEvents * pContactOrGroup) : CBinXcpStanza(eStanzaType_zInformation)
+CBinXcpStanzaEventPreview::CBinXcpStanzaEventPreview(ITreeItemChatLogEvents * pContactOrGroup)
 	{
 	TAccountXmpp * pAccount = pContactOrGroup->m_pAccount;
 	m_pContact = m_paContact = new TContact(pAccount);	// We will serialize using a dummy contact
@@ -472,6 +472,7 @@ CBinXcpStanzaEventPreview::TransformEvents(IN_MOD_TMP IEvent * paEventSent, INOU
 	Assert(paEventSent->m_pVaultParent_NZ == NULL);
 	Assert(ppEventReceived != NULL);
 	Assert(*ppEventReceived != NULL);
+	Assert(m_pContact != NULL);
 	CVaultEvents * pVault = m_pContact->Vault_PGet_NZ();	// Get an empty vault from the dummy contact
 	paEventSent->m_pVaultParent_NZ = pVault;				// We need a valid pointer because the event may need to access the vault, contact or account
 	BinXmlSerializeEventForXcpCore(paEventSent, d_ts_zNA);

@@ -86,7 +86,7 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 		}
 	pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotChoices ">");
 
-    //if (pbinXmlAttributes->FSerializingEventToDisk())
+	if (pbinXmlAttributes->FuSerializingEventToDisk())
 		{
 		// Do not transmit the votes to the contacts; only serialize the vote to disk.
 		pbinXmlAttributes->BinAppendText("><" d_szAPIe_BallotVotes ">");
@@ -99,7 +99,7 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 			}
 		pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotVotes ">");
 		}
-	return eXml_fElementPresent;	// There may be an element present
+	return eXml_ElementPresent;	// There may be an element present
 	}
 
 //	IEventBallot::IEvent::XmlUnserializeCore()
@@ -139,17 +139,6 @@ IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 		}
 	} // XmlUnserializeCore()
 
-void
-IEventBallot::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
-	{
-	MessageLog_AppendTextFormatCo(d_coRed, "IEventBallot::XcpExtraDataRequest()\n");
-	}
-
-void
-IEventBallot::XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply)
-	{
-	MessageLog_AppendTextFormatCo(d_coRed, "IEventBallot::XcpExtraDataArrived()\n");
-	}
 
 //	Some of the HTML entities do are not displayed properly
 //const char c_szHtmlBulletSmall[]		= "&#8729;";	// Tiny dot
@@ -359,14 +348,19 @@ CEventBallotSent::CEventBallotSent(const TIMESTAMP * ptsEventID) : IEventBallot(
 	{
 	}
 
-void
-CEventBallotSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply)
+//	CEventBallotSent::IEvent::XospDataE()
+//
+//	This virtual method is called every time someone casts a vote.
+//	This method records the vote of the user and update the Chat Log.
+EGui
+CEventBallotSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply)
 	{
-	const UINT_BALLOT_CHOICES ukmChoices = pXmlNodeExtraData->UFindAttributeValueHexadecimal_ZZR(d_chAPIa_CEventBallotReceived_uxVotedChoice);
-	CStr strComment = pXmlNodeExtraData->PszuFindAttributeValue(d_chAPIa_CEventBallotReceived_strNote);
-	//MessageLog_AppendTextFormatCo(d_coRed, "CEventBallotSent::XcpExtraDataArrived() - $x\n", ukmChoices);
+	const UINT_BALLOT_CHOICES ukmChoices = pXmlNodeData->UFindAttributeValueHexadecimal_ZZR(d_chAPIa_CEventBallotReceived_uxVotedChoice);
+	CStr strComment = pXmlNodeData->PszuFindAttributeValue(d_chAPIa_CEventBallotReceived_strNote);
+	//MessageLog_AppendTextFormatCo(d_coRed, "CEventBallotSent::XospDataE() - $x\n", ukmChoices);
 
-	TContact * pContact = pbinXcpStanzaReply->m_pContact; // Get the contact who voted
+	TContact * pContact = pbinXospReply->m_pContact; // Get the contact who voted
+	Assert(pContact != NULL);
 	// Search if the contact already voted
 	_CEventBallotVote * pVote;
 	_CEventBallotVote ** ppVoteStop;
@@ -377,7 +371,7 @@ CEventBallotSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT 
 		if (pVote->m_pContact == pContact)
 			{
 			if (pVote->m_ukmChoices == ukmChoices && pVote->m_strComment.FCompareBinary(strComment))
-				return;		// This vote is a duplicate
+				return eGui_NoUpdate;		// This vote is a duplicate
 			MessageLog_AppendTextFormatSev(eSeverityComment, "Updating vote by ^j from 0x$x to 0x$x\n", pContact, pVote->m_ukmChoices, ukmChoices);
 			goto UpdateChoices;
 			}
@@ -391,7 +385,8 @@ CEventBallotSent::XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT 
 	pVote->m_strComment = strComment;
 	pVote->m_tsVote = Timestamp_GetCurrentDateTime();
 	m_pVaultParent_NZ->SetModified();
-	}
+	return eGui_zUpdate;
+	} // XospDataE()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CEventBallotReceived::CEventBallotReceived(const TIMESTAMP * ptsEventID) : IEventBallot(ptsEventID)
@@ -426,6 +421,9 @@ CEventBallotReceived::PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScrat
 	return pstrScratchBuffer->Format("Please vote: $S\n$S", &m_strTitle, &m_strDescription);
 	}
 
+#include "XcpApi.h"
+
+//	Update the GUI and send the ballot via XOSP
 void
 CEventBallotReceived::UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditTextArea * pwEditComments)
 	{
@@ -436,12 +434,10 @@ CEventBallotReceived::UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditT
 	m_strComment = strComments;
 	m_pVaultParent_NZ->SetModified();
 	ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree();
-	/*
+
 	// Send the selected choices to the ballot creator
-	CBinXcpStanzaTypeInfo binXcpStanza(this);
-	binXcpStanza.BinAppendText_VE("<" d_szXCP_"x" _tsI d_szAPIa_CEventBallotReceived_uxVotedChoice_ux d_szAPIa_CEventBallotReceived_strNote "/>", m_tsOther, m_ukmChoices, &m_strComment);	// TODO: rewrite this with more elegant code!
-	binXcpStanza.XcpSendStanzaToContact(PGetContactForReply_YZ());
-	*/
+	CBinXcpStanza binXcpStanza;
+	binXcpStanza.XcpApi_SendDataToEvent_VE(this, "<v" d_szAPIa_CEventBallotReceived_uxVotedChoice_ux d_szAPIa_CEventBallotReceived_strNote "/>", m_ukmChoices, &m_strComment);
 	}
 
 

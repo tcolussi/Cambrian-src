@@ -8,13 +8,13 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.0.8"
-#define d_szwApplicationVersion		   L"0.1.0.8"
+#define d_szApplicationVersion			"0.1.1.2"
+#define d_szwApplicationVersion		   L"0.1.1.2"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
 //#define DEBUG_IMPORT_OLD_CONFIG_XML
-#define SUPPORT_XCP_VERSION_1			// For backward compatibility, support XCP 1
+//#define SUPPORT_XCP_VERSION_1			// For backward compatibility, support XCP 1
 
 #ifndef PRECOMPILEDHEADERS_H
 #define PRECOMPILEDHEADERS_H
@@ -249,10 +249,13 @@ class OJapiContact;
 class OJapiGroup;
 
 #define POJapi				QObject *	// Every object exposed to the JavaScript engine must be stored as QVariant.  Fortunately QVariant accepts a QObject * however since QObject * is quite generic, we #define a new type of object to distinguish between those for JavaScript and those used by Qt, such as QWdiget. It makes the code easier to read.  BTW: Using a typedef does not work, as the compiler no longer recognizes the QObject *.
+#define POCapi				QObject *
 
 //	The following pointers are declared in this file because they will be used by TContact and TGroup.  The motivation for such a design is to have a mechanism to know which TContact and TGroup are used by JavaScript and consequently not delete them while in use, otherwise there will be a crash.
 #define POJapiContact		POJapi
 #define POJapiGroup			POJapi
+#define POJapiProfile		POJapi
+#define POJapiBrowserTab	POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 extern const QBrush c_brushGreenSuperPale;

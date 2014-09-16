@@ -72,7 +72,6 @@ public:
 	TGroupMember * Member_PFindOrAddContact_NZ(TContact * pContact);
 	TGroupMember * Member_PFindOrAllocate_NZ(PSZUC pszMemberJID);
 	TContact * Member_PFindOrAddContact_YZ(PSZUC pszContactJID, const CXmlNode * pXmlNodeContactName);
-	void Members_BroadcastChatState(EChatState eChatState) const;
 	void Members_GetContacts(IOUT CArrayPtrContacts * parraypContacts) const;
 
 	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;					// From IRuntimeObject

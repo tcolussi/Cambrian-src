@@ -338,7 +338,8 @@ WChatLog::ChatLog_ChatStateIconUpdate(INOUT TContact * pContact, EChatState eCha
 			return;
 		pContact->TreeItemContact_UpdateIconComposingStopped(m_pContactOrGroup);
 		}
-	ChatLog_ChatStateTextUpdate();
+	if (eChatState != eChatState_PausedNoUpdateGui)
+		ChatLog_ChatStateTextUpdate();
 	}
 
 //	WChatLog::QObject::event()

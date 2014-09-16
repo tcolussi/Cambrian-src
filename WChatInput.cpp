@@ -30,11 +30,7 @@ WChatInput::WChatInput(WLayoutChatLog * pwLayoutChatLog) : WEditTextArea(pwLayou
 void
 WChatInput::ChatInput_UpdateWatermarkText()
 	{
-	TContact * pContact = m_pwLayoutChatLog->m_pContactParent_YZ;
-	if (pContact != NULL)
-		m_strWatermark.Format("Send a message to $s", pContact->ChatLog_PszGetNickname());
-	else
-		m_strWatermark.Format("Send a message to group $s", m_pwLayoutChatLog->m_pGroupParent_YZ->ChatLog_PszGetNickname());
+	m_strWatermark.Format((m_pwLayoutChatLog->m_pContactParent_YZ != NULL) ? "Send a message to $s" : "Send a message to group $s", m_pwLayoutChatLog->m_pContactOrGroup_NZ->ChatLog_PszGetNickname());
 	}
 
 //	Edit an existing event
@@ -63,7 +59,7 @@ WChatInput::ChatStateComposingCancelTimer(BOOL fWriteXmlChatStatePaused)
 		}
 	m_ttcBeforeChatStatePaused = 0;
 	if (fWriteXmlChatStatePaused)
-		m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_fPaused);	// Notify the remote contact the user stopped typing
+		m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_Paused);	// Notify the remote contact the user stopped typing
 	}
 
 //	WChatInput::QWidget::minimumSizeHint()

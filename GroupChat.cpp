@@ -71,13 +71,16 @@ TAccountXmpp::Contact_PFindByIdentifierOrCreate_YZ(const CXmlNode * pXmlNodeEven
 		TContact * pContact = Contact_PFindByJID(pszContactIdentifier, eFindContact_zDefault);
 		if (pContact != NULL)
 			return pContact;
-		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find peer identifier '$s' from XML node: ^N\n", pszContactIdentifier, pXmlNodeEvent);
-		// Create a new contact
-		if (pbinXcpApiExtraRequest != NULL)
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to find contact identifier '$s' from XML node: ^N\n", pszContactIdentifier, pXmlNodeEvent);
+		if (!m_strJID.FCompareStringsJIDs(pszContactIdentifier))
 			{
+			// Create a new contact
+			if (pbinXcpApiExtraRequest != NULL)
+				{
 
+				}
+			return TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszContactIdentifier);
 			}
-		return TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszContactIdentifier);
 		}
 	return NULL;
 	}
@@ -115,14 +118,6 @@ IEvent::_XmlUnserializeAttributeOfContactIdentifier(CHS chAttributeName, OUT TCo
 	*ppContact = m_pVaultParent_NZ->m_pParent->m_pAccount->Contact_PFindByIdentifierOrCreate_YZ(pXmlNodeElement, chAttributeName, NULL);
 	}
 
-/*
-void
-TContact::BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const
-	{
-	pbin->BinAppendXmlAttributeCStr(chAttributeName, m_strJidBare);
-	}
-*/
-
 void
 CBinXcpStanza::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent)
 	{
@@ -143,6 +138,7 @@ CBinXcpStanza::BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(con
 		}
 	}
 
+/*
 void
 CBinXcpStanza::BinXmlAppendAttributeUIntHexadecimalExcludeForXcp(CHS chAttributeName, UINT uAttributeValueHexadecimal, UINT kmFlagsExcludeForXcp)
 	{
@@ -150,3 +146,4 @@ CBinXcpStanza::BinXmlAppendAttributeUIntHexadecimalExcludeForXcp(CHS chAttribute
 		uAttributeValueHexadecimal &= ~kmFlagsExcludeForXcp;	// Exclude some flags
 	BinAppendXmlAttributeUIntHexadecimal(chAttributeName, uAttributeValueHexadecimal);
 	}
+*/

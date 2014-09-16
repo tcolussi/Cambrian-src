@@ -7,17 +7,6 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-#ifdef SUPPORT_XCP_VERSION_1
-//	Class holding a the data for an event requiring a large amount of XML data to transmit.
-class CDataXmlLargeEvent : public SListNode
-{
-public:
-	TIMESTAMP m_tsEventID;			// Which event the stanza is associated
-	CBin m_binXmlData;				// XML data to transmit.  This data is the caching of IEvent::XmlSerializeCore() and will be unserialized with XmlUnserializeCore().
-	TIMESTAMP_MINUTES m_tsmLastAccessed;	// Remember when this stanza was last used (after about 15 minutes of inactivity, the object gets deleted because it is assumed the stanza is now idle)
-	SHashSha1 m_hashXmlData;				// Reliable checksum of the data
-};
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 typedef UINT UINT_VERSION;		// At the moment, use a 32-bit integer to store the version number

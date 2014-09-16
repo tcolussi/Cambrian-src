@@ -77,11 +77,6 @@ public:
 	IEvent * PFindEventNextReceivedByOtherGroupMembers(TIMESTAMP tsEventID, TContact * pContactExclude, OUT int * pcEventsRemaining) CONST_MCC;
 	IEvent * PFindEventReplacedBy(IEvent * pEventReplacing) CONST_MCC;
 	IEvent * PFindEventReplacing(IEvent * pEventReplaced) CONST_MCC;
-
-	#ifdef SUPPORT_XCP_VERSION_1
-	CEventDownloader * PFindEventDownloaderMatchingEvent(const IEvent * pEvent) const;
-	CDataXmlLargeEvent * PFindOrAllocateDataXmlLargeEvent_NZ(TIMESTAMP tsEventID, IN_MOD_TMP CBinXcpStanza * pbinXcpStanza);
-	#endif
 }; // CVaultEvents
 
 #endif // CVAULTEVENTS_H

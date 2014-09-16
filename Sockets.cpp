@@ -252,8 +252,12 @@ CSocketXmpp::Socket_WriteXmlPresence()
 	#define d_szVersion			"2"
 	#endif
 	*/
-	//Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><"d_szCambrianProtocol_xcp"/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
+	#if 1
+	#pragma GCC warning			"[Warning] Compiling SocietyPro with XOSP!"
+	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><"d_szCambrianProtocol_xcp"/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
+	#else
 	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());	// Temporary disable the XOSP protocol
+	#endif
 	}
 
 void
@@ -263,7 +267,8 @@ CSocketXmpp::Socket_WriteXmlPingToServerIfIdle()
 	Assert(cMinutesIdle >= 0);
 	if (cMinutesIdle >= 4)
 		{
-		Socket_WriteXmlFormatted("<iq type='get' from='^S' to='^S'><ping xmlns='urn:xmpp:ping'/></iq>", &m_pAccount->m_strJID, &m_pAccount->m_strServerName);
+		//Socket_WriteXmlFormatted("<iq from='^S' to='^S' type='get'><ping xmlns='urn:xmpp:ping'/></iq>", &m_pAccount->m_strJID, &m_pAccount->m_strServerName);
+		Socket_WriteXmlFormatted("<iq to='^S' type='get'><ping xmlns='urn:xmpp:ping'/></iq>", &m_pAccount->m_strServerName);
 		if (cMinutesIdle >= 15)
 			{
 			MessageLog_AppendTextFormatSev(eSeverityWarning, "Socket_WriteXmlPingToServerIfIdle($S) - Closing socket after $i minutes without network response\n", &m_pAccount->m_strServerName, cMinutesIdle);
@@ -1268,6 +1273,7 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 	Assert(m_pXmlNodeStanzaCurrent_YZ != NULL);
 	MessageLog_AppendTextFormatCo(d_coGoldenRod, "CSocketXmpp::OnEventXmppStanzaArrived(0x$p)  md5={Nf}\n", m_pXmlNodeStanzaCurrent_YZ, m_pXmlNodeStanzaCurrent_YZ);
 	DebugDisplayStanzaToMessageLog();
+	//m_pAccount->DebugDumpContacts();
 
 	// Before searching for any XMPP specific method, check if we are using the Cambrian Protocol.
 	CXmlNode * pXmlNodeXCP = m_pXmlNodeStanzaCurrent_YZ->PFindElement(c_sza_xcp);
@@ -1396,7 +1402,7 @@ CSocketXmpp::SL_SocketDataAvailableForReading()
 		}
 
 	g_oMutex.lock();
-	char * pbData = (char *)m_binBufferIncomingData.PbAllocateExtraDataWithVirtualNullTerminator(cbDataAvailable);
+	char * pbData = (char *)m_binBufferIncomingData.PbeAllocateExtraDataWithVirtualNullTerminator(cbDataAvailable);
 	const int cbDataRead = read(OUT pbData, cbDataAvailable);	// Read the data from the socket
 	Assert((cbDataRead == cbDataAvailable) && "All data should be read!");
 	Assert((int)strlen(pbData) == cbDataRead);
