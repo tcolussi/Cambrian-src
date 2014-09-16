@@ -8,8 +8,8 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.1.2"
-#define d_szwApplicationVersion		   L"0.1.1.2"
+#define d_szApplicationVersion			"0.1.1.3"
+#define d_szwApplicationVersion		   L"0.1.1.3"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 

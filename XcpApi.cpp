@@ -407,7 +407,7 @@ CBinXcpStanza::BinXmlAppendXcpApiCall_SendEventToContact(TContact * pContact, IE
 		return;
 		}
 	TIMESTAMP tsEventID = pEvent->m_tsEventID;
-	if (pContact->Contact_FQueueXospTasksUntilOnline())
+	if (pContact->Contact_FQueueXospTasksUntilOnline() && !pContact->Contact_FuIsOnline())
 		{
 		// The contact is offline, however capable to communicate via XOSP, therefore set a flag to synchronize next time it is online.  There is no need to add a task for this, as the synchronization will dispatch the events.
 		MessageLog_AppendTextFormatSev(eSeverityComment, "Contact ^j is offline, therefore Event ID $t will be dispatched via a synchronize operation next time it is online.\n", pContact, tsEventID);
