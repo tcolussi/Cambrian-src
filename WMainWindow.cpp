@@ -197,7 +197,8 @@ public:
 WMenuDropdown::WMenuDropdown(PSZAC pszName) : WMenu(pszName)
 	{
 	#ifdef Q_OS_MAC
-	ActionAdd(eMenuAction_Quit);
+	//ActionAdd(eMenuAction_Quit);	// This does not work
+	addAction(c_sEmpty);
 	#endif
 	}
 

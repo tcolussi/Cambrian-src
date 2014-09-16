@@ -924,6 +924,7 @@ ITreeItem::TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay)
 void
 TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * pbinXcpApiExtraRequest)
 	{
+	UNUSED_PARAMETER(pbinXcpApiExtraRequest);
 	// Fill in any missing group info from the data in pXmlNodeApiParameters
 	if (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated)
 		{
