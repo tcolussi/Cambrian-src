@@ -384,6 +384,21 @@ LaunchApplication(const QString & sName)
 	if ( pInfo )
 		{
 		CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
+		QUrl qurlAbsolute(strUrl);
+
+		// underconstruction if the file doesn't exist
+		if ( qurlAbsolute.isLocalFile() )
+			{
+			QFile oHtmlFile(qurlAbsolute.toLocalFile());
+			QString strTest = qurlAbsolute.toString();
+			MessageLog_AppendTextFormatCo(d_coPurple, "LaunchBrowser: (exists $i) - $Q\n", oHtmlFile.exists(), &strTest);
+			if ( !oHtmlFile.exists() )
+				{
+				pInfo = ApplicationGetInfo("Underconstruction");
+				strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
+				}
+			}
+
 		LaunchBrowser(sName, strUrl);
 		}
 	}
@@ -409,8 +424,9 @@ LaunchBrowser(const QString & sName, const QString & sUrlAbsolute)
 		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 	}
 
-	// find an open tab for the selected url
+
 	CStr strUrl(sUrlAbsolute);
+	// find an open tab for the selected url
 	TBrowserTab **ppBrowserTabStop;
 	TBrowserTab **ppBrowserTab;
 	ppBrowserTab = pBrowser->m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);

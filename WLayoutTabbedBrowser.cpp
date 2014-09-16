@@ -47,10 +47,26 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 
 	WWebViewTabbed *paWebView = new WWebViewTabbed(pTBrowserTab, m_pProfile);
 	pTBrowserTab->m_pwWebViewTab = paWebView;
+
 	if ( !pTBrowserTab->m_url.FIsEmptyString() )
 		paWebView->NavigateToAddress(pTBrowserTab->m_url );
+	else
+		{
+		// open default page
+		TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+		if (pProfile != NULL)
+			{
+			MessageLog_AppendTextFormatCo(d_coRed, "WLayoutTabbedBrowser::AddTab profile $S\n", &pProfile->m_strNameProfile);
+			const SApplicationHtmlInfo *pInfo = ApplicationGetInfo("Default NewTab");
+			Assert(pInfo != NULL && "Application 'Default NewTab' doesn't exist");
+			if ( pInfo )
+				{
+				CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
+				pTBrowserTab->SetUrl(strUrl);// this in turn calls to NavigateToAddress
+				}
+			}
+		}
 
-	//MessageLog_AppendTextFormatCo(d_coBlue, "WLayoutTabbedBrowser::AddTab($S)\n", &pTBrowserTab->m_url);
 
 	QObject::connect(paWebView, SIGNAL(titleChanged(QString)), this, SLOT(SL_WebViewTitleChanged(QString)) );
 
@@ -59,7 +75,7 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 	//m_pTabWidget->setTabsClosable(true);
 
 	return m_arraypaWebViews.Add(paWebView);
-}
+	}
 
 void WLayoutTabbedBrowser::RemoveTab ( int index )
 	{

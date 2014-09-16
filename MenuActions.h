@@ -94,6 +94,9 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
     eMenuAction_WikiHtml5Xik,
 	eMenuAction_WikiGroupManager,
 	eMenuAction_WikiBallotMaster,
+	eMenuAction_AppDefaultNewTab,
+	eMenuAction_AppUnderconstruction,
+	eMenuAction_AppHome,
 
 	eMenuAction_DisplayWallet,		// Ccreate a new wallet
 	eMenuAction_DisplaySecureWebBrowsing,	// New instance of a web browser

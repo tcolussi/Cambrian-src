@@ -690,10 +690,12 @@ SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 	{"Pomodoro"          , "Apps/html5-pomodoro/index.html"			, PaAllocateJapiGeneric, NULL },
 	{"JAPI Tests"        , "Apps/japi/test/test.html"				, PaAllocateJapiGeneric, NULL },
 	{"Scratch"           , "Apps/html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
-	{"HTML5 xik"         , "Apps/html5-xik/index.html"				, PaAllocateJapiGeneric, NULL },
-	{"Group Manager"	 , "Apps/html5-group-manager/index.html"	, PaAllocateJapiGeneric, NULL },
-	{"Ballotmaster"		 , "Apps/html5-pollmaster/index.html"		, PaAllocateJapiGeneric, NULL },
-	{"Home"		         , "Apps/html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"HTML5 xik"         , "Apps/html5-xik/index.html"						, PaAllocateJapiGeneric, NULL },
+	{"Group Manager"	 , "Apps/html5-group-manager/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"Ballotmaster"		 , "Apps/html5-pollmaster/index.html"				, PaAllocateJapiGeneric, NULL },
+	{"Home"		         , "Apps/html5-static/home/index.html"				, PaAllocateJapiGeneric, NULL },
+	{"Default NewTab"	 , "Apps/html5-static/default-new-tab/index.html"	, PaAllocateJapiGeneric, NULL },
+	{"Underconstruction" , "Apps/html5-static/underconstruction/index.html"	, PaAllocateJapiGeneric, NULL },
 };
 
 SApplicationHtmlInfo * PGetApplicationHtmlInfoBallotmaster() { return &g_rgApplicationHtmlInfo[9]; }
