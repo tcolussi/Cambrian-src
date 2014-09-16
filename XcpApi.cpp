@@ -218,7 +218,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 					else
 						{
 						if (ibData != 0)
-							MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "\t\t Ignoring data from Task ID $t because its offset ($I) does not match the received data\n", tsTaskID, ibData);
+							MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "\t\t Ignoring data from Task ID $t because its offset ($I) does not match the received data of $I bytes\n", tsTaskID, ibData, pTaskDownload->m_binXmlData.CbGetData());
 						BinAppendText_VE("<" d_szXop_TaskUploading_ts d_szXa_TaskDataOffset_i "/>", tsTaskID, cbData);	// Send a request to download the remaining data (if any), or to indicate all the data was received and therefore delete the task
 						}
 					}

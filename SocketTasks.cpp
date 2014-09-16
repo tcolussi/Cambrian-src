@@ -260,17 +260,22 @@ CListTasksSendReceive::UnserializeFromXml(const CXmlNode * pXmlNodeElementTask)
 void
 CListTasksSendReceive::DisplayTasksToMessageLog()
 	{
+	int cTasks = 0;
 	TIMESTAMP tsNow = Timestamp_GetCurrentDateTime();
 	CTaskSendReceive * pTask = m_plistTasks;
 	while (pTask != NULL)
 		{
 		TIMESTAMP_DELTA dts = tsNow - pTask->m_tsTaskID;
+		const int cbXmlData = pTask->m_binXmlData.CbGetData();
 		if (pTask->FIsTaskSend())
-			MessageLog_AppendTextFormatCo(d_coGreen, "\t [$T] Sending Task ID $t: $I bytes\n", dts, pTask->m_tsTaskID, pTask->m_binXmlData.CbGetData());
+			MessageLog_AppendTextFormatCo(d_coGreen, "\t [$T] Sending Task ID $t: $I bytes\n", dts, pTask->m_tsTaskID, cbXmlData);
 		else
-			MessageLog_AppendTextFormatCo(d_coGreen, "\t [$T] Downloading Task ID $t: cbTotalToDownload = $I, cbDownloadedSoFar = $I\n", dts, pTask->m_tsTaskID, pTask->m_cbTotal, pTask->m_binXmlData.CbGetData());
-		if (!pTask->m_binXmlData.FIsEmptyBinary())
+			MessageLog_AppendTextFormatCo(d_coGreen, "\t [$T] Downloading Task ID $t: cbTotalToDownload = $I, cbDownloadedSoFar = $I\n", dts, pTask->m_tsTaskID, pTask->m_cbTotal, cbXmlData);
+		if (cbXmlData > 0 && cbXmlData < 200)
 			MessageLog_AppendTextFormatCo(d_coGray, "\t\t $B\n", &pTask->m_binXmlData);
 		pTask = pTask->m_pNext;
+		cTasks++;
 		} // while
+	if (cTasks >= 3)
+		MessageLog_AppendTextFormatCo(d_coGreen, "\t\t Total of $i tasks\n", cTasks);
 	}
