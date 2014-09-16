@@ -179,7 +179,7 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 				pEvent = IEvent::S_PaAllocateEvent_YZ(IN pXmlNodeEvent, IN &tsEventID);
 				if (pEvent == NULL)
 					{
-					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to allocate event $t of class '$s'\n", tsEventID, pXmlNodeEvent->m_pszuTagName);
+					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to allocate event $t ({tL}) of class '$s'\n", tsEventID, tsEventID, pXmlNodeEvent->m_pszuTagName);
 					goto EventNext;
 					}
 				pEvent->m_uFlagsEvent |= pXmlNodeEvent->UFindAttributeValueHexadecimal_ZZR(d_chXCPa_IEvent_uFlagsEvent);

@@ -167,7 +167,9 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 					CEventUpdaterSent * pEventUpdater = (CEventUpdaterSent *)*--ppEventCompare;	// Get the updater which is just before the event
 					if (pEventUpdater->EGetEventClass() != eEventClassUpdater)
 						{
-						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Missing Updater for Event ID $t.  Found class '$U' with Event ID $t\n", pEventTemp->m_tsEventID, pEventUpdater->EGetEventClass(), pEventUpdater->m_tsEventID);
+						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Missing Updater for Event ID $t ({tL}); instead found class '$U' with Event ID $t.\n", pEventTemp->m_tsEventID, pEventTemp->m_tsEventID, pEventUpdater->EGetEventClass(), pEventUpdater->m_tsEventID);
+						pEvent->m_uFlagsEvent &= ~IEvent::FE_kfReplacing;	// Remove the bit to avoid displaying the error again and again
+						pEvent->m_pVaultParent_NZ->SetModified();			// Save the change
 						continue;
 						}
 					const TIMESTAMP tsEventIdOld = pEventUpdater->m_tsEventIdOld;

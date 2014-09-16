@@ -418,7 +418,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			// Dump the tasks to the Message Log
 			if (fIsContact)
 				{
-				MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "Tasks for contact ^j:\n", this);
+				MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "Tasks related to ^j:\n", this);
 				((TContact *)this)->m_listaTasksSendReceive.DisplayTasksToMessageLog();
 				}
 			goto Done;
