@@ -69,6 +69,13 @@ ITreeItem::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		}
 	pXmlExchanger->XmlExchangeStrConditional("N", INOUT &m_strNameDisplayTyped, (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated) == 0);	// Save the name before the flags (it makes the XML file a bit more organized, as the name is always present while the flags are not)
 	pXmlExchanger->XmlExchangeUIntHexFlagsMasked("F", INOUT &m_uFlagsTreeItem, FTI_kmTreeItem_FlagsSerializeMask);
+
+	#if 0
+	//m_uFlagsTreeItem |= FTI_kfObjectInvisible;
+	if (m_uFlagsTreeItem != 0)
+		MessageLog_AppendTextFormatCo(d_coBlack, "0x$p: ITreeItem::XmlExchange($s) m_uFlagsTreeItem = 0x$x\n", this, TreeItem_PszGetNameDisplay(), m_uFlagsTreeItem);
+	#endif
+
 	if (!pXmlExchanger->m_fSerializing && m_strNameDisplayTyped.FIsEmptyString())
 		pXmlExchanger->XmlExchangeStr("NameDisplay", INOUT &m_strNameDisplayTyped);	// Compatibility with the old file format (to be removed in 2015)
 	} // XmlExchange()

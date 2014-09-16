@@ -191,12 +191,14 @@ ITreeItemChatLogEvents::Vault_PGet_NZ()
 	}
 
 void
-ITreeItemChatLogEvents::Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD IEvent * paEvent)
+ITreeItemChatLogEvents::Vault_AddEventToChatLogAndSendToContacts(PA_CHILD IEvent * paEvent)
 	{
 	AssertValidEvent(paEvent);
-	paEvent->EventAddToVault(PA_PARENT Vault_PGet_NZ());
+	Vault_PGet_NZ()->EventAddAndDispatchToContacts(PA_CHILD paEvent);
+	//paEvent->EventAddToVault(PA_PARENT Vault_PGet_NZ());
 	if (m_pawLayoutChatLog != NULL)
-		m_pawLayoutChatLog->ChatLog_EventAppend(IN paEvent);
+		//m_pawLayoutChatLog->ChatLog_EventAppend(IN paEvent);
+		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_EventDisplay(IN paEvent);
 	}
 
 void
@@ -293,7 +295,7 @@ ITreeItemChatLogEvents::Vault_SendToJID(PSZAC pszJID)
 	{
 	Vault_WriteEventsToDiskIfModified();	// Make sure the latest events have been written to disk before sending the file
 	CStr strPathVault = Vault_SGetPath();
-	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventFileSentTo(strPathVault, pszJID));
+	Vault_AddEventToChatLogAndSendToContacts(PA_CHILD new CEventFileSentTo(strPathVault, pszJID));
 	EMessageBoxWarning("The code to send a file to $s is still under construction and does not work!!!", pszJID);
 	}
 
@@ -383,7 +385,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			Xmpp_Ping();
 			goto Done;
 			}
-		if (PszrCompareStringBeginCommand(pszCommand, "version"))
+		if (PszrCompareStringBeginCommand(pszCommand, "version") || PszrCompareStringBeginCommand(pszCommand, "ver"))
 			{
 			Xmpp_QueryVersion();
 			goto Done;
@@ -411,6 +413,16 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			XcpApi_Invoke_Synchronize();
 			goto Done;
 			}
+		if (PszrCompareStringBeginCommand(pszCommand, "t"))
+			{
+			// Dump the tasks to the Message Log
+			if (fIsContact)
+				{
+				MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "Tasks related to ^j:\n", this);
+				((TContact *)this)->m_listaTasksSendReceive.DisplayTasksToMessageLog();
+				}
+			goto Done;
+			}
 		if (PszrCompareStringBeginCommand(pszCommand, "sync"))
 			{
 			XcpApi_Invoke_Synchronize();
@@ -420,13 +432,13 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 		PSZUC pszParameters =  PszrCompareStringBeginCommand(pszCommand, "api");
 		if (pszParameters != NULL && *pszParameters != '\0')
 			{
-			XcpApi_Invoke(IN pszParameters, d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
+			//XcpApi_Invoke(IN pszParameters, d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
 			goto Done;
 			}
 		pszParameters = PszrCompareStringBeginCommand(pszCommand, "sendxml");
 		if (pszParameters != NULL && pszParameters[0] == '<')
 			{
-			Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageXmlRawSent(pszParameters));
+			Vault_AddEventToChatLogAndSendToContacts(PA_CHILD new CEventMessageXmlRawSent(pszParameters));
 			goto Done;
 			}
 		if (PszrCompareStringBeginCommand(pszCommand, "sendfile") != NULL)
@@ -461,7 +473,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			}
 
 		// The command is invalid, therefore display something to the user so he/she may learn about the syntax of the command line interface
-		Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventHelp(
+		Vault_AddEventToChatLogAndSendToContacts(PA_CHILD new CEventHelp(
 			g_strScratchBufferStatusBar.Format(
 			"Invalid command: <b>^s</b><br/>"
 			"Valid commands are:<br/>"
@@ -498,7 +510,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 void
 ITreeItemChatLogEvents::Xmpp_SendEventMessageText(PSZUC pszMessage)
 	{
-	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventMessageTextSent(pszMessage));
+	Vault_AddEventToChatLogAndSendToContacts(PA_CHILD new CEventMessageTextSent(pszMessage));
 	}
 
 
@@ -510,7 +522,7 @@ ITreeItemChatLogEvents::Xmpp_SendEventFileUpload(PSZUC pszFileUpload)
 	Assert(m_pawLayoutChatLog != NULL);
 	if (pszFileUpload == NULL || pszFileUpload[0] == '\0')
 		return;
-	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventFileSent(pszFileUpload));
+	Vault_AddEventToChatLogAndSendToContacts(PA_CHILD new CEventFileSent(pszFileUpload));
 	}
 
 //	Upload multiple files.
@@ -555,7 +567,7 @@ ITreeItemChatLogEvents::Xmpp_PGetSocketOnlyIfReady() const
 CSocketXmpp *
 TContact::Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp() const
 	{
-	if (m_cVersionXCP <= 0)
+	if (!Contact_FuCommunicateViaXosp())
 		return m_pAccount->Socket_PGetOnlyIfReadyToSendMessages();
 	return NULL;
 	}
@@ -563,12 +575,12 @@ TContact::Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp() const
 void
 ITreeItemChatLogEvents::Xmpp_Ping()
 	{
-	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventPing);	// Pinging a group makes little sense, however there is no harm.  The first group member responding to the ping will set the timestamp.
+	Vault_AddEventToChatLogAndSendToContacts(PA_CHILD new CEventPing);	// Pinging a group makes little sense, however there is no harm.  The first group member responding to the ping will set the timestamp.
 	}
 
 void
 ITreeItemChatLogEvents::Xmpp_QueryVersion()
 	{
-	Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD new CEventVersion);
+	Vault_AddEventToChatLogAndSendToContacts(PA_CHILD new CEventVersion);
 	}
 

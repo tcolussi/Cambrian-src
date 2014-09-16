@@ -227,6 +227,8 @@ public:
 	void SetFileDataCopy(const CBin & binXmlFileData);
 	void SetFileDataCopy(const QByteArray & arraybXmlFileData);
 	void SetFileDataCopy(PSZUC pszuXmlFileDataStart, PSZUC pszuXmlFileDataStop);
+	CBin * PGetBinTemporaryDuringSerialization() { return &m_binXmlFileData; }	// We may use m_binXmlFileData while serializing because it is unused during serialization.
+	CBin * PGetBinTemporaryDuringSerializationInitAlreadyEncoded();
 
 	EError ELoadFile(const QString & sFileName);
 	EError ELoadFileAndParseToXmlNodes(const QString & sFileName, INOUT_F_VALID CErrorMessage * pError);
@@ -264,6 +266,7 @@ public:
 	CXmlNode * _PAllocateElement(CXmlNode * pNodeElementParent, PSZAC pszaElementName);
 	CXmlNode * _PAllocateAttribute(CXmlNode * pNodeElementParent, PSZAC pszaAttributeName, PSZUC pszuAttributeValue);
 	CXmlNode * _PAllocateAttributeWithExtraStorage(CXmlNode * pNodeElementParent, PSZAC pszaAttributeName, int cbAllocExtra);
+
 
 private:
 	VOID _InitBuffersForFileParsing();
@@ -332,6 +335,8 @@ public:
 	void XmlExchangeWriteAttributeUSZU(PSZAC pszNameAttribute, USZU uszuAttributeValue);
 	void XmlExchangeWriteAttributeRtiSz(PSZAC pszNameAttribute, RTI_ENUM rtiAttributeValue);
 
+	CXmlNode * XmlExchange_PFindElement(CHS chElementName);
+	CXmlNode * XmlExchange_PAllocateElementFromCBinString(CHS chElementName, IN_MOD_TMP CBin & binString);
 protected:
 	void AllocateAttributePsz(PSZAC pszaAttributeName, PSZUC pszValue);
 	void AllocateAttributeValueCopyPsz(PSZAC pszaAttributeName, PSZUC pszValue);

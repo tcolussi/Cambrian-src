@@ -51,6 +51,8 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 			piTreeItem->m_uFlagsTreeItem |= ITreeItem::FTI_kfTreeItem_IsExpanded;
 		else
 			piTreeItem->m_uFlagsTreeItem &= ~ITreeItem::FTI_kfTreeItem_IsExpanded;
+
+		//MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "0x$p: $s  m_uFlagsTreeItem = 0x$x\n", piTreeItem, piTreeItem->TreeItem_PszGetNameDisplay(), piTreeItem->m_uFlagsTreeItem);
 		piTreeItem->m_paTreeItemW_YZ = NULL;	// This would cause a memory leak in the absence of pwTreeView->clear()
 		} // while
 	pwTreeView->clear();

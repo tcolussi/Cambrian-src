@@ -66,8 +66,11 @@ public:
 	CArrayPtrContacts m_arraypaContacts;	// Contacts related to the XMPP account.
 	CArrayPtrGroups m_arraypaGroups;
 	CArrayPtrContacts m_arraypContactsComposing;		// All contacts currently composing (this list is important for optimization)
-	CArrayPtrEvents m_arraypEventsUnsent;				// All events which have never been sent.  As soon as the socket is ready, those events will be dispatched. (This code is no longer working)
+//	CArrayPtrEvents m_arraypEventsUnsent;				// All events which have never been sent.  As soon as the socket is ready, those events will be dispatched. (This code is no longer working)
+#ifdef SUPPORT_XCP_VERSION_1
 	CListaDataXmlLargeEvents m_listaDataXmlLargeEvents;	// Cache of large events waiting to be transmitted
+#endif
+
 protected:
 	TAccountAlias * m_paAlias;	// Each account has a corresponding alias under the "Profile" node
 	CArrayPtrContacts m_arraypContactsMessagesUnread;	// List of contacts with unread messages.  When this list is empty, then the icon 'new message' is removed from the Navigation Tree.
@@ -176,9 +179,12 @@ public:
 		eFindGroupCreate,		// Create a new group if not present
 		};
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanza * pbinXcpApiExtraRequest, EFindGroup eFindGroup);
+	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier);
+
 	void Group_AddToNavigationTree(PA_CHILD TGroup * paGroup);
 
 	void DisplayDialogProperties();
+	void DebugDumpContacts();
 public:
 	static IXmlExchange * S_PaAllocateAccount(PVOID pvContextAllocate);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
 	friend class CArrayPtrAccountsXmpp;

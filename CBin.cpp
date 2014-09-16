@@ -16,7 +16,7 @@
 #ifdef _ALLOCATE_EXACT_BINARY_SIZE
 	#define _cbAllocSizeExtra	1		// Just allocate one extra byte
 #else
-	#define _cbAllocSizeExtra	32		// Always add 32 more bytes for each allocations (to reduce the number of allocations)
+	#define _cbAllocSizeExtra	32		// Always add 32 more bytes for each allocations (to reduce the number of re-allocations)
 #endif
 #define _cbAllocSizeExtraForBinAppendText	20	// Allocate an extra 20 bytes when calling BinAppendText_VE() or BinAppendTextSzv_VL()
 
@@ -172,9 +172,9 @@ CBin::FIsPointerAddressWithinBinaryObject(const void * pvData) const
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	PvSizeAlloc()
+//	PbbAllocateMemoryAndEmpty_YZ()
 //
-//	Allocate a block of memory to hold a desired number of bytes.
+//	Core routine to allocate a block of memory to hold a desired number of bytes.
 //
 //	USAGE
 //	Use this method to allocate bytes before using the object.
@@ -183,16 +183,17 @@ CBin::FIsPointerAddressWithinBinaryObject(const void * pvData) const
 //	INTERFACE NOTES
 //	This method destroys the content of the object.
 //	After calling this method, the size returned by CbGetData() is always zero.
+//	This method may return NULL if cbDataAlloc is zero.
 //
-//	Return pointer to the buffer of the binary data.
+//	Return pointer to the beginning of the binary data.
 //
-void *
-CBin::PvSizeAlloc(int cbDataAlloc)
+BYTE *
+CBin::PbbAllocateMemoryAndEmpty_YZ(int cbDataAlloc)
 	{
 	Assert(cbDataAlloc >= 0);
 	if (m_paData == NULL)
 		{
-		if (cbDataAlloc == 0)
+		if (cbDataAlloc <= 0)
 			return NULL;
 		m_paData = S_PaAllocateBytes(cbDataAlloc);
 		}
@@ -208,10 +209,26 @@ CBin::PvSizeAlloc(int cbDataAlloc)
 	return m_paData->rgbData;
 	}
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	PvSizeAllocGrowBy()
+//	Allocate bytes for the bin and set its size to cbData.
+//	The method may expand or truncate the bin if necessary.
 //
-//	Allocate more bytes to the bin without changing its data size.
+//	Return pointer to newly allocated buffer.
+BYTE *
+CBin::PbbAllocateMemoryAndSetSize_YZ(int cbData)
+	{
+	BYTE * pb = PbbAllocateMemoryAndEmpty_YZ(cbData);
+	if (m_paData != NULL)
+		m_paData->cbData = cbData;
+	return pb;
+	}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	PbbAllocateMemoryToGrowBy_NZ()
+//
+//	Allocate more bytes to the blob without changing its data size.
 //
 //	PERFORMANCE NOTES
 //	To avoid unnecessary memory allocations and copying data,
@@ -227,10 +244,11 @@ CBin::PvSizeAlloc(int cbDataAlloc)
 //	SEE ALSO
 //	PbAllocateExtraMemory() this method does the same but return pointer pointer to the END of the bin.
 //
-void *
-CBin::PvSizeAllocGrowBy(int cbDataGrowBy)
+BYTE *
+CBin::PbbAllocateMemoryToGrowBy_NZ(int cbDataGrowBy)
 	{
 	Assert(cbDataGrowBy >= 0);
+	Assert(_cbAllocSizeExtra > 0);
 	if (m_paData != NULL)
 		{
 		Assert(m_paData->cbData <= m_paData->cbAlloc);
@@ -251,53 +269,8 @@ CBin::PvSizeAllocGrowBy(int cbDataGrowBy)
 			}
 		return m_paData->rgbData;
 		}
-	return PvSizeAlloc(cbDataGrowBy + _cbAllocSizeExtra);
+	return PbbAllocateMemoryAndEmpty_YZ(cbDataGrowBy + _cbAllocSizeExtra);	// This method does not return NULL if cbDataAlloc is greater than zero
 	}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	PvSizeAllocGrowTo()
-//
-//	Grow the allocation of the bin to make sure it can hold cbAlloc bytes.
-//	This routine is similar to PvSizeAllocGrowBy() since it preserves the
-//	content of the bin.
-//
-//	Return pointer to the buffer of the bin.
-//
-void *
-CBin::PvSizeAllocGrowTo(int cbAlloc)
-	{
-	Assert(cbAlloc >= 0);
-	if (m_paData != NULL)
-		{
-		if (cbAlloc > m_paData->cbAlloc)
-			{
-			int cbDataOld = m_paData->cbData;
-			SHeaderWithData * paHeader = S_PaAllocateBytes(cbAlloc + cbDataOld + 16);
-			memcpy(OUT paHeader->rgbData, IN m_paData->rgbData, cbDataOld);
-			ValidateHeapPointer(m_paData);
-			delete m_paData;
-			m_paData = paHeader;
-			m_paData->cbData = cbDataOld;
-			}
-		return m_paData->rgbData;
-		}
-	return PvSizeAlloc(cbAlloc);
-	}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Allocate bytes for the bin and set its size to cbData.
-//	The method may expand or truncate the bin if necessary.
-//
-//	Return pointer to newly allocated buffer.
-void *
-CBin::PvSizeInit(int cbData)
-	{
-	void * pv = PvSizeAlloc(cbData);
-	if (m_paData != NULL)
-		m_paData->cbData = cbData;
-	return pv;
-	}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Allocate more storage to the blob and return pointer to the end of the blob.
@@ -306,19 +279,19 @@ CBin::PvSizeInit(int cbData)
 //
 //	This method never return NULL.
 BYTE *
-CBin::PbAllocateExtraMemory(int cbAllocGrowBy)
+CBin::PbeAllocateExtraMemory(int cbAllocGrowBy)
 	{
 	Assert(cbAllocGrowBy >= 0);
-	BYTE * pbData = (BYTE *)PvSizeAllocGrowBy(cbAllocGrowBy);
+	BYTE * pbData = PbbAllocateMemoryToGrowBy_NZ(cbAllocGrowBy);
 	Assert(m_paData != NULL);
 	return (pbData + m_paData->cbData);
 	}
 
 BYTE *
-CBin::PbAllocateExtraData(int cbDataGrowBy)
+CBin::PbeAllocateExtraMemoryAndSetSize(int cbDataGrowBy)
 	{
 	Assert(cbDataGrowBy >= 0);
-	BYTE * pbData = (BYTE *)PvSizeAllocGrowBy(cbDataGrowBy);
+	BYTE * pbData = PbbAllocateMemoryToGrowBy_NZ(cbDataGrowBy);
 	Assert(m_paData != NULL);
 	const int cbData = m_paData->cbData;
 	m_paData->cbData += cbDataGrowBy;
@@ -326,10 +299,10 @@ CBin::PbAllocateExtraData(int cbDataGrowBy)
 	}
 
 BYTE *
-CBin::PbAllocateExtraDataWithVirtualNullTerminator(int cbDataGrowBy)
+CBin::PbeAllocateExtraDataWithVirtualNullTerminator(int cbDataGrowBy)
 	{
 	Assert(cbDataGrowBy >= 0);
-	BYTE * pbData = (BYTE *)PvSizeAllocGrowBy(cbDataGrowBy + sizeof(CHU));
+	BYTE * pbData = PbbAllocateMemoryToGrowBy_NZ(cbDataGrowBy + sizeof(CHU));
 	Assert(m_paData != NULL);
 	const int cbData = m_paData->cbData;
 	m_paData->cbData += cbDataGrowBy;
@@ -412,7 +385,7 @@ CBin::DataTruncateAtOffset(UINT cbDataKeep)
 	}
 
 //	Truncate the binary to have its end of buffer at pvDataEnd.
-//	This method is used with PbAllocateExtraMemory() and/or PvSizeAllocGrowBy().
+//	This method is used with PbAllocateExtraMemory() and/or PvAllocateMemoryToGrowBy().
 //
 //	SEE ALSO: CStr::StringTruncateAt()
 void
@@ -496,10 +469,10 @@ CBin::BinInitFromBinaryData(const void * pvData, int cbData)
 	Assert(!FIsPointerAddressWithinBinaryObject(pvData));
 	if (cbData > 0)
 		{
-		(void)PvSizeAlloc(cbData);
+		BYTE * pbData = PbbAllocateMemoryAndEmpty_YZ(cbData);
 		Assert(m_paData != NULL);
 		Assert(m_paData->cbData == 0);
-		memcpy(OUT m_paData->rgbData, IN pvData, cbData);
+		memcpy(OUT pbData, IN pvData, cbData);
 		m_paData->cbData = cbData;
 		}
 	else
@@ -527,7 +500,7 @@ CBin::BinInitFromBinaryDataWithExtraVirtualZeroes(const void * pvData, int cbDat
 	Assert(cbExtraVirtualZeroes > 0);
 	Assert(!FIsPointerAddressWithinBinaryObject(pvData));
 
-	BYTE * pbDst = (BYTE *)PvSizeAlloc(cbData + cbExtraVirtualZeroes);
+	BYTE * pbDst = PbbAllocateMemoryAndEmpty_YZ(cbData + cbExtraVirtualZeroes);
 	Assert(m_paData != NULL);
 	Assert(m_paData->cbData == 0);
 	m_paData->cbData = cbData;				// Set the data size
@@ -847,7 +820,7 @@ CBin::BinAppendCBinLowercaseAscii(const CBin & binSrc)
 	const BYTE * pbSrc = pDataSrc->rgbData;
 	int cbData = pDataSrc->cbData;
 	const BYTE * pbSrcStop = pbSrc + cbData;
-	BYTE * pbDst = PbAllocateExtraData(cbData);
+	BYTE * pbDst = PbeAllocateExtraMemoryAndSetSize(cbData);
 	while (pbSrc != pbSrcStop)
 		*pbDst++ = Ch_GetCharLowercase(*pbSrc++);
 	}
@@ -1009,7 +982,7 @@ CBin::BinAppendTextBytesKiBPercentProgress(L64 cbBytesReceived, L64 cbBytesTotal
 void
 CBin::BinAppendTimestamp(TIMESTAMP ts)
 	{
-	m_paData->cbData += Timestamp_CchToString(ts, OUT PbAllocateExtraMemory(16));
+	m_paData->cbData += Timestamp_CchToString(ts, OUT PbeAllocateExtraMemory(16));
 	}
 
 void
@@ -1068,7 +1041,7 @@ CBin::BinUtf8AppendStringW(PSZWC pszwString)
 	if (pszwString != NULL)
 		{
 		Assert(!FIsPointerAddressWithinBinaryObject(pszwString));
-		CHU * pchuDst = PbAllocateExtraMemory(CbAllocWtoU(pszwString));
+		CHU * pchuDst = PbeAllocateExtraMemory(CbAllocWtoU(pszwString));
 		m_paData->cbData += EncodeUnicodeToUtf8(OUT pchuDst, IN pszwString);
 		Assert(m_paData->cbData <= m_paData->cbAlloc);
 		}
@@ -1080,7 +1053,7 @@ CBin::BinUtf8AppendStringQ(const QString & sString)
 	if (&sString != NULL)
 		{
 		const int cchwString = sString.length();
-		CHU * pchuDst = PbAllocateExtraMemory(CbAllocCchwToU(cchwString));
+		CHU * pchuDst = PbeAllocateExtraMemory(CbAllocCchwToU(cchwString));
 		m_paData->cbData += EncodeUnicodeToUtf8(OUT pchuDst, IN sString.utf16());
 		}
 	}
@@ -1292,7 +1265,7 @@ CBin::BinAppendHtmlTextUntilPch(PCHUC pchTextBegin, PCHUC pchTextEnd)
 		} // while
 
 	NeedEncoding:
-	(void)PbAllocateExtraMemory(pchTextEnd - pchTextBegin + 20);	// Allocate memory enough to hold the text and encode at least 3 HTML entities
+	(void)PbeAllocateExtraMemory(pchTextEnd - pchTextBegin + 20);	// Allocate memory enough to hold the text and encode at least 3 HTML entities
 	BinAppendBinaryData(IN pchTextBegin, pchu - pchTextBegin);		// Append the data which does not require any encoding
 	Assert(m_paData != NULL);
 	CHS chHtmlBr = '\0';	// Which character to use to insert the <br/>.  Only the '\n' or '\r' may be used, however not both
@@ -1345,7 +1318,7 @@ CBin::BinAppendHtmlTextUntilPch(PCHUC pchTextBegin, PCHUC pchTextEnd)
 			else
 				{
 				// Any character less than $32 are encoded in a numeric value
-				BYTE * pb = PbAllocateExtraMemory(6);
+				BYTE * pb = PbeAllocateExtraMemory(6);
 				*(CHW *)pb = UINT16_FROM_CHARS('&', '#');	// Append "&#"
 				if (chu < 10)
 					{
@@ -1424,7 +1397,7 @@ CBin::BinAppendXmlTextU(PSZUC pszText)
 		return;	// Nothing to do
 	if (pszText[0] == d_chuXmlAlreadyEncoded)
 		{
-		// The content of pszuString is already XML encoded, so just copy it to the bin
+		// The content of pszuString is already XML encoded, so just copy it to the blob
 		BinAppendText((PSZAC)pszText + 1);
 		return;
 		}
@@ -1452,7 +1425,7 @@ CBin::BinAppendXmlTextU(PSZUC pszText)
 
 	NeedEncoding:
 	int cbAppend = pchu - pszText;
-	(void)PbAllocateExtraMemory(cbAppend + CbAllocUtoU(pchu) + 20);	// Allocate memory enough to hold the string and encode at least 3 XML entities
+	(void)PbeAllocateExtraMemory(cbAppend + CbAllocUtoU(pchu) + 20);	// Allocate memory enough to hold the string and encode at least 3 XML entities
 	BinAppendBinaryData(IN pszText, cbAppend);	// Append the data which does not require any encoding
 	Assert(m_paData != NULL);
 
@@ -1603,7 +1576,7 @@ CBin::BinInitFromCBinWithVirtualNullTerminator(const CBin * pbinSrc)
 	if (pDataSrc != NULL)
 		{
 		const int cbData = pDataSrc->cbData;
-		BYTE * pbDst = (BYTE *)PvSizeAlloc(cbData + sizeof(BYTE));	// Allocate memory for the data and the null-terminator
+		BYTE * pbDst = PbbAllocateMemoryAndEmpty_YZ(cbData + sizeof(BYTE));	// Allocate memory for the data and the null-terminator
 		memcpy(OUT pbDst, IN pDataSrc->rgbData, cbData);
 		pbDst[cbData] = '\0';		// Append the null-terminator
 		m_paData->cbData = cbData;
@@ -1799,7 +1772,7 @@ CBin::BinFileReadE(const QString & sFileName)
 	if (oFile.open(QIODevice::ReadOnly))
 		{
 		UINT cbFileLength = oFile.size();
-		char * prgbBuffer = (char *)PvSizeAlloc(cbFileLength + sizeof(CHW));	// Allocate room for a unicode null-terminator
+		char * prgbBuffer = (char *)PbbAllocateMemoryAndEmpty_YZ(cbFileLength + sizeof(CHW));	// Allocate room for a unicode null-terminator
 		UINT cbDataRead = oFile.read(OUT prgbBuffer, cbFileLength);
 		eFileError = oFile.error();	// Get the file error (if any)
 		oFile.close();	// Close the file
@@ -1948,7 +1921,7 @@ CBin::BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding)
 		if (cbData > 0)
 			{
 			Assert((int)strlenU(pvData) == cbData);
-			(void)PvSizeAllocGrowBy(cbData + 32);	// Since we already know the length of the string, use it to allocate enough memory to hold the string and encode a few extra entities
+			(void)PbbAllocateMemoryToGrowBy_NZ(cbData + 32);	// Since we already know the length of the string, use it to allocate enough memory to hold the string and encode a few extra entities
 			BinAppendUrlPercentEncode((PSZUC)pvData);
 			}
 		return;
@@ -1957,9 +1930,9 @@ CBin::BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding)
 	} // BinAppendDataEncoded()
 
 //	Similar as BinAppendText_VE() returning the beginning offset
-//	This offset is useful to truncate
+//	This offset is useful to truncate empty XML requests.
 void
-CBin::BinAppendTextOffsets_VE(OUT SOffsets * pOffsets, PSZAC pszFmtTemplate, ...)
+CBin::BinAppendTextOffsetsInit_VE(OUT SOffsets * pOffsets, PSZAC pszFmtTemplate, ...)
 	{
 	Assert(pOffsets != NULL);
 	pOffsets->ibReset = (m_paData != NULL) ? m_paData->cbData : 0;
@@ -1967,6 +1940,26 @@ CBin::BinAppendTextOffsets_VE(OUT SOffsets * pOffsets, PSZAC pszFmtTemplate, ...
 	va_start(OUT vlArgs, pszFmtTemplate);
 	BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
 	pOffsets->ibDataBegins = m_paData->cbData;
+	}
+
+void
+CBin::BinAppendTextOffsetsTruncateIfEmpty_VE(IN const SOffsets * pOffsets, PSZAC pszFmtTemplate, ...)
+	{
+	Assert(pOffsets != NULL);
+	Assert(pOffsets->ibReset >= 0);
+	Assert(pOffsets->ibReset <= pOffsets->ibDataBegins);
+	Assert(m_paData != NULL);
+	Assert(m_paData->cbAlloc >= pOffsets->ibDataBegins);
+	Assert(pszFmtTemplate != NULL);
+	if (m_paData->cbData <= pOffsets->ibDataBegins)
+		{
+		Assert(m_paData->cbData == pOffsets->ibDataBegins);
+		m_paData->cbData = pOffsets->ibReset;	// Truncate the blob
+		return;
+		}
+	va_list vlArgs;
+	va_start(OUT vlArgs, pszFmtTemplate);
+	BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
 	}
 
 void
@@ -1988,7 +1981,9 @@ union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outs
 	const CArrayPsz * parraypsz;
 	const ITreeItem * piTreeItem;
 	const TContact * pContact;
+	const TGroup * pGroup;
 	const TAccountXmpp * pAccount;
+	const IEvent * pEvent;
 	const CXmlNode * pXmlNode;
 	QDateTime * pdtuDateTime;
 	UINT uValue;
@@ -2037,7 +2032,9 @@ union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outs
 //		^Q - Append/encode to XML the content of QString*
 //		^Y - Append/encode to XML the content of QByteArray* (the QByteArray is always null-terminated)
 //		^N - Append/encode to XML the content of CXmlNode*
-//		^A - Append/incode an XML attribute of a CXmlNode*
+//		^A - Append/encode an XML attribute of a CXmlNode*
+//		^G - Append the group identifier (SHA-1) if pointer is a TGroup.  This is somewhat complement to ^i
+//		^E - Same as ^G except the the pointer is IEvent.
 //		^L - Append an HTML list items from a CArrayPsz*
 //		^Lo
 //		^:		Append an attribute named "xmlns".  Of course this may appear as pollution in this routine, however those xmlns attributes are everywhere
@@ -2059,7 +2056,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 	{
 	Assert(pszFmtTemplate != NULL);
 	Assert(!FIsPointerAddressWithinBinaryObject(pszFmtTemplate));
-	(void)PbAllocateExtraMemory(CbAllocUtoU((PSZUC)pszFmtTemplate) + _cbAllocSizeExtraForBinAppendText);	// Pre-allocate memory for the template.  This ensures m_paData is never NULL and also optimizes the destination buffer by reducing the number of memory allocations
+	(void)PbeAllocateExtraMemory(CbAllocUtoU((PSZUC)pszFmtTemplate) + _cbAllocSizeExtraForBinAppendText);	// Pre-allocate memory for the template.  This ensures m_paData is never NULL and also optimizes the destination buffer by reducing the number of memory allocations
 	Assert(m_paData != NULL);
 	_UnionForBinAppendTextSzv_VL u;
 
@@ -2185,7 +2182,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 					TIMESTAMP ts = va_arg(vlArgs, TIMESTAMP);
 					if (chEncoding == d_chEncodingBase64Url)			// {t_}
 						{
-						m_paData->cbData += Timestamp_CchEncodeToBase64Url(ts, OUT PbAllocateExtraMemory(16));
+						m_paData->cbData += Timestamp_CchEncodeToBase64Url(ts, OUT PbeAllocateExtraMemory(16));
 						break;
 						}
 					Assert(chEncoding == d_chEncodingQDateTimeLocal);	// {tL}
@@ -2194,7 +2191,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 					}
 					break;
 				case d_chSourceAmount:
-					m_paData->cbData += Amount_CchFormat(OUT PbAllocateExtraMemory(64), va_arg(vlArgs, AMOUNT), chEncoding);
+					m_paData->cbData += Amount_CchFormat(OUT PbeAllocateExtraMemory(64), va_arg(vlArgs, AMOUNT), chEncoding);
 					break;
 				case d_chSourceKiB_32:
 				case d_chSourceKiB_64:
@@ -2261,6 +2258,20 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				u.pXmlNode = va_arg(vlArgs, CXmlNode *);
 				if (u.pXmlNode != NULL)
 					BinAppendXmlAttributeText((PSZAC)u.pXmlNode->m_pszuTagName, u.pXmlNode->m_pszuTagValue);
+				break;
+			case 'E':	// ^E
+				u.pEvent = va_arg(vlArgs, IEvent *);
+				Assert(u.pEvent != NULL);
+				u.pGroup = (TGroup *)u.pEvent->m_pVaultParent_NZ->m_pParent;
+				Assert(u.pGroup != NULL);
+				goto AppendGroupIdentifier;
+			case 'G':	// ^G
+				u.pGroup = va_arg(vlArgs, TGroup *);
+				if (u.pGroup == NULL)
+					break;
+				AppendGroupIdentifier:
+				if (u.pGroup->EGetRuntimeClass() == RTI(TGroup))
+					BinAppendText_VE(" g='{h|}'", &u.pGroup->m_hashGroupIdentifier);
 				break;
 			case d_chSourcePCArrayPsz:	// ^L
 				u.parraypsz = va_arg(vlArgs, CArrayPsz *);
@@ -2405,7 +2416,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				break;
 			case d_chSourceTIMESTAMP_DELTA:	// $T
 				#if 1
-				m_paData->cbData += TimestampDelta_CchToString(va_arg(vlArgs, TIMESTAMP_DELTA), OUT PbAllocateExtraMemory(32));
+				m_paData->cbData += TimestampDelta_CchToString(va_arg(vlArgs, TIMESTAMP_DELTA), OUT PbeAllocateExtraMemory(32));
 				#else
 				int TimestampDelta_CchToStringLongText(TIMESTAMP_DELTA dts, OUT CHU pszTimestampDelta[64]);
 				m_paData->cbData += TimestampDelta_CchToStringLongText(va_arg(vlArgs, TIMESTAMP_DELTA), OUT PbAllocateExtraMemory(64));
@@ -2414,7 +2425,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 			case '@':	// $@
 				{
 				QTime timeNow = QTime::currentTime();
-				CHU * pszTime = PbAllocateExtraData(2 + 1 + 2 + 1 + 2);	// Allocate enough data for the following format "hh:mm:ss"
+				CHU * pszTime = PbeAllocateExtraMemoryAndSetSize(2 + 1 + 2 + 1 + 2);	// Allocate enough data for the following format "hh:mm:ss"
 				UINT uValue = timeNow.hour();
 				pszTime[0] = '0' + (uValue / 10);
 				pszTime[1] = '0' + (uValue % 10);
@@ -2541,7 +2552,7 @@ CBin::BinAppendXmlAttributeText(PSZAC pszaAttributeName, PSZUC pszAttributeValue
 		}
 	const int cchAttributeName = pb - (BYTE *)pszaAttributeName;
 	const int cbAttributeName = cchAttributeName + 3;
-	pb = PbAllocateExtraMemory(cbAttributeName);
+	pb = PbeAllocateExtraMemory(cbAttributeName);
 	Assert(m_paData != NULL);
 	*pb++ = ' ';
 	memcpy(OUT pb, pszaAttributeName, cchAttributeName);
@@ -2736,7 +2747,7 @@ CBin::BinAppendStringBase16FromBinaryData(const void * pvBinaryData, int cbBinar
 	Assert(cbBinaryData >= 0);
 	if (cbBinaryData > 0)
 		{
-		PSZU pszHex = PbAllocateExtraDataWithVirtualNullTerminator(cbBinaryData * 2);
+		PSZU pszHex = PbeAllocateExtraDataWithVirtualNullTerminator(cbBinaryData * 2);
 		Base16_StringFromBinary(OUT pszHex, (const BYTE *)pvBinaryData, cbBinaryData);
 		}
 	}
@@ -2746,7 +2757,7 @@ CBin::BinAppendStringBase41FromBinaryData(const void * pvDataBinary, int cbDataB
 	{
 	Assert(!FIsPointerAddressWithinBinaryObject(pvDataBinary));
 	Assert(cbDataBinary >= 4);	// Don't attempt to convert odd number of bytes to Base41
-	PSZU pszBase41 = PbAllocateExtraMemory(cbDataBinary * 2);	// Allocate double the memory, this should be enough for the conversion
+	PSZU pszBase41 = PbeAllocateExtraMemory(cbDataBinary * 2);	// Allocate double the memory, this should be enough for the conversion
 	pszBase41 = Base41_EncodeToText(OUT pszBase41, IN (const BYTE *)pvDataBinary, cbDataBinary);
 	m_paData->cbData = pszBase41 - m_paData->rgbData;
 	Assert(m_paData->cbData <= m_paData->cbAlloc);
@@ -2758,7 +2769,7 @@ CBin::BinAppendStringBase64FromBinaryData(const void * pvDataBinary, int cbDataB
 	{
 	Assert(!FIsPointerAddressWithinBinaryObject(pvDataBinary));
 	Assert(cbDataBinary >= 0);
-	PSZU pszBase64 = PbAllocateExtraDataWithVirtualNullTerminator(Base64_CchEncoded(cbDataBinary));
+	PSZU pszBase64 = PbeAllocateExtraDataWithVirtualNullTerminator(Base64_CchEncoded(cbDataBinary));
 	(void)Base64_CchEncodeToText(OUT pszBase64, (const BYTE *)pvDataBinary, cbDataBinary);
 	}
 
@@ -2848,7 +2859,7 @@ CBin::BinAppendBinaryDataFromBase85SCb_ML(PSZUC pszuBase85)
 	if (pszuBase85 != NULL)
 		{
 		PCHRO pchroStop;
-		BYTE * pbBinaryData = PbAllocateExtraMemory(Base85_CbDecodeAlloc(pszuBase85, OUT &pchroStop));
+		BYTE * pbBinaryData = PbeAllocateExtraMemory(Base85_CbDecodeAlloc(pszuBase85, OUT &pchroStop));
 		const int cbDecoded = Base85_CbDecodeToBinary(IN pszuBase85, OUT_F_INV pbBinaryData);
 		m_paData->cbData += cbDecoded;
 		Assert(m_paData->cbData < m_paData->cbAlloc);	// The function Base85_CbDecodeAlloc() should return a value large for the null-terminator
@@ -2876,7 +2887,7 @@ CBin::BinAppendStringBase85FromBinaryData(const void * pvDataBinary, int cbDataB
 	{
 	Assert(!FIsPointerAddressWithinBinaryObject(pvDataBinary));
 	Assert(cbDataBinary >= 0);
-	PSZU pszBase85 = PbAllocateExtraMemory(Base85_CbEncodeAlloc(cbDataBinary));
+	PSZU pszBase85 = PbeAllocateExtraMemory(Base85_CbEncodeAlloc(cbDataBinary));
 	m_paData->cbData += Base85_CchEncodeToText(OUT pszBase85, (const BYTE *)pvDataBinary, cbDataBinary);
 	}
 

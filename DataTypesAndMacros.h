@@ -351,6 +351,7 @@ typedef QRgb QRGB;	// co
 #define d_coYellowDark		MAKE_QRGB(200, 200, 0)
 #define d_coYellowPure		MAKE_QRGB(255, 255, 0)
 #define d_coOrange			MAKE_QRGB(255, 96, 0)
+#define d_coOrangeDark		MAKE_QRGB(200, 64, 0)
 #define d_coOrangeRed		MAKE_QRGB(255, 69, 0)
 #define d_coRedDark			MAKE_QRGB(128, 0, 0)
 #define d_coRed				MAKE_QRGB(200, 0, 0)

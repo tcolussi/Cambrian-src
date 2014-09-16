@@ -108,8 +108,6 @@ DDialogAssertionFailure::SL_ShowErrorLog()
 
 #endif // DEBUG_ASSERT_NON_BLOCKING
 
-#define d_coOrangeDark			MAKE_QRGB(200, 64, 0)
-
 /////////////////////////////////////////////////////////////////////
 //	Return TRUE to break into the debugger
 BOOL

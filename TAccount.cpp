@@ -158,7 +158,7 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 			while (ppContact != ppContactStop)
 				{
 				pContact = *ppContact++;
-				Assert(!m_strJID.FCompareStringsJIDs(pContact->m_strJidBare) && "Contact should not have the same JID as its parent XMPP account!");
+//				Assert(!m_strJID.FCompareStringsJIDs(pContact->m_strJidBare) && "Contact should not have the same JID as its parent XMPP account!");
 				//MessageLog_AppendTextFormatCo(d_coBlack, "Comparing $s with $S\n", pszContactJID, &pContact->m_strJidBare);
 				if (pContact->m_strJidBare.FCompareStringsNoCaseCch(pszContactJID, cchJID))
 					{
@@ -175,12 +175,12 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 						if (!pContact->m_strRessource.FCompareStringsExactCase(pszResource))
 							{
 							if (pContact->m_strRessource.FIsEmptyString())
-								MessageLog_AppendTextFormatCo(d_coBlack, "Peer $S: Assigning resource '$s'\n", &pContact->m_strJidBare, pszResource);
+								MessageLog_AppendTextFormatCo(d_coBlack, "Contact $S: Assigning resource '$s' (m_uFlagsTreeItem = 0x$x)\n", &pContact->m_strJidBare, pszResource, m_uFlagsTreeItem);
 							else
-								MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "Peer $S: Updating resource from '$S' to '$s'\n", &pContact->m_strJidBare, &pContact->m_strRessource, pszResource);
+								MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "Contact $S: Updating resource from '$S' to '$s'\n", &pContact->m_strJidBare, &pContact->m_strRessource, pszResource);
 							//pContact->Xcp_ServiceDiscovery();	// The resource changed, therefore query the remote client for its capabilities
-							pContact->SetFlagXcpComposingSendTimestampsOfLastKnownEvents();	// Each time the resource change, re-send the timestamps of the last known events so we give an opportunity to synchronie
-							pContact->m_cVersionXCP = 0;	// Also, reset the XCP version, to make sure the device connects properly
+							pContact->SetFlagXcpComposingSendTimestampsOfLastKnownEvents();	// Each time the resource change, re-send the timestamps of the last known events so we give an opportunity to synchronize
+							//pContact->m_cVersionXCP = 0;	// Also, reset the XCP version, to make sure the device connects properly
 							}
 						pContact->m_strRessource.InitFromStringU(pszResource);
 						}
@@ -264,6 +264,8 @@ TAccountXmpp::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent
 		return Certificate_PGet_YZ();
 	case RTI(TCertificateServerName):
 		return Certificate_PGetServerName();
+	case RTI(TContact):	// TODO: Without this line, there is a stack overvlow
+		return NULL;
 	default:
 		return TAccountCore::PGetRuntimeInterface(rti, m_pProfileParent);
 		}
@@ -290,6 +292,8 @@ TAccountXmpp::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	#endif
 
 	m_strJIDwithResource.InitOnlyIfEmpty(IN m_strJID);	// Make sure m_strJIDwithResource is never empty
+
+	//DebugDumpContacts();
 	} // XmlExchange()
 
 //	TAccountXmpp::ITreeItem::TreeItem_FContainsMatchingText()
@@ -399,7 +403,7 @@ void
 TAccountXmpp::OnTimerNetworkIdle()
 	{
 	m_arraypContactsComposing.RemoveAllContactsComposingWhoAreIdle();
-	m_listaDataXmlLargeEvents.DeleteIdleNodes();
+//	m_listaDataXmlLargeEvents.DeleteIdleNodes();
 	if (Socket_FIsConnected())
 		m_paSocket->Socket_WriteXmlPingToServerIfIdle();
 	}
@@ -535,9 +539,9 @@ TAccountXmpp::Contact_RosterSubscribe(INOUT TContact * pContact)
 	Assert(pContact != NULL);
 	if (m_paSocket == NULL)
 		return;
-	if (TreeItemFlags_FuIsInvisible())
+	if (pContact->TreeItemFlags_FuIsInvisible())
 		return;	// Don't add invisible contacts to the roster
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Adding peer ^j to roster...\n", pContact);
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Adding constact ^j to roster... (m_uFlagsTreeItem = 0x$x)\n", pContact, m_uFlagsTreeItem);
 	m_paSocket->Socket_WriteXmlFormatted("<iq id='$p' type='set'><query xmlns='jabber:iq:roster'><item jid='^j'></item></query></iq>", pContact, pContact);
 	//m_paSocket->Socket_WriteXmlFormatted("<presence to='^j' type='subscribe'/>", pContact);
 	//m_paSocket->Socket_WriteXmlFormatted("<presence ^:jc from='^J' to='^j' type='subscribe'/>", this, pContact);
@@ -861,3 +865,15 @@ CArrayPtrAccountsXmpp::PFindChatAccountByNameDisplay(PSZUC pszAccountNameDisplay
 	}
 */
 
+void
+TAccountXmpp::DebugDumpContacts()
+	{
+	TContact * pContact;
+	TContact ** ppContactStop;
+	TContact ** ppContact = m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
+	while (ppContact != ppContactStop)
+		{
+		pContact = *ppContact++;
+		MessageLog_AppendTextFormatCo(d_coBlack, "0x$p: Contact $S: m_uFlagsTreeItem = 0x$x\n", pContact, &pContact->m_strJidBare, pContact->m_uFlagsTreeItem);
+		}
+	}

@@ -12,8 +12,9 @@
 
 enum EChatState
 	{
-	eChatState_zComposing,	// The user is currently typing
-	eChatState_fPaused		// The user stopped typing
+	eChatState_zComposing			= 0,	// The user is currently typing
+	eChatState_Paused				= 1,	// The user stopped typing
+	eChatState_PausedNoUpdateGui	= 2,	// Same as above except do not update the Chat Log.  This is an optimization to avoid flicker when pausing and adding events
 	};
 
 enum EUserCommand
@@ -61,7 +62,7 @@ public:
 	CChatConfiguration * PGetConfiguration() const;
 
 	CVaultEvents * Vault_PGet_NZ();
-	void Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD IEvent * paEvent);
+	void Vault_AddEventToChatLogAndSendToContacts(PA_CHILD IEvent * paEvent);
 	void Vault_SetNotModified();
 	void Vault_SetModified();
 	IEvent * Vault_PFindEventByID(TIMESTAMP tsEventID) CONST_MCC;
@@ -101,6 +102,7 @@ public:
 	void Xmpp_SendEventsFileUpload(IN_MOD_INV PSZU pszmFilesUpload);
 	void Xmpp_Ping();
 	void Xmpp_QueryVersion();
+	void Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC;
 	CSocketXmpp * Xmpp_PGetSocketOnlyIfReady() const;
 
 	void XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters);

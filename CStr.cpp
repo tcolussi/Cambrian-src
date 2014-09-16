@@ -123,7 +123,7 @@ CStr::InitFromCBin(const CBin & binString)
 	int cbData = pDataSrc->cbData;
 	if (cbData > 0)
 		{
-		BYTE * pbDst = (BYTE *)PvSizeInit(cbData + 1);
+		BYTE * pbDst = PbbAllocateMemoryAndSetSize_YZ(cbData + 1);
 		memcpy(OUT pbDst, IN pDataSrc->rgbData, cbData);
 		pbDst[cbData] = '\0';
 		Assert(m_paData->cbData == cbData + 1);
@@ -146,7 +146,7 @@ CStr::AppendTextW(PSZWC pszwString)
 				m_paData->cbData = cbData - 1;	// Remove the null-terminator
 				}
 			}
-		CHU * pchuDst = PbAllocateExtraMemory(CbAllocWtoU(pszwString));
+		CHU * pchuDst = PbeAllocateExtraMemory(CbAllocWtoU(pszwString));
 		m_paData->cbData += 1 + EncodeUnicodeToUtf8(OUT pchuDst, IN pszwString);
 		}
 	} // AppendTextW()
@@ -476,7 +476,8 @@ CStr::InitFromQueryStringPsz(PSZUC pszTextSource, PSZAC pszNameVariable)
 					case ' ':
 					case '&':	// The ampersand separates QueryString values, and therefore indicates the end of the current QueryString value
 						// Now it it time to decode (remove the escaping from) the QueryString
-						PSZU pszQueryStringDecoded = (PSZU)PvSizeAlloc(pchEnd - pszQueryStringValue);
+						PSZU pszQueryStringDecoded = PbbAllocateMemoryAndEmpty_YZ(pchEnd - pszQueryStringValue);
+						Assert(pszQueryStringDecoded != NULL);
 						while (TRUE)
 							{
 							ch = *++pszQueryStringValue;

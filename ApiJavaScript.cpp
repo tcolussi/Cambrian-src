@@ -237,14 +237,13 @@ OJapiList
 OJapiGroup::members()
 	{
 	CListVariants oList(m_poCambrian);
-	TGroupMember **ppGroupMemberStop;
-	TGroupMember **ppGroupMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(&ppGroupMemberStop);
+	TGroupMember ** ppGroupMemberStop;
+	TGroupMember ** ppGroupMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(OUT &ppGroupMemberStop);
 	while ( ppGroupMember != ppGroupMemberStop )
-	{
-		TGroupMember *pGroupMember = *ppGroupMember++;
+		{
+		TGroupMember * pGroupMember = *ppGroupMember++;
 		oList.AddContact(pGroupMember->m_pContact);
-	}
-
+		}
 	return oList;
 	}
 
@@ -254,6 +253,7 @@ QString OJapiGroup::type()
 		return "broadcast";
 	else if (m_pGroup->m_eGroupType == eGroupType_Open)
 		return "open";
+	return c_sEmpty;
 	}
 
 void
@@ -267,9 +267,7 @@ OJapiGroup::addPeer(QObject *pContactAdd)
 void
 OJapiGroup::removePeer(QObject *pContactRemove)
 	{
-
 	OJapiContact * pContact = qobject_cast<OJapiContact *>(pContactRemove); // Make sure we received an object of proper type
-
 	TGroupMember **ppGroupMemberStop;
 	TGroupMember **ppGroupMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(&ppGroupMemberStop);
 	while ( ppGroupMember != ppGroupMemberStop )
@@ -463,7 +461,7 @@ void
 OJapiBrowserTab::openApp(const QString & appName)
 	{
 	CStr sAppName(appName);
-	const SApplicationHtmlInfo *pInfo = ApplicationGetInfo(sAppName.PszaGetUtf8NZ());
+	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(sAppName.PszaGetUtf8NZ());
 	if ( pInfo != NULL )
 		{
 		/*???*/
@@ -683,22 +681,38 @@ enum EApplicationHtmlinfo
 
 SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 {
-	{"Navshell Peers"	 , "Apps/navshell-contacts/index.html"		, PaAllocateJapiGeneric, NULL },
-	{"Navshell Sidebar"  , "Apps/navshell-stack/index.html"			, PaAllocateJapiGeneric, NULL },
-	{"Navshell Header"   , "Apps/navshell-header/index.html"		, PaAllocateJapiGeneric, NULL },
-	{"Office Kingpin"    , "Apps/html5-office-kingpin/index.html"	, PaAllocateJapiGeneric, NULL },
-	{"Pomodoro"          , "Apps/html5-pomodoro/index.html"			, PaAllocateJapiGeneric, NULL },
-	{"JAPI Tests"        , "Apps/japi/test/test.html"				, PaAllocateJapiGeneric, NULL },
-	{"Scratch"           , "Apps/html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
-	{"HTML5 xik"         , "Apps/html5-xik/index.html"						, PaAllocateJapiGeneric, NULL },
-	{"Group Manager"	 , "Apps/html5-group-manager/index.html"			, PaAllocateJapiGeneric, NULL },
-	{"Ballotmaster"		 , "Apps/html5-pollmaster/index.html"				, PaAllocateJapiGeneric, NULL },
-	{"Home"		         , "Apps/html5-static/home/index.html"				, PaAllocateJapiGeneric, NULL },
-	{"Default NewTab"	 , "Apps/html5-static/default-new-tab/index.html"	, PaAllocateJapiGeneric, NULL },
-	{"Underconstruction" , "Apps/html5-static/underconstruction/index.html"	, PaAllocateJapiGeneric, NULL },
+	{"Navshell Peers"	 , "navshell-contacts/index.html"		, PaAllocateJapiGeneric, NULL },
+	{"Navshell Sidebar"  , "navshell-stack/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"Navshell Header"   , "navshell-header/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"Office Kingpin"    , "html5-office-kingpin/index.html"	, PaAllocateJapiGeneric, NULL },
+	{"Pomodoro"          , "html5-pomodoro/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"JAPI Tests"        , "japi/test/test.html"				, PaAllocateJapiGeneric, NULL },
+	{"Scratch"           , "html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"HTML5 xik"         , "html5-xik/index.html"						, PaAllocateJapiGeneric, NULL },
+	{"Group Manager"	 , "html5-group-manager/index.html"				, PaAllocateJapiGeneric, NULL },
+	{"Ballotmaster"		 , "html5-pollmaster/index.html"				, PaAllocateJapiGeneric, NULL },
+	{"Home"		         , "html5-static/home/index.html"				, PaAllocateJapiGeneric, NULL },
+	{"Default NewTab"	 , "html5-static/default-new-tab/index.html"	, PaAllocateJapiGeneric, NULL },
+	{"Underconstruction" , "html5-static/underconstruction/index.html"	, PaAllocateJapiGeneric, NULL },
 };
 
 SApplicationHtmlInfo * PGetApplicationHtmlInfoBallotmaster() { return &g_rgApplicationHtmlInfo[9]; }
+
+// This function was moved to make the code compile
+const SApplicationHtmlInfo *
+PGetApplicationHtmlInfo(PSZAC pszNameApplication)
+	{
+	//MessageLog_AppendTextFormatCo(d_coRed, "sizeof=$i\n", sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo) );
+	const SApplicationHtmlInfo * pInfo = g_rgApplicationHtmlInfo;
+	while (pInfo != g_rgApplicationHtmlInfo + LENGTH(g_rgApplicationHtmlInfo))
+		{
+		if (FCompareStringsNoCase((PSZUC) pInfo->pszName, (PSZUC)pszNameApplication))
+			return pInfo;
+		pInfo++;
+		}
+	return NULL;
+	}
+
 
 QVariantList OCapiRootGUI::apps()
 	{
@@ -724,22 +738,6 @@ POJapiPeerRequestsList
 OCapiRootGUI::peerRequests()
 	{
 	return &m_oPeerRequestsList;
-	}
-
-
-
-const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name)
-	{
-	//MessageLog_AppendTextFormatCo(d_coRed, "sizeof=$i\n", sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo) );
-	for(int i=0; i < sizeof(g_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo); i++)
-	{
-	const SApplicationHtmlInfo *pInfo = &g_rgApplicationHtmlInfo[i];
-	if ( FCompareStringsNoCase( (PSZUC) pInfo->pszName, (PSZUC) name ) )
-		{
-		return pInfo;
-		}
-	}
-	return NULL;
 	}
 
 OCapiImageProvider::OCapiImageProvider()  : QQuickImageProvider(QQuickImageProvider::Pixmap)

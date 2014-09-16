@@ -1237,7 +1237,7 @@ AssertValidUtf8(IN PSZUC pszuUtf8)
 	else
 		{
 		// The string is more than 1 MB, so allocate it on the heap
-		pszwTemp = (CHW *)binTemp.PvSizeAlloc(cchu * sizeof(CHW));
+		pszwTemp = (CHW *)binTemp.PbbAllocateMemoryAndEmpty_YZ(cchu * sizeof(CHW));
 		}
 
 	const CHU * pszuError;
@@ -1435,7 +1435,7 @@ CBin::BinAppendTextFormattedFromFingerprintBinary(const void * pvFingerprintBina
 	{
 	Assert(!FIsPointerAddressWithinBinaryObject(pvFingerprintBinary));
 	Assert(cbFingerprintBinary >= 0);
-	PSZU pszHex = PbAllocateExtraMemory(Base16_CchuAllocToFormatTextFromBinaryData(cbFingerprintBinary));
+	PSZU pszHex = PbeAllocateExtraMemory(Base16_CchuAllocToFormatTextFromBinaryData(cbFingerprintBinary));
 	m_paData->cbData += Base16_FormatTextFromBinaryData(OUT pszHex, (const BYTE *)pvFingerprintBinary, cbFingerprintBinary, d_chBase16Format_Separator_Space);
 	Assert(strlenU(pszHex) < Base16_CchuAllocToFormatTextFromBinaryData(cbFingerprintBinary));
 	}
@@ -1450,7 +1450,7 @@ CBin::BinAppendBinaryFingerprintF_MB(IN PSZUC pszTextFingerprint) OUT_F_UNCH
 	Assert(pszTextFingerprint != NULL);
 	Assert(!FIsPointerAddressWithinBinaryObject(pszTextFingerprint));
 	const int cbBinaryFingerprint = Base16_CbTextToBinary((PSZAC)pszTextFingerprint);
-	BYTE * pbBinaryFingerprint = PbAllocateExtraDataWithVirtualNullTerminator(cbBinaryFingerprint);
+	BYTE * pbBinaryFingerprint = PbeAllocateExtraDataWithVirtualNullTerminator(cbBinaryFingerprint);
 	PSZUC pcheInvalid = (PSZUC)Base16_PcheTextToBinary(IN (PSZAC)pszTextFingerprint, OUT pbBinaryFingerprint, cbBinaryFingerprint);
 	if (pcheInvalid == NULL)
 		{
@@ -1534,7 +1534,7 @@ CBin::BinAppendBinaryFromTextBase16F(PSZUC pszTextBase16)
 	{
 	Assert(!FIsPointerAddressWithinBinaryObject(pszTextBase16));
 	int cbBinary = Base16_CbTextToBinary((PSZAC)pszTextBase16);
-	BYTE * pbBinary = PbAllocateExtraDataWithVirtualNullTerminator(cbBinary);
+	BYTE * pbBinary = PbeAllocateExtraDataWithVirtualNullTerminator(cbBinary);
 	return Base16_FStringToBinary(IN (PSZAC)pszTextBase16, OUT pbBinary, cbBinary);
 	}
 
@@ -2191,7 +2191,7 @@ CStr::TransformContentToMd5Hex(PSZAC pszFmtTemplate, ...)
 void
 CBin::BinInitFromCalculatingHashSha1(const CBin & binData)
 	{
-	SHashSha1 * pHashSha1 = (SHashSha1 *)PvSizeInit(sizeof(SHashSha1));
+	SHashSha1 * pHashSha1 = (SHashSha1 *)PbbAllocateMemoryAndSetSize_YZ(sizeof(SHashSha1));
 	HashSha1_CalculateFromBinary(OUT pHashSha1, IN binData.PvGetData(), binData.CbGetData());
 	Assert(CbGetData() == sizeof(SHashSha1));
 	}

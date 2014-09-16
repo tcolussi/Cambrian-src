@@ -30,11 +30,7 @@ WChatInput::WChatInput(WLayoutChatLog * pwLayoutChatLog) : WEditTextArea(pwLayou
 void
 WChatInput::ChatInput_UpdateWatermarkText()
 	{
-	TContact * pContact = m_pwLayoutChatLog->m_pContactParent_YZ;
-	if (pContact != NULL)
-		m_strWatermark.Format("Send a message to $s", pContact->ChatLog_PszGetNickname());
-	else
-		m_strWatermark.Format("Send a message to group $s", m_pwLayoutChatLog->m_pGroupParent_YZ->ChatLog_PszGetNickname());
+	m_strWatermark.Format((m_pwLayoutChatLog->m_pContactParent_YZ != NULL) ? "Send a message to $s" : "Send a message to group $s", m_pwLayoutChatLog->m_pContactOrGroup_NZ->ChatLog_PszGetNickname());
 	}
 
 //	Edit an existing event
@@ -63,7 +59,7 @@ WChatInput::ChatStateComposingCancelTimer(BOOL fWriteXmlChatStatePaused)
 		}
 	m_ttcBeforeChatStatePaused = 0;
 	if (fWriteXmlChatStatePaused)
-		m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_fPaused);	// Notify the remote contact the user stopped typing
+		m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_Paused);	// Notify the remote contact the user stopped typing
 	}
 
 //	WChatInput::QWidget::minimumSizeHint()
@@ -120,7 +116,7 @@ WChatInput::event(QEvent * pEvent)
 					else
 						{
 						// The user was editing an existing message
-						m_pEventEdit->MessageResendUpdate(strText, INOUT m_pwLayoutChatLog);
+						m_pEventEdit->EventUpdateMessageText(strText, INOUT m_pwLayoutChatLog);
 						m_pEventEdit = NULL;
 						}
 					ChatStateComposingCancelTimer((BOOL)eUserCommand);	// After sending a message, cancel (reset) the timer to, so a new 'composing' notification will be sent when the user starts typing again. BTW, there is no need to send a 'pause' command since receiving a text message automatically implies a pause.

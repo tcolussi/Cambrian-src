@@ -346,7 +346,7 @@ OSocketWeb::SL_DataAvailable()
 		cbDataAvailable -= m_cblFrameData;
 		if (cbDataAvailable >= 0)
 			{
-			BYTE * pbData = m_binFrameData.PbAllocateExtraDataWithVirtualNullTerminator(m_cblFrameData);
+			BYTE * pbData = m_binFrameData.PbeAllocateExtraDataWithVirtualNullTerminator(m_cblFrameData);
 			const int cbDataRead = read(OUT (char *)pbData, m_cblFrameData);	// Read the data from the socket
 			if (cbDataRead != m_cblFrameData)
 				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "WebSocket: cbDataRead=$I, m_cblFrameData=$L\n", cbDataRead, m_cblFrameData);

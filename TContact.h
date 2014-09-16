@@ -28,26 +28,34 @@ public:
 		FCS_kmServiceDiscovery					= 0x0000000F,
 		};
 	UINT m_uFlagsContactSerialized;
-	*/
 	int m_cVersionXCP;								// Which version of the Cambrian Protocol is supported by the contact.  This field is a temporary 'hack' to determine if an XMPP stanza should be sent through XCP or regular XMPP.
+	*/
 	TIMESTAMP m_tsOtherLastSynchronized;			// Timestamp of last synchronization
-	CListTasks m_listTasksSocket;					// Socket tasks to be dispatched when the contact becomes online
+	TIMESTAMP m_tsTaskIdDownloadedLast;				// Timestamp of the last task downloaded.  This Task ID is essential to avoid repeating/executing the same task when there is a retry to resend the task data.
+	//CListTasks m_listTasksSocket;					// Socket tasks to be dispatched when the contact becomes online
+	CListTasksSendReceive m_listaTasksSendReceive;	// Pending tasks to be completed (sent or received) when the contact becomes online
 
 protected:
 	enum
 		{
-		FC_kfContactUnsolicited								= 0x00000001,	// The contact was created from an unsolicited message.  Such contact is displayed with the gray color
-		FC_kfContactNeedsInvitation							= 0x00000002,	// The contact was added, however there was never been any communication between the two paties, suggesting an invitation is recommended
+		FC_kfXospSynchronizeWhenPresenceOnline				= 0x00000001,	// As soon as the contact appears online, initiate a synchronization
+		FC_kfXospPendingTasks								= 0x00000002,	// The contact has pending tasks to be completed
 		FC_kfContactRecommendationsNeverReceived			= 0x00000004,	// The recommendations have never been received, therefore download them as soon as the contact becomes online
-//		FC_kfCommentContainsInvitation						= 0x00000004,
+		FC_kfContactNeedsInvitation							= 0x00000008,	// The contact was added, however there was never been any communication between the two paties, suggesting an invitation is recommended
+		FC_kfNativeXmppOnly									= 0x00000010,	// Send all messages via native XMPP, and do not use XOSP.
+		FC_kfContactUnsolicited								= 0x00000020,	// The contact was created from an unsolicited message.  Such contact is displayed with the gray color
 		//FC_kfNoCambrianProtocol								= 0x00000008,	// The contact does NOT understand the Cambrian Protocol, and therefore the application should NOT send stanzas with the element <xcp>.
+		//FC_kfCommentContainsInvitation						= 0x00000004,	// Old stuff where an invitation was stored in a comment
+
 		FC_kmFlagsSerializeMask								= 0x000000FF,	// Mask of the flags to serialize
-		FC_kmPresenceMask									= 0x00000F00,	// Mask of the flags representing the presence
-		FC_kzPresenceOffline								= 0x00000000,
-		FC_kePresenceOnline									= 0x00000100,
-		FC_kePresenceAway									= 0x00000200,
+		FC_kmPresenceMaskOnline								= 0x00000700,	// Mask of the flags representing the online presence
+		FC_kmPresenceMaskOnlineXosp							= 0x00000F00,	// Mask with the XOSP flag
+		FC_kzPresenceOffline								= 0x00000000,	// The user is offline, and therefore no data may be sent
+		FC_kePresenceChat									= 0x00000100,	// The user is available for chat (this is the green icon)
+		FC_kePresenceAway									= 0x00000200,	// The user is away or idle (this is the yellow icon)
 		FC_kePresenceAwayExtended							= 0x00000300,
-		FC_kePresenceBusy									= 0x00000400,
+		FC_kePresenceBusy									= 0x00000400,	// The user is busy and should not be disturbed (this is the red icon)
+		FC_kfPresenceXosp									= 0x00000800,	// Special bit indicating the contact is online (chatty, away, busy) and its client software is capable to received XOSP messages.
 		FC_kfRosterItem										= 0x00001000,	// The contact is found in the roster
 		FC_kfRosterSubscriptionFrom							= 0x00002000,
 		FC_kfRosterSubscriptionTo							= 0x00004000,
@@ -55,13 +63,10 @@ protected:
 		FC_kfSubscribeAsk									= 0x00010000,
 		FC_kfSubscribe										= 0x00020000,
 		FC_kfSubscribed										= 0x00040000,
-		//FC_kfXcpNotSupported								= 0x00100000,	// The contact does NOT understand the Cambrian Protocol, and therefore the application should NOT send stanzas with the element <xcp>.
 		FC_kfXcpComposingSendTimestampsOfLastKnownEvents	= 0x00200000,
 		FC_kfXcpRequestingDataForSynchronization			= 0x00400000
 		};
-	UINT m_uFlagsContact;		// Various flags for the chat contact
-
-	//UINT m_uFlagsContactUnserialized;
+	UINT m_uFlagsContact;		// Various flags for the contact (some of those bits are serialized)
 
 	IContactAlias * m_plistAliases;
 	TIMESTAMP m_tsLastSeenOnline;					// Date & time when the contact was last seen online
@@ -80,8 +85,12 @@ public:
 	inline void SetFlagContactAsUnsolicited() { m_uFlagsContact |= FC_kfContactUnsolicited; }
 	inline void SetFlagContactAsInvited() { m_uFlagsContact &= ~FC_kfContactNeedsInvitation; }
 	inline void SetFlagXcpComposingSendTimestampsOfLastKnownEvents() { m_uFlagsContact |= FC_kfXcpComposingSendTimestampsOfLastKnownEvents; }
-	//inline BOOL Contact_FuIsInsecure() const { return (m_uFlagsContact & FC_kfNoCambrianProtocol); }
-	BOOL Contact_FuCommunicateViaXcp() const;
+	inline BOOL Contact_FQueueXospTasksUntilOnline() const { return ((m_uFlagsContact & FC_kfNativeXmppOnly) == 0); }
+	inline BOOL Contact_FuCommunicateViaXmppOnly() const { return (m_uFlagsContact & FC_kfNativeXmppOnly); }
+	inline BOOL Contact_FuCommunicateViaXosp() const { return (m_uFlagsContact & FC_kfPresenceXosp); }
+	inline BOOL Contact_FuNeedSynchronizeWhenPresenceOnline() const { return (m_uFlagsContact & FC_kfXospSynchronizeWhenPresenceOnline); }
+	inline void Contact_SetFlagSynchronizeWhenPresenceOnline() { m_uFlagsContact |= FC_kfXospSynchronizeWhenPresenceOnline; }
+	inline BOOL Contact_FuIsOnline() const { return (m_uFlagsContact & FC_kmPresenceMaskOnline); }
 
 	CChatConfiguration * PGetConfiguration() const;
 
@@ -115,14 +124,14 @@ public:
 	void Xcp_ServiceDiscovery();
 	void Xcp_Synchronize();
 
-	void XcpApiContact_TaskQueue(PA_TASK ITask * paTask);
 	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
 	void XcpApiContact_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters);
+
+	ITreeItemChatLogEvents * PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttributeGroupIdentifier);
 
 	void Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParameters);
 	void Contact_RecommendationsDisplayWithinNavigationTree(BOOL fSetFocus = FALSE);
 
-	//void BinAppendXmlAttributeOfContactIdentifier(IOUT CBin * pbin, CHS chAttributeName) const;
 	void Contact_AddToGroup(int iGroup);
 	EMenuAction Contact_EGetMenuActionPresence() const;
 

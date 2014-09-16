@@ -19,7 +19,7 @@
 	//#define DEBUG_DISABLE_TIMER		// Useful for debugging the code booting the application without displaying the connection notifications in the Message Log
 #endif
 
-
+QString g_sPathHtmlApplications;	// Where the HTML applications are located (typically this is a sub-folder where SocietyPro.exe is installed, however for developers, they may change the Registry value to anotehr folder)
 #ifdef Q_OS_WIN
 HWND g_hwndMainWindow;							// Win-32 handle of the main window.  This handle is used by the MessageLog.
 #endif
@@ -92,6 +92,12 @@ MainWindow_SetIdleState(EIdleState eIdleState)
 		}
 	Configuration_GlobalSettingsPresenceUpdate(eMenuAction);
 	g_uPreferences = uPreferences;
+	}
+
+QString
+MainWindow_SGetPathOfApplication(const QString & sPathRelativeApplication)
+	{
+	return g_sPathHtmlApplications + sPathRelativeApplication;
 	}
 
 void
@@ -179,6 +185,23 @@ SystemTray_Destroy()
 		}
 	}
 
+//	Special class for a drop-down menu in the main menu bar.
+//	This class is necessary for Mac because the OS does not display an empty menu, so the
+//	constructor will add an dummy menu item.
+class WMenuDropdown : public WMenu
+{
+public:
+	WMenuDropdown(PSZAC pszName);
+};
+
+WMenuDropdown::WMenuDropdown(PSZAC pszName) : WMenu(pszName)
+	{
+	#ifdef Q_OS_MAC
+	//ActionAdd(eMenuAction_Quit);	// This does not work
+	addAction(c_sEmpty);
+	#endif
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WMainWindow::WMainWindow() : QMainWindow()
 	{
@@ -202,9 +225,9 @@ WMainWindow::WMainWindow() : QMainWindow()
 	setGeometry(rc);
 	MessageLog_ModuleInitialize();	// Initialize/create the MessageLog/ErrorLog as early as possible in case there is an error/assert during the creation of the other widgets
 
-	g_pwMenuCambrian = new WMenu("SocietyPro");
-	g_pwMenuContacts = new WMenu("Peers");
-	g_pwMenuTools = new WMenu("Applications");
+	g_pwMenuCambrian = new WMenuDropdown("SocietyPro");
+	g_pwMenuContacts = new WMenuDropdown("Peers");
+	g_pwMenuTools = new WMenuDropdown("Applications");
 	#if 0
 	g_pwMenuAdvanced = new WMenu("test");
 	//g_pwMenuAdvanced->setTitle("test");
@@ -212,7 +235,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 	g_pwMenuBar->setCornerWidget(g_pwMenuAdvanced);
 	#else
 	//g_pwMenuAdvanced = new WMenu("Advanced");
-	g_pwMenuAdvanced = new WMenu;
+	g_pwMenuAdvanced = new WMenuDropdown(NULL);
 	g_pwMenuAdvanced->InitAsDymanicMenu();
 	WButtonIconForToolbar * pwButtonTest = new WButtonIconForToolbar(eMenuIconMenu);
 	pwButtonTest->setStyleSheet("QToolButton { border: none;  padding-top:3px; padding-right:5px; padding-bottom:3px } QToolButton::menu-indicator { image: none; }");
@@ -274,7 +297,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 
 WMainWindow::~WMainWindow()
 	{
-	Configuration_Save();	// Before destroy the main window, save all open configurations
+	//Configuration_Save();	// Before destroy the main window, save all open configurations
 	SettingsSave();			// Also remember the settings (window position)
 
 	// We are destroying the WMainWindow, so flush everything (both for performance, and also to prevent the application to crash)
@@ -365,6 +388,7 @@ WMainWindow::event(QEvent * pEvent)
 	switch (eEvent)
 		{
 	case QEvent::Close:	// The close button was clicked
+		Configuration_Save();
 		#ifdef DEBUG
 		QCoreApplication::exit(0);	// This line is necessary so the QWebInspector is closed when the application closes
 		break;		// When debugging, close Cambrian
@@ -438,6 +462,12 @@ WMainWindow::SettingsRestore()
 
 	void ApiWebSocket_Init(UINT uPort);
 	ApiWebSocket_Init(oSettings.value("Port").toUInt());
+
+	g_sPathHtmlApplications = oSettings.value("Apps").toString();
+	if (g_sPathHtmlApplications.isEmpty())
+		g_sPathHtmlApplications = QCoreApplication::applicationDirPath() + "/Apps/";
+	g_sPathHtmlApplications = QUrl::fromLocalFile(g_sPathHtmlApplications).toString();	// Make sure the URL begins with "file://"
+
 	#ifdef DEBUG
 	return;		// Don't save the path if running a debug build
 	#endif

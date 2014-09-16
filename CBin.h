@@ -25,6 +25,8 @@
 //	For instance, if a method returns a string, the method will be named GetDataPsz() rather than PszGetData() as it would be in the rest of the code.  After all, almost all the
 //	methods for the CBin will return pointer to either a string, or a pointer to an array of bytes, or nothing, so the possible return types are quite limited.
 //
+//	Pbb		Return a BYTE * to the BEGINNING of the blob.
+//	Pbe		Return a BYTE * to the END of the blob.
 //	Psz()	The method returns a pointer to a string zero-terminator (this pointer may be NULL)
 //	Sz()	The method returns a string zero-terminated (which means the pointer will never be NULL).  The Sz() is a shortcut of the decoration Psz_NZ().
 //	Szv()	The method returns a string zero-terminated with a virtual null-terminator.  This applies only to the class CBin, as this class is the building block for the class CStr.
@@ -49,13 +51,12 @@ public:
 	inline ~CBin() { delete m_paData; }
 	BOOL FIsEmptyBinary() const;
 
-	void * PvSizeAlloc(int cbDataAlloc);
-	void * PvSizeAllocGrowBy(int cbDataGrowBy);
-	void * PvSizeAllocGrowTo(int cbAlloc);
-	void * PvSizeInit(int cbData);
-	BYTE * PbAllocateExtraMemory(int cbAllocGrowBy);
-	BYTE * PbAllocateExtraData(int cbDataGrowBy);
-	BYTE * PbAllocateExtraDataWithVirtualNullTerminator(int cbDataGrowBy);
+	BYTE * PbbAllocateMemoryAndEmpty_YZ(int cbDataAlloc);
+	BYTE * PbbAllocateMemoryAndSetSize_YZ(int cbData);
+	BYTE * PbbAllocateMemoryToGrowBy_NZ(int cbDataGrowBy);
+	BYTE * PbeAllocateExtraMemory(int cbAllocGrowBy);
+	BYTE * PbeAllocateExtraMemoryAndSetSize(int cbDataGrowBy);
+	BYTE * PbeAllocateExtraDataWithVirtualNullTerminator(int cbDataGrowBy);
 	int CbGetData() const;
 	int CbGetDataAllocated() const;
 	int CbGetDataAllocatedOverhead() const;
@@ -146,7 +147,8 @@ public:
 	void BinAppendXmlNode(const CXmlNode * pXmlNode);
 	void BinAppendXmlNodeNoWhiteSpaces(const CXmlNode * pXmlNode);
 	void BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding);
-	void BinAppendTextOffsets_VE(OUT SOffsets * pOffsets, PSZAC pszFmtTemplate, ...);
+	void BinAppendTextOffsetsInit_VE(OUT SOffsets * pOffsets, PSZAC pszFmtTemplate, ...);
+	void BinAppendTextOffsetsTruncateIfEmpty_VE(IN const SOffsets * pOffsets, PSZAC pszFmtTemplate, ...);
 	void BinAppendText_VE(PSZAC pszFmtTemplate, ...);
 	PSZU BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs);
 	void BinAppendStringBase16FromBinaryData(const void * pvBinaryData, int cbBinaryData);

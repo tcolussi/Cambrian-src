@@ -22,7 +22,7 @@ extern const QDateTime c_dtEmpty;	// Empty/null datetime
 extern const CHU c_szXmppServerDefault[];
 
 extern const char c_sza_xcp[];
-#define d_szCambrianProtocol_xcp					"xcp"	// eXtensible Cambrian Protocol (this is the xml element enabling Cambrian to send encrypted messages)
+#define d_szCambrianProtocol_xcp					"xosp"	// eXtensible Object Synchronization Protocol (this is the xml element enabling SocietyPro to send encrypted messages)
 #define d_szCambrianProtocol_Attribute_hSignature	"s"		// Signature for every stanza within the element <xcp>.  Example: "<xcp s='X$l|J5N#bjN2kmLyJ){CA2ZB^'> .... </xcp>
 
 

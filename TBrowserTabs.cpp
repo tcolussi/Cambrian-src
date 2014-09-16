@@ -16,13 +16,13 @@ TBrowserTabs::TBrowserTabs(TProfile * pProfile)
 
 TBrowserTabs::~TBrowserTabs()
 	{
-	TRACE1("TBrowserTabs::~TBrowserTabs(0x$p)\n", this);
+	TRACE1("TBrowserTabs::~TBrowserTabs(0x$p)", this);
 	m_arraypaTabs.DeleteAllRuntimeObjects();
 	MainWindow_DeleteLayout(PA_DELETING m_pawLayoutBrowser);
 	}
 
 void
-TBrowserTabs::SetIconAndName(EMenuAction eMenuActionIcon, PSZAC pszName)
+TBrowserTabs::SetIconAndName(EMenuAction /*eMenuActionIcon*/, PSZAC pszName)
 	{
 	m_strNameDisplayTyped.BinInitFromStringWithNullTerminator(pszName);
 	}

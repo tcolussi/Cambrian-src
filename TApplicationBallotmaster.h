@@ -29,11 +29,11 @@ struct SApplicationHtmlInfo
 	*/
 };
 
+
+const SApplicationHtmlInfo * PGetApplicationHtmlInfo(PSZAC pszNameApplication);
+
 extern SApplicationHtmlInfo g_rgApplicationHtmlInfo[];
 SApplicationHtmlInfo * PGetApplicationHtmlInfoBallotmaster();
-const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name);
-
-
 
 class CApplicationHtmlBallotmaster
 	{

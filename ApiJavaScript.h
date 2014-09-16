@@ -409,6 +409,7 @@ public slots:
 	void destroy();
 	void start();
 	void stop();
+	bool send(const QString & sGroupId);
 	POJapiPollResults getResults() CONST_MCC;
 
 	// attatchments sections

@@ -75,7 +75,8 @@ public:
 	enum
 		{
 		FB_kfAllowMultipleChoices			= 0x0001,	// Voters may select multiple choices
-		FB_kfAllowNoComments				= 0x0002	// Prevent voters to send feedback comments (this flag uses the negation, so by default comments are enabled)
+		FB_kfAllowNoComments				= 0x0002,	// Prevent voters to send feedback comments (this flag uses the negation, so by default comments are enabled)
+		FB_kfStopAcceptingVotes				= 0x0004	// Do not accept votes from user (this is the case when a poll is stopped)
 		};
 	UINT m_uFlagsBallot;							// Various options for the ballot
 
@@ -84,8 +85,6 @@ public:
 	virtual ~IEventBallot();
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
-	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
-	virtual void XcpExtraDataArrived(const CXmlNode * pXmlNodeExtraData, CBinXcpStanza * pbinXcpStanzaReply);
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -108,7 +107,7 @@ public:
     CEventBallotSent(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const { return eEventClass_eBallotReceived_class; }
-	virtual void XcpExtraDataRequest(const CXmlNode * pXmlNodeExtraData, INOUT CBinXcpStanza * pbinXcpStanzaReply);
+	virtual EGui XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply);
 };
 
 class CEventBallotReceived : public IEventBallot

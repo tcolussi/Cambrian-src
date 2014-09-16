@@ -53,17 +53,13 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 	else
 		{
 		// open default page
-		TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
-		if (pProfile != NULL)
+		const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo("Default NewTab");
+		Assert(pInfo != NULL && "Application 'Default NewTab' doesn't exist");
+		if ( pInfo )
 			{
-			MessageLog_AppendTextFormatCo(d_coRed, "WLayoutTabbedBrowser::AddTab profile $S\n", &pProfile->m_strNameProfile);
-			const SApplicationHtmlInfo *pInfo = ApplicationGetInfo("Default NewTab");
-			Assert(pInfo != NULL && "Application 'Default NewTab' doesn't exist");
-			if ( pInfo )
-				{
-				CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
-				pTBrowserTab->SetUrl(strUrl);// this in turn calls to NavigateToAddress
-				}
+			CStr strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+			MessageLog_AppendTextFormatCo(d_coRed, "WLayoutTabbedBrowser::AddTab $S\n", &strUrl);
+			pTBrowserTab->SetUrl(strUrl);// this in turn calls to NavigateToAddress
 			}
 		}
 
@@ -343,8 +339,6 @@ WaTabWidget::WaTabWidget(QWidget *parent) : QTabWidget(parent)
 int
 WaTabWidget::addTab(QWidget *widget, const QString &label)
 	{
-	//QTabBar *pTabBar = tabBar();
-
 	// remove [plus button]
 	//pTabBar->removeTab( count() );
 
@@ -356,13 +350,11 @@ WaTabWidget::addTab(QWidget *widget, const QString &label)
 	// add [plus button] tab
 	//addPlusButtonTab();
 	return iPos;
-}
+	}
 
 void
 WaTabWidget::removeTab(int index)
-{
-	//QTabBar *pTabBar = tabBar();
-
+	{
 	// remove [plus button]
 	//pTabBar->removeTab( count()  );
 	MessageLog_AppendTextFormatCo(d_coBlue, "WaTabWidget::removeTab - selIndex $i / $i\n", index, count() );
@@ -377,7 +369,7 @@ WaTabWidget::removeTab(int index)
 
 	// add [plus button] tab
 	//addPlusButtonTab();
-}
+	}
 
 void
 WaTabWidget::setTabsClosable(bool closeable)

@@ -19,11 +19,11 @@ TContact::S_PaAllocateContact(POBJECT pAccountParent)
 
 TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	{
-	m_uFlagsContact = FC_kfContactNeedsInvitation | FC_kfContactRecommendationsNeverReceived; // | FC_kfNoCambrianProtocol;	// Until proven otherwise, any new contact needs an invitation and is assumed to not understand the Cambrian Protocol <xcp>
+	m_uFlagsContact = FC_kfContactNeedsInvitation | FC_kfContactRecommendationsNeverReceived | FC_kfNativeXmppOnly; // Until proven otherwise, any new contact needs an invitation and is assumed to not understand the Cambrian Protocol <xcp>
 //	m_uFlagsContactSerialized = 0;
 	m_plistAliases = NULL;
 	m_tsOtherLastSynchronized = d_ts_zNA;
-	m_cVersionXCP = 0;
+	m_tsTaskIdDownloadedLast = d_ts_zNA;
 	m_paoJapiContact = NULL;
 	}
 
@@ -55,11 +55,6 @@ TContact::PGetConfiguration() const
 	return m_pAccount->PGetConfiguration();
 	}
 
-BOOL
-TContact::Contact_FuCommunicateViaXcp() const
-	{
-	return FALSE;
-	}
 
 //	TContact::IRuntimeObject::PGetRuntimeInterface()
 //
@@ -70,20 +65,8 @@ POBJECT
 TContact::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
 	Report(piParent == NULL);
-	/*
-	switch (rti)
-		{
-	case RTI(TProfile):
-	case RTI(TAccountXmpp):
-	case RTI(TCertificate):
-	case RTI(TCertificateServerName):
-		return m_pAccount->PGetRuntimeInterface(rti);
-	default:
-		return ITreeItemChatLogEvents::PGetRuntimeInterface(rti);
-		} // switch
-	*/
 	return ITreeItemChatLogEvents::PGetRuntimeInterface(rti, m_pAccount);
-	} // PGetRuntimeInterface()
+	}
 
 
 //	TContact::IXmlExchange::XmlExchange()
@@ -105,7 +88,15 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT &m_strComment);
 	pXmlExchanger->XmlExchangeBin("Rec", INOUT &m_binXmlRecommendations);
 
+	m_listaTasksSendReceive.XmlExchange(INOUT pXmlExchanger);
+
 	m_strJidBare.StringTruncateAtCharacter('/');	// Remove the resource from the JID. In earlier version of the chat, the serialized JID could contain the resource.  Eventually this line should go away.
+
+	#if 0
+	if (m_uFlagsTreeItem != 0)
+		MessageLog_AppendTextFormatCo(d_coBlack, "0x$p: TContact::XmlExchange($S) m_uFlagsTreeItem = 0x$x\n", this, &m_strJidBare, m_uFlagsTreeItem);
+	//m_pAccount->DebugDumpContacts();
+	#endif
 	} // XmlExchange()
 
 // Unique file name to store the message history.  This hash is computed from the JIDs of the account and the contact, so if both are deleted and later added, the chat history is preserved.
@@ -149,10 +140,10 @@ TContact::Contact_EGetMenuActionPresence() const
 	if (g_fIsConnectedToInternet)
 		{
 		const BOOL fuInsecure = FALSE; // (m_uFlagsContact & FC_kfNoCambrianProtocol);
-		const UINT uFlagsPresence = (m_uFlagsContact & FC_kmPresenceMask);
+		const UINT uFlagsPresence = (m_uFlagsContact & FC_kmPresenceMaskOnline);
 		if (uFlagsPresence)
 			{
-			if (uFlagsPresence == FC_kePresenceOnline)
+			if (uFlagsPresence == FC_kePresenceChat)
 				return fuInsecure ? eMenuIcon_PresenceInsecureOnline : eMenuAction_PresenceAccountOnline;
 			else if (uFlagsPresence == FC_kePresenceAway)
 				return eMenuAction_PresenceAway;
@@ -181,10 +172,10 @@ TContact::TreeItem_IconUpdate()
 	if (g_fIsConnectedToInternet)
 		{
 		const BOOL fuInsecure = FALSE; // (m_uFlagsContact & FC_kfNoCambrianProtocol);
-		const UINT uFlagsPresence = (m_uFlagsContact & FC_kmPresenceMask);
+		const UINT uFlagsPresence = (m_uFlagsContact & FC_kmPresenceMaskOnline);
 		if (uFlagsPresence)
 			{
-			if (uFlagsPresence == FC_kePresenceOnline)
+			if (uFlagsPresence == FC_kePresenceChat)
 				eMenuIconPresence = fuInsecure ? eMenuIcon_PresenceInsecureOnline : eMenuAction_PresenceAccountOnline;
 			else if (uFlagsPresence == FC_kePresenceAway)
 				eMenuIconPresence = eMenuAction_PresenceAway;
@@ -200,8 +191,10 @@ TContact::TreeItem_IconUpdate()
 		coText = d_coTreeItem_UnreadMessages;
 		eMenuIconDisplay = eMenuAction_MessageNew;
 		}
+	/*
 	if (m_uFlagsContact & FC_kfContactUnsolicited)
 		coText = d_coGray;
+	*/
 	TreeItemW_SetTextColorAndIcon(coText, eMenuIconDisplay);
 
 	// Update the icon for every alias
@@ -411,6 +404,10 @@ void
 TContact::TreeItemContact_DisplayWithinNavigationTree()
 	{
 	Assert(m_pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
+	#if 0
+	if (m_uFlagsTreeItem != 0)
+		MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "0x$p: TreeItemContact_DisplayWithinNavigationTree($S) - m_uFlagsTreeItem = 0x$x\n", this, &m_strNameDisplayTyped, m_uFlagsTreeItem);
+	#endif
 	if (m_uFlagsTreeItem & FTI_kfObjectInvisible)
 		return;	// Don't display hidden contacts
 	TreeItemW_DisplayWithinNavigationTree(m_pAccount);
@@ -444,7 +441,7 @@ ITreeItemChatLogEvents::TreeItemChatLog_UpdateTextAndIcon()
 void
 TContact::TreeItemContact_UpdateIconOffline()
 	{
-	m_uFlagsContact = (m_uFlagsContact & ~FC_kmPresenceMask);
+	m_uFlagsContact = (m_uFlagsContact & ~FC_kmPresenceMaskOnlineXosp);	// Remove any presence bit
 	if (m_pAccount->m_arraypContactsComposing.RemoveElementFastF(this))
 		ChatLogContact_ChatStateIconUpdateComposingStopped();	// The user was composing while going offline, so remove the text "x is typing..." from the Chat Log
 	TreeItemContact_UpdateIcon();
@@ -500,7 +497,7 @@ TContact::XmppRosterSubscriptionUpdate(PSZUC pszSubscription)
 		}
 	if (m_uFlagsContact != uFlagsOld)
 		{
-		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t Flags changed from 0x$x to 0x$x\n", uFlagsOld, m_uFlagsContact);
+		MessageLog_AppendTextFormatSev(eSeverityNoise, "\t m_uFlagsContact changed from 0x$x to 0x$x\n", uFlagsOld, m_uFlagsContact);
 		TreeItemContact_UpdateIcon();
 		}
 
@@ -539,7 +536,7 @@ TContact::XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence)
 		TreeItemContact_UpdateIconOffline();
 		return;
 		}
-	UINT uFlagsPresence = FC_kePresenceOnline;	// If there is no presence value, assume online
+	UINT uFlagsPresence = FC_kePresenceChat;	// If there is no presence value, assume online
 	PSZUC pszPresence = pXmlNodeStanzaPresence->PszuFindElementValue_ZZ("show");
 	if (pszPresence != NULL && !FCompareStrings(pszPresence, "chat"))
 		{
@@ -561,16 +558,18 @@ TContact::XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence)
 		NoticeListAuxiliary_DeleteAllNoticesRelatedToTreeItem(this);
 		}
 	//m_uFlagsContact = (m_uFlagsContact & ~(FC_kmPresenceMask | FC_kfNoCambrianProtocol)) | uFlagsPresence;
-	m_uFlagsContact = (m_uFlagsContact & ~(FC_kmPresenceMask)) | uFlagsPresence;
+	m_uFlagsContact = (m_uFlagsContact & ~(FC_kmPresenceMaskOnlineXosp)) | uFlagsPresence;
 	// Check if the contact uses Cambrian
 	const CXmlNode * pXmlNodeXCP = pXmlNodeStanzaPresence->PFindElement(c_sza_xcp);
-	if (pXmlNodeXCP == NULL)
+	if (pXmlNodeXCP != NULL)
 		{
+		// The contact is supporting XOSP
+		m_uFlagsContact = (m_uFlagsContact & ~FC_kfNativeXmppOnly) | FC_kfPresenceXosp;	// Remember the XOSP is present, and remove the XMPP only flag
+		if (m_uFlagsContact & FC_kfXospSynchronizeWhenPresenceOnline)
+			XcpApi_Invoke_Synchronize();
 		if (m_uFlagsContact & FC_kfContactRecommendationsNeverReceived)
-			{
 			XcpApi_Invoke_RecommendationsGet();
-			}
-		//m_uFlagsContact |= FC_kfNoCambrianProtocol;
+		//m_listaTasksSendReceive.SentTasksToContact(this);	// Send any pending task
 		}
 	TreeItemContact_UpdateIcon();
 	} // XmppPresenceUpdateIcon()

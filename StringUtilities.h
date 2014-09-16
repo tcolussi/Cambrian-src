@@ -216,7 +216,7 @@ struct SBlobPvCb
 struct SOffsets
 	{
 	int ibReset;		// Where to truncate if the blob does not contain any data
-	int ibDataBegins;	// Where the actual data begins
+	int ibDataBegins;	// Where the actual data begins (this value is larger than ibReset)
 	};
 
 #endif // STRINGUTILITIES_H

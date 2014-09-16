@@ -377,13 +377,13 @@ LaunchApplication(const QString & sName)
 		return;
 
 	CStr strName(sName);// typecast
-	MessageLog_AppendTextFormatCo(d_coRedDark, "LaunchApplication '$Q'\n", &sName);
-	const SApplicationHtmlInfo *pInfo = ApplicationGetInfo(strName.PszaGetUtf8NZ());
+	//MessageLog_AppendTextFormatCo(d_coRedDark, "LaunchApplication '$Q'\n", &sName);
+	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(strName.PszaGetUtf8NZ());
 
 	Assert(pInfo != NULL && "Application doesn't exist");
-	if ( pInfo )
+	if (pInfo != NULL)
 		{
-		CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
+		CStr strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
 		QUrl qurlAbsolute(strUrl);
 
 		// underconstruction if the file doesn't exist
@@ -391,11 +391,11 @@ LaunchApplication(const QString & sName)
 			{
 			QFile oHtmlFile(qurlAbsolute.toLocalFile());
 			QString strTest = qurlAbsolute.toString();
-			MessageLog_AppendTextFormatCo(d_coPurple, "LaunchBrowser: (exists $i) - $Q\n", oHtmlFile.exists(), &strTest);
+			//MessageLog_AppendTextFormatCo(d_coPurple, "LaunchBrowser: (exists $i) - $Q\n", oHtmlFile.exists(), &strTest);
 			if ( !oHtmlFile.exists() )
 				{
-				pInfo = ApplicationGetInfo("Underconstruction");
-				strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
+				pInfo = PGetApplicationHtmlInfo("Underconstruction");
+				strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
 				}
 			}
 
@@ -408,7 +408,7 @@ void
 LaunchBrowser(const QString & sName, const QString & sUrlAbsolute)
 	{
 	//EMessageBoxInformation("opening page $Q", &sUrl);
-	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser( $Q, $Q )\n", &sName, &sUrlAbsolute);
+	//MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser( $Q, $Q )\n", &sName, &sUrlAbsolute);
 
 	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
 	if (pProfile == NULL)
@@ -441,10 +441,13 @@ LaunchBrowser(const QString & sName, const QString & sUrlAbsolute)
 			}
 		}
 
+	/*
+	CStr strUrlRelative(sUrlRelative);
+	CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrlRelative);//"Apps/Test/index.htm");
+	*/
 	// add a new tab
 	pBrowser->AddTab(strUrl);
 	pBrowser->TreeItemW_SelectWithinNavigationTree();
-
 
 	/*
 	// find a browser with tabs already opened

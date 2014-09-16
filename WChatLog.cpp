@@ -94,7 +94,7 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 	{
 	Assert(iEventStart >= 0);
 	Assert(m_oTextBlockComposing.isValid());
-	CSocketXmpp * pSocket = m_pContactOrGroup->Xmpp_PGetSocketOnlyIfReady();
+//	CSocketXmpp * pSocket = m_pContactOrGroup->Xmpp_PGetSocketOnlyIfReady();
 
 	OCursorSelectBlock oCursor(m_oTextBlockComposing);
 	QTextBlock oTextBlockEvent;	// Text block for each event to insert
@@ -167,7 +167,9 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 					CEventUpdaterSent * pEventUpdater = (CEventUpdaterSent *)*--ppEventCompare;	// Get the updater which is just before the event
 					if (pEventUpdater->EGetEventClass() != eEventClassUpdater)
 						{
-						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Missing Updater for Event ID $t.  Found class '$U' with Event ID $t\n", pEventTemp->m_tsEventID, pEventUpdater->EGetEventClass(), pEventUpdater->m_tsEventID);
+						MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Missing Updater for Event ID $t ({tL}); instead found class '$U' with Event ID $t.\n", pEventTemp->m_tsEventID, pEventTemp->m_tsEventID, pEventUpdater->EGetEventClass(), pEventUpdater->m_tsEventID);
+						pEvent->m_uFlagsEvent &= ~IEvent::FE_kfReplacing;	// Remove the bit to avoid displaying the error again and again
+						pEvent->m_pVaultParent_NZ->SetModified();			// Save the change
 						continue;
 						}
 					const TIMESTAMP tsEventIdOld = pEventUpdater->m_tsEventIdOld;
@@ -209,8 +211,10 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 			if (oTextBlockUpdate.isValid())
 				{
 				MessageLog_AppendTextFormatSev(eSeverityNoise, "\t Event ID $t is updating its old Event ID $t\n", pEvent->m_tsEventID, pEventOld->m_tsEventID);
+				/*
 				if (pSocket != NULL && pEvent->m_tsOther == d_tsOther_ezEventNeverSent)
 					pEvent->Event_WriteToSocket();	// TODO: This code has to be moved to tasks
+				*/
 				OCursorSelectBlock oCursorEventOld(oTextBlockUpdate);
 				pEvent->ChatLogUpdateTextBlock(INOUT &oCursorEventOld);
 				continue;
@@ -232,8 +236,10 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Event ID $t is replacing another event which cannot be found\n", pEvent->m_tsEventID);
 			} // if (replacing)
 		oTextBlockEvent.setUserData(PA_CHILD new OTextBlockUserDataEvent(pEvent));		// Assign an event for each text block
+		#ifdef SUPPORT_XCP_VERSION_1_
 		if (pSocket != NULL && pEvent->m_tsOther == d_tsOther_ezEventNeverSent)
 			pEvent->Event_WriteToSocket();	// TODO: This code has to be moved to tasks
+		#endif
 		pEvent->ChatLogUpdateTextBlock(INOUT &oCursor);
 		if ((pEvent->m_uFlagsEvent & IEvent::FE_kfEventHidden) == 0)
 			oCursor.AppendBlockBlank();	// If the event is visible, then add a new text block (otherwise it will reuse the same old block)
@@ -334,7 +340,8 @@ WChatLog::ChatLog_ChatStateIconUpdate(INOUT TContact * pContact, EChatState eCha
 			return;
 		pContact->TreeItemContact_UpdateIconComposingStopped(m_pContactOrGroup);
 		}
-	ChatLog_ChatStateTextUpdate();
+	if (eChatState != eChatState_PausedNoUpdateGui)
+		ChatLog_ChatStateTextUpdate();
 	}
 
 //	WChatLog::QObject::event()

@@ -189,7 +189,7 @@ TGroup::Member_Add_UI(TContact * pContact)
 		// Create an event in the Chat Log
 		/*
 		CEventGroupMemberJoin * pEvent = new CEventGroupMemberJoin(pContact);
-		Vault_InitEventForVaultAndDisplayToChatLog(PA_CHILD pEvent);
+		Vault_AddEventToChatLogAndSendToContacts(PA_CHILD pEvent);
 		*/
 		}
 	TreeItemW_SelectWithinNavigationTreeExpanded();
@@ -328,8 +328,8 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		return ezMenuActionNone;
 	default:
 		return ITreeItemChatLogEvents::TreeItem_EDoMenuAction(eMenuAction);
-	} // switch
-}
+		} // switch
+	} // TreeItem_EDoMenuAction()
 
 void TGroup::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon)
 	{
@@ -351,8 +351,6 @@ void TGroup::TreeItemW_DisplayWithinNavigationTree(ITreeItem *pParent_YZ)
 	{
 	ITreeItem::TreeItemW_DisplayWithinNavigationTree(pParent_YZ);
 	}
-
- // TreeItem_EDoMenuAction()
 
 /*
 class WLayoutGroup : public WLayout
@@ -572,4 +570,27 @@ TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcp
 	return NULL;
 	} // Group_PFindByIdentifier_YZ()
 
-
+TGroup *
+TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier)
+	{
+	// Search for the contact matching the identifier
+	SHashSha1 shaGroupIdentifier;
+	if (!HashSha1_FInitFromStringBase85_ZZR_ML(OUT &shaGroupIdentifier, IN pszGroupIdentifier))
+		{
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Invalid group identifier $s\n", pszGroupIdentifier);
+		return NULL;
+		}
+	TGroup * pGroup;
+	TGroup ** ppGroupStop;
+	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+	while (ppGroup != ppGroupStop)
+		{
+		pGroup = *ppGroup++;
+		Assert(pGroup != NULL);
+		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+		Assert(sizeof(pGroup->m_hashGroupIdentifier) == sizeof(shaGroupIdentifier));
+		if (HashSha1_FCompareEqual(IN &pGroup->m_hashGroupIdentifier, IN &shaGroupIdentifier))
+			return pGroup;
+		}
+	return NULL;
+	}
