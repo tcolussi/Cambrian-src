@@ -377,13 +377,28 @@ LaunchApplication(const QString & sName)
 		return;
 
 	CStr strName(sName);// typecast
-	MessageLog_AppendTextFormatCo(d_coRedDark, "LaunchApplication '$Q'\n", &sName);
+	//MessageLog_AppendTextFormatCo(d_coRedDark, "LaunchApplication '$Q'\n", &sName);
 	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(strName.PszaGetUtf8NZ());
 
 	Assert(pInfo != NULL && "Application doesn't exist");
 	if (pInfo != NULL)
 		{
 		CStr strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+		QUrl qurlAbsolute(strUrl);
+
+		// underconstruction if the file doesn't exist
+		if ( qurlAbsolute.isLocalFile() )
+			{
+			QFile oHtmlFile(qurlAbsolute.toLocalFile());
+			QString strTest = qurlAbsolute.toString();
+			//MessageLog_AppendTextFormatCo(d_coPurple, "LaunchBrowser: (exists $i) - $Q\n", oHtmlFile.exists(), &strTest);
+			if ( !oHtmlFile.exists() )
+				{
+				pInfo = PGetApplicationHtmlInfo("Underconstruction");
+				strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+				}
+			}
+
 		LaunchBrowser(sName, strUrl);
 		}
 	}
@@ -393,7 +408,7 @@ void
 LaunchBrowser(const QString & sName, const QString & sUrlAbsolute)
 	{
 	//EMessageBoxInformation("opening page $Q", &sUrl);
-	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser( $Q, $Q )\n", &sName, &sUrlAbsolute);
+	//MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser( $Q, $Q )\n", &sName, &sUrlAbsolute);
 
 	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
 	if (pProfile == NULL)
@@ -409,8 +424,9 @@ LaunchBrowser(const QString & sName, const QString & sUrlAbsolute)
 		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 	}
 
-	// find an open tab for the selected url
+
 	CStr strUrl(sUrlAbsolute);
+	// find an open tab for the selected url
 	TBrowserTab **ppBrowserTabStop;
 	TBrowserTab **ppBrowserTab;
 	ppBrowserTab = pBrowser->m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);
