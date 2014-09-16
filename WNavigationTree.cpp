@@ -508,11 +508,11 @@ ITreeItem::TreeItemW_SelectWithinNavigationTreeExpanded()
 void
 ITreeItem::TreeItemW_RemoveFromNavigationTree()
 	{
-	TreeItemW_Hide();	// At the moment, hide the CTreeItemW.  Deleting the CTreeItemW also deletes any child object of the Tree Item which causes a crash.  To prevent this crash, a routine to recursively delete all child objects would be necessary.
-	/*
+	//TreeItemW_Hide();	// At the moment, hide the CTreeItemW.  Deleting the CTreeItemW also deletes any child object of the Tree Item which causes a crash.  To prevent this crash, a routine to recursively delete all child objects would be necessary.
+
 	delete m_paTreeItemW_YZ;	// Delete the CTreeItemW (if any).  The destructor will automatically remove the CTreeItemW from the GUI.
 	m_paTreeItemW_YZ = NULL;
-	*/
+
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

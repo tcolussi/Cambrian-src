@@ -1,0 +1,3 @@
+[submodule "sopro-dist-root"]
+	path = sopro-dist-root
+	url = https://github.com/sopro-dist/sopro-dist-root.git

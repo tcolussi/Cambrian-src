@@ -171,7 +171,7 @@ public:
 
 	static const int c_iGroupNew = -1;
 	TGroup * Group_PAllocate();
-	TGroup * Group_PaAllocateAudience();
+	TGroup * Group_PaAllocateTemp(EGroupType eGroupType);
 	void Group_AddNewMember_UI(TContact * pContact, int iGroup);
 	enum EFindGroup
 		{

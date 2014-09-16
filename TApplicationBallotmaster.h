@@ -4,6 +4,14 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+struct SApplicationHtmlInfo;
+
+
+typedef OJapiAppInfo * (* PFn_PaAllocateJapi)(SApplicationHtmlInfo * pInfo);
+OJapiAppInfo * PaAllocateJapiGeneric(SApplicationHtmlInfo * pInfo);
+//OJapiAppInfo * PaAllocateJapiBallotMaster(SApplicationHtmlInfo * pInfo);
+
+
 //	The TApplicationHtml is a generic container for an HTML5 application.
 //	The application has access to the root "Cambrian" JavaScript object which gives access to other applications.
 //	At the moment, there is no security, so all HTML applications have full access to the JavaScript APIs.
@@ -12,6 +20,8 @@ struct SApplicationHtmlInfo
 {
 	PSZAC pszName;			// "Ballotmaster"
 	PSZAC pszLocation;		// "Apps/Ballotmaster/index.html"
+	PFn_PaAllocateJapi pfnPaAllocateJapi;
+	POJapi paoJapi;			//
 	// Icon
 	/* NYI
 	PSZAC pszUrlDocumentation;
@@ -19,21 +29,11 @@ struct SApplicationHtmlInfo
 	*/
 };
 
-const SApplicationHtmlInfo c_rgApplicationHtmlInfo[] =
-{
-	{"Navshell Peers"	 , "navshell-contacts/index.html"		},
-	{"Navshell Sidebar"  , "navshell-stack/index.html"			},
-	{"Navshell Header"   , "navshell-header/index.html"		},
-	{"Office Kingpin"    , "html5-office-kingpin/index.html"	},
-	{"Pomodoro"          , "html5-pomodoro/index.html"			},
-	{"JAPI Tests"        , "japi/test/test.html"				},
-	{"Scratch"           , "html5-scratch/index.html"			},
-	{"HTML5 xik"         , "html5-xik/index.html"				},
-	{"Group Manager"	 , "html5-group-manager/index.html"	},
-	{"Ballotmaster"		 , "html5-pollmaster/index.html"		},
-};
 
 const SApplicationHtmlInfo * PGetApplicationHtmlInfo(PSZAC pszNameApplication);
+
+extern SApplicationHtmlInfo g_rgApplicationHtmlInfo[];
+SApplicationHtmlInfo * PGetApplicationHtmlInfoBallotmaster();
 
 class CApplicationHtmlBallotmaster
 	{

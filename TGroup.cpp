@@ -331,6 +331,27 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		} // switch
 	} // TreeItem_EDoMenuAction()
 
+void TGroup::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon)
+	{
+	ITreeItem::TreeItemW_DisplayWithinNavigationTree(pParent_YZ, eMenuActionIcon);
+	if (m_paTreeItemW_YZ != NULL)
+		{
+		TGroupMember **ppMemberStop;
+		TGroupMember **ppMember = m_arraypaMembers.PrgpGetMembersStop(&ppMemberStop);
+		while( ppMember != ppMemberStop)
+			{
+			TGroupMember *pMember = *ppMember++;
+			pMember->TreeItemGroupMember_DisplayWithinNavigationTree();	// Display the group member to the Navigation Tree only if its group is visible
+			TreeItemW_SetTextToDisplayNameIfGenerated();
+			}
+	}
+}
+
+void TGroup::TreeItemW_DisplayWithinNavigationTree(ITreeItem *pParent_YZ)
+	{
+	ITreeItem::TreeItemW_DisplayWithinNavigationTree(pParent_YZ);
+	}
+
 /*
 class WLayoutGroup : public WLayout
 {
@@ -475,11 +496,10 @@ TAccountXmpp::Group_PAllocate()
 	return pGroup;
 	}
 
-TGroup *TAccountXmpp::Group_PaAllocateAudience()
+TGroup *TAccountXmpp::Group_PaAllocateTemp(EGroupType eGroupType)
 	{
 	TGroup * pGroup = new TGroup(this);
-	//m_arraypaGroups.Add(PA_CHILD pGroup);
-	pGroup->m_eGroupType = eGroupType_Audience;
+	pGroup->m_eGroupType = eGroupType;
 	pGroup->GroupInitNewIdentifier();
 	return pGroup;
 	}

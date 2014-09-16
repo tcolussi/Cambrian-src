@@ -9,6 +9,8 @@
 
 #include "ApiJavaScript.h"
 
+class OJapiProfile;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,6 +74,7 @@ public:
 
 	TContact * PGetContactDummy_NZ() CONST_MCC;
 	POJapiProfile POJapiGet();
+	OJapiCambrian * POJapiGetCambrian();
 	void BallotMaster_EventBallotAddAsTemplate(IEventBallot * pEventBallot);
 
 public:

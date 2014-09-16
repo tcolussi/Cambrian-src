@@ -168,6 +168,7 @@ IEvent::PtsGetTimestampChronology() const
 IEvent::IEvent(const TIMESTAMP * ptsEventID)
 	{
 	m_pVaultParent_NZ = NULL;					// Although this pointer is declared 'non-zero', it is initialized to NULL because as soon ad the event is added to a vault, this pointer will become valid
+	m_paoJapiEvent = NULL;
 	m_pContactGroupSender_YZ = NULL;
 	m_uFlagsEvent = FE_kzDefault;
 	m_tsOther = d_tsOther_ezEventNeverSent;		// Initialize m_tsOther to something so we don't get unpleasant surprises

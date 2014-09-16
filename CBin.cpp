@@ -2804,8 +2804,7 @@ CStr::InitFromTextEncodedInBase85(PSZUC pszBase85)
 	m_paData->cbData++;	// Include the virtual null-terminator as a null-terminator
 	}
 
-/*
-Not used anymore... need testing
+
 void
 CStr::InitFromTextEncodedInBase64(const CStr & strText)
 	{
@@ -2814,7 +2813,7 @@ CStr::InitFromTextEncodedInBase64(const CStr & strText)
 	BinAppendStringBase64FromStringU(strText.PszuGetDataNZ());
 	BinAppendNullTerminator();
 	}
-*/
+
 
 PSZUC
 CStr::InitFromBase64Sz(PSZUC pszBase64)
@@ -2824,6 +2823,19 @@ CStr::InitFromBase64Sz(PSZUC pszBase64)
 	BinAppendBinaryDataFromBase64Szv(pszBase64);
 	m_paData->cbData++;	// Include the virtual null-terminator as a null-terminator
 	return m_paData->rgbData;
+	}
+
+
+void
+CBin::BinAppendBinaryDataFromBase64(const QString & sBase64)
+	{
+	BinAppendBinaryDataFromBase64(sBase64.toUtf8());
+	}
+
+void
+CBin::BinAppendBinaryDataFromBase64(const QByteArray & arraybDataBase64)
+	{
+	BinAppendByteArray(QByteArray::fromBase64(arraybDataBase64));
 	}
 
 //	Decode a Base64 string into binary data (the Base64 string may contain just text without any binary character)

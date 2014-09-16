@@ -5,6 +5,7 @@
 #include "IEventBallot.h"
 #include "WLayoutBrowser.h"
 
+
 void
 DisplayApplicationBallotMaster()
 	{
@@ -477,8 +478,31 @@ OJapiPoll::getResults() CONST_MCC
 	return &m_oResults;
 	}
 
+QVariantList OJapiPoll::listAttatchments()
+	{
+	QVariantList list;
+	CEventBallotAttatchment **ppBallotAttatchmentStop;
+	CEventBallotAttatchment **ppBallotAttatchment = m_pBallot->m_arraypaAtattchments.PrgpGetAttatchmentsStop(&ppBallotAttatchmentStop);
+	while ( ppBallotAttatchment != ppBallotAttatchmentStop)
+		{
+		CEventBallotAttatchment *pBallotAttatchment = *ppBallotAttatchment++;
+		list.append(QVariant::fromValue(pBallotAttatchment->POJapiGet()));
+		}
+
+	return list;
+	}
+
+void OJapiPoll::addAttatchment(const QString &strName, const QString &strContentBase64, const QString strMimeType)
+	{
+	CEventBallotAttatchment *pAttatchment = m_pBallot->PAllocateNewAttatchment();
+	pAttatchment->m_strMimeType = strMimeType;
+	pAttatchment->m_strName = strName;
+	pAttatchment->m_binContent.BinAppendBinaryDataFromBase64(strContentBase64);
+	}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiAppBallotmaster::OJapiAppBallotmaster(OJapiCambrian * poCambrian)
+OJapiAppBallotmaster::OJapiAppBallotmaster(OJapiCambrian * poCambrian, const SApplicationHtmlInfo *pApplicationInfo) : OJapiAppInfo(pApplicationInfo)
 	{
 	Assert(poCambrian != NULL);
 	m_pServiceBallotmaster = poCambrian->m_pProfile->PGetServiceBallotmaster_NZ();
@@ -647,27 +671,19 @@ OPolls::save(QString sXmlPolls)
 	}
 */
 
-
-const SApplicationHtmlInfo *
-PGetApplicationHtmlInfo(PSZAC pszNameApplication)
+OJapiAppInfo * PaAllocateJapiGeneric(SApplicationHtmlInfo * pInfo)
 	{
-	//MessageLog_AppendTextFormatCo(d_coRed, "sizeof=$i\n", sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo) );
-	const SApplicationHtmlInfo * pInfo = c_rgApplicationHtmlInfo;
-	while (pInfo != c_rgApplicationHtmlInfo + LENGTH(c_rgApplicationHtmlInfo))
-		{
-		if (FCompareStringsNoCase((PSZUC) pInfo->pszName, (PSZUC)pszNameApplication))
-			return pInfo;
-		pInfo++;
-		}
-	/*
-	for(int i=0; i < sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo); i++)
-		{
-		const SApplicationHtmlInfo *pInfo = &c_rgApplicationHtmlInfo[i];
-		if ( FCompareStringsNoCase( (PSZUC) pInfo->pszName, (PSZUC) pszNameApplication ) )
-			{
-			return pInfo;
-			}
-		}
-	*/
-	return NULL;
+	return new OJapiAppInfo(pInfo);
 	}
+/*
+OJapiAppInfo * PaAllocateJapiBallotMaster(SApplicationHtmlInfo * pInfo)
+	{
+	TProfile * pProfileParent = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+	if ( pProfileParent != NULL)
+		return new OJapiAppBallotmaster(pProfileParent->POJapiGet(), pInfo);
+	else
+		return PaAllocateJapiGeneric(pInfo);
+	}
+
+*/
+

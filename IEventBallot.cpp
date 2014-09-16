@@ -2,6 +2,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "IEventBallot.h"
+#include "ApiJavaScript.h"
 
 #define d_chAPIa_IEventBallot_strTitle							't'		// Ballot title / headline
 #define d_chAPIa_IEventBallot_strDescription					'd'		// Description of what/why the vote
@@ -441,7 +442,15 @@ CEventBallotReceived::UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditT
 	}
 
 
-CEventBallotPoll::CEventBallotPoll(const TIMESTAMP * ptsEventID) : CEventBallotSent (ptsEventID)
+CEventBallotAttatchment *
+CEventBallotPoll::PAllocateNewAttatchment()
+	{
+	CEventBallotAttatchment *pAttatchment = new CEventBallotAttatchment(this);
+	m_arraypaAtattchments.Add(PA_CHILD pAttatchment);
+	return pAttatchment;
+	}
+
+CEventBallotPoll::CEventBallotPoll(const TIMESTAMP * ptsEventID) : CEventBallotSent(ptsEventID)
     {
     m_tsStarted = d_ts_zNA;
     m_tsStopped = d_ts_zNA;
@@ -456,6 +465,18 @@ CEventBallotPoll::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) cons
     pbinXmlAttributes->BinAppendXmlAttributeTimestamp('Z', m_tsStopped);
     pbinXmlAttributes->BinAppendXmlAttributeInt('l', m_cSecondsPollLength);
 
+	// BEGIN serialize attatchments
+	pbinXmlAttributes->BinAppendText("><A>");
+	CEventBallotAttatchment **ppBallotAttatchmentStop;
+	CEventBallotAttatchment **ppBallotAttatchment = m_arraypaAtattchments.PrgpGetAttatchmentsStop(&ppBallotAttatchmentStop);
+	while ( ppBallotAttatchment != ppBallotAttatchmentStop)
+		{
+		CEventBallotAttatchment *pBallotAttatchment = *ppBallotAttatchment++;
+		pbinXmlAttributes->BinAppendText_VE("<a n='^S' m='^S' b='{B|}' />", &pBallotAttatchment->m_strName, &pBallotAttatchment->m_strMimeType, &pBallotAttatchment->m_binContent );
+		}
+	pbinXmlAttributes->BinAppendText("</A>");
+	// END serialize attatchments
+
     return CEventBallotSent::XmlSerializeCoreE(IOUT pbinXmlAttributes);
     }
 
@@ -466,5 +487,51 @@ CEventBallotPoll::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
     pXmlNodeElement->UpdateAttributeValueTimestamp('z', OUT_F_UNCH &m_tsStarted);
     pXmlNodeElement->UpdateAttributeValueTimestamp('Z', OUT_F_UNCH &m_tsStopped);
     pXmlNodeElement->UpdateAttributeValueInt('l', &m_cSecondsPollLength);
+
+	const CXmlNode * pXmlNodeAttatchments = pXmlNodeElement->PFindElement('A');
+	if ( pXmlNodeAttatchments != NULL)
+		{
+		const CXmlNode * pXmlNodeAttatchment = pXmlNodeAttatchments ->m_pElementsList;
+		while (pXmlNodeAttatchment != NULL)
+			{
+			CEventBallotAttatchment *pAttatchment = PAllocateNewAttatchment();
+			pXmlNodeAttatchment->UpdateAttributeValueCStr('n', OUT_F_UNCH &pAttatchment->m_strName);
+			pXmlNodeAttatchment->UpdateAttributeValueCStr('m', OUT_F_UNCH &pAttatchment->m_strMimeType);
+			pXmlNodeAttatchment->UpdateAttributeValueCBin('b', OUT_F_UNCH &pAttatchment->m_binContent);
+			pXmlNodeAttatchment = pXmlNodeAttatchment->m_pNextSibling;
+			}
+		}
+
+
     CEventBallotSent::XmlUnserializeCore(pXmlNodeElement);
-    }
+}
+
+
+CEventBallotAttatchment::CEventBallotAttatchment(CEventBallotPoll *pPollParent)
+	{
+	m_pPollParent = pPollParent;
+	m_paoJapiAttatchment = NULL;
+	}
+
+CEventBallotAttatchment::CEventBallotAttatchment(CEventBallotPoll * pPollParent, const CBin & binContent, const CStr & strName, const CStr & strMimeType)
+	{
+	m_pPollParent = pPollParent;
+	m_strName = strName;
+	m_strMimeType = strMimeType;
+	m_paoJapiAttatchment = NULL;
+	}
+
+CEventBallotAttatchment::~CEventBallotAttatchment()
+	{
+	}
+
+POJapi
+CEventBallotAttatchment::POJapiGet()
+	{
+	if ( m_paoJapiAttatchment == NULL )
+		m_paoJapiAttatchment = new OJapiPollAttatchment(this);
+
+	return m_paoJapiAttatchment;
+	}
+
+

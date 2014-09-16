@@ -62,7 +62,7 @@ OSettings::AudioEnabled(bool fEnable)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oApps(this), m_oMe(this)
+OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oApps(this), m_oMe(this), m_oGroupList(this)
 	{
 	m_pProfile = pProfile;
 	m_paAppBallotmaster = NULL;
@@ -97,7 +97,7 @@ POJapiAppBallotmaster
 OJapiCambrian::polls()
 	{
 	if (m_paAppBallotmaster == NULL)
-		m_paAppBallotmaster = new OJapiAppBallotmaster(this);
+		m_paAppBallotmaster = new OJapiAppBallotmaster(this, PGetApplicationHtmlInfoBallotmaster());
 	return m_paAppBallotmaster;
 	/*
 	if (FDeniedBySecurityPolicy())
@@ -134,13 +134,25 @@ OJapiCambrian::polls()
 POJapiMe
 OJapiCambrian::me()
 	{
-return &m_oMe;
-}
+	return &m_oMe;
+	}
+
+POJapiGroupList
+OJapiCambrian::groups()
+	{
+	return &m_oGroupList;
+	}
 
 POCapiRootGUI
 OJapiCambrian::capi()
 	{
 	return &m_capi;
+	}
+
+POJapiUtil
+OJapiCambrian::util()
+	{
+	return &m_oUtil;
 	}
 
 void
