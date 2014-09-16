@@ -458,16 +458,10 @@ OJapiBrowserTab::close()
 	}
 
 void
-OJapiBrowserTab::openApp(const QString & appName)
+OJapiBrowserTab::openApp(const QString & sAppName)
 	{
-	CStr sAppName(appName);
-	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(sAppName.PszaGetUtf8NZ());
-	if ( pInfo != NULL )
-		{
-		/*???*/
-		CStr url = "file:///" + m_pBrowsersListParent->m_poJapiProfileParent_NZ->m_pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
-		m_pTab->SetUrl(url);
-		}
+	CStr strAppName(sAppName);
+	m_pTab->OpenApp(strAppName);
 	}
 
 void

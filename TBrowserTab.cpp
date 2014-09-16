@@ -2,6 +2,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "TBrowserTab.h"
+#include "WLayoutBrowser.h"
 
 TBrowserTab::TBrowserTab(TBrowserTabs *pBrowserTabs)
 	{
@@ -13,16 +14,22 @@ TBrowserTab::TBrowserTab(TBrowserTabs *pBrowserTabs)
 	}
 
 TBrowserTab::~TBrowserTab()
+{
+}
+
+void TBrowserTab::OpenApp(CStr &strAppName)
 	{
+	CStr strUrl = ResolveAppPath(strAppName);
+	SetUrl(strUrl);
 	}
 
 void
-TBrowserTab::SetUrl(CStr &sUrl)
+TBrowserTab::SetUrl(CStr &strUrl)
 	{
-	m_url = sUrl;
+	m_url = strUrl;
 	if ( m_pwWebViewTab != NULL)
 		{
-		m_pwWebViewTab->NavigateToAddress(sUrl);
+		m_pwWebViewTab->NavigateToAddress(strUrl);
 	}
 	}
 

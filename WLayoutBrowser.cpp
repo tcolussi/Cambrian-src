@@ -369,38 +369,41 @@ LaunchBrowser(const QString & sName, const QString & sUrlRelative)
     pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}*/
 
-void
-LaunchApplication(const QString & sName)
+CStr ResolveAppPath(const CStr &strAppName)
 	{
-	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
-	if (pProfile == NULL)
-		return;
-
-	CStr strName(sName);// typecast
-	//MessageLog_AppendTextFormatCo(d_coRedDark, "LaunchApplication '$Q'\n", &sName);
-	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(strName.PszaGetUtf8NZ());
+	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(strAppName.PszaGetUtf8NZ());
+	CStr strUrl("");
 
 	Assert(pInfo != NULL && "Application doesn't exist");
 	if (pInfo != NULL)
 		{
-		CStr strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+		strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
 		QUrl qurlAbsolute(strUrl);
 
-		// underconstruction if the file doesn't exist
+		// underconstruction page if the file doesn't exist
 		if ( qurlAbsolute.isLocalFile() )
 			{
 			QFile oHtmlFile(qurlAbsolute.toLocalFile());
 			QString strTest = qurlAbsolute.toString();
-			//MessageLog_AppendTextFormatCo(d_coPurple, "LaunchBrowser: (exists $i) - $Q\n", oHtmlFile.exists(), &strTest);
+
 			if ( !oHtmlFile.exists() )
 				{
 				pInfo = PGetApplicationHtmlInfo("Underconstruction");
-				strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+				Assert(pInfo != NULL && "Underconstruction app doesn't exist");
+				if ( pInfo != NULL )
+					strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
 				}
 			}
-
-		LaunchBrowser(sName, strUrl);
 		}
+
+	return strUrl;
+	}
+
+void
+LaunchApplication(const QString & sName)
+	{
+	QString sUrl = ResolveAppPath(sName);
+	LaunchBrowser(sName, sUrl);
 	}
 
 

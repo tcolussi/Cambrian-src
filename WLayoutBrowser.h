@@ -35,5 +35,6 @@ public slots:
 
 void LaunchBrowser(const QString & sName, const QString & sUrlRelative);
 void LaunchApplication(const QString & sName);
+CStr ResolveAppPath(const CStr &strAppName);
 
 #endif // WLAYOUTBROWSER_H
