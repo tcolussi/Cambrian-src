@@ -362,6 +362,11 @@ CEventBallotSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza *
 
 	TContact * pContact = pbinXospReply->m_pContact; // Get the contact who voted
 	Assert(pContact != NULL);
+	if (m_uFlagsBallot & FB_kfStopAcceptingVotes)
+		{
+		MessageLog_AppendTextFormatSev(eSeverityWarning, "Vote from ^j is rejected because the poll stopped\n", pContact);
+		return eGui_NoUpdate;
+		}
 	// Search if the contact already voted
 	_CEventBallotVote * pVote;
 	_CEventBallotVote ** ppVoteStop;
@@ -465,6 +470,7 @@ CEventBallotPoll::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) cons
     pbinXmlAttributes->BinAppendXmlAttributeTimestamp('Z', m_tsStopped);
     pbinXmlAttributes->BinAppendXmlAttributeInt('l', m_cSecondsPollLength);
 
+	#if 0 // Need to implement this properly
 	// BEGIN serialize attatchments
 	pbinXmlAttributes->BinAppendText("><A>");
 	CEventBallotAttatchment **ppBallotAttatchmentStop;
@@ -476,6 +482,7 @@ CEventBallotPoll::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) cons
 		}
 	pbinXmlAttributes->BinAppendText("</A>");
 	// END serialize attatchments
+	#endif
 
     return CEventBallotSent::XmlSerializeCoreE(IOUT pbinXmlAttributes);
     }

@@ -454,6 +454,7 @@ OJapiPoll::start()
 	{
     m_pBallot->m_tsStarted = Timestamp_GetCurrentDateTime();
     m_pBallot->m_tsStopped = d_ts_zNA;
+	m_pBallot->m_uFlagsBallot &= ~CEventBallotPoll::FB_kfStopAcceptingVotes;
 	}
 
 void
@@ -461,7 +462,39 @@ OJapiPoll::stop()
 	{
     if ( m_pBallot->m_tsStarted != d_ts_zNA )
         m_pBallot->m_tsStopped = Timestamp_GetCurrentDateTime();
+	m_pBallot->m_uFlagsBallot |= CEventBallotPoll::FB_kfStopAcceptingVotes;
 	}
+
+//	Send the ballot to a group, or to a contact
+bool
+OJapiPoll::send(const QString & sGroupId)
+	{
+	// In order to send the poll to the group, we need to find the TGroup object
+	CStr strGroupId = sGroupId;
+	TAccountXmpp * pAccount = m_pBallot->PGetAccount();
+	ITreeItemChatLogEvents * pContactOrGroup = pAccount->Contact_PFindByJID(strGroupId, eFindContact_zDefault);
+	if (pContactOrGroup == NULL)
+		pContactOrGroup = pAccount->Group_PFindByIdentifier_YZ(strGroupId);
+	MessageLog_AppendTextFormatCo(d_coBlack, "OJapiPoll::send($Q) - pContactOrGroup = 0x$p\n", &sGroupId, pContactOrGroup);
+	if (pContactOrGroup != NULL)
+		{
+		// To send the poll, we need to clone it and add it to the group (this code is a quite ugly at the moment, however it is for proof of concept)
+		CEventBallotPoll * paEventBallot = new CEventBallotPoll;
+		paEventBallot->m_pVaultParent_NZ = m_pBallot->m_pVaultParent_NZ;
+		CBinXcpStanzaEventCopier binXcpStanzaCopier(m_pBallot->m_pVaultParent_NZ->m_pParent);
+		binXcpStanzaCopier.EventCopy(IN m_pBallot, OUT paEventBallot);
+		paEventBallot->m_pVaultParent_NZ = NULL;
+		pContactOrGroup->Vault_AddEventToChatLogAndSendToContacts(PA_CHILD paEventBallot);
+		#if 0
+		paEventBallot->m_uFlagsBallot |= CEventBallotPoll::FB_kfStopAcceptingVotes; // Testing the stop()
+		stop();
+		//start();
+		#endif
+		return true;
+		}
+	return false;
+	}
+
 
 void OJapiAppBallotmaster::open()
     {

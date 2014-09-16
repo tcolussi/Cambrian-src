@@ -738,22 +738,6 @@ OCapiRootGUI::peerRequests()
 	return &m_oPeerRequestsList;
 	}
 
-
-
-const SApplicationHtmlInfo *ApplicationGetInfo(PSZAC name)
-	{
-	//MessageLog_AppendTextFormatCo(d_coRed, "sizeof=$i\n", sizeof(c_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo) );
-	for(int i=0; i < sizeof(g_rgApplicationHtmlInfo)/sizeof(SApplicationHtmlInfo); i++)
-	{
-	const SApplicationHtmlInfo *pInfo = &g_rgApplicationHtmlInfo[i];
-	if ( FCompareStringsNoCase( (PSZUC) pInfo->pszName, (PSZUC) name ) )
-		{
-		return pInfo;
-		}
-	}
-	return NULL;
-	}
-
 OCapiImageProvider::OCapiImageProvider()  : QQuickImageProvider(QQuickImageProvider::Pixmap)
 	{
 	}

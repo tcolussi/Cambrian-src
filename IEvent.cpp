@@ -8,9 +8,9 @@
 #endif
 #include "IEventBallot.h"
 #ifdef DEBUG
-	#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
+	//#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
-	#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
+	//#define DEBUG_DISPLAY_TIMESTAMPS	// Sometimes display the timestamps on the release build
 #endif
 #include "XcpApi.h"
 
@@ -195,6 +195,20 @@ IEvent::EventAddToVault(PA_PARENT TContact * pContactParent)
 	{
 	Assert(pContactParent != NULL);
 	EventAddToVault(PA_PARENT pContactParent->Vault_PGet_NZ());
+	}
+
+TAccountXmpp *
+IEvent::PGetAccount() const
+	{
+	Assert(m_pVaultParent_NZ != NULL);
+	Assert(m_pVaultParent_NZ->m_pParent != NULL);
+	return m_pVaultParent_NZ->m_pParent->m_pAccount;
+	}
+
+TProfile *
+IEvent::PGetProfile() const
+	{
+	return PGetAccount()->m_pProfileParent;
 	}
 
 //	EGetEventClassForXCP(), virtual

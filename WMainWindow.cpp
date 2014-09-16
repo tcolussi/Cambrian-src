@@ -296,7 +296,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 
 WMainWindow::~WMainWindow()
 	{
-	Configuration_Save();	// Before destroy the main window, save all open configurations
+	//Configuration_Save();	// Before destroy the main window, save all open configurations
 	SettingsSave();			// Also remember the settings (window position)
 
 	// We are destroying the WMainWindow, so flush everything (both for performance, and also to prevent the application to crash)
@@ -387,6 +387,7 @@ WMainWindow::event(QEvent * pEvent)
 	switch (eEvent)
 		{
 	case QEvent::Close:	// The close button was clicked
+		Configuration_Save();
 		#ifdef DEBUG
 		QCoreApplication::exit(0);	// This line is necessary so the QWebInspector is closed when the application closes
 		break;		// When debugging, close Cambrian

@@ -13,6 +13,7 @@ void
 CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData)
 	{
 	Assert(eErrorXcpApi != eErrorXcpApi_zSuccess);
+	Assert(pszxErrorData != NULL);
 	/* TBD
 	if (m_ibXmlApiReply <= 0)
 		return;
@@ -28,6 +29,8 @@ CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXc
 void
 ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters)
 	{
+	UNUSED_PARAMETER(pXmlNodeApiParameters);
+	UNUSED_PARAMETER(pszXmlApiParameters);
 	CBinXcpStanza binXcpStanza;
 	//binXcpStanza.BinXmlAppendXcpApiRequest((PSZAC)pszApiName, pszXmlApiParameters);
 	//binXcpStanza.XcpSendStanzaToContactOrGroup(IN this);
@@ -96,7 +99,7 @@ void
 CBinXcpStanza::BinAppendXmlEventSerializeOpen(const IEvent * pEvent, TIMESTAMP tsOther)
 	{
 	Assert(pEvent != NULL);
-	Assert(tsOther == d_ts_zNA || tsOther == pEvent->m_tsOther);
+	//Assert(tsOther == d_ts_zNA || tsOther == pEvent->m_tsOther);
 	BinAppendTextOffsetsInit_VE(OUT &m_oOffsets, (tsOther != d_ts_zNA) ? "<$U" _tsO _tsI : "<$U" _tsO, pEvent->EGetEventClassForXCP(), pEvent->m_tsEventID, tsOther);	// Send the content of m_tsOther only if it contains a valid timestamp
 	}
 
@@ -104,7 +107,7 @@ void
 CBinXcpStanza::BinAppendXmlEventSerializeDataAndClose(const IEvent * pEvent)
 	{
 	Assert(pEvent != NULL);
-	Assert(m_oOffsets.ibDataBegins > 0);
+	//Assert(m_oOffsets.ibDataBegins > 0);
 	BinAppendXmlAttributeUIntHexadecimal(d_chXCPa_IEvent_uFlagsEvent, pEvent->m_uFlagsEvent & IEvent::FE_kmSerializeMask);
 	const EXml eXml = pEvent->XmlSerializeCoreE(IOUT this);
 	switch (eXml)
@@ -363,7 +366,7 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 						{
 						pTaskPending->m_cbTotal = CTaskSendReceive::c_cbTotal_TaskSentOnce;
 						BinAppendText_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i d_szXa_TaskDataOffset_i d_szXa_TaskDataBinary_Bii"/>", tsTaskID, cbData, 0, &pTaskPending->m_binXmlData, 0, cbAvailable);
-						Assert(m_paData->cbData < m_cbStanzaThresholdBeforeSplittingIntoTasks + 50);
+						Assert(m_paData->cbData < m_cbStanzaThresholdBeforeSplittingIntoTasks + 200);
 						goto SendStanza;
 						}
 					}

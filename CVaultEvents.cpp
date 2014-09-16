@@ -26,7 +26,11 @@ CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 		IEvent * pEvent = *ppEvent++;
 		if (pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted)
 			continue;	// Don't serialize deleted events
-		pbinXmlEvents->BinAppendXmlEventSerializeOpen(pEvent, pEvent->m_tsEventID);
+		#if 1
+		pbinXmlEvents->BinAppendXmlEventSerializeOpen(pEvent, pEvent->m_tsEventID);	// TODO: need to fix the need to serialize tsEventID twice
+		#else
+		pbinXmlEvents->BinAppendXmlEventSerializeOpen(pEvent, d_ts_zNULL);
+		#endif
 		pbinXmlEvents->BinAppendXmlEventSerializeDataAndClose(pEvent);
 		} // while
 	pbinXmlEvents->BinAppendText("</"d_szVault_Event">");

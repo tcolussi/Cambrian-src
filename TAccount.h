@@ -179,6 +179,8 @@ public:
 		eFindGroupCreate,		// Create a new group if not present
 		};
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanza * pbinXcpApiExtraRequest, EFindGroup eFindGroup);
+	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier);
+
 	void Group_AddToNavigationTree(PA_CHILD TGroup * paGroup);
 
 	void DisplayDialogProperties();

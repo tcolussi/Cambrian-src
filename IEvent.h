@@ -14,28 +14,6 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-/*
-//	XCP is an abbreviation for "eXtensible Cambrian Protocol".
-//	In a nutshell, this protocol is a layer taking care of end-to-end encryption between clients, as well as automatically
-//	splitting large pieces of data into smaller xmpp-stanzas when the data does not fit in the recommended xmpp-stanza size of 4 KiB.
-#define d_chXCP_					'_'
-#define d_szXCP_					"_"
-
-//	The following #define are for the XCP APIs which are shared among multiple .cpp files
-#define d_chXCPe_ApiRequest									'a'
-#define d_szXCPe_ApiRequest_s						d_szXCP_"a n='$s'"
-#define d_szXCPe_ApiRequestGroup_s_h				d_szXCP_"a n='$s' g='{h|}'"
-#define d_szXCPe_ApiRequest_close					d_szXCP_"a"
-	#define d_chXCPa_Api_strName								'n'		// Name of the function (API) to call
-	#define d_chXCPa_Api_shaGroupID								'g'		// Group (if any) where the API is related
-#define d_chXCPe_ApiReply									'A'
-#define d_szXCPe_ApiReply_s							d_szXCP_"A n='$s'"
-#define d_szXCPe_ApiReply_close						d_szXCP_"A"
-	#define d_chXCPa_Api_eErrorCode								'e'	// Store the error code EErrorXcpApi
-	#define d_chXCPa_Api_strxErrorData							'd'
-	#define d_szXCPa_Api_ErrorCodeAndErrorData_i_s				" e='$i' d='^s'"
-*/
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	#defines for events
 #define d_szEventDebug_strContactSource					"_CONTACTSOURCE"	// Add an extra field to the base class IEvent to include the contact who transmitted the event.  This field is useful to debug group chat.
@@ -377,6 +355,8 @@ public:
 	virtual ~IEvent();
 	void EventAddToVault(PA_PARENT CVaultEvents * pVaultParent);
 	void EventAddToVault(PA_PARENT TContact * pContactParent);
+	TAccountXmpp * PGetAccount() const;
+	TProfile * PGetProfile() const;
 
 	virtual EEventClass EGetEventClass() const  = 0;
 	virtual EEventClass EGetEventClassForXCP() const;

@@ -85,6 +85,7 @@ public:
 	inline void SetFlagContactAsUnsolicited() { m_uFlagsContact |= FC_kfContactUnsolicited; }
 	inline void SetFlagContactAsInvited() { m_uFlagsContact &= ~FC_kfContactNeedsInvitation; }
 	inline void SetFlagXcpComposingSendTimestampsOfLastKnownEvents() { m_uFlagsContact |= FC_kfXcpComposingSendTimestampsOfLastKnownEvents; }
+	inline BOOL Contact_FQueueXospTasksUntilOnline() const { return ((m_uFlagsContact & FC_kfNativeXmppOnly) == 0); }
 	inline BOOL Contact_FuCommunicateViaXmppOnly() const { return (m_uFlagsContact & FC_kfNativeXmppOnly); }
 	inline BOOL Contact_FuCommunicateViaXosp() const { return (m_uFlagsContact & FC_kfPresenceXosp); }
 	inline BOOL Contact_FuNeedSynchronizeWhenPresenceOnline() const { return (m_uFlagsContact & FC_kfXospSynchronizeWhenPresenceOnline); }

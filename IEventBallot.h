@@ -75,7 +75,8 @@ public:
 	enum
 		{
 		FB_kfAllowMultipleChoices			= 0x0001,	// Voters may select multiple choices
-		FB_kfAllowNoComments				= 0x0002	// Prevent voters to send feedback comments (this flag uses the negation, so by default comments are enabled)
+		FB_kfAllowNoComments				= 0x0002,	// Prevent voters to send feedback comments (this flag uses the negation, so by default comments are enabled)
+		FB_kfStopAcceptingVotes				= 0x0004	// Do not accept votes from user (this is the case when a poll is stopped)
 		};
 	UINT m_uFlagsBallot;							// Various options for the ballot
 

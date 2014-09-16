@@ -45,6 +45,8 @@ TContact::PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttrib
 	{
 	if (pXmlAttributeGroupIdentifier == NULL)
 		return this;
+	return m_pAccount->Group_PFindByIdentifier_YZ(IN pXmlAttributeGroupIdentifier->m_pszuTagValue);
+	/*
 	// Search for the contact matching the identifier
 	SHashSha1 shaGroupIdentifier;
 	if (!HashSha1_FInitFromStringBase85_ZZR_ML(OUT &shaGroupIdentifier, IN pXmlAttributeGroupIdentifier->m_pszuTagValue))
@@ -65,6 +67,7 @@ TContact::PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttrib
 			return pGroup;
 		}
 	return NULL;
+	*/
 	}
 
 //	Core method to execute multiple XCP APIs
@@ -91,7 +94,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 		else if (chXop == d_chXop_MessageTyping)
 			{
 			ITreeItemChatLogEvents * pContactOrGroup = m_pContact->PGetContactOrGroupDependingOnIdentifier_YZ(pXmlAttributeGroupIdentifier);
-			Report(pContactOrGroup != NULL);
+			//Report(pContactOrGroup != NULL);	// The group does not yet exists on the client
 			if (pContactOrGroup != NULL)
 				pContactOrGroup->ChatLog_ChatStateIconUpdate((pXmlNodeApiList->m_pszuTagValue == NULL) ? eChatState_zComposing : eChatState_Paused, m_pContact);
 			}
@@ -357,7 +360,7 @@ CBinXcpStanza::XcpApi_ExecuteApiResponse(PSZUC pszApiName, const CXmlNode * pXml
 void
 CBinXcpStanza::BinXmlAppendXcpApiRequest_Group_Profile_Get(PSZUC pszGroupIdentifier)
 	{
-
+	Assert(pszGroupIdentifier != NULL);
 	//BinXmlAppendXcpApiRequest((PSZAC)c_szaApi_Group_Profile_Get, pszGroupIdentifier);
 	}
 
@@ -404,15 +407,12 @@ CBinXcpStanza::BinXmlAppendXcpApiCall_SendEventToContact(TContact * pContact, IE
 		return;
 		}
 	TIMESTAMP tsEventID = pEvent->m_tsEventID;
-	if (!pContact->Contact_FuIsOnline())
+	if (pContact->Contact_FQueueXospTasksUntilOnline())
 		{
-		if (!pContact->Contact_FuCommunicateViaXmppOnly())
-			{
-			// The contact is offline, however capable to communicate via XOSP, therefore set a flag to synchronize next time it is online.  There is no need to add a task for this, as the synchronization will dispatch the events.
-			MessageLog_AppendTextFormatSev(eSeverityComment, "Contact ^j is offline, therefore Event ID $t will be dispatched via a synchronize operation next time it is online.\n", pContact, tsEventID);
-			pContact->Contact_SetFlagSynchronizeWhenPresenceOnline();
-			return;
-			}
+		// The contact is offline, however capable to communicate via XOSP, therefore set a flag to synchronize next time it is online.  There is no need to add a task for this, as the synchronization will dispatch the events.
+		MessageLog_AppendTextFormatSev(eSeverityComment, "Contact ^j is offline, therefore Event ID $t will be dispatched via a synchronize operation next time it is online.\n", pContact, tsEventID);
+		pContact->Contact_SetFlagSynchronizeWhenPresenceOnline();
+		return;
 		}
 	// At this point we have a contact which is unable to communicate via XOSP.  Therefore send the message via native XMPP if the socket is ready.  If not, then the message will be synchronized next time the contact is online (TBD)
 	CSocketXmpp * pSocket = pContact->m_pAccount->Socket_PGetOnlyIfReadyToSendMessages();
@@ -513,8 +513,9 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 	TIMESTAMP * ptsOtherLastSynchronized = &m_pContact->m_tsOtherLastSynchronized;	// When the data was last synchronized with the contact
 	WChatLog * pwChatLog = m_pContact->ChatLog_PwGet_YZ();
 	CVaultEvents * pVault = m_pContact->Vault_PGet_NZ();	// Get the vault so we may append new events, or fetch the missing events
-	TContact * pContactGroupMember = NULL;
 	TGroup * pGroup = NULL;
+	TGroupMember * pMember = NULL;
+	TContact * pContactGroupMember = NULL;
 	if (pXmlAttributeGroupIdentifier != NULL)
 		{
 		PSZUC pszGroupIdentifier = pXmlAttributeGroupIdentifier->m_pszuTagValue;
@@ -526,7 +527,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			return;	// Don't attempt to synchronize with an invalid group identifier
 			}
 		pContactGroupMember = m_pContact;
-		TGroupMember * pMember = pGroup->Member_PFindOrAddContact_NZ(m_pContact);
+		pMember = pGroup->Member_PFindOrAddContact_NZ(m_pContact);
 		Assert(pMember != NULL);
 		Assert(pMember->m_pContact == m_pContact);
 		ptsOtherLastSynchronized = &pMember->m_tsOtherLastSynchronized;
@@ -838,10 +839,11 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 	MessageLog_AppendTextFormatCo(d_coBlue, "Sorting $I events by chronology...\n", arraypaEvents.GetSize());
 	arraypaEvents.SortEventsByChronology();	// First, sort by chronology, to display the events according to their timestamp
 
+	IEvent * pEvent = NULL;
 	// Next, assign the current date & time to those events not having a timestamp
 	while (ppEvent != ppEventStop)
 		{
-		IEvent * pEvent = *ppEvent++;
+		pEvent = *ppEvent++;
 		if (pEvent->m_tsEventID == c_tsMax)
 			pEvent->m_tsEventID = Timestamp_GetCurrentDateTime();	// Assign the current date & time to new events
 		PSZUC pszExtra = NULL;
@@ -860,19 +862,18 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 	Assert(pVault->m_arraypaEvents.FEventsSortedByIDs());
 
 	// Display the new events into the Chat Log (if present)
-	if (pwChatLog != NULL)
+	if (fNewMessage)
 		{
-		//arraypaEvents.SortEventsByChronology();
-		if (fNewMessage)
-			{
-			pContactOrGroup_NZ->ChatLog_ChatStateIconUpdate(eChatState_PausedNoUpdateGui, m_pContact);
-			/*
-			pwChatLog->ChatLog_ChatStateComposerRemove(m_pContact);	// When a new message arrives, automatically assume the user stopped typing
-			m_pContact->TreeItemContact_UpdateIcon();				// Update the icon in the Navigation Tree which will remove the pencil icon
-			*/
-			}
-		pwChatLog->ChatLog_EventsDisplay(IN arraypaEvents);
+		pContactOrGroup_NZ->ChatLog_ChatStateIconUpdate(eChatState_PausedNoUpdateGui, m_pContact);
+		if (pwChatLog != NULL)
+			pwChatLog->ChatLog_EventsDisplay(IN arraypaEvents);
 		}
+
+	// Update the GUI about the new event
+	Assert(pEvent != NULL);
+	if (pEvent != NULL)
+		pContactOrGroup_NZ->TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(IN pEvent->PszGetTextOfEventForSystemTray(OUT_IGNORED &g_strScratchBufferStatusBar), m_pContact, pMember);
+
 	} // BinXmlAppendXcpApiMessageSynchronization()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

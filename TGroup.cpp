@@ -570,4 +570,27 @@ TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcp
 	return NULL;
 	} // Group_PFindByIdentifier_YZ()
 
-
+TGroup *
+TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier)
+	{
+	// Search for the contact matching the identifier
+	SHashSha1 shaGroupIdentifier;
+	if (!HashSha1_FInitFromStringBase85_ZZR_ML(OUT &shaGroupIdentifier, IN pszGroupIdentifier))
+		{
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Invalid group identifier $s\n", pszGroupIdentifier);
+		return NULL;
+		}
+	TGroup * pGroup;
+	TGroup ** ppGroupStop;
+	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+	while (ppGroup != ppGroupStop)
+		{
+		pGroup = *ppGroup++;
+		Assert(pGroup != NULL);
+		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+		Assert(sizeof(pGroup->m_hashGroupIdentifier) == sizeof(shaGroupIdentifier));
+		if (HashSha1_FCompareEqual(IN &pGroup->m_hashGroupIdentifier, IN &shaGroupIdentifier))
+			return pGroup;
+		}
+	return NULL;
+	}
