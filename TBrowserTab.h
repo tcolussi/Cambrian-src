@@ -24,7 +24,8 @@ public:
 	CStr m_url;
 
 public:
-	void SetUrl(CStr &sUrl);
+	void OpenApp(CStr &strAppName);
+	void SetUrl(CStr &strUrl);
 	void Show();
 	void NavigateForward();
 	void NavigateBack();

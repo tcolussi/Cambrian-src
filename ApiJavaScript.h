@@ -83,7 +83,7 @@ public slots:
 	void forward();
 	void reload();
 	void close();
-	void openApp(const QString &url);
+	void openApp(const QString &sAppName);
 	void openUrl(const QString &url);
 };
 #define POJapiBrowserTab POJapi

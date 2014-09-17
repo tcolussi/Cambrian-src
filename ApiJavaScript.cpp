@@ -458,16 +458,10 @@ OJapiBrowserTab::close()
 	}
 
 void
-OJapiBrowserTab::openApp(const QString & appName)
+OJapiBrowserTab::openApp(const QString & sAppName)
 	{
-	CStr sAppName(appName);
-	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(sAppName.PszaGetUtf8NZ());
-	if ( pInfo != NULL )
-		{
-		/*???*/
-		CStr url = "file:///" + m_pBrowsersListParent->m_poJapiProfileParent_NZ->m_pProfile->m_pConfigurationParent->SGetPathOfFileName(pInfo->pszLocation);
-		m_pTab->SetUrl(url);
-		}
+	CStr strAppName(sAppName);
+	m_pTab->OpenApp(strAppName);
 	}
 
 void
@@ -683,15 +677,17 @@ SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 {
 	{"Navshell Peers"	 , "navshell-contacts/index.html"		, PaAllocateJapiGeneric, NULL },
 	{"Navshell Sidebar"  , "navshell-stack/index.html"			, PaAllocateJapiGeneric, NULL },
-	{"Navshell Header"   , "navshell-header/index.html"		, PaAllocateJapiGeneric, NULL },
+	{"Navshell Header"   , "navshell-header/index.html"			, PaAllocateJapiGeneric, NULL },
 	{"Office Kingpin"    , "html5-office-kingpin/index.html"	, PaAllocateJapiGeneric, NULL },
 	{"Pomodoro"          , "html5-pomodoro/index.html"			, PaAllocateJapiGeneric, NULL },
 	{"JAPI Tests"        , "japi/test/test.html"				, PaAllocateJapiGeneric, NULL },
 	{"Scratch"           , "html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
-	{"HTML5 xik"         , "html5-xik/index.html"				, PaAllocateJapiGeneric, NULL },
-	{"Group Manager"	 , "html5-group-manager/index.html"	, PaAllocateJapiGeneric, NULL },
-	{"Ballotmaster"		 , "html5-pollmaster-wip/index.html"		, PaAllocateJapiGeneric, NULL },
-	{"Home"		         , "html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
+	{"HTML5 xik"         , "html5-xik/index.html"						, PaAllocateJapiGeneric, NULL },
+	{"Group Manager"	 , "html5-group-manager/index.html"				, PaAllocateJapiGeneric, NULL },
+	{"Ballotmaster"		 , "html5-pollmaster/index.html"				, PaAllocateJapiGeneric, NULL },
+	{"Home"		         , "html5-static/home/index.html"				, PaAllocateJapiGeneric, NULL },
+	{"Default NewTab"	 , "html5-static/default-new-tab/index.html"	, PaAllocateJapiGeneric, NULL },
+	{"Underconstruction" , "html5-static/underconstruction/index.html"	, PaAllocateJapiGeneric, NULL },
 };
 
 SApplicationHtmlInfo * PGetApplicationHtmlInfoBallotmaster() { return &g_rgApplicationHtmlInfo[9]; }

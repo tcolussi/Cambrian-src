@@ -369,23 +369,41 @@ LaunchBrowser(const QString & sName, const QString & sUrlRelative)
     pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}*/
 
-void
-LaunchApplication(const QString & sName)
+CStr ResolveAppPath(const CStr &strAppName)
 	{
-	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
-	if (pProfile == NULL)
-		return;
-
-	CStr strName(sName);// typecast
-	MessageLog_AppendTextFormatCo(d_coRedDark, "LaunchApplication '$Q'\n", &sName);
-	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(strName.PszaGetUtf8NZ());
+	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(strAppName.PszaGetUtf8NZ());
+	CStr strUrl("");
 
 	Assert(pInfo != NULL && "Application doesn't exist");
 	if (pInfo != NULL)
 		{
-		CStr strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
-		LaunchBrowser(sName, strUrl);
+		strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+		QUrl qurlAbsolute(strUrl);
+
+		// underconstruction page if the file doesn't exist
+		if ( qurlAbsolute.isLocalFile() )
+			{
+			QFile oHtmlFile(qurlAbsolute.toLocalFile());
+			QString strTest = qurlAbsolute.toString();
+
+			if ( !oHtmlFile.exists() )
+				{
+				pInfo = PGetApplicationHtmlInfo("Underconstruction");
+				Assert(pInfo != NULL && "Underconstruction app doesn't exist");
+				if ( pInfo != NULL )
+					strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+				}
+			}
 		}
+
+	return strUrl;
+	}
+
+void
+LaunchApplication(const QString & sName)
+	{
+	QString sUrl = ResolveAppPath(sName);
+	LaunchBrowser(sName, sUrl);
 	}
 
 
@@ -393,7 +411,7 @@ void
 LaunchBrowser(const QString & sName, const QString & sUrlAbsolute)
 	{
 	//EMessageBoxInformation("opening page $Q", &sUrl);
-	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser( $Q, $Q )\n", &sName, &sUrlAbsolute);
+	//MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser( $Q, $Q )\n", &sName, &sUrlAbsolute);
 
 	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
 	if (pProfile == NULL)
@@ -409,8 +427,9 @@ LaunchBrowser(const QString & sName, const QString & sUrlAbsolute)
 		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 	}
 
-	// find an open tab for the selected url
+
 	CStr strUrl(sUrlAbsolute);
+	// find an open tab for the selected url
 	TBrowserTab **ppBrowserTabStop;
 	TBrowserTab **ppBrowserTab;
 	ppBrowserTab = pBrowser->m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);
