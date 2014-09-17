@@ -421,6 +421,59 @@ WndProcMessageLog(HWND hwndMessageLog, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return ::DefWindowProc(hwndMessageLog, uMsg, wParam, lParam);
 	} // WndProcMessageLog()
 
+// Minimum visible width
+#define d_cxWidthVisibleMinimum	200
+#define d_cyWidthVisibleMinimum	200
+
+//	Ensure a window is partially visible within the screen.
+//
+//	- If the input prcWindowPos is completely out of the screen coordinates,
+//	  then the routine will make sure the window rectangle becomes FULLY visible.
+//	- If the input prcWindowPos is partially out of the screen coordinates,
+//	  then the routine will make a reasonable size (200 x 200) of the window is visible.
+VOID
+WindowRectEnsurePartiallyVisibleWithinScreen(INOUT RECT * prcWindowPos)
+	{
+	Assert(prcWindowPos != NULL);
+	RECT rcWindowPos = *prcWindowPos;	// Make a copy on the stack for efficiently
+	int cxWindow = rcWindowPos.right - rcWindowPos.left;
+	int cyWindow = rcWindowPos.bottom - rcWindowPos.top;
+	Assert(cxWindow > 0 && cxWindow < 10000);
+	Assert(cyWindow > 0 && cyWindow < 10000);
+
+	HMONITOR hMonitor = ::MonitorFromRect(IN prcWindowPos, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO mi;
+	InitToGarbage(OUT &mi, sizeof(mi));
+	mi.cbSize = sizeof(mi);
+	::GetMonitorInfo(hMonitor, OUT &mi);
+	// Resize the window if larger than the screen (this is very rare)
+	if (cxWindow > mi.rcWork.right)
+		cxWindow = mi.rcWork.right;
+	if (cyWindow > mi.rcWork.bottom)
+		cyWindow = mi.rcWork.bottom;
+
+	// If the window is completely out of screen coordinates, then make it fully visible
+	if (rcWindowPos.left > mi.rcWork.right)
+		rcWindowPos.left = mi.rcWork.right - cxWindow;
+	if (rcWindowPos.top > mi.rcWork.bottom)
+		rcWindowPos.top = mi.rcWork.bottom - cyWindow;
+
+	// Then, if the window is partially visible, then
+	// make sure there is enough of the window that is visible to the user
+	if (rcWindowPos.left > mi.rcWork.right - d_cxWidthVisibleMinimum)
+		rcWindowPos.left = mi.rcWork.right - d_cxWidthVisibleMinimum;
+	if (rcWindowPos.top > mi.rcWork.bottom - d_cyWidthVisibleMinimum)
+		rcWindowPos.top = mi.rcWork.bottom - d_cyWidthVisibleMinimum;
+	if (rcWindowPos.left < mi.rcWork.left)
+		rcWindowPos.left = mi.rcWork.left;
+	if (rcWindowPos.top < mi.rcWork.top)
+		rcWindowPos.top = mi.rcWork.top;
+
+	rcWindowPos.right = rcWindowPos.left + cxWindow;
+	rcWindowPos.bottom = rcWindowPos.top + cyWindow;
+	*prcWindowPos = rcWindowPos;
+	} // WindowRectEnsurePartiallyVisibleWithinScreen()
+
 #else
 
 class CTextBrowserMessageLog : public WTextBrowser
@@ -528,59 +581,6 @@ public:
 
 CMessageLog g_oMessageLog(c_sMessageLog);
 CMessageLog g_oErrorLog(c_sErrorLog);
-
-// Minimum visible width
-#define d_cxWidthVisibleMinimum	200
-#define d_cyWidthVisibleMinimum	200
-
-//	Ensure a window is partially visible within the screen.
-//
-//	- If the input prcWindowPos is completely out of the screen coordinates,
-//	  then the routine will make sure the window rectangle becomes FULLY visible.
-//	- If the input prcWindowPos is partially out of the screen coordinates,
-//	  then the routine will make a reasonable size (200 x 200) of the window is visible.
-VOID
-WindowRectEnsurePartiallyVisibleWithinScreen(INOUT RECT * prcWindowPos)
-	{
-	Assert(prcWindowPos != NULL);
-	RECT rcWindowPos = *prcWindowPos;	// Make a copy on the stack for efficiently
-	int cxWindow = rcWindowPos.right - rcWindowPos.left;
-	int cyWindow = rcWindowPos.bottom - rcWindowPos.top;
-	Assert(cxWindow > 0 && cxWindow < 10000);
-	Assert(cyWindow > 0 && cyWindow < 10000);
-
-	HMONITOR hMonitor = ::MonitorFromRect(IN prcWindowPos, MONITOR_DEFAULTTONEAREST);
-	MONITORINFO mi;
-	InitToGarbage(OUT &mi, sizeof(mi));
-	mi.cbSize = sizeof(mi);
-	::GetMonitorInfo(hMonitor, OUT &mi);
-	// Resize the window if larger than the screen (this is very rare)
-	if (cxWindow > mi.rcWork.right)
-		cxWindow = mi.rcWork.right;
-	if (cyWindow > mi.rcWork.bottom)
-		cyWindow = mi.rcWork.bottom;
-
-	// If the window is completely out of screen coordinates, then make it fully visible
-	if (rcWindowPos.left > mi.rcWork.right)
-		rcWindowPos.left = mi.rcWork.right - cxWindow;
-	if (rcWindowPos.top > mi.rcWork.bottom)
-		rcWindowPos.top = mi.rcWork.bottom - cyWindow;
-
-	// Then, if the window is partially visible, then
-	// make sure there is enough of the window that is visible to the user
-	if (rcWindowPos.left > mi.rcWork.right - d_cxWidthVisibleMinimum)
-		rcWindowPos.left = mi.rcWork.right - d_cxWidthVisibleMinimum;
-	if (rcWindowPos.top > mi.rcWork.bottom - d_cyWidthVisibleMinimum)
-		rcWindowPos.top = mi.rcWork.bottom - d_cyWidthVisibleMinimum;
-	if (rcWindowPos.left < mi.rcWork.left)
-		rcWindowPos.left = mi.rcWork.left;
-	if (rcWindowPos.top < mi.rcWork.top)
-		rcWindowPos.top = mi.rcWork.top;
-
-	rcWindowPos.right = rcWindowPos.left + cxWindow;
-	rcWindowPos.bottom = rcWindowPos.top + cyWindow;
-	*prcWindowPos = rcWindowPos;
-	} // WindowRectEnsurePartiallyVisibleWithinScreen()
 
 void
 CMessageLog::CreateLogWindow()
