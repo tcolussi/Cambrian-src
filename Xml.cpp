@@ -3382,6 +3382,8 @@ CXmlExchanger::XmlExchangeUInt(PSZAC pszuTagName, INOUT_F_UNCH_S UINT * puValue)
 	{
 	XmlExchangeInt(pszuTagName, INOUT_F_UNCH_S (int *)puValue);
 	}
+
+// TODO: Document this
 void
 CXmlExchanger::XmlExchangeUIntHex(PSZAC pszuTagName, INOUT_F_UNCH_S UINT * puValueHex)
 	{
@@ -3403,6 +3405,8 @@ CXmlExchanger::XmlExchangeUIntHex(PSZAC pszuTagName, INOUT_F_UNCH_S UINT * puVal
 		CXmlNode * pNode = m_pXmlNodeSerialize->PFindElementOrAttribute(pszuTagName);
 		if (pNode != NULL)
 			*puValueHex	= UStringToNumberHexadecimal_ZZR_ML(pNode->m_pszuTagValue);
+		else
+			*puValueHex = 0;
 		}
 	}
 

@@ -36,7 +36,7 @@
 #define d_szXCPa_tsOther_t				d_szEvent_Attribute_tsOther_t
 #define d_chXCPa_pContactGroupSender	'g'		// Pointer of the contact who sent the event/message to the group.  Of course, this attribute is present only when receiving a group message
 #define d_chXCPa_IEvent_uFlagsEvent		'G'		// Rare attribute indicating some bits of IEvent::m_uFlagsEvent are serialized.  Since 'g' is already reserved by the XCP protocol, then 'G' is used for flaGs.
-
+//	X for signature, and x for extra data
 
 //	The enumeration EEventClass is used to serialize and unserialize events.
 //	This enumeration is somewhat as RTI_ENUM, however since the events are serialized, letters of the alphabet are used to identify different classes of events.

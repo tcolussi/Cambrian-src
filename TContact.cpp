@@ -83,7 +83,6 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
 	pXmlExchanger->XmlExchangeStr("JID", INOUT &m_strJidBare);
 	pXmlExchanger->XmlExchangeUIntHexFlagsMasked("Flags", INOUT &m_uFlagsContact, FC_kmFlagsSerializeMask);
-//	pXmlExchanger->XmlExchangeUIntHex("F", INOUT &m_uFlagsContactSerialized);
 	pXmlExchanger->XmlExchangeTimestamp("tsSync", INOUT_F_UNCH_S &m_tsOtherLastSynchronized);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT &m_strComment);
 	pXmlExchanger->XmlExchangeBin("Rec", INOUT &m_binXmlRecommendations);

@@ -313,6 +313,18 @@ OJapiPollCore::pollTimeLength(int cSeconds)
     //MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPoll::pollTimeLength set");
     m_pBallot->m_cSecondsPollLength = cSeconds;
     }
+void
+OJapiPollCore::pollTargetId(const CString & sTargetId)
+	{
+	m_pBallot->m_strTargetIdentifier = sTargetId;
+	}
+
+QString
+OJapiPollCore::pollTargetId() const
+	{
+	return m_pBallot->m_strTargetIdentifier;
+	}
+
 
 QString
 OJapiPollCore::title() const
@@ -449,23 +461,35 @@ OJapiPoll::destroy()
 	m_pBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;
 	}
 
-void
+//	Return true if the poll was successfully started.
+bool
 OJapiPoll::start()
 	{
-    m_pBallot->m_tsStarted = Timestamp_GetCurrentDateTime();
-    m_pBallot->m_tsStopped = d_ts_zNA;
+	if (m_pBallot->m_tsStarted == d_ts_zNA)
+		{
+		PSZUC pszGroupIdentifier = m_pBallot->m_strTargetIdentifier;
+		TAccountXmpp * pAccount = m_pBallot->PGetAccount();
+		ITreeItemChatLogEvents * pContactOrGroup = pAccount->Contact_PFindByJID(pszGroupIdentifier, eFindContact_zDefault);
+		if (pContactOrGroup == NULL)
+			pContactOrGroup = pAccount->Group_PFindByIdentifier_YZ(pszGroupIdentifier);
+		MessageLog_AppendTextFormatCo(d_coBlack, "OJapiPoll::start($s) - pContactOrGroup = 0x$p\n", pszGroupIdentifier, pContactOrGroup);
+		m_pBallot->m_tsStarted = Timestamp_GetCurrentDateTime();
+		}
+	m_pBallot->m_tsStopped = d_ts_zNA;
 	m_pBallot->m_uFlagsBallot &= ~CEventBallotPoll::FB_kfStopAcceptingVotes;
+	return true;
 	}
 
 void
 OJapiPoll::stop()
 	{
-    if ( m_pBallot->m_tsStarted != d_ts_zNA )
+	if (m_pBallot->m_tsStarted != d_ts_zNA)
         m_pBallot->m_tsStopped = Timestamp_GetCurrentDateTime();
 	m_pBallot->m_uFlagsBallot |= CEventBallotPoll::FB_kfStopAcceptingVotes;
 	}
 
 //	Send the ballot to a group, or to a contact
+//	This method is for debugging
 bool
 OJapiPoll::send(const QString & sGroupId)
 	{

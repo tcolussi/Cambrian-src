@@ -4,32 +4,41 @@
 #include "IEventBallot.h"
 #include "ApiJavaScript.h"
 
-#define d_chAPIa_IEventBallot_strTitle							't'		// Ballot title / headline
-#define d_chAPIa_IEventBallot_strDescription					'd'		// Description of what/why the vote
-#define d_chAPIa_IEventBallot_uxFlagsBallot						'b'		// Various options for the ballot
 
-#define d_chAPIa_CEventBallotReceived_uxVotedChoice				'v'		// What was voted (which choice(s) the user selected)
-#define d_szAPIa_CEventBallotReceived_uxVotedChoice_ux			" v='$x'"
-#define d_chAPIa_CEventBallotReceived_tsConfirmationReceipt		'r'		// Timestamp confirming vote was successfully receivede by the ballot sender
-#define d_chAPIa_CEventBallotReceived_strNote					'n'
-#define d_szAPIa_CEventBallotReceived_strNote					" n='$S'"
+#define d_chXMLa_IEventBallot_strTitle							't'		// Ballot title / headline
+#define d_chXMLa_IEventBallot_strDescription					'd'		// Description of what/why the vote
+#define d_chXMLa_IEventBallot_uxFlagsBallot						'b'		// Various options for the ballot
 
-#define d_chAPIe_BallotChoices						'C'
-#define d_szAPIe_BallotChoices						"C"
-#define d_chAPIe_BallotChoice						'C'
-#define d_szAPIe_BallotChoice_S						"C t='^S'"
-#define d_chAPIa_BallotChoice_strText				't'				// Text to appear for one ballot choice
-#define d_chAPIa_BallotChoice_strGroup				'g'				// NYI: Which sub-group to automatically create
+#define d_chXMLa_CEventBallotReceived_uxVotedChoice				'v'		// What was voted (which choice(s) the user selected)
+#define d_szXMLa_CEventBallotReceived_uxVotedChoice_ux			" v='$x'"
+#define d_chXMLa_CEventBallotReceived_tsConfirmationReceipt		'r'		// Timestamp confirming vote was successfully receivede by the ballot sender
+#define d_chXMLa_CEventBallotReceived_strNote					'n'
+#define d_szXMLa_CEventBallotReceived_strNote					" n='$S'"
 
-#define d_chAPIe_BallotVotes						'V'
-#define d_szAPIe_BallotVotes						"V"
-#define d_chAPIe_BallotVote							'V'
-//#define d_szAPIe_BallotVote_p_u_ts					"V f='^i' v='$x' t='$t'"
-#define d_szAPIe_BallotVote_p_u_ts_str				"V f='^i' v='$x' t='$t' n='^S'"	//  ^{n$S}
-#define d_chAPIa_BallotVote_pContactFrom			'f'
-#define d_chAPIa_BallotVote_uxVotedChoice			'v'
-#define d_chAPIa_BallotVote_tsTime					't'
-#define d_chAPIa_BallotVote_strNote					'n'				// NYI: Feedback comment of the user who casted the vote
+#define d_chXMLa_CEventBallotPoll_tsStarted						's'
+#define d_chXMLa_CEventBallotPoll_tsStopped						'S'
+#define d_chXMLa_CEventBallotPoll_cSecondsPollLength			'l'
+#define d_chXMLa_CEventBallotPoll_strTargetId					'T'
+#define d_chXMLa_CEventBallotPoll_tsEventIdBallot				'E'
+
+#define d_chXMLe_BallotChoices						'C'
+#define d_szXMLe_BallotChoices						"C"
+#define d_chXMLe_BallotChoice						'C'
+#define d_szXMLe_BallotChoice_S						"C t='^S'"
+#define d_chXMLa_BallotChoice_strText				't'				// Text to appear for one ballot choice
+#define d_chXMLa_BallotChoice_strGroup				'g'				// NYI: Which sub-group to automatically create
+
+#define d_chXMLe_BallotVotes						'V'
+#define d_szXMLe_BallotVotes						"V"
+#define d_chXMLe_BallotVote							'V'
+//#define d_szXMLe_BallotVote_p_u_ts					"V f='^i' v='$x' t='$t'"
+#define d_szXMLe_BallotVote_p_u_ts_str				"V f='^i' v='$x' t='$t' n='^S'"	//  ^{n$S}
+#define d_chXMLa_BallotVote_pContactFrom			'f'
+#define d_chXMLa_BallotVote_uxVotedChoice			'v'
+#define d_chXMLa_BallotVote_tsTime					't'
+#define d_chXMLa_BallotVote_strNote					'n'				// NYI: Feedback comment of the user who casted the vote
+
+
 
 
 IEventBallot::IEventBallot(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
@@ -73,32 +82,32 @@ CArrayPtrBallotVotes::DeleteAllVotes()
 EXml
 IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
-	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_IEventBallot_strTitle, m_strTitle);
-	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_IEventBallot_strDescription, m_strDescription);
-	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chAPIa_IEventBallot_uxFlagsBallot, m_uFlagsBallot);
+	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_IEventBallot_strTitle, m_strTitle);
+	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_IEventBallot_strDescription, m_strDescription);
+	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chXMLa_IEventBallot_uxFlagsBallot, m_uFlagsBallot);
 
-	pbinXmlAttributes->BinAppendText("><" d_szAPIe_BallotChoices ">");
+	pbinXmlAttributes->BinAppendText("><" d_szXMLe_BallotChoices ">");
 	_CEventBallotChoice ** ppChoiceStop;
 	_CEventBallotChoice ** ppChoice = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
 		{
 		_CEventBallotChoice * pChoice = *ppChoice++;
-		pbinXmlAttributes->BinAppendText_VE("<" d_szAPIe_BallotChoice_S "/>", &pChoice->m_strQuestion);
+		pbinXmlAttributes->BinAppendText_VE("<" d_szXMLe_BallotChoice_S "/>", &pChoice->m_strQuestion);
 		}
-	pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotChoices ">");
+	pbinXmlAttributes->BinAppendText("</" d_szXMLe_BallotChoices ">");
 
 	if (pbinXmlAttributes->FuSerializingEventToDisk())
 		{
 		// Do not transmit the votes to the contacts; only serialize the vote to disk.
-		pbinXmlAttributes->BinAppendText("><" d_szAPIe_BallotVotes ">");
+		pbinXmlAttributes->BinAppendText("><" d_szXMLe_BallotVotes ">");
 		_CEventBallotVote ** ppVoteStop;
 		_CEventBallotVote ** ppVote = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
 		while (ppVote != ppVoteStop)
 			{
 			_CEventBallotVote * pVote = *ppVote++;
-			pbinXmlAttributes->BinAppendText_VE("<" d_szAPIe_BallotVote_p_u_ts_str "/>",  pVote->m_pContact, pVote->m_ukmChoices, pVote->m_tsVote, &pVote->m_strComment);
+			pbinXmlAttributes->BinAppendText_VE("<" d_szXMLe_BallotVote_p_u_ts_str "/>",  pVote->m_pContact, pVote->m_ukmChoices, pVote->m_tsVote, &pVote->m_strComment);
 			}
-		pbinXmlAttributes->BinAppendText("</" d_szAPIe_BallotVotes ">");
+		pbinXmlAttributes->BinAppendText("</" d_szXMLe_BallotVotes ">");
 		}
 	return eXml_ElementPresent;	// There may be an element present
 	}
@@ -107,11 +116,11 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 void
 IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	{
-	pXmlNodeElement->UpdateAttributeValueCStr(d_chAPIa_IEventBallot_strTitle, OUT_F_UNCH &m_strTitle);
-	pXmlNodeElement->UpdateAttributeValueCStr(d_chAPIa_IEventBallot_strDescription, OUT_F_UNCH &m_strDescription);
-	pXmlNodeElement->UpdateAttributeValueUIntHexadecimal(d_chAPIa_IEventBallot_uxFlagsBallot, OUT_F_UNCH &m_uFlagsBallot);
+	pXmlNodeElement->UpdateAttributeValueCStr(d_chXMLa_IEventBallot_strTitle, OUT_F_UNCH &m_strTitle);
+	pXmlNodeElement->UpdateAttributeValueCStr(d_chXMLa_IEventBallot_strDescription, OUT_F_UNCH &m_strDescription);
+	pXmlNodeElement->UpdateAttributeValueUIntHexadecimal(d_chXMLa_IEventBallot_uxFlagsBallot, OUT_F_UNCH &m_uFlagsBallot);
 
-	const CXmlNode * pXmlNodeChoices = pXmlNodeElement->PFindElement(d_chAPIe_BallotChoices);
+	const CXmlNode * pXmlNodeChoices = pXmlNodeElement->PFindElement(d_chXMLe_BallotChoices);
 	if (pXmlNodeChoices != NULL)
 		{
 		m_arraypaChoices.DeleteAllChoices();	// Delete any previous choice(s) before adding new ones
@@ -119,11 +128,11 @@ IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 		while (pXmlNodeChoice != NULL)
 			{
 			_CEventBallotChoice * pChoice = PAllocateNewChoice();
-			pXmlNodeChoice->UpdateAttributeValueCStr(d_chAPIa_BallotChoice_strText, OUT_F_UNCH &pChoice->m_strQuestion);
+			pXmlNodeChoice->UpdateAttributeValueCStr(d_chXMLa_BallotChoice_strText, OUT_F_UNCH &pChoice->m_strQuestion);
 			pXmlNodeChoice = pXmlNodeChoice->m_pNextSibling;
 			}
 		}
-	const CXmlNode * pXmlNodeVotes = pXmlNodeElement->PFindElement(d_chAPIe_BallotVotes);
+	const CXmlNode * pXmlNodeVotes = pXmlNodeElement->PFindElement(d_chXMLe_BallotVotes);
 	if (pXmlNodeVotes != NULL)
 		{
 		m_arraypaVotes.DeleteAllVotes();	// Delete any previous vote(s) results before adding new ones
@@ -131,10 +140,10 @@ IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 		while (pXmlNodeVote != NULL)
 			{
 			_CEventBallotVote * pVote = PAllocateNewVote();
-			_XmlUnserializeAttributeOfContactIdentifier(d_chAPIa_BallotVote_pContactFrom, OUT &pVote->m_pContact, IN pXmlNodeVote);
-			pXmlNodeVote->UpdateAttributeValueUIntHexadecimal(d_chAPIa_BallotVote_uxVotedChoice, OUT_F_UNCH &pVote->m_ukmChoices);
-			pXmlNodeVote->UpdateAttributeValueTimestamp(d_chAPIa_BallotVote_tsTime, OUT_F_UNCH &pVote->m_tsVote);
-			pXmlNodeVote->UpdateAttributeValueCStr(d_chAPIa_BallotVote_strNote, OUT_F_UNCH &pVote->m_strComment);
+			_XmlUnserializeAttributeOfContactIdentifier(d_chXMLa_BallotVote_pContactFrom, OUT &pVote->m_pContact, IN pXmlNodeVote);
+			pXmlNodeVote->UpdateAttributeValueUIntHexadecimal(d_chXMLa_BallotVote_uxVotedChoice, OUT_F_UNCH &pVote->m_ukmChoices);
+			pXmlNodeVote->UpdateAttributeValueTimestamp(d_chXMLa_BallotVote_tsTime, OUT_F_UNCH &pVote->m_tsVote);
+			pXmlNodeVote->UpdateAttributeValueCStr(d_chXMLa_BallotVote_strNote, OUT_F_UNCH &pVote->m_strComment);
 			pXmlNodeVote = pXmlNodeVote->m_pNextSibling;
 			}
 		}
@@ -356,8 +365,8 @@ CEventBallotSent::CEventBallotSent(const TIMESTAMP * ptsEventID) : IEventBallot(
 EGui
 CEventBallotSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply)
 	{
-	const UINT_BALLOT_CHOICES ukmChoices = pXmlNodeData->UFindAttributeValueHexadecimal_ZZR(d_chAPIa_CEventBallotReceived_uxVotedChoice);
-	CStr strComment = pXmlNodeData->PszuFindAttributeValue(d_chAPIa_CEventBallotReceived_strNote);
+	const UINT_BALLOT_CHOICES ukmChoices = pXmlNodeData->UFindAttributeValueHexadecimal_ZZR(d_chXMLa_CEventBallotReceived_uxVotedChoice);
+	CStr strComment = pXmlNodeData->PszuFindAttributeValue(d_chXMLa_CEventBallotReceived_strNote);
 	//MessageLog_AppendTextFormatCo(d_coRed, "CEventBallotSent::XospDataE() - $x\n", ukmChoices);
 
 	TContact * pContact = pbinXospReply->m_pContact; // Get the contact who voted
@@ -405,9 +414,9 @@ CEventBallotReceived::CEventBallotReceived(const TIMESTAMP * ptsEventID) : IEven
 EXml
 CEventBallotReceived::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
-	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chAPIa_CEventBallotReceived_uxVotedChoice, m_ukmChoices);	// Save the attribute before the rest of the ballot, because the ballot includes XML elements
-	pbinXmlAttributes->BinAppendXmlAttributeTimestamp(d_chAPIa_CEventBallotReceived_tsConfirmationReceipt, m_tsConfirmationReceipt);
-	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chAPIa_CEventBallotReceived_strNote, m_strComment);
+	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chXMLa_CEventBallotReceived_uxVotedChoice, m_ukmChoices);	// Save the attribute before the rest of the ballot, because the ballot includes XML elements
+	pbinXmlAttributes->BinAppendXmlAttributeTimestamp(d_chXMLa_CEventBallotReceived_tsConfirmationReceipt, m_tsConfirmationReceipt);
+	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_CEventBallotReceived_strNote, m_strComment);
 	return IEventBallot::XmlSerializeCoreE(IOUT pbinXmlAttributes);
 	}
 
@@ -415,9 +424,9 @@ CEventBallotReceived::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) 
 void
 CEventBallotReceived::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	{
-	pXmlNodeElement->UpdateAttributeValueUIntHexadecimal(d_chAPIa_CEventBallotReceived_uxVotedChoice, OUT_F_UNCH &m_ukmChoices);
-	pXmlNodeElement->UpdateAttributeValueTimestamp(d_chAPIa_CEventBallotReceived_tsConfirmationReceipt, OUT_F_UNCH &m_tsConfirmationReceipt);
-	pXmlNodeElement->UpdateAttributeValueCStr(d_chAPIa_CEventBallotReceived_strNote, OUT_F_UNCH &m_strComment);
+	pXmlNodeElement->UpdateAttributeValueUIntHexadecimal(d_chXMLa_CEventBallotReceived_uxVotedChoice, OUT_F_UNCH &m_ukmChoices);
+	pXmlNodeElement->UpdateAttributeValueTimestamp(d_chXMLa_CEventBallotReceived_tsConfirmationReceipt, OUT_F_UNCH &m_tsConfirmationReceipt);
+	pXmlNodeElement->UpdateAttributeValueCStr(d_chXMLa_CEventBallotReceived_strNote, OUT_F_UNCH &m_strComment);
 	IEventBallot::XmlUnserializeCore(pXmlNodeElement);
 	}
 
@@ -443,7 +452,7 @@ CEventBallotReceived::UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditT
 
 	// Send the selected choices to the ballot creator
 	CBinXcpStanza binXcpStanza;
-	binXcpStanza.XcpApi_SendDataToEvent_VE(this, "<v" d_szAPIa_CEventBallotReceived_uxVotedChoice_ux d_szAPIa_CEventBallotReceived_strNote "/>", m_ukmChoices, &m_strComment);
+	binXcpStanza.XcpApi_SendDataToEvent_VE(this, "<v" d_szXMLa_CEventBallotReceived_uxVotedChoice_ux d_szXMLa_CEventBallotReceived_strNote "/>", m_ukmChoices, &m_strComment);
 	}
 
 
@@ -460,19 +469,25 @@ CEventBallotPoll::CEventBallotPoll(const TIMESTAMP * ptsEventID) : CEventBallotS
     m_tsStarted = d_ts_zNA;
     m_tsStopped = d_ts_zNA;
     m_cSecondsPollLength = d_zNA;
+	m_pEventBallotSent = NULL;
+	m_tsEventIdBallot = d_ts_zNA;
     }
 
 //  CEventBallotPoll::IEvent::XmlSerializeCoreE()
 EXml
 CEventBallotPoll::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
     {
-    pbinXmlAttributes->BinAppendXmlAttributeTimestamp('z', m_tsStarted);
-    pbinXmlAttributes->BinAppendXmlAttributeTimestamp('Z', m_tsStopped);
-    pbinXmlAttributes->BinAppendXmlAttributeInt('l', m_cSecondsPollLength);
+	pbinXmlAttributes->BinAppendXmlAttributeTimestamp(d_chXMLa_CEventBallotPoll_tsStarted, m_tsStarted);
+	pbinXmlAttributes->BinAppendXmlAttributeTimestamp(d_chXMLa_CEventBallotPoll_tsStopped, m_tsStopped);
+	pbinXmlAttributes->BinAppendXmlAttributeInt(d_chXMLa_CEventBallotPoll_cSecondsPollLength, m_cSecondsPollLength);
+	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_CEventBallotPoll_strTargetId, m_strTargetIdentifier);
 
-	#if 0 // Need to implement this properly
+	EXml eXml = CEventBallotSent::XmlSerializeCoreE(IOUT pbinXmlAttributes);	// Serialize the base class and its XML elements
+	Assert(eXml == eXml_ElementPresent);
+
+	#if 1
 	// BEGIN serialize attatchments
-	pbinXmlAttributes->BinAppendText("><A>");
+	pbinXmlAttributes->BinAppendText("<A>");
 	CEventBallotAttatchment **ppBallotAttatchmentStop;
 	CEventBallotAttatchment **ppBallotAttatchment = m_arraypaAtattchments.PrgpGetAttatchmentsStop(&ppBallotAttatchmentStop);
 	while ( ppBallotAttatchment != ppBallotAttatchmentStop)
@@ -484,19 +499,20 @@ CEventBallotPoll::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) cons
 	// END serialize attatchments
 	#endif
 
-    return CEventBallotSent::XmlSerializeCoreE(IOUT pbinXmlAttributes);
+	return eXml_ElementPresent;
     }
 
 //  CEventBallotPoll::IEvent:XmlUnserializeCore()
 void
 CEventBallotPoll::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
     {
-    pXmlNodeElement->UpdateAttributeValueTimestamp('z', OUT_F_UNCH &m_tsStarted);
-    pXmlNodeElement->UpdateAttributeValueTimestamp('Z', OUT_F_UNCH &m_tsStopped);
-    pXmlNodeElement->UpdateAttributeValueInt('l', &m_cSecondsPollLength);
+	pXmlNodeElement->UpdateAttributeValueTimestamp(d_chXMLa_CEventBallotPoll_tsStarted, OUT_F_UNCH &m_tsStarted);
+	pXmlNodeElement->UpdateAttributeValueTimestamp(d_chXMLa_CEventBallotPoll_tsStopped, OUT_F_UNCH &m_tsStopped);
+	pXmlNodeElement->UpdateAttributeValueInt(d_chXMLa_CEventBallotPoll_cSecondsPollLength, OUT_F_UNCH &m_cSecondsPollLength);
+	pXmlNodeElement->UpdateAttributeValueCStr(d_chXMLa_CEventBallotPoll_strTargetId, OUT_F_UNCH &m_strTargetIdentifier);
 
 	const CXmlNode * pXmlNodeAttatchments = pXmlNodeElement->PFindElement('A');
-	if ( pXmlNodeAttatchments != NULL)
+	if (pXmlNodeAttatchments != NULL)
 		{
 		const CXmlNode * pXmlNodeAttatchment = pXmlNodeAttatchments ->m_pElementsList;
 		while (pXmlNodeAttatchment != NULL)
@@ -508,10 +524,8 @@ CEventBallotPoll::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 			pXmlNodeAttatchment = pXmlNodeAttatchment->m_pNextSibling;
 			}
 		}
-
-
     CEventBallotSent::XmlUnserializeCore(pXmlNodeElement);
-}
+	}
 
 
 CEventBallotAttatchment::CEventBallotAttatchment(CEventBallotPoll *pPollParent)
@@ -535,9 +549,8 @@ CEventBallotAttatchment::~CEventBallotAttatchment()
 POJapi
 CEventBallotAttatchment::POJapiGet()
 	{
-	if ( m_paoJapiAttatchment == NULL )
+	if (m_paoJapiAttatchment == NULL)
 		m_paoJapiAttatchment = new OJapiPollAttatchment(this);
-
 	return m_paoJapiAttatchment;
 	}
 

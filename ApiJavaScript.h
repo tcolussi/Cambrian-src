@@ -309,6 +309,8 @@ public:
 	QString status() const;
     int pollTimeLength() const;
     void pollTimeLength(int cSeconds);
+	void pollTargetId(const CString & sTargetId);
+	QString pollTargetId() const;
 
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString type READ type)
@@ -319,6 +321,7 @@ public:
 	Q_PROPERTY(QDateTime dateStopped READ dateStopped)
 	Q_PROPERTY(QString status READ status)
 	Q_PROPERTY(int pollTimeLength READ pollTimeLength WRITE pollTimeLength)
+	Q_PROPERTY(QString pollTargetId READ pollTargetId WRITE pollTargetId)
 
 }; // OJapiPollCore
 
@@ -407,7 +410,7 @@ public:
 public slots:
 	bool save();
 	void destroy();
-	void start();
+	bool start();
 	void stop();
 	bool send(const QString & sGroupId);
 	POJapiPollResults getResults() CONST_MCC;
