@@ -1606,6 +1606,8 @@ CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * p
 				if (pEvent->m_tsOther <= d_tsOther_kmReserved)
 					{
 					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Event class '$U' tsEventID $t {tL} has value tsOther $t\n", pEvent->EGetEventClass(), pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther);
+					pEvent->m_tsOther = pEvent->m_tsEventID;	// Assign tsOther as the Event ID to suppress the error
+					SetModified();
 					}
 				if (pEvent->m_tsOther == tsOther && pEvent->m_pContactGroupSender_YZ == pContactGroupSender)
 					{

@@ -348,12 +348,12 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		CTaskSendReceive * pTaskPending = pContact->m_listaTasksSendReceive.m_plistTasks;
 		if (pTaskPending != NULL)
 			{
-			MessageLog_AppendTextFormatCo(d_coNavy, "Pending Tasks for XospSendStanzaToContactAndEmpty()\n");
+			MessageLog_AppendTextFormatCo(d_coPurple, "Pending Tasks for XospSendStanzaToContactAndEmpty()\n");
 			pContact->m_listaTasksSendReceive.DisplayTasksToMessageLog();
-			PSZAC pszFmtTemplate_ts_i = "<"d_szXop_TaskUploading_ts d_szXa_TaskDataOffset_i"/>";	// Template to request an upload of the next outstanding/pending task to download
+
 			TIMESTAMP tsTaskID = pTaskPending->m_tsTaskID;
-			const int cbData = pTaskPending->m_binXmlData.CbGetData();
-			const int cbTotal = pTaskPending->m_cbTotal;
+			int cbData = pTaskPending->m_binXmlData.CbGetData();
+			int cbTotal = pTaskPending->m_cbTotal;
 			if (cbTotal < 0)
 				{
 				Assert(pTaskPending->FIsTaskSend());
@@ -366,15 +366,33 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 						{
 						pTaskPending->m_cbTotal = CTaskSendReceive::c_cbTotal_TaskSentOnce;
 						BinAppendText_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i d_szXa_TaskDataOffset_i d_szXa_TaskDataBinary_Bii"/>", tsTaskID, cbData, 0, &pTaskPending->m_binXmlData, 0, cbAvailable);
-						Assert(m_paData->cbData < m_cbStanzaThresholdBeforeSplittingIntoTasks + 200);
+						if (m_paData->cbData > c_cbStanzaThresholdBeforeSplittingIntoTasks)
+							MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Task ID $t contains $I bytes of data, $I bytes larger than its maximum allowed size of $I bytes\n", tsTaskID, m_paData->cbData, m_paData->cbData - c_cbStanzaThresholdBeforeSplittingIntoTasks, c_cbStanzaThresholdBeforeSplittingIntoTasks);
 						goto SendStanza;
 						}
 					}
 				if (cbTotal == CTaskSendReceive::c_cbTotal_TaskSendTryOnlyOnce)
 					pContact->m_listaTasksSendReceive.DeleteTask(PA_DELETING pTaskPending);
-				pszFmtTemplate_ts_i = "<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i"/>";	// We already sent the task once, therefore send only the header to notify the client there is a task to send
-				}
-			BinAppendText_VE(pszFmtTemplate_ts_i, tsTaskID, cbData);
+				BinAppendText_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i"/>", tsTaskID, cbData);	// We already sent the task once, therefore send only the header to notify the client there is a task to send
+				// The tasks to send are prioritized first, now check if there is any task to download
+				while (TRUE)
+					{
+					pTaskPending = pTaskPending->m_pNext;
+					if (pTaskPending == NULL)
+						goto SendStanza;	// No task to download
+					if (pTaskPending->m_cbTotal > 0)
+						{
+						Assert(!pTaskPending->FIsTaskSend());
+						// We have found a task do download, there capture the necessary information to send the request
+						tsTaskID = pTaskPending->m_tsTaskID;
+						cbData = pTaskPending->m_binXmlData.CbGetData();
+						break;
+						}
+					Assert(pTaskPending->FIsTaskSend());
+					} // while
+				} // if (task to upload)
+			Assert(!pTaskPending->FIsTaskSend());
+			BinAppendText_VE("<"d_szXop_TaskUploading_ts d_szXa_TaskDataOffset_i"/>", tsTaskID, cbData);	// Request an upload of the next outstanding/pending task to download
 			} // if
 		}
 	if (m_paData == NULL)
@@ -386,14 +404,13 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		CTaskSendReceive * pTaskSend = pContact->m_listaTasksSendReceive.PAllocateTaskSend_YZ(m_uFlags & F_kfContainsSyncData);
 		if (pTaskSend == NULL)
 			{
-			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "XospSendStanzaToContactAndEmpty($s) - Ignoring $I bytes of data because there is already a pending task containing synchronization data:\n$B\n", pContact->ChatLog_PszGetNickname(), m_paData->cbData, this);
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "XospSendStanzaToContactAndEmpty($s) - Ignoring $I bytes of data because there is already a pending task containing synchronization data:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), m_paData->cbData, this);
 			return;
 			}
 		pTaskSend->m_binXmlData.BinAppendCBin(*this);
 		BinInitFromTextSzv_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i d_szXa_TaskDataBinary_Bii"/>",
 			pTaskSend->m_tsTaskID, pTaskSend->m_binXmlData.CbGetData(), &pTaskSend->m_binXmlData, 0, c_cbStanzaMaxBinary / 100);
-		//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "XospSendStanzaToContactAndEmpty($s) - Creating Task ID $t of $I bytes:\n$B\n", pContact->ChatLog_PszGetNickname(), pTaskSend->m_tsTaskID, pTaskSend->m_binXmlData.CbGetData(), &pTaskSend->m_binXmlData);
-		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "XospSendStanzaToContactAndEmpty($s) - Creating Task ID $t of $I bytes:\n$B\n", pContact->ChatLog_PszGetNickname(), pTaskSend->m_tsTaskID, pTaskSend->m_binXmlData.CbGetData(), &pTaskSend->m_binXmlData);
+		MessageLog_AppendTextFormatCo(d_coPurple, "XospSendStanzaToContactAndEmpty($s) - Creating Task ID $t of $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), pTaskSend->m_tsTaskID, pTaskSend->m_binXmlData.CbGetData(), &pTaskSend->m_binXmlData);
 		}
 
 	SendStanza:
@@ -407,7 +424,7 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 	SHashSha1 hashSignature;
 	HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);	// At the moment, use SHA-1 as the 'signature'
 
-	MessageLog_AppendTextFormatCo(d_coBlue, "XospSendStanzaToContactAndEmpty($s) $I bytes:\n$B\n", pContact->ChatLog_PszGetNickname(), cbDataStanza, this);
+	MessageLog_AppendTextFormatCo(d_coBlue, "XospSendStanzaToContactAndEmpty($s) $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), cbDataStanza, this);
 
 	PSZAC pszStanzaType = c_sza_message;
 	PSZAC pszStanzaAttributesExtra = NULL;

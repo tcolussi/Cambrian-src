@@ -29,7 +29,7 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 		oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
 		#if 1
 		MessageLog_AppendTextFormatCo(d_coGray, "XCP Received($S):\n", &m_strJidBare);
-		MessageLog_AppendTextFormatCo(d_coBlack, "$B\n", &oXmlTree.m_binXmlFileData);
+		MessageLog_AppendTextFormatCo(d_coBlack, "{Bm}\n", &oXmlTree.m_binXmlFileData);
 		#endif
 		if (oXmlTree.EParseFileDataToXmlNodes_ML() == errSuccess)
 			{
@@ -189,7 +189,8 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 		else
 			{
 			const TIMESTAMP tsTaskID = pXmlNodeApiList->TsGetAttributeValueTimestamp_ML(d_chXa_TaskID);
-			const int ibData =  pXmlNodeApiList->UFindAttributeValueDecimal_ZZR(d_chXa_TaskDataOffset);
+			const CXmlNode * pXmlAttributeOffset = pXmlNodeApiList->PFindAttribute(d_chXa_TaskDataOffset);
+			const int ibData = (pXmlAttributeOffset != NULL) ? NStringToNumber_ZZR_ML(pXmlAttributeOffset->m_pszuTagValue) : -1;
 			if (chXop == d_chXop_TaskDownloading)
 				{
 				// We are receiving task data
@@ -202,11 +203,13 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 					if (ibData == cbData)
 						{
 						cbData += pTaskDownload->m_binXmlData.BinAppendBinaryDataFromBase85SCb_ML(pXmlNodeApiList->PszuFindAttributeValue(d_chXa_TaskDataBinary));
+						if (cbData == ibData)
+							MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "No data from XMPP stanza for Task ID $t\n", tsTaskID);
 						Assert(cbData == pTaskDownload->m_binXmlData.CbGetData());
 						if (cbData == pTaskDownload->m_cbTotal)
 							{
 							// We successfully downloaded the task, therefore execute it
-							MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreenDarker), "Download complete ($I bytes) for Task ID $t:\n$B\n", cbData, pTaskDownload->m_tsTaskID, &pTaskDownload->m_binXmlData);
+							MessageLog_AppendTextFormatCo(COX_MakeBold(d_coPurple), "Task download complete ($I bytes) for Task ID $t:\n{Bm}\n", cbData, pTaskDownload->m_tsTaskID, &pTaskDownload->m_binXmlData);
 							CXmlTree oXmlTree;
 							oXmlTree.EParseFileDataToXmlNodesModify_ML(INOUT &pTaskDownload->m_binXmlData);
 							m_pContact->m_listaTasksSendReceive.DeleteTask(PA_DELETING pTaskDownload);
@@ -216,19 +219,20 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 							goto NextApi;
 							}
 						}
-					else
-						{
-						if (ibData != 0)
-							MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "\t\t Ignoring data from Task ID $t because its offset ($I) does not match the received data of $I bytes\n", tsTaskID, ibData, pTaskDownload->m_binXmlData.CbGetData());
-						BinAppendText_VE("<" d_szXop_TaskUploading_ts d_szXa_TaskDataOffset_i "/>", tsTaskID, cbData);	// Send a request to download the remaining data (if any), or to indicate all the data was received and therefore delete the task
-						}
+					else if (ibData >= 0)
+						MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "\t\t Ignoring data from Task ID $t because its offset ($I) does not match the received data of $I bytes\n", tsTaskID, ibData, pTaskDownload->m_binXmlData.CbGetData());
+					//BinAppendText_VE("<" d_szXop_TaskUploading_ts d_szXa_TaskDataOffset_i "/>", tsTaskID, cbData);	// Send a request to download the remaining data (if any), or to indicate all the data was received and therefore delete the task
 					}
 				else
+					{
 					MessageLog_AppendTextFormatSev(eSeverityNoise, "Ignoring TaskID $t from ^j because it already executed\n", tsTaskID, m_pContact);
+					BinAppendText_VE("<"d_szXop_TaskExecuted_ts"/>", tsTaskID);	// Notify the other client the task has been executed to make sure it is removed from its list
+					}
 				}
 			else if (chXop == d_chXop_TaskUploading)
 				{
 				// We have a request to download data from the task
+				Assert(ibData >= 0);
 				Assert(m_pContact != NULL);
 				if (m_pContact == NULL)
 					return;
@@ -243,7 +247,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 						MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "The TaskID $t requested by ^j is out of order, therefore notify ^j about Task ID $t\n", tsTaskID, m_pContact, m_pContact, pTaskFirst->m_tsTaskID);
 						BinAppendText_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i"/>", pTaskFirst->m_tsTaskID, pTaskFirst->m_binXmlData.CbGetData());
 						}
-					if (ibData < pTaskUpload->m_binXmlData.CbGetData())
+					if (ibData >= 0 && ibData < pTaskUpload->m_binXmlData.CbGetData())
 						{
 						// Supply the next chunk of data
 						#ifdef DEBUG_XCP_TASKS
@@ -860,19 +864,19 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		if ( pEvent->Event_FIsEventTypeReceived() )
 			g_arraypEventsReceived.Add(pEvent);
 
-		MessageLog_AppendTextFormatCo(d_coBlue, "\t tsEventID $t ({tL}), tsOther $t ({tL}): $s\n", pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther, pEvent->m_tsOther, pszExtra);
+		/*??? after conflict, the {sm} was left instead of $s */
+		MessageLog_AppendTextFormatCo(d_coBlue, "\t tsEventID $t ({tL}), tsOther $t ({tL}): {sm}\n", pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther, pEvent->m_tsOther, pszExtra);
 		} // while
 
 	pVault->m_arraypaEvents.AppendEventsSortedByIDs(PA_CHILD &arraypaEvents);	// Add the events to the vault
 	Assert(pVault->m_arraypaEvents.FEventsSortedByIDs());
+	pVault->SetModified();	// Make sure the vault gets saved
 
 	// Display the new events into the Chat Log (if present)
 	if (fNewMessage)
-		{
 		pContactOrGroup_NZ->ChatLog_ChatStateIconUpdate(eChatState_PausedNoUpdateGui, m_pContact);
-		if (pwChatLog != NULL)
-			pwChatLog->ChatLog_EventsDisplay(IN arraypaEvents);
-		}
+	if (pwChatLog != NULL)
+		pwChatLog->ChatLog_EventsDisplay(IN arraypaEvents);
 
 	// Update the GUI about the new event
 	Assert(pEvent != NULL);

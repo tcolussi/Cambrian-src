@@ -1458,7 +1458,7 @@ CSocketXmpp::SL_SocketDataAvailableForReading()
 				Assert(strlenU(c_szaXmlStreamClose) == 16);
 				if (memcmp(pszuDataBufferXmlStop, c_szaXmlStreamClose, 16) != 0)
 					{
-					MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Remaining $I bytes in buffer: $s\n", m_binBufferIncomingData.CbGetData() - (pszuDataBufferXmlStop - pszuDataBuffer), pszuDataBufferXmlStop);
+					MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Remaining $I bytes in buffer: {sm}\n", m_binBufferIncomingData.CbGetData() - (pszuDataBufferXmlStop - pszuDataBuffer), pszuDataBufferXmlStop);
 					m_binBufferIncomingData.DataRemoveUntilPointer(pszuDataBufferXmlStop);
 					goto EnsureValidString;
 					}
@@ -1493,7 +1493,7 @@ CSocketXmpp::DebugDisplayStanzaToMessageLog()
 			return;	// Don't display stanzas containg data in base64
 		}
 
-	MessageLog_AppendTextFormatCo(d_coChocolate, "^N\n", m_pXmlNodeStanzaCurrent_YZ);
+	MessageLog_AppendTextFormatCo(d_coChocolate, "{Nm}\n", m_pXmlNodeStanzaCurrent_YZ);
 	}
 
 void
@@ -1504,7 +1504,7 @@ CSocketXmpp::DebugDisplayPendingDataToMessageLog()
 		return;
 	if (memcmp(pbData, "<iq ", 4) == 0)
 		return;	// Don't display lage <iq>
-	MessageLog_AppendTextFormatCo(d_coOrange, "Pending $I bytes of XML data: $B\n", m_binBufferIncomingData.CbGetData(), &m_binBufferIncomingData);
+	MessageLog_AppendTextFormatCo(d_coOrange, "Pending $I bytes of XML data: {Bm}\n", m_binBufferIncomingData.CbGetData(), &m_binBufferIncomingData);
 	}
 
 
@@ -1527,5 +1527,5 @@ CSocketXmpp::DebugDisplayDataToWriteMessageLog(PCVOID pvData, int cbData)
 			bin.SubstituteData(ibElementDataOpen + 50, cbElementData - 75, szReplaceBy, cbReplaceBy);
 			}
 		}
-	MessageLog_AppendTextWithNewLine(d_coSocketWriteContent, bin.BinAppendNullTerminatorVirtualAndEmptySzv());
+	MessageLog_AppendTextFormatCo(d_coSocketWriteContent, "{Bm}\n", &bin);
 	}

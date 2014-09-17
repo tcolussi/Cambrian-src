@@ -140,12 +140,18 @@ public:
     int m_cSecondsPollLength;
 	CArrayPtrPollAttatchments m_arraypaAtattchments;
 
-	CEventBallotAttatchment *PAllocateNewAttatchment();
+	// In order to send a ballot, we need a group or a contact.  Since this class is not stored into a regular vault for a group or a contact, we need the identifier of that vault so we may fetch the results.
+	CStr m_strTargetIdentifier;				// Identifier to send the poll.  This is typically the SHA of a group, however may be something else in the future
+private:
+	TIMESTAMP m_tsEventIdBallot;			// Identifier of the Ballot in the Chat Log.
+	CEventBallotSent * m_pEventBallotSent;	// Pointer to the actual ballot sent.  This event will accumulate/tally the votes.
+
+public:
     CEventBallotPoll(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);
     virtual EEventClass EGetEventClass() const { return eEventClass_eBallotPoll; }
     virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
     virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
-
+	CEventBallotAttatchment * PAllocateNewAttatchment();
 };
 
 

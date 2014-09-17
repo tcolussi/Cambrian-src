@@ -1884,6 +1884,8 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chEncodingKiB					'K'	// Show the value in Bytes or KiB
 #define d_chEncodingKiB_Percent			'%'	// Show the percentage (%) by dividing two values (this is useful to show the progress of a download)
 #define d_chEncodingKiB_PercentOfTotal	'T'	// Show the the percentage (%) as well as the total
+#define d_chEncodingMaximum				'm' // {Bm}
+//#define d_chEncodingMaximum100			'M'	// Typically {BM}
 
 #define d_chEncodingQDateTimeLocal		'L'	// Display a TIMESTAMP in the local date and time	{tL}
 #define d_chEncodingQDateTimeUTC		'U'	// Display a TIMESTAMP in the UTC date and time		{tU}
@@ -1924,6 +1926,15 @@ CBin::BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding)
 			(void)PbbAllocateMemoryToGrowBy_NZ(cbData + 32);	// Since we already know the length of the string, use it to allocate enough memory to hold the string and encode a few extra entities
 			BinAppendUrlPercentEncode((PSZUC)pvData);
 			}
+		return;
+	case d_chEncodingMaximum:
+		if (cbData > 250)
+			{
+			BinAppendBinaryData(pvData, 200);
+			BinAppendText_VE(" [ $I bytes removed ] ", cbData - 200);
+			}
+		else
+			BinAppendBinaryData(pvData, cbData);
 		return;
 		} // switch
 	Assert(FALSE && "Invalid Encoding!");
@@ -2159,16 +2170,29 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 					BinAppendDataEncoded(pvSourceDataStart, cbSourceData, chEncoding);
 					}
 					break;
-				case d_chSourcePCXmlNode:
+				case d_chSourcePCXmlNode:	// {N
 					{
-					Assert(chEncoding == 'f');
+					Assert(chEncoding == d_chEncodingHexadecimal || chEncoding == d_chEncodingMaximum);	// {Nf} or {Nm}
 					// For performance reasons, serialize the XML node in the blob, and then calculate the MD5 value
 					int cbPrevious = m_paData->cbData;
 					BinAppendXmlNode(va_arg(vlArgs, CXmlNode *));
-					SHashMd5 md5;
-					HashMd5_CalculateFromBinary(OUT &md5, m_paData->rgbData + cbPrevious, m_paData->cbData - cbPrevious);
-					m_paData->cbData = cbPrevious;	// Flush (truncate) the content of the XML node to restore it to its original state
-					BinAppendStringBase16FromBinaryData(IN &md5, sizeof(md5));
+					if (chEncoding == d_chEncodingHexadecimal)
+						{
+						SHashMd5 md5;
+						HashMd5_CalculateFromBinary(OUT &md5, m_paData->rgbData + cbPrevious, m_paData->cbData - cbPrevious);
+						m_paData->cbData = cbPrevious;	// Flush (truncate) the content of the XML node to restore it to its original state
+						BinAppendStringBase16FromBinaryData(IN &md5, sizeof(md5));
+						}
+					else
+						{
+						int cbXmlNode = m_paData->cbData - cbPrevious;
+						Assert(cbXmlNode >= 0);
+						if (cbXmlNode > 250)
+							{
+							m_paData->cbData = cbPrevious + 200;
+							BinAppendText_VE(" [ $I bytes removed ] ", cbXmlNode - 200);
+							}
+						}
 					}
 					break;
 				case d_chSourcePQDateTime: // {DU}

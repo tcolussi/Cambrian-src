@@ -118,23 +118,6 @@ CVaultEvents::EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD 
 			Assert(pMember != NULL);
 			Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
 			binXcpStanza.BinXmlAppendXcpApiCall_SendEventToContact(pMember->m_pContact, paEvent, paEventUpdater);
-			#if 0
-			binXcpStanza.m_pContact = pMember->m_pContact;
-			/*
-			if (binXcpStanza.m_pContact->m_cVersionXCP <= 0)
-				{
-				MessageLog_AppendTextFormatSev(eSeverityNoise, "Skipping group member $S because its client does not support XCP (probably because it is offline)\n", &pMember->m_pContact->m_strJidBare);
-				continue;
-				}
-			*/
-			MessageLog_AppendTextFormatSev(eSeverityNoise, "TBD: Sending message to group member $S\n", &pMember->m_pContact->m_strJidBare);
-			/*
-			binXcpStanza.BinXmlInitStanzaWithGroupSelector(pGroup);	// This line could be removed out of the loop
-			binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithGroupMember(pMember);
-			binXcpStanza.BinXmlSerializeEventForXcp(IN this);
-			binXcpStanza.XcpSendStanza();	// Send the XCP stanza to the contact
-			*/
-			#endif
 			} // while
 		} // if...else
 	}
@@ -173,6 +156,7 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 		}
 	m_pParent->m_tsEventIdLastSentCached = m_arraypaEvents.TsEventIdLastEventSent();	// Update the timestamp so it is what is from the vault, rather than what was loaded from the configuration, as the Chat Log may have been deleted.
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "CVaultEvents::ReadEventsFromDisk(\"{h!}.dat\") for '$s': $I events, m_tsEventIdLastSentCached=$t\n", pHashFileName, m_pParent->TreeItem_PszGetNameDisplay(), m_arraypaEvents.GetSize(), m_pParent->m_tsEventIdLastSentCached);
+
 	if (m_pParent->EGetRuntimeClass() == RTI(TContact))
 		{
 		TContact * pContact = (TContact *)m_pParent;

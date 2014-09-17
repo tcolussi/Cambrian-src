@@ -111,7 +111,7 @@ CListTasksSendReceive::PFindOrAllocateTaskDownload_NZ(TIMESTAMP tsTaskID, const 
 	pTask = new CTaskSendReceive;
 	pTask->m_tsTaskID = tsTaskID;
 	pTask->m_cbTotal = pXmlNodeTaskDownload->UFindAttributeValueDecimal_ZZR(d_chXa_TaskDataSizeTotal);
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Downloading Task ID $t of $I bytes\n", tsTaskID, pTask->m_cbTotal);
+	MessageLog_AppendTextFormatCo(d_coPurple, "Downloading Task ID $t of $I bytes\n", tsTaskID, pTask->m_cbTotal);
 
 	// And insert tot he list
 	pTask->m_pNext = *ppTaskInsert;
@@ -129,7 +129,7 @@ CListTasksSendReceive::DeleteTaskMatchingID(TIMESTAMP tsTaskID, BOOL fDeleteTask
 		{
 		if ((pTask->m_tsTaskID == tsTaskID) && (pTask->FIsTaskSend() == fDeleteTaskToSend))
 			{
-			MessageLog_AppendTextFormatSev(eSeverityNoise, "DeleteTaskMatchingID() - Task ID $t deleted\n", tsTaskID);
+			MessageLog_AppendTextFormatCo(d_coPurple, "DeleteTaskMatchingID() - Task ID $t is now deleted\n", tsTaskID);
 			*ppTaskPrevious = pTask->m_pNext;	// Remove the task to delete from the linked list
 			delete pTask;
 			return;
@@ -137,7 +137,7 @@ CListTasksSendReceive::DeleteTaskMatchingID(TIMESTAMP tsTaskID, BOOL fDeleteTask
 		ppTaskPrevious = &pTask->m_pNext;
 		pTask = pTask->m_pNext;
 		}
-	MessageLog_AppendTextFormatSev(eSeverityWarning, "DeleteTaskMatchingID() - Task ID $t not found!\n", tsTaskID);
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coPurple), "DeleteTaskMatchingID() - Cannot delete Task ID $t because its ID is no cannot be found!\n", tsTaskID);
 	}
 
 //	Delete a task from the list.
@@ -169,7 +169,7 @@ CListTasksSendReceive::DeleteTask(PA_DELETING CTaskSendReceive * paTaskDelete)
 				}
 			} // while
 		}
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "Deleting Task ID $t\n", paTaskDelete->m_tsTaskID);
+	MessageLog_AppendTextFormatCo(d_coPurple, "Deleting Task ID $t\n", paTaskDelete->m_tsTaskID);
 	delete paTaskDelete;
 	DisplayTasksToMessageLog();
 	}
@@ -268,14 +268,14 @@ CListTasksSendReceive::DisplayTasksToMessageLog()
 		TIMESTAMP_DELTA dts = tsNow - pTask->m_tsTaskID;
 		const int cbXmlData = pTask->m_binXmlData.CbGetData();
 		if (pTask->FIsTaskSend())
-			MessageLog_AppendTextFormatCo(d_coGreen, "\t [$T] Sending Task ID $t: $I bytes\n", dts, pTask->m_tsTaskID, cbXmlData);
+			MessageLog_AppendTextFormatCo(d_coPurple, "\t [$T] Sending Task ID $t: $I bytes\n", dts, pTask->m_tsTaskID, cbXmlData);
 		else
-			MessageLog_AppendTextFormatCo(d_coGreen, "\t [$T] Downloading Task ID $t: cbTotalToDownload = $I, cbDownloadedSoFar = $I\n", dts, pTask->m_tsTaskID, pTask->m_cbTotal, cbXmlData);
-		if (cbXmlData > 0 && cbXmlData < 200)
-			MessageLog_AppendTextFormatCo(d_coGray, "\t\t $B\n", &pTask->m_binXmlData);
+			MessageLog_AppendTextFormatCo(d_coPurple, "\t [$T] Downloading Task ID $t: cbTotalToDownload = $I, cbDownloadedSoFar = $I\n", dts, pTask->m_tsTaskID, pTask->m_cbTotal, cbXmlData);
+		if (cbXmlData > 0) // && cbXmlData < 200)
+			MessageLog_AppendTextFormatCo(d_coGray, "\t\t {Bm}\n", &pTask->m_binXmlData);
 		pTask = pTask->m_pNext;
 		cTasks++;
 		} // while
 	if (cTasks >= 3)
-		MessageLog_AppendTextFormatCo(d_coGreen, "\t\t Total of $i tasks\n", cTasks);
+		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coPurple), "\t\t Total of $i tasks\n", cTasks);
 	}
