@@ -10,6 +10,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "XcpApi.h"
+#include "ApiJavaScript.h"
 
 //	Entry point of all XCP stanzas
 void
@@ -855,6 +856,10 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		default:
 			break;
 			}
+
+		if ( pEvent->Event_FIsEventTypeReceived() )
+			g_arraypEventsReceived.Add(pEvent);
+
 		MessageLog_AppendTextFormatCo(d_coBlue, "\t tsEventID $t ({tL}), tsOther $t ({tL}): $s\n", pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther, pEvent->m_tsOther, pszExtra);
 		} // while
 

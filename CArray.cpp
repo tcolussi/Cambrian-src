@@ -61,7 +61,24 @@ CArray::PrgpvGetElementsStop(OUT void *** pppvDataStop) const
 		}
 	*pppvDataStop = NULL;
 	return NULL;
+}
+
+void
+**CArray::PrgpvGetElementsStopLast(void ***pppvDataStop, int cElementsLastMax) const
+	{
+	Assert(pppvDataStop != NULL);
+	if (m_paArrayHdr != NULL)
+		{
+		//ValidateHeapPointerDescr(m_paArrayHdr, "CArray::PpvGetElementsStop()");
+		Assert(m_paArrayHdr->cElements <= m_paArrayHdr->cElementsAlloc);
+		int nLastElementIndex = (m_paArrayHdr->cElements > cElementsLastMax ) ? cElementsLastMax : m_paArrayHdr->cElements;
+		*pppvDataStop = (void **)m_paArrayHdr->rgpvData + nLastElementIndex;
+		return (void **)m_paArrayHdr->rgpvData;
+		}
+	*pppvDataStop = NULL;
+	return NULL;
 	}
+
 
 /////////////////////////////////////////////////////////////////////
 //	PrgpvGetElements()

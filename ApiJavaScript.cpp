@@ -657,7 +657,7 @@ OJapiProfilesList::create(const QString &name)
 	}
 
 
-OCapiRootGUI::OCapiRootGUI() : m_oProfiles(this)
+OCapiRootGUI::OCapiRootGUI() : m_oProfiles(this), m_oPeerMessagesList(this)
 	{
 	}
 
@@ -732,6 +732,12 @@ POJapiPeerRequestsList
 OCapiRootGUI::peerRequests()
 	{
 	return &m_oPeerRequestsList;
+	}
+
+POJapiPeerMessagesList
+OCapiRootGUI::peerMessages()
+	{
+	return &m_oPeerMessagesList;
 	}
 
 OCapiImageProvider::OCapiImageProvider()  : QQuickImageProvider(QQuickImageProvider::Pixmap)
@@ -1007,4 +1013,90 @@ QString
 OJapiPeerRequest::name()
 	{
 	return "Plato";
+}
+
+
+OJapiPeerMessagesList::OJapiPeerMessagesList(OCapiRootGUI *pParentCapiRoot)
+	{
+	m_pParentCapiRoot = pParentCapiRoot;
 	}
+
+int
+OJapiPeerMessagesList::recentCount()
+	{
+	return g_arraypEventsReceived.GetSize();
+	}
+
+CArrayPtrEvents g_arraypEventsReceived;
+
+QVariantList
+OJapiPeerMessagesList::recent(int nMax)
+	{
+	QVariantList list;
+	// Search the array from the end, as the event to search is likely to be a recent one
+	Assert(nMax >= 0);
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = g_arraypEventsReceived.PrgpGetEventsStopLast(OUT &ppEventStop, nMax);
+	//IEvent ** ppEvent = g_arraypEventsReceived.PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		IEvent * pEvent = *--ppEventStop;
+		if ( pEvent->EGetEventClass() == CEventMessageTextReceived::c_eEventClass )
+		{
+		list.append(QVariant::fromValue(new OJapiPeerMessage((IEventMessageText*) pEvent)));
+		}
+		}
+
+	return list;
+	}
+
+void
+OJapiPeerMessagesList::clearAll()
+	{
+	g_arraypEventsReceived.RemoveAllElements();
+	/*
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = g_arraypEventsReceived.PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		IEvent * pEvent = *--ppEventStop;
+		if ( pEvent->EGetEventClass() == CEventMessageTextReceived::c_eEventClass )
+			{
+			pEvent->m_uFlagsEvent |= IEvent::FE_kfArchived;
+			}
+		}
+	*/
+	}
+
+OJapiPeerMessage::OJapiPeerMessage(IEventMessageText *pEventMessage)
+	{
+	m_pEventMessage = pEventMessage;
+	}
+
+QString
+OJapiPeerMessage::message()
+	{
+	QString sMessage = m_pEventMessage->m_strMessageText;
+	sMessage.truncate(140);
+	return sMessage;
+	}
+
+QDateTime OJapiPeerMessage::date()
+	{
+	return Timestamp_ToQDateTime(m_pEventMessage->m_tsEventID);
+	}
+
+POJapiContact
+OJapiPeerMessage::peer()
+	{
+	TContact *pContact = PGetContact_YZ();
+	if ( pContact != NULL)
+		return pContact->POJapiGet();
+	return NULL;
+	}
+
+void OJapiPeerMessage::clear()
+	{
+	g_arraypEventsReceived.RemoveElementFastF(m_pEventMessage);
+	}
+

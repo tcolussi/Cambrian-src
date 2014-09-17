@@ -329,7 +329,7 @@ public:
 		FE_kzDefault				= 0x0000,
 		FE_kfReplacing				= 0x0001,	// The event is replacing another [previous] event (for instance, the event contains the text replacing an older event).  To find the old event, use CEventUpdater.
 		FE_kfReplaced				= 0x0002,	// The event has been replaced by another event (for instance, the text was edited, and therefore another event contains the updated text).  The flags FE_kfReplacing and FE_kfReplaced are not mutually exclusive, as an event may replacing another event, which in turn was replaced by a more recent event.
-		FE_kfArchieved				= 0x0004,	// The event is archieved
+		FE_kfArchived				= 0x0004,	// The event is archieved
 
 		FE_kmSerializeMask			= 0x000F,
 
@@ -434,7 +434,8 @@ protected:
 public:
 	inline void EventAdd(IEvent * pEvent) { Add(pEvent); }
 	BOOL Event_FoosAddSorted(IEvent * pEventNew);
-	inline IEvent ** PrgpGetEventsStop(OUT IEvent *** pppEventStop) const { return (IEvent **)PrgpvGetElementsStop(OUT (void ***)pppEventStop); }
+	inline IEvent ** PrgpGetEventsStop    (OUT IEvent *** pppEventStop)                       const { return (IEvent **)PrgpvGetElementsStop    (OUT (void ***)pppEventStop);                   }
+	inline IEvent ** PrgpGetEventsStopLast(OUT IEvent *** pppEventStop, int cElementsLastMax) const { return (IEvent **)PrgpvGetElementsStopLast(OUT (void ***)pppEventStop, cElementsLastMax); }
 	inline IEvent * PGetEventLast_YZ() const { return (IEvent *)PvGetElementLast_YZ(); }
 	IEvent * PFindEventLastSent() const;
 	IEvent * PFindEventNextForXcp(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const;

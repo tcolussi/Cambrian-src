@@ -222,7 +222,7 @@ public slots:
 
 
 
-class OJapiPeerRequestsList : public QObject
+class OJapiPeerRequestsList : public OJapi
 {
 	Q_OBJECT
 public:
@@ -235,10 +235,7 @@ public slots:
 };
 #define POJapiPeerRequestsList POJapi
 
-
-
-
-class OJapiPeerRequest : public QObject
+class OJapiPeerRequest : public OJapi
 {
 	Q_OBJECT
 
@@ -252,6 +249,55 @@ public:
 
 
 
+extern CArrayPtrEvents g_arraypEventsReceived;
+
+class OJapiPeerMessagesList : public OJapi
+{
+	Q_OBJECT
+	OCapiRootGUI *m_pParentCapiRoot;
+
+public:
+	OJapiPeerMessagesList(OCapiRootGUI *pParentCapiRoot);
+
+	int recentCount();
+
+	Q_PROPERTY(int recentCount READ recentCount)
+
+public slots:
+	QVariantList recent(int nMax);
+	void clearAll();
+};
+#define POJapiPeerMessagesList POJapi
+
+class OJapiPeerMessage : public OJapi
+{
+	Q_OBJECT
+	IEventMessageText *m_pEventMessage;
+
+	inline TContact * PGetContact_YZ() { return m_pEventMessage->PGetContactForReply_YZ(); }
+
+public:
+	OJapiPeerMessage(IEventMessageText *pEventMessage);
+
+	//QString peerName();
+	//QString peerId();
+	QString message();
+	QDateTime date();
+	POJapiContact peer();
+
+	//Q_PROPERTY(QString peerName READ peerName)
+	//Q_PROPERTY(QString peerId READ peerId)
+	Q_PROPERTY(QString message READ message)
+	Q_PROPERTY(QDateTime date READ date)
+	Q_PROPERTY(POJapiContact peer READ peer)
+
+public slots:
+	void clear();
+};
+#define POJapiPeerMessage POJapi
+
+
+
 
 class OCapiRootGUI : public OJapi
 {
@@ -259,6 +305,7 @@ class OCapiRootGUI : public OJapi
 	OJapiProfilesList m_oProfiles;
 	OJapiNotificationsList m_oNotificationsList;
 	OJapiPeerRequestsList m_oPeerRequestsList;
+	OJapiPeerMessagesList m_oPeerMessagesList;
 
 public:
 	OCapiRootGUI();
@@ -266,11 +313,13 @@ public:
 	POJapiProfilesList roles();
 	POJapiNotificationsList notifications();
 	POJapiPeerRequestsList peerRequests();
+	POJapiPeerMessagesList peerMessages();
 
 	Q_PROPERTY(QVariantList apps READ apps)
 	Q_PROPERTY(POJapiProfilesList roles READ roles)
 	Q_PROPERTY(POJapiNotificationsList notifications READ notifications)
 	Q_PROPERTY(POJapiPeerRequestsList peerRequests READ peerRequests)
+	Q_PROPERTY(POJapiPeerMessagesList peerMessages READ peerMessages)
 };
 #define POCapiRootGUI	POJapi
 

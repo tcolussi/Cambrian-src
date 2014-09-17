@@ -45,7 +45,8 @@ public:
 	inline CArray(const CArray & array) { m_paArrayHdr = NULL; Copy(&array); }
 	~CArray() { if (m_paArrayHdr != NULL) delete m_paArrayHdr; }
 
-	void ** PrgpvGetElementsStop(OUT void *** pppvElementStop) const;
+	void ** PrgpvGetElementsStop    (OUT void *** pppvElementStop) const;
+	void ** PrgpvGetElementsStopLast(OUT void *** pppvDataStop, int cElementsLastMax) const;
 	inline const void ** PrgpvGetElementsUnsafe() const { return m_paArrayHdr->rgpvData; }	// For performance, when you are sure the array has been allocated
 	void ** PrgpvGetElements() const;
 	//void ** PrgpvGetElements();
