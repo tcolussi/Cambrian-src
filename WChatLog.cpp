@@ -211,35 +211,13 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 			if (oTextBlockUpdate.isValid())
 				{
 				MessageLog_AppendTextFormatSev(eSeverityNoise, "\t Event ID $t is updating its old Event ID $t\n", pEvent->m_tsEventID, pEventOld->m_tsEventID);
-				/*
-				if (pSocket != NULL && pEvent->m_tsOther == d_tsOther_ezEventNeverSent)
-					pEvent->Event_WriteToSocket();	// TODO: This code has to be moved to tasks
-				*/
 				OCursorSelectBlock oCursorEventOld(oTextBlockUpdate);
 				pEvent->ChatLogUpdateTextBlock(INOUT &oCursorEventOld);
 				continue;
 				}
-			/*
-			IEvent * pEventReplaced = PFindEventReplacedBy(pEvent);
-			if (pEventReplaced != NULL)
-				{
-				MessageLog_AppendTextFormatSev(eSeverityNoise, "Updating old Event ID $t with the content of Event ID $t\n", pEventReplaced->m_tsEventID, pEvent->m_tsEventID);
-				QTextBlock oTextBlockOld = pEventReplaced->ChatLog_GetTextBlockRelatedToDocument(document());
-				if (oTextBlockOld.isValid())
-					{
-					OCursorSelectBlock oCursorEventOld(oTextBlockOld);
-					pEvent->ChatLogUpdateTextBlock(INOUT &oCursorEventOld);
-					}
-				continue;
-				}
-			*/
 			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Event ID $t is replacing another event which cannot be found\n", pEvent->m_tsEventID);
 			} // if (replacing)
 		oTextBlockEvent.setUserData(PA_CHILD new OTextBlockUserDataEvent(pEvent));		// Assign an event for each text block
-		#ifdef SUPPORT_XCP_VERSION_1_
-		if (pSocket != NULL && pEvent->m_tsOther == d_tsOther_ezEventNeverSent)
-			pEvent->Event_WriteToSocket();	// TODO: This code has to be moved to tasks
-		#endif
 		pEvent->ChatLogUpdateTextBlock(INOUT &oCursor);
 		if ((pEvent->m_uFlagsEvent & IEvent::FE_kfEventHidden) == 0)
 			oCursor.AppendBlockBlank();	// If the event is visible, then add a new text block (otherwise it will reuse the same old block)
@@ -340,7 +318,7 @@ WChatLog::ChatLog_ChatStateIconUpdate(INOUT TContact * pContact, EChatState eCha
 			return;
 		pContact->TreeItemContact_UpdateIconComposingStopped(m_pContactOrGroup);
 		}
-	if (eChatState != eChatState_PausedNoUpdateGui)
+	if (eChatState != eChatState_PausedNoUpdateChatLog)
 		ChatLog_ChatStateTextUpdate();
 	}
 

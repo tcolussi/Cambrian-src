@@ -868,7 +868,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 
 	// Display the new events into the Chat Log (if present)
 	if (fNewMessage)
-		pContactOrGroup_NZ->ChatLog_ChatStateIconUpdate(eChatState_PausedNoUpdateGui, m_pContact);
+		pContactOrGroup_NZ->ChatLog_ChatStateIconUpdate(eChatState_PausedNoUpdateChatLog, m_pContact);
 	if (pwChatLog != NULL)
 		pwChatLog->ChatLog_EventsDisplay(IN arraypaEvents);
 

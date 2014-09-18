@@ -16,7 +16,7 @@ TBrowserTabs::TBrowserTabs(TProfile * pProfile)
 
 TBrowserTabs::~TBrowserTabs()
 	{
-	TRACE1("TBrowserTabs::~TBrowserTabs(0x$p)", this);
+	//TRACE1("TBrowserTabs::~TBrowserTabs(0x$p)", this);
 	m_arraypaTabs.DeleteAllRuntimeObjects();
 	MainWindow_DeleteLayout(PA_DELETING m_pawLayoutBrowser);
 	}
@@ -177,7 +177,7 @@ TBrowserTabs::TreeItem_GotFocus()
 void
 TBrowserTabs::TreeItemBrowser_DisplayWithinNavigationTree()
 	{
-	MessageLog_AppendTextFormatCo(d_coChocolate, "TBrowserTabs::TreeItemBrowser_DisplayWithinNavigationTree()");
+	//MessageLog_AppendTextFormatCo(d_coChocolate, "TBrowserTabs::TreeItemBrowser_DisplayWithinNavigationTree()");
 	TreeItemW_DisplayWithinNavigationTree((m_pProfile->m_paTreeItemW_YZ != NULL) ?  m_pProfile : NULL);
 	TreeItemW_SetIcon(eMenuAction_DisplaySecureWebBrowsing);
 	}

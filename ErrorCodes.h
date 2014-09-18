@@ -58,12 +58,6 @@ enum ESeverity	// Severity/importance of a string
 	eSeverityWarningToErrorLog	= 7,		// Display a warning to Error Log.  This warning is NOT an error, however displayed to the Error Log to draw the attention.
 	eSeverityErrorWarning		= 8,		// Report a minor error error to user.  This is typically an unsual code path taken by the program worth reporting to the user as a warning, typically from invalid data.
 	eSeverityErrorAssert		= 9,		// This error is the equivalent of a non-blocking Assert() which represents a flaw in the code.  Such error does not mean Cambrian will crash, however it means there is an inconsistency within the code worth reporting to the developer(s).  For isntance, if an icon fails to load, it probably means the icon is not in the resource.
-
-	// Values to initialize a threshold for logging events
-	eSeverityThresholdLogEverything		= 0,	// Log everything
-	eSeverityThresholdLogNothing		= 10,	// Do not log anything
-	// Misc values
-	eSeverityMask						= 0xF
 	};
 
 QRGBX CoxFromSeverity(ESeverity eSeverity);

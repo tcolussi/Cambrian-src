@@ -23,6 +23,9 @@ class OJapi;
 	class OJapiContact;
 	class OJapiGroup;
 
+	class OJapiEvent;
+		class OJapiEventPollResults;
+
 
 // QML js API
 class OCapiRootGUI;
@@ -35,10 +38,10 @@ class OJapiBrowsersList;
 
 class CListVariants : public QVariantList
 {
-	OJapiCambrian *m_poCambrian;
+	OJapiCambrian * m_poCambrian;
 
 public:
-	CListVariants(OJapiCambrian *poCambrian);
+	CListVariants(OJapiCambrian * poCambrian);
 	void AddContact(TContact * pContact);
 	void AddContacts(const CArrayPtrContacts & arraypContacts);
 	void AddGroupMatchingType(TGroup * pGroup, EGroupType eGroupType);
@@ -61,6 +64,26 @@ public:
 
 #define OJapiList	QVariant	// Every list is stored as a QVariant, however it makes more sense to specify OJapiList than QVariant because QVariant may be used for other purposes
 
+
+
+class OJapiEvent : public OJapi
+{
+	Q_OBJECT
+public:
+	IEvent * m_pEvent;
+
+public:
+	OJapiEvent(IEvent * pEvent) { m_pEvent = pEvent; }
+
+};
+
+//	This object returns the results of a sent ballot
+class OJapiEventPollResults : public OJapiEvent
+{
+public:
+	OJapiEventPollResults(CEventBallotSent * pEventBallotSent);
+
+};
 
 ///////////////////////////////////////  CAPI   //////////////////////////////////////////////////////
 
@@ -182,6 +205,8 @@ public:
 	Q_PROPERTY(QString iconUrl READ iconUrl )
 };
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiNotification : public OJapi
 {
 	Q_OBJECT
@@ -221,7 +246,7 @@ public slots:
 
 
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiPeerRequestsList : public QObject
 {
 	Q_OBJECT
@@ -371,6 +396,8 @@ public:
 class OJapiPollResults : public OJapiPollCore
 {
 	Q_OBJECT
+	//OJapiEventPollResults * m_poJapiEventPollResults_YZ;		// Points to the object where the actual votes are tallied (counted) as well as the comments
+	CEventBallotSent * m_pEventBallotSent;
     OJapiPollResultsStats m_oStats;
 
 public:
@@ -400,8 +427,8 @@ public slots:
 class OJapiPoll : public OJapiPollCore
 {
 	Q_OBJECT
-public:
-	OJapiPollResults m_oResults;
+private:
+	OJapiPollResults * m_paoJapiPollResults;
 
 public:
     OJapiPoll(CEventBallotPoll * pBallot);
@@ -640,7 +667,7 @@ public:
 	Q_PROPERTY(POJapiMe me READ me)
 	Q_PROPERTY(POJapiGroupList groups READ groups)
 	Q_PROPERTY(POCapiRootGUI capi READ capi)
-	Q_PROPERTY(POJapiUtil util READ util);
+	Q_PROPERTY(POJapiUtil util READ util)
 
 
 public slots:

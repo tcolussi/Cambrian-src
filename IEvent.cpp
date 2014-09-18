@@ -115,11 +115,6 @@ IEvent::S_PaAllocateEvent_YZ(EEventClass eEventClass, const TIMESTAMP * ptsEvent
 	case eEventClass_eUpdaterReceived:
 		return new CEventUpdaterReceived(ptsEventID);
 
-	#ifdef SUPPORT_XCP_VERSION_1
-	case eEventClass_eDownloader:
-		return new CEventDownloader(ptsEventID);
-	#endif
-
 	case eEventClass_eBallotSent:
 		return new CEventBallotSent(ptsEventID);
 	case eEventClass_eBallotReceived:
@@ -155,11 +150,11 @@ NCompareResult
 IEvent::S_NCompareSortEventsByChronology(IEvent * pEventA, IEvent * pEventB, LPARAM lParamCompareSort)
 	{
 	Assert(lParamCompareSort == d_zNA);
-	return NCompareSortTimestamps(*pEventA->PtsGetTimestampChronology(), *pEventB->PtsGetTimestampChronology());
+	return NCompareSortTimestamps(*pEventA->PtsGetTimestampForChronology(), *pEventB->PtsGetTimestampForChronology());
 	}
 
 const TIMESTAMP *
-IEvent::PtsGetTimestampChronology() const
+IEvent::PtsGetTimestampForChronology() const
 	{
 	return (EGetEventClass() & eEventClass_kfReceivedByRemoteClient) ? &m_tsOther : &m_tsEventID;
 	}
@@ -180,6 +175,14 @@ IEvent::IEvent(const TIMESTAMP * ptsEventID)
 
 IEvent::~IEvent()
 	{
+	}
+
+void
+IEvent::Event_InitFromDataOfEvent(const IEvent * pEventSource)
+	{
+	CBinXcpStanzaEventCopier binXcpStanzaCopier(pEventSource->m_pVaultParent_NZ->m_pParent);
+	binXcpStanzaCopier.EventCopy(IN pEventSource, OUT this);
+	m_pVaultParent_NZ = NULL;
 	}
 
 void
@@ -308,16 +311,6 @@ IEvent::DetachFromObjectsAboutBeingDeleted()
 	{
 	}
 
-/*
-//	Always return the pointer of the contact who sent the event
-TContact *
-IEvent::PGetContactSender()
-	{
-	return m_pContact_NZ;
-	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "eEventClass $U, tsEventID $t has no peer\n", EGetEventClass(), m_tsEventID);
-	return NULL;
-	}
-*/
 
 //	Return TRUE if the event belong to a group, otherwise to a contact.
 BOOL
@@ -603,18 +596,6 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 		}
 	#ifdef DEBUG_DISPLAY_TIMESTAMPS
 	pbinTextHtml->BinAppendText_VE("<code>[i=<b>$t</b> o=<b>$t</b>] </code>", m_tsEventID, m_tsOther);
-	#ifdef d_szEventDebug_strContactSource
-	if (!m_strDebugContactSource.FIsEmptyString())
-		{
-		if (m_pContactGroupSender_YZ != NULL)
-			{
-			if (m_pContactGroupSender_YZ->m_strJidBare.FCompareStringsNoCase(m_strDebugContactSource))
-				goto SkipSource;
-			}
-		pbinTextHtml->BinAppendText_VE(" <img src=':/ico/Exchange' title='This event was forwarded by ^S, however originally written by ^j'/> ", &m_strDebugContactSource, m_pContactGroupSender_YZ);
-		SkipSource:;
-		}
-	#endif
 	#endif
 	if (m_uFlagsEvent & FE_kfEventOutOfSync)
 		pbinTextHtml->BinAppendText(" <img src=':/ico/OutOfSync' title='Out of Sync' /> ");

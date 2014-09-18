@@ -85,12 +85,6 @@ CBinXcpStanza::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 		{
 		BinAppendTextOffsetsInit_VE(OUT &m_oOffsets, "<$U" _tsI _tsO, pEvent->EGetEventClass(), pEvent->m_tsEventID, pEvent->m_tsOther);
 		BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(IN pEvent);
-		#ifdef d_szEventDebug_strContactSource
-		BinAppendXmlAttributeText(d_szEventDebug_strContactSource, pEvent->m_strDebugContactSource);
-		#endif
-		#ifdef d_szEventDebug_strVersion
-		BinAppendXmlAttributeText(d_szEventDebug_strVersion, pEvent->m_strDebugVersion);
-		#endif
 		BinAppendXmlEventSerializeDataAndClose(pEvent);
 		}
 	} // BinXmlSerializeEventForDisk()
@@ -186,12 +180,6 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 				pEvent->m_pVaultParent_NZ = pVault;
 				AssertValidEvent(pEvent);
 				Assert(pEvent->m_tsEventID == tsEventID);
-				#ifdef d_szEventDebug_strContactSource
-				pEvent->m_strDebugContactSource = pXmlNodeEvent->PszuFindAttributeValue(d_szEventDebug_strContactSource);
-				#endif
-				#ifdef d_szEventDebug_strVersion
-				pEvent->m_strDebugVersion = pXmlNodeEvent->PszuFindAttributeValue(d_szEventDebug_strVersion);
-				#endif
 				fOutOfSync |= Event_FoosAddSorted(PA_CHILD pEvent);
 				}
 			else

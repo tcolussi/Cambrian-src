@@ -8,13 +8,12 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.1.4"
-#define d_szwApplicationVersion		   L"0.1.1.4"
+#define d_szApplicationVersion			"0.1.1.5"
+#define d_szwApplicationVersion		   L"0.1.1.5"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
 //#define DEBUG_IMPORT_OLD_CONFIG_XML
-//#define SUPPORT_XCP_VERSION_1			// For backward compatibility, support XCP 1
 
 #ifndef PRECOMPILEDHEADERS_H
 #define PRECOMPILEDHEADERS_H
@@ -259,6 +258,7 @@ class OJapiAppInfo;
 #define POJapiGroup			POJapi
 #define POJapiProfile		POJapi
 #define POJapiBrowserTab	POJapi
+#define POJapiEvent			POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 extern const QBrush c_brushGreenSuperPale;

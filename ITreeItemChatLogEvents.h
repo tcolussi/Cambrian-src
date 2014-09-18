@@ -12,9 +12,9 @@
 
 enum EChatState
 	{
-	eChatState_zComposing			= 0,	// The user is currently typing
-	eChatState_Paused				= 1,	// The user stopped typing
-	eChatState_PausedNoUpdateGui	= 2,	// Same as above except do not update the Chat Log.  This is an optimization to avoid flicker when pausing and adding events
+	eChatState_zComposing				= 0,	// The user is currently typing
+	eChatState_Paused					= 1,	// The user stopped typing
+	eChatState_PausedNoUpdateChatLog	= 2,	// Same as above except do not update the Chat Log.  This is an optimization to avoid flicker when pausing and adding events
 	};
 
 enum EUserCommand

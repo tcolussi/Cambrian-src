@@ -129,7 +129,7 @@ CListTasksSendReceive::DeleteTaskMatchingID(TIMESTAMP tsTaskID, BOOL fDeleteTask
 		{
 		if ((pTask->m_tsTaskID == tsTaskID) && (pTask->FIsTaskSend() == fDeleteTaskToSend))
 			{
-			MessageLog_AppendTextFormatCo(d_coPurple, "DeleteTaskMatchingID() - Task ID $t is now deleted\n", tsTaskID);
+			MessageLog_AppendTextFormatCo(d_coPurple, "DeleteTaskMatchingID() - Task ID $t is now deleted ($I bytes)\n", tsTaskID, pTask->m_binXmlData.CbGetData());
 			*ppTaskPrevious = pTask->m_pNext;	// Remove the task to delete from the linked list
 			delete pTask;
 			return;

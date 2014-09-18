@@ -48,11 +48,11 @@ IEventBallot::IEventBallot(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 
 IEventBallot::~IEventBallot()
 	{
-	DeleteChoices();
+	DeleteChoicesAndVotes();
 	}
 
 void
-IEventBallot::DeleteChoices()
+IEventBallot::DeleteChoicesAndVotes()
 	{
 	m_arraypaChoices.DeleteAllChoices();
 	m_arraypaVotes.DeleteAllVotes();
@@ -317,6 +317,7 @@ _CEventBallotChoice *
 IEventBallot::PAllocateNewChoice()
 	{
 	_CEventBallotChoice * pChoice = new _CEventBallotChoice;
+	pChoice->m_cVotes = 0;		// So far, nobody voted for this choice!
 	m_arraypaChoices.Add(PA_CHILD pChoice);
 	return pChoice;
 	}
@@ -329,10 +330,38 @@ IEventBallot::PAllocateNewVote()
 	return pVote;
 	}
 
+
+//	This method is essentially the same as m_arraypaChoices.PrgpGetChoicesStop() except it make sure the votes have been tallied/counted
+_CEventBallotChoice **
+IEventBallot::PrgpGetChoicesStopWithTally(OUT _CEventBallotChoice *** pppChoiceStop) CONST_MCC
+	{
+	_CEventBallotChoice ** prgpChoices = m_arraypaChoices.PrgpGetChoicesStop(OUT pppChoiceStop);
+	if ((m_uFlagsBallot & FB_kfVotesTailied) == 0)
+		{
+		m_uFlagsBallot |= FB_kfVotesTailied;
+		// Calculate the votes
+		const int cChoices = *pppChoiceStop - prgpChoices;
+		_CEventBallotVote ** ppVoteStop;
+		_CEventBallotVote ** ppVote = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
+		while (ppVote != ppVoteStop)
+			{
+			_CEventBallotVote * pVote = *ppVote++;
+			int iChoice = 0;
+			while (iChoice < cChoices)
+				{
+				if (pVote->m_ukmChoices & (1 << iChoice))
+					prgpChoices[iChoice]->m_cVotes++;
+				iChoice++;
+				} // while
+			} // while
+		}
+	return prgpChoices;
+	}
+
 void
 IEventBallot::SetChoices(const QStringList & lsChoices)
 	{
-	DeleteChoices();	// Delete any previous choice(s)
+	DeleteChoicesAndVotes();	// Delete any previous choice(s)
 	foreach(const QString & sChoice, lsChoices)
 		{
 		PAllocateNewChoice()->m_strQuestion = sChoice;
@@ -394,12 +423,14 @@ CEventBallotSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza *
 	// The contact never voted, therefore create a new entry
 	MessageLog_AppendTextFormatSev(eSeverityComment, "New vote by ^j: 0x$x\n", pContact, ukmChoices);
 	pVote = PAllocateNewVote();
+	pVote->m_paoJapiPollResultsComment = NULL;
 	pVote->m_pContact = pContact;
 	UpdateChoices:
 	pVote->m_ukmChoices = ukmChoices;
 	pVote->m_strComment = strComment;
 	pVote->m_tsVote = Timestamp_GetCurrentDateTime();
 	m_pVaultParent_NZ->SetModified();
+	m_uFlagsBallot &= ~FB_kfVotesTailied;	// Force a recount of the votes
 	return eGui_zUpdate;
 	} // XospDataE()
 
@@ -470,7 +501,6 @@ CEventBallotPoll::CEventBallotPoll(const TIMESTAMP * ptsEventID) : CEventBallotS
     m_tsStopped = d_ts_zNA;
     m_cSecondsPollLength = d_zNA;
 	m_pEventBallotSent = NULL;
-	m_tsEventIdBallot = d_ts_zNA;
     }
 
 //  CEventBallotPoll::IEvent::XmlSerializeCoreE()
@@ -534,7 +564,7 @@ CEventBallotAttatchment::CEventBallotAttatchment(CEventBallotPoll *pPollParent)
 	m_paoJapiAttatchment = NULL;
 	}
 
-CEventBallotAttatchment::CEventBallotAttatchment(CEventBallotPoll * pPollParent, const CBin & binContent, const CStr & strName, const CStr & strMimeType)
+CEventBallotAttatchment::CEventBallotAttatchment(CEventBallotPoll * pPollParent, const CBin & /*binContent*/, const CStr & strName, const CStr & strMimeType)
 	{
 	m_pPollParent = pPollParent;
 	m_strName = strName;

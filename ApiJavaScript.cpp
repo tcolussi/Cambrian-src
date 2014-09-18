@@ -601,7 +601,6 @@ OJapiProfile::destroy()
 
 
 
-
 OJapiProfilesList::OJapiProfilesList(OCapiRootGUI *pRootGui)
 	{
 	m_pRootGui = pRootGui;
@@ -651,7 +650,7 @@ OJapiProfilesList::list()
 	}
 
 POJapiProfile
-OJapiProfilesList::create(const QString &name)
+OJapiProfilesList::create(const QString & /*name*/)
 	{
 	return NULL; // TODO
 	}
@@ -893,11 +892,23 @@ QString OJapiAppInfo::iconUrl()
 	{
 	Assert ( m_pApplicationInfo != NULL );
 	return "image://application/" + QString(m_pApplicationInfo->pszName);
-}
+	}
 
 
-/////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	POJapiGet_NZ(), virtual
+//
+//	Return a pointer to an object offering an interface with JavaScript.
+//	By default, return a generic OJapiEvent to return basic information about the event.
+POJapiEvent
+IEvent::POJapiGet_NZ() CONST_MCC
+	{
+	if (m_paoJapiEvent == NULL)
+		m_paoJapiEvent = new OJapiEvent(this);
+	return m_paoJapiEvent;
+	}
 
+/*
 POJapi
 IEvent::POJapiGet()
 	{
@@ -906,7 +917,7 @@ IEvent::POJapiGet()
 
 	return m_paoJapiEvent;
 	}
-
+*/
 
 OJapiNotification::OJapiNotification(IEvent *pEvent)
 	{

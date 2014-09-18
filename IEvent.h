@@ -317,8 +317,6 @@ CHS ChGetCambrianActionFromUrl(PSZUC pszUrl);
 //
 class IEvent	// (event)
 {
-	POJapi m_paoJapiEvent;
-
 public:
 	CVaultEvents * m_pVaultParent_NZ;		// Pointer of the vault holding the event
 	TContact * m_pContactGroupSender_YZ;	// Pointer to the contact who sent the group event.  If this pointer is NULL, it means the event is not part of group conversation, or the event was sent by the user.
@@ -339,20 +337,16 @@ public:
 		FE_kfEventDeliveryConfirmed	= 0x0080,	// The event was delivered and its checkmark was displayed.  This flag should be eventually removed, however it is a workaround a Qt bug in the QTextEdit
 		FE_kfEventProtocolWarning	= 0x0100,	// Therew was a minor error while transmitting the event.  This bit is set to give a second chance to retry, however to prevent an infinite loop to retry over and over
 		FE_kfEventProtocolError		= 0x0200,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
+		FE_kfEventError				= 0x0400,	// There has been an error related to the event.  Perhaps next time SocietyPro restarts the error will go away.  This flag is there to prevent to repeat displaying an error message, or performing an expensive computation, over and over again.
 		};
 	mutable UINT m_uFlagsEvent;				// Flags related to the event.  Most of those flags are never serialized, however under rare cases some bits are serialized.
-	#ifdef d_szEventDebug_strContactSource
-	CStr m_strDebugContactSource;				// Contact JID who transmitted the event
-	#endif
-	#ifdef d_szEventDebug_strVersion
-	CStr m_strDebugVersion;
-	#endif
-
-	POJapi POJapiGet();
+	POJapiEvent m_paoJapiEvent;				// Object to allow the event to interact with JavaScript
 
 public:
 	IEvent(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);
 	virtual ~IEvent();
+	void Event_InitFromDataOfEvent(const IEvent * pEventSource);
+
 	void EventAddToVault(PA_PARENT CVaultEvents * pVaultParent);
 	void EventAddToVault(PA_PARENT TContact * pContactParent);
 	TAccountXmpp * PGetAccount() const;
@@ -370,6 +364,7 @@ public:
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 	virtual void DetachFromObjectsAboutBeingDeleted();
+	virtual POJapiEvent POJapiGet_NZ() CONST_MCC;
 
 	BOOL Event_FIsEventBelongsToGroup() const;
 	BOOL Event_FIsEventTypeSent() const;
@@ -400,9 +395,7 @@ public:
 	void Socket_WriteXmlIqError_VE_Gso(PSZAC pszErrorType, PSZUC pszErrorID, PSZAC pszFmtTemplate, ...);
 	void Socket_WriteXmlIqReplyAcknowledge();
 
-	void Event_WriteToSocket();
-	void Event_WriteToSocketIfReady();
-	const TIMESTAMP * PtsGetTimestampChronology() const;
+	const TIMESTAMP * PtsGetTimestampForChronology() const;
 
 protected:
 	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const;

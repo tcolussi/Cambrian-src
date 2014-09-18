@@ -377,10 +377,10 @@ OJapiPollResultsStats::OJapiPollResultsStats(CEventBallotPoll * pBallot)
     }
 
 
-OJapiPollResultsComment::OJapiPollResultsComment (_CEventBallotVote * pComment )
-{
+OJapiPollResultsComment::OJapiPollResultsComment(_CEventBallotVote * pComment )
+	{
     m_pComment = pComment;
-}
+	}
 
 QDateTime
 OJapiPollResultsComment::date()
@@ -390,39 +390,45 @@ OJapiPollResultsComment::date()
 
 QString
 OJapiPollResultsComment::comment()
-{
+	{
     return m_pComment->m_strComment;
-}
+	}
 
 QString
 OJapiPollResultsComment::name()
-{
+	{
     return m_pComment->m_pContact->m_strJidBare;
-}
+	}
 
 
 OJapiPollResults::OJapiPollResults(CEventBallotPoll * pBallot) : OJapiPollCore(pBallot), m_oStats(pBallot)
 	{
-
+	Assert(pBallot != NULL);
+	//m_poJapiEventPollResults_YZ = pBallot->PGetEventBallotSend_YZ();
+	m_pEventBallotSent = pBallot->PGetEventBallotSend_YZ();
     }
 
+//	Return a list of comments from those who voted
 QVariant
 OJapiPollResults::comments() const
     {
     //MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPollResults::comments($t)\n", &m_pBallot->m_tsEventID);
     QVariantList lvComments;
-
-    _CEventBallotVote ** ppVoteStop;
-    _CEventBallotVote ** ppVote = m_pBallot->m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
-    while (ppVote != ppVoteStop)
-        {
-        _CEventBallotVote * pVote = *ppVote++;
-        MessageLog_AppendTextFormatCo(d_coBlue, "comment: $t $S $S\n", pVote->m_tsVote, &pVote->m_pContact->m_strJidBare, &pVote->m_strComment);
-        if ( pVote->m_strComment.FIsEmptyString() )
-            continue;
-        lvComments.append(QVariant::fromValue(new OJapiPollResultsComment(pVote)) );
-        }
-
+	if (m_pEventBallotSent != NULL)
+		{
+		_CEventBallotVote ** ppVoteStop;
+		_CEventBallotVote ** ppVote = m_pEventBallotSent->m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
+		while (ppVote != ppVoteStop)
+			{
+			_CEventBallotVote * pVote = *ppVote++;
+			MessageLog_AppendTextFormatCo(d_coBlue, "comment: $t $S $S\n", pVote->m_tsVote, &pVote->m_pContact->m_strJidBare, &pVote->m_strComment);
+			if (pVote->m_strComment.FIsEmptyString())
+				continue;
+			if (pVote->m_paoJapiPollResultsComment == NULL)
+				pVote->m_paoJapiPollResultsComment = new OJapiPollResultsComment(pVote);
+			lvComments.append(QVariant::fromValue(pVote->m_paoJapiPollResultsComment));
+			}
+		}
     return lvComments;
     }
 
@@ -431,19 +437,29 @@ OJapiPollResults::counts() const
     {
     MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPollResults::counts()\n");
     QVariantList list;
-    //list.append(123);
-    //list.append(456);
+	if (m_pEventBallotSent != NULL)
+		{
+		_CEventBallotChoice ** ppChoiceStop;
+		_CEventBallotChoice ** ppChoice = m_pEventBallotSent->PrgpGetChoicesStopWithTally(OUT &ppChoiceStop);
+		while (ppChoice != ppChoiceStop)
+			{
+			_CEventBallotChoice * pChoice = *ppChoice++;
+			list.append(pChoice->m_cVotes);
+			}
+		}
     return list;
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiPoll::OJapiPoll(CEventBallotPoll * pBallot) : OJapiPollCore(pBallot), m_oResults(pBallot)
+OJapiPoll::OJapiPoll(CEventBallotPoll * pBallot) : OJapiPollCore(pBallot)
 	{
+	m_paoJapiPollResults = NULL;
 	}
 
 OJapiPoll::~OJapiPoll()
 	{
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OJapiPoll::~OJapiPoll() 0x$p\n", this);
+	delete m_paoJapiPollResults;
 	}
 
 bool
@@ -461,31 +477,85 @@ OJapiPoll::destroy()
 	m_pBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;
 	}
 
+//	This method return a pointer to a group or a contact.
+//	The name of the method uses the word 'group' because most polls are sent to groups.
+ITreeItemChatLogEvents *
+CEventBallotPoll::PGetGroupTarget_YZ()
+	{
+	PSZUC pszGroupIdentifier = m_strTargetIdentifier;
+	TAccountXmpp * pAccount = PGetAccount();
+	ITreeItemChatLogEvents * pContactOrGroup = pAccount->Contact_PFindByJID(pszGroupIdentifier, eFindContact_zDefault);
+	if (pContactOrGroup == NULL)
+		pContactOrGroup = pAccount->Group_PFindByIdentifier_YZ(pszGroupIdentifier);
+	if (pContactOrGroup != NULL)
+		return pContactOrGroup;
+	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventBallotPoll::PGetGroupTarget_YZ() - Invalid pollTargetId '$s'\n", pszGroupIdentifier);
+	return NULL;
+	}
+
+CEventBallotSent *
+CEventBallotPoll::PGetEventBallotSend_YZ() CONST_MCC
+	{
+	if (m_pEventBallotSent == NULL && (m_uFlagsEvent & FE_kfEventError) == 0)
+		{
+		// Attempt to find the ballot
+		ITreeItemChatLogEvents * pGroup = PGetGroupTarget_YZ();
+		if (pGroup != NULL)
+			{
+			m_pEventBallotSent = (CEventBallotSent *)pGroup->Vault_PGet_NZ()->PFindEventByID(m_tsStarted);
+			if (m_pEventBallotSent == NULL || m_pEventBallotSent->EGetEventClass() != CEventBallotSent::c_eEventClass)
+				{
+				m_pEventBallotSent = NULL;
+				m_uFlagsEvent |= FE_kfEventError;;
+				}
+			}
+		}
+	return m_pEventBallotSent;
+	}
+
+
 //	Return true if the poll was successfully started.
+bool
+CEventBallotPoll::FStartPoll()
+	{
+	m_tsStopped = d_ts_zNA;		// Clear this variable in case it is a resume of a poll
+	m_uFlagsBallot &= ~FB_kfStopAcceptingVotes;
+	if (m_tsStarted == d_ts_zNA)
+		{
+		Assert(m_pEventBallotSent == NULL);
+		ITreeItemChatLogEvents * pGroup = PGetGroupTarget_YZ();
+		if (pGroup == NULL)
+			return false;
+		m_tsStarted = Timestamp_GetCurrentDateTime();
+
+		// To send a poll, we need to clone the template and add it to the Chat Log of the group (or contact)
+		m_pEventBallotSent = new CEventBallotSent(IN &m_tsStarted);		// Create a ballot with the same Event ID
+		m_pEventBallotSent->Event_InitFromDataOfEvent(this);
+		pGroup->Vault_AddEventToChatLogAndSendToContacts(PA_CHILD m_pEventBallotSent);
+		}
+	return true;
+	}
+
+void
+CEventBallotPoll::StopPoll()
+	{
+	if (m_tsStarted != d_ts_zNA)
+		m_tsStopped = Timestamp_GetCurrentDateTime();
+	m_uFlagsBallot |= FB_kfStopAcceptingVotes;
+	if (PGetEventBallotSend_YZ() != NULL)
+		m_pEventBallotSent->m_uFlagsBallot |= FB_kfStopAcceptingVotes;
+	}
+
 bool
 OJapiPoll::start()
 	{
-	if (m_pBallot->m_tsStarted == d_ts_zNA)
-		{
-		PSZUC pszGroupIdentifier = m_pBallot->m_strTargetIdentifier;
-		TAccountXmpp * pAccount = m_pBallot->PGetAccount();
-		ITreeItemChatLogEvents * pContactOrGroup = pAccount->Contact_PFindByJID(pszGroupIdentifier, eFindContact_zDefault);
-		if (pContactOrGroup == NULL)
-			pContactOrGroup = pAccount->Group_PFindByIdentifier_YZ(pszGroupIdentifier);
-		MessageLog_AppendTextFormatCo(d_coBlack, "OJapiPoll::start($s) - pContactOrGroup = 0x$p\n", pszGroupIdentifier, pContactOrGroup);
-		m_pBallot->m_tsStarted = Timestamp_GetCurrentDateTime();
-		}
-	m_pBallot->m_tsStopped = d_ts_zNA;
-	m_pBallot->m_uFlagsBallot &= ~CEventBallotPoll::FB_kfStopAcceptingVotes;
-	return true;
+	return m_pBallot->FStartPoll();
 	}
 
 void
 OJapiPoll::stop()
 	{
-	if (m_pBallot->m_tsStarted != d_ts_zNA)
-        m_pBallot->m_tsStopped = Timestamp_GetCurrentDateTime();
-	m_pBallot->m_uFlagsBallot |= CEventBallotPoll::FB_kfStopAcceptingVotes;
+	m_pBallot->StopPoll();
 	}
 
 //	Send the ballot to a group, or to a contact
@@ -532,7 +602,9 @@ void OJapiAppBallotmaster::open()
 POJapiPollResults
 OJapiPoll::getResults() CONST_MCC
 	{
-	return &m_oResults;
+	if (m_paoJapiPollResults == NULL)
+		m_paoJapiPollResults = new OJapiPollResults(m_pBallot);
+	return m_paoJapiPollResults;
 	}
 
 QVariantList OJapiPoll::listAttatchments()

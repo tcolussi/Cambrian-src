@@ -62,7 +62,7 @@ OSettings::AudioEnabled(bool fEnable)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oApps(this), m_oMe(this), m_oGroupList(this)
+OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oApps(this), m_oGroupList(this), m_oMe(this)
 	{
 	m_pProfile = pProfile;
 	m_paAppBallotmaster = NULL;
@@ -408,7 +408,7 @@ LaunchApplication(const QString & sName)
 
 
 void
-LaunchBrowser(const QString & sName, const QString & sUrlAbsolute)
+LaunchBrowser(const QString & /*sName*/, const QString & sUrlAbsolute)
 	{
 	//EMessageBoxInformation("opening page $Q", &sUrl);
 	//MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser( $Q, $Q )\n", &sName, &sUrlAbsolute);
