@@ -79,7 +79,7 @@ IEvent::XcpRequesExtraData()
 void
 CBinXcpStanza::BinXmlSerializeEventForDisk(const IEvent * pEvent)
 	{
-	Assert(FuSerializingEventToDisk());
+	Assert(FuSerializingEventToDiskOrCloning());
 	EEventClass eEventClass = pEvent->EGetEventClass();
 	if ((eEventClass & eEventClass_kfNeverSerializeToDisk) == 0)
 		{
@@ -110,7 +110,7 @@ CBinXcpStanza::BinAppendXmlEventSerializeDataAndClose(const IEvent * pEvent)
 		BinAppendXmlForSelfClosingElement();
 		break;
 	case eXml_ElementPresent:
-		BinAppendText_VE("</$U>\n", FuSerializingEventToDisk() ? pEvent->EGetEventClass() : pEvent->EGetEventClassForXCP());
+		BinAppendText_VE("</$U>\n", FuSerializingEventToDiskOrCloning() ? pEvent->EGetEventClass() : pEvent->EGetEventClassForXCP());
 		break;
 	case eXml_NoSerialize:
 		m_paData->cbData = m_oOffsets.ibReset;	// Flush the data
@@ -436,6 +436,50 @@ CBinXcpStanza::XcpSendStanza() CONST_MCC
 	{
 	XospSendStanzaToContactAndEmpty(m_pContact);
 	}
+
+CBinXcpStanzaEventCopier::CBinXcpStanzaEventCopier(ITreeItemChatLogEvents * pContactOrGroup)
+	{
+	TAccountXmpp * pAccount = pContactOrGroup->m_pAccount;
+	m_pContact = m_paContact = new TContact(pAccount);	// We will serialize using a dummy contact
+	m_pContact->m_strNameDisplayTyped = m_pContact->m_pAccount->m_pProfileParent->m_strNameProfile;	// Use the profile name as the contact so the preview looks like someone is receiving the event from the sender
+	m_uFlags |= F_kfSerializeForCloning;
+	}
+
+CBinXcpStanzaEventCopier::~CBinXcpStanzaEventCopier()
+	{
+	// delete m_paContact;
+	}
+
+void
+CBinXcpStanzaEventCopier::EventCopy(IN const IEvent * pEventSource, OUT IEvent * pEventDestination)
+	{
+	Assert(pEventSource != NULL);
+	Assert(pEventSource->m_pVaultParent_NZ != NULL);
+	BinXmlSerializeEventForDisk(pEventSource);
+	/*
+	BinInitFromTextSzv_VE("<$U", EGetRuntimeClass());
+	BinAppendXmlEventSerializeDataAndClose(pEvent);
+	*/
+	MessageLog_AppendTextFormatCo(d_coOrange, "CBinXcpStanzaEventCopier::EventCopy(): $B\n", this);
+
+	CXmlTree oXmlTree;
+	(void)oXmlTree.EParseFileDataToXmlNodesCopy_ML(IN *this);
+	pEventDestination->m_pVaultParent_NZ = pEventSource->m_pVaultParent_NZ;	// Use the same vault as the source event
+	pEventDestination->XmlUnserializeCore(IN &oXmlTree);
+	}
+
+#if 0
+IEvent *
+CBinXcpStanzaEventCloner::PaEventClone(IEvent * pEventToClone)
+	{
+	Assert(pEventToClone != NULL);
+	/*
+	CVaultEvents * pVault = m_pContact->Vault_PGet_NZ();	// Get an empty vault from the dummy contact
+	paEventSent->m_pVaultParent_NZ = pVault;				// We need a valid pointer because the event may need to access the vault, contact or account
+	*/
+	return 0;
+	}
+#endif
 
 /*
 void

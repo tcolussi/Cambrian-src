@@ -49,43 +49,6 @@ TProfile::PGetApplicationBallotmaster_NZ()
 	}
 */
 
-CBinXcpStanzaEventCopier::CBinXcpStanzaEventCopier(ITreeItemChatLogEvents * pContactOrGroup)
-	{
-	TAccountXmpp * pAccount = pContactOrGroup->m_pAccount;
-	m_pContact = m_paContact = new TContact(pAccount);	// We will serialize using a dummy contact
-	m_pContact->m_strNameDisplayTyped = m_pContact->m_pAccount->m_pProfileParent->m_strNameProfile;	// Use the profile name as the contact so the preview looks like someone is receiving the event from the sender
-	}
-
-CBinXcpStanzaEventCopier::~CBinXcpStanzaEventCopier()
-	{
-	// delete m_paContact;
-	}
-
-void
-CBinXcpStanzaEventCopier::EventCopy(IN const IEvent * pEventSource, OUT IEvent * pEventDestination)
-	{
-	Assert(pEventSource != NULL);
-	Assert(pEventSource->m_pVaultParent_NZ != NULL);
-	BinXmlSerializeEventForXcpCore(pEventSource, d_ts_zNA);	// TODO: Need to use XmlSerializeCore() instead
-	MessageLog_AppendTextFormatCo(d_coOrange, "CBinXcpStanzaEventCopier::EventCopy(): $B\n", this);
-
-	CXmlTree oXmlTree;
-	(void)oXmlTree.EParseFileDataToXmlNodesCopy_ML(IN *this);
-	pEventDestination->m_pVaultParent_NZ = pEventSource->m_pVaultParent_NZ;	// Use the same vault as the source event
-	pEventDestination->XmlUnserializeCore(IN &oXmlTree);
-	}
-
-IEvent *
-CBinXcpStanzaEventCloner::PaEventClone(IEvent * pEventToClone)
-	{
-	Assert(pEventToClone != NULL);
-	/*
-	CVaultEvents * pVault = m_pContact->Vault_PGet_NZ();	// Get an empty vault from the dummy contact
-	paEventSent->m_pVaultParent_NZ = pVault;				// We need a valid pointer because the event may need to access the vault, contact or account
-	*/
-	return 0;
-	}
-
 CServiceBallotmaster::CServiceBallotmaster(TProfile * pProfileParent) : IService(pProfileParent), m_oVaultBallots(pProfileParent->PGetContactDummy_NZ())
 	{
 	}
@@ -728,45 +691,13 @@ QVariant
 OJapiAppBallotmaster::getList()
 	{
 	//CVaultEvents * pVaultPolls = m_pBallotmaster->PGetVault_NZ();
-	#if 0
-	#define d_cDebugLists		10000
-	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPolls::getList() [Debug=$I iterations]\n", d_cDebugLists);
-	for (int i = 0; i < d_cDebugLists - 1; i++)
-		{
-		QVariantList oList;
-		IEvent ** ppEventStop;
-		IEvent ** ppEvent = pVaultPolls->m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
-		//QScopedArrayPointer <OPoll *>oList(new OPoll *[10]);
-		//QScopedPointerArrayDeleter <QObject *>oList;
-		while (ppEvent != ppEventStop)
-			{
-			CEventBallotSent * pEvent = (CEventBallotSent *)*ppEvent++;
-			/*
-			QSharedPointer<OPoll> oPoll(new OPoll(pEvent));
-			oList.append(QVariant::fromValue(oPoll));
-			*/
-			/*
-			QScopedPointer<OPoll> p(new OPoll(pEvent));
-			oList.append(p);
-			*/
-			/*
-			QPointer<OPoll> p(new OPoll(pEvent));
-			oList.append(p);
-			*/
-			//oList[0] = new OPoll(pEvent);
-			//oList.append(QVariant::fromValue(PA_CHILD QScopedPointer(new OPoll(pEvent))));
-			oList.append(QVariant::fromValue(PA_CHILD new OPoll(pEvent)));
-			}
-		}
-	#endif
-	//MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::list() - $i elements\n", oList.size());
 	QVariantList oList;
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = m_pServiceBallotmaster->m_oVaultBallots.m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
 		{
         CEventBallotPoll * pEvent = (CEventBallotPoll *)*ppEvent++;
-		if ( pEvent->EGetEventClass() != eEventClass_eBallotPoll)
+		if (pEvent->EGetEventClass() != eEventClass_eBallotPoll)
             continue;
 		if ((pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted) == 0)
 			{
@@ -775,6 +706,7 @@ OJapiAppBallotmaster::getList()
 			oList.append(QVariant::fromValue(PGetOJapiPoll(pEvent)));	// List only non-deleted polls
             }
 		}
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::list() - $i elements\n", oList.size());
 	return QVariant::fromValue(oList);
 	}
 

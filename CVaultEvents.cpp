@@ -26,12 +26,15 @@ CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 		IEvent * pEvent = *ppEvent++;
 		if (pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted)
 			continue;	// Don't serialize deleted events
+		pbinXmlEvents->BinXmlSerializeEventForDisk(pEvent);	// Serializing for memory or disk uses the same core method
+		/*
 		#if 1
 		pbinXmlEvents->BinAppendXmlEventSerializeOpen(pEvent, pEvent->m_tsEventID);	// TODO: need to fix the need to serialize tsEventID twice
 		#else
 		pbinXmlEvents->BinAppendXmlEventSerializeOpen(pEvent, d_ts_zNULL);
 		#endif
 		pbinXmlEvents->BinAppendXmlEventSerializeDataAndClose(pEvent);
+		*/
 		} // while
 	pbinXmlEvents->BinAppendText("</"d_szVault_Event">");
 	}
@@ -39,7 +42,7 @@ CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 void
 CVaultEvents::XmlExchange(PSZAC pszTagNameVault, INOUT CXmlExchanger * pXmlExchanger)
 	{
-	CBinXcpStanza binXcpStanza;
+	CBinXospStanzaForDisk binXcpStanza;
 	if (pXmlExchanger->m_fSerializing)
 		{
 		EventsSerializeForMemory(INOUT &binXcpStanza);
@@ -48,12 +51,12 @@ CVaultEvents::XmlExchange(PSZAC pszTagNameVault, INOUT CXmlExchanger * pXmlExcha
 	else
 		{
 		pXmlExchanger->XmlExchangeBin(pszTagNameVault, OUT &binXcpStanza);
-		//MessageLog_AppendTextFormatCo(d_coChocolate, "CVaultEvents::XmlExchange($s) : $B\n", pszTagNameVault, IN &binXcpStanza);
+		MessageLog_AppendTextFormatCo(d_coChocolate, "CVaultEvents::XmlExchange($s) : $B\n", pszTagNameVault, IN &binXcpStanza);
 		CXmlTree oXmlTree;
 		oXmlTree.SetFileDataCopy(binXcpStanza);
 		if (oXmlTree.EParseFileDataToXmlNodes_ML() == errSuccess)
 			EventsUnserialize(IN &oXmlTree);
-		//MessageLog_AppendTextFormatCo(d_coRed, "\t $i events read\n", m_arraypaEvents.GetSize());
+		MessageLog_AppendTextFormatCo(d_coRed, "\t $i events read\n", m_arraypaEvents.GetSize());
 		}
 	}
 

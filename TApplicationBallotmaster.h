@@ -73,23 +73,5 @@ public:
 };
 #endif
 
-//	Generic class to copy the data from an event to another event.
-class CBinXcpStanzaEventCopier : public CBinXcpStanza
-{
-protected:
-	TContact * m_paContact;		// We need a contact to clone the event, so use an empty contact so there is no interference with existing data
-public:
-	CBinXcpStanzaEventCopier(ITreeItemChatLogEvents * pContactOrGroup);
-	~CBinXcpStanzaEventCopier();
-
-	void EventCopy(IN const IEvent * pEventSource, OUT IEvent * pEventDestination);
-};
-
-//	Generic class to clone an event
-class CBinXcpStanzaEventCloner : public CBinXcpStanzaEventCopier
-{
-public:
-	IEvent * PaEventClone(IEvent * pEventToClone);
-};
 
 #endif // TAPPLICATIONBALLOTMASTER_H
