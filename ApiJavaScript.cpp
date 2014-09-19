@@ -90,22 +90,9 @@ OJapiMe::peers()
 		TAccountXmpp * pAccount = *ppAccount++;
 		oList.AddContacts(IN pAccount->m_arraypaContacts);
 		}
-		/*
-		TContact ** ppContactStop;
-		TContact ** ppContact = pAccount->m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
-
-		while (ppContact != ppContactStop)
-			{
-			TContact * pContact = *ppContact++;
-			Assert(pContact != NULL);
-			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-			//oList.append(QVariant::fromValue(new OJapiContact(pContact)));
-			oList.append(QVariant::fromValue(pContact->POJapiGet()));
-			} // while
-		} // while
-		*/
+	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiMe::peers() (length = $i)\n", oList.length());
 	return oList;
-}
+	}
 
 /*
 POJapiGroup
@@ -394,7 +381,7 @@ CListVariants::AddGroupsMatchingType(const CArrayPtrGroups &arraypGroups, EGroup
 	{
 	TGroup **ppGroupsStop;
 	TGroup **ppGroup = arraypGroups.PrgpGetGroupsStop(&ppGroupsStop);
-		while( ppGroup != ppGroupsStop)
+	while( ppGroup != ppGroupsStop)
 		{
 		TGroup *pGroup = *ppGroup++;
 		AddGroupMatchingType(pGroup, eGroupType);

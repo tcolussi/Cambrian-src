@@ -89,7 +89,7 @@ void
 DDialogAssertionFailure::IncreaseAssert()
 	{
 	CStr strCaption;
-	Dialog_SetCaption(IN (PSZAC)strCaption.Format("$s ($i times)", c_szInternalErrorDetected, ++m_cAsserts));
+	Dialog_SetCaption(IN (PSZAC)strCaption.Format("$s ($I times)", c_szInternalErrorDetected, ++m_cAsserts));
 	showNormal();
 	raise();
 	}

@@ -106,6 +106,7 @@ public:
 	void TreeItemAccount_SetIconDisconnected();
 	TContact * TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(PSZUC pszContactJID, PSZUC pszContactNameDisplay = NULL);
 	TContact * TreeItemAccount_PContactAllocateNewToNavigationTreeInvited_NZ(PSZUC pszContactJID);
+	TContact * TreeItemAccount_PContactAllocateNewTemporary(int nContact);
 	void TreeItemAccount_RecommendationAdd(PA_CHILD ITreeItem * paTreeItemRecommendationAdd);
 	void TreeItemAccount_RecommendationRemove(ITreeItem * pTreeItemRecommendationRemove);
 

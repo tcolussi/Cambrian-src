@@ -251,6 +251,18 @@ TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTreeInvited_NZ(PSZU
 	return pContact;
 	}
 
+TContact *
+TAccountXmpp::TreeItemAccount_PContactAllocateNewTemporary(int nContact)
+	{
+	TContact * pContact = new TContact(this);
+	pContact->m_strJidBare.Format("Temp$i$i$i#$i@example.com", qrand(), qrand(), qrand(), nContact);
+	pContact->m_strNameDisplayTyped = pContact->m_strJidBare;
+	pContact->m_uFlagsTreeItem |= FTI_kfTreeItem_Temporary;
+	m_arraypaContacts.Add(PA_CHILD pContact);
+	pContact->TreeItemW_DisplayWithinNavigationTree(this);
+	return pContact;
+	}
+
 //	TAccountXmpp::IRuntimeObject::PGetRuntimeInterface()
 //
 //	Enable the TAccountXmpp object to respond to the interface of other objects it is related to, such as TCertificate and TCertificateServerName

@@ -3539,7 +3539,7 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 			// An object is always serialized as an element
 			ITreeItem * pObject = *ppObject++;
 			Assert(PGetRuntimeInterfaceOf_ITreeItem(pObject) == pObject);
-			if (!pObject->TreeItemFlags_FuIsDeleted())
+			if (!pObject->TreeItemFlags_FuDeletedOrTemporary())
 				{
 				CXmlNode * pXmlNodeObject = _PAllocateElement(pXmlNodeObjects, pszuTagNameObject);
 				*ppXmlNodeObjectStack = pXmlNodeObject;
@@ -3547,7 +3547,8 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 				}
 			else
 				{
-				MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "The Tree Item 0x$p '$S' is NOT serialized because it is considered deleted\n", pObject, &pObject->m_strNameDisplayTyped);
+				if ((pObject->m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItem_Temporary) == 0)
+					MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "The Tree Item 0x$p '$S' is NOT serialized because it is considered deleted\n", pObject, &pObject->m_strNameDisplayTyped);
 				}
 			if (ppObject == ppObjectStop)
 				break;

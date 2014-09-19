@@ -289,6 +289,7 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 	m_arraypContactsAvailable.RemoveTreeItems(IN m_arraypContactsInGroup);	// Make sure m_arraypContactsAvailable and m_arraypContactsInGroup are mutually exclusive
 	m_pwListContactsAvailable->ContactsAdd(IN_MOD_SORT m_arraypContactsAvailable);
 	m_pwListContactsInGroup->ContactsAdd(IN_MOD_SORT m_arraypContactsInGroup);
+	MessageLog_AppendTextFormatCo(d_coBlack, "DDialogGroupAddContacts() - $I contacts available, $I contacts in group\n", m_arraypContactsAvailable.GetSize(), m_arraypContactsInGroup.GetSize());
 	connect(m_pwListContactsAvailable, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(SL_ContactAvailableDoubleClicked(QListWidgetItem*)));
 	connect(m_pwListContactsInGroup, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(SL_ContactInGroupDoubleClicked(QListWidgetItem*)));
 	connect(pwButtonOK, SIGNAL(clicked()), this, SLOT(SL_ButtonOK()));

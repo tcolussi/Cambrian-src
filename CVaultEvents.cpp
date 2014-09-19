@@ -51,7 +51,7 @@ CVaultEvents::XmlExchange(PSZAC pszTagNameVault, INOUT CXmlExchanger * pXmlExcha
 	else
 		{
 		pXmlExchanger->XmlExchangeBin(pszTagNameVault, OUT &binXcpStanza);
-		MessageLog_AppendTextFormatCo(d_coChocolate, "CVaultEvents::XmlExchange($s) : $B\n", pszTagNameVault, IN &binXcpStanza);
+		//MessageLog_AppendTextFormatCo(d_coChocolate, "CVaultEvents::XmlExchange($s) : $B\n", pszTagNameVault, IN &binXcpStanza);
 		CXmlTree oXmlTree;
 		oXmlTree.SetFileDataCopy(binXcpStanza);
 		if (oXmlTree.EParseFileDataToXmlNodes_ML() == errSuccess)

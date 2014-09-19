@@ -469,7 +469,9 @@ WMainWindow::SettingsRestore()
 	g_sPathHtmlApplications = oSettings.value("Apps").toString();
 	if (g_sPathHtmlApplications.isEmpty())
 		g_sPathHtmlApplications = QCoreApplication::applicationDirPath() + "/Apps/";
-	g_sPathHtmlApplications = QUrl::fromLocalFile(g_sPathHtmlApplications).toString();	// Make sure the URL begins with "file://"
+	else if (!g_sPathHtmlApplications.startsWith("file:", Qt::CaseInsensitive))
+		g_sPathHtmlApplications = QUrl::fromLocalFile(g_sPathHtmlApplications).toString();	// Make sure the URL begins with "file://"
+	//MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "$Q\n", &g_sPathHtmlApplications);
 
 	#ifdef DEBUG
 	return;		// Don't save the path if running a debug build

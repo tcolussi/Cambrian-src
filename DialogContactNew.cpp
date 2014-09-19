@@ -9,6 +9,19 @@ DisplayDialogContactNew()
 	TAccountXmpp * pAccount = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTAccount();
 	if (pAccount == NULL)
 		return;
+	#if 1
+	if (QApplication::queryKeyboardModifiers() & Qt::ShiftModifier)
+		{
+		// Create 10,000 temporary contacts
+		int cContactsTemporary = 10000;
+		MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Info: Adding $I temporary contacts to test performance (those contacts won't be saved to disk)\n", cContactsTemporary);
+		while (cContactsTemporary > 0)
+			pAccount->TreeItemAccount_PContactAllocateNewTemporary(cContactsTemporary--);
+		return;
+		}
+	#endif
+
+
 //	pAccount->Contacts_RosterDisplayDebug("DisplayDialogContactNew() before");
 	DialogContactNew dlg(pAccount);
 	dlg.FuExec();

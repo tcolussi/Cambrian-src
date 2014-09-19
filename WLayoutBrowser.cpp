@@ -33,7 +33,7 @@ OSettings::OSettings(OJapiCambrian * poCambrian) : QObject(poCambrian)
 
 OSettings::~OSettings()
 	{
-    MessageLog_AppendTextFormatCo(d_coYellowDirty, "OSettings::~OSettings()\n");
+	//MessageLog_AppendTextFormatCo(d_coYellowDirty, "OSettings::~OSettings()\n");
 	}
 
 /*
@@ -411,7 +411,7 @@ void
 LaunchBrowser(const QString & /*sName*/, const QString & sUrlAbsolute)
 	{
 	//EMessageBoxInformation("opening page $Q", &sUrl);
-	//MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser( $Q, $Q )\n", &sName, &sUrlAbsolute);
+	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser($Q)\n", &sUrlAbsolute);
 
 	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
 	if (pProfile == NULL)
