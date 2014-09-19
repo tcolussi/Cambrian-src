@@ -115,6 +115,8 @@ CServiceBallotmaster::PAllocateBallot(const IEventBallot * pEventBallotTemplate)
 		Assert(pEventBallotTemplate->m_pVaultParent_NZ != NULL);
 		CBinXcpStanzaEventCopier binXcpStanzaCopier(m_oVaultBallots.m_pParent);
 		binXcpStanzaCopier.EventCopy(IN pEventBallotTemplate, OUT paEventBallot);
+		paEventBallot->m_tsStarted = paEventBallot->m_tsStopped = d_zNA;
+		paEventBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;
 		}
 	m_oVaultBallots.m_arraypaEvents.Add(PA_CHILD paEventBallot);
 	return paEventBallot;
@@ -296,8 +298,8 @@ OJapiPollCore::status() const
     if ( m_pBallot->m_tsStarted != d_ts_zNA )
         return "started";
 
-	//return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "deleted" : "unstarted";
-	return "unsaved";
+	return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "unsaved" : "unstarted";
+	//return "unsaved";
 	}
 
 int

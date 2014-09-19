@@ -31,6 +31,7 @@ class OJapiProfile;
 class OJapiProfilesList;
 class OJapiBrowserTab;
 class OJapiBrowsersList;
+class OJapiJurisdiction;
 
 
 class CListVariants : public QVariantList
@@ -114,9 +115,29 @@ public slots:
 
 
 
+
+
+class OJapiJurisdiction : public OJapi
+{
+	OJapiProfile *m_pProfileParent;
+	Q_OBJECT
+
+	TProfile * PGetProfile_NZ();
+
+public:
+	OJapiJurisdiction(OJapiProfile *pProfileParent);
+	void setCurrent(const QString & sJurisdiction);
+	QString current();
+
+	Q_PROPERTY(QString current READ current WRITE setCurrent)
+};
+#define POJapiJurisdiction POJapi
+
+
 class OJapiProfile : public OJapi
 {
 	OJapiBrowsersList m_oBrowsersList;
+	OJapiJurisdiction m_oJurisdiction;
 	Q_OBJECT
 
 public:
@@ -126,10 +147,12 @@ public:
 	QString id();
 	QString name();
 	POJapiBrowsersList browsers();
+	POJapiJurisdiction jurisdiction();
 
 	Q_PROPERTY(QString name READ name)
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(POJapiBrowsersList browsers READ browsers)
+	Q_PROPERTY(POJapiJurisdiction jurisdiction READ jurisdiction)
 
 public slots:
 	void destroy();
@@ -160,6 +183,7 @@ signals:
 	void roleChanged ();
 };
 #define POJapiProfilesList	POJapi
+
 
 
 class OJapiAppInfo : public OJapi
@@ -249,14 +273,14 @@ public:
 
 
 
-extern CArrayPtrEvents g_arraypEventsReceived;
 
 class OJapiPeerMessagesList : public OJapi
 {
 	Q_OBJECT
 	OCapiRootGUI *m_pParentCapiRoot;
-
 public:
+
+	TProfile * PGetProfileSelected_YZ();
 	OJapiPeerMessagesList(OCapiRootGUI *pParentCapiRoot);
 
 	int recentCount();
@@ -272,12 +296,13 @@ public slots:
 class OJapiPeerMessage : public OJapi
 {
 	Q_OBJECT
+	OJapiPeerMessagesList * m_pParent;
 	IEventMessageText *m_pEventMessage;
 
 	inline TContact * PGetContact_YZ() { return m_pEventMessage->PGetContactForReply_YZ(); }
 
 public:
-	OJapiPeerMessage(IEventMessageText *pEventMessage);
+	OJapiPeerMessage(OJapiPeerMessagesList *pParent, IEventMessageText *pEventMessage);
 
 	//QString peerName();
 	//QString peerId();

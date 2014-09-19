@@ -770,6 +770,27 @@ public:
 };
 
 
+class CArrayPtrEventsRecent : private CArrayPtrEvents
+{
+	TProfile *m_pProfile;
+	int m_cEventsMax;
+	void EventsUnserialize();
+	void EventsUnserialize(const CXmlNode * pXmlNodeEvents);
+
+public:
+	CBin m_binXmlEvents;
+	CArrayPtrEventsRecent(TProfile *pProfile, int cEventsMax);
+
+	void AddEvent(IEvent *pEvent);
+	inline IEvent ** PrgpGetEventsStopLast(OUT IEvent *** pppEventStop) CONST_MCC { EventsUnserialize(); return (IEvent **)PrgpvGetElementsStopLast(OUT (void ***)pppEventStop, m_cEventsMax); }
+	int GetSize();
+	inline void Flush() { RemoveAllElements(); }
+	inline void RemoveEvent(IEvent * pEvent) { RemoveElementAssertI(pEvent); }
+
+
+};
+
+
 #ifdef DEBUG_WANT_ASSERT
 	void AssertValidEvent(const IEvent * pEvent);
 #else

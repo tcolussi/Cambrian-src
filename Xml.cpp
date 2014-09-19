@@ -3705,6 +3705,7 @@ CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CAr
 		}
 	else
 		{
+		Assert(m_pXmlNodeSerialize != NULL);
 		CXmlNode * pXmlNode = m_pXmlNodeSerialize->PFindElementOrAttribute(pszuTagNamePointers);
 		if (pXmlNode == NULL)
 			return;
@@ -3740,6 +3741,55 @@ CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CAr
 			} // if
 		} // if...else
 	} // XmlExchangePointers()
+
+void CXmlExchanger::XmlExchangeEventPointers(CHS chTagNameEvents, CArrayPtrEventsRecent *parraypEventsRecent, TProfile *pProfileParent)
+	{
+	Assert(parraypEventsRecent != NULL);
+	Assert(pProfileParent != NULL);
+
+	if (m_fSerializing)
+		{
+		// Serialize the pointers
+
+		IEvent ** ppEvent;
+		IEvent ** ppEventStop;
+		ppEvent = parraypEventsRecent->PrgpGetEventsStopLast(OUT &ppEventStop);
+		if (ppEvent == ppEventStop)
+			return;	// The array is empty, therefore there is nothing to serialize
+
+		CBin * pbinTemp = PGetBinTemporaryDuringSerialization();	// Use the temporary buffer to serializa all the events
+		while (TRUE)
+			{
+		IEvent * pEvent = *ppEvent++;
+			if (pEvent != NULL)
+				{
+				ITreeItemChatLogEvents * pContactOrGroup = pEvent->PGetContactOrGroup_NZ();
+				TAccountXmpp  * pAccount = pContactOrGroup->m_pAccount;
+				//pbinTemp->BinAppendText_VE( "<e a='$i' $b='$i' i='$t'/>", pAccount->UGetObjectId(), pContactOrGroup->EGetRuntimeClass() == RTI(TContact) ? 'c' : 'g', pContactOrGroup->UGetObjectId(), pEvent->m_tsEventID);
+				pbinTemp->BinAppendText_VE( "<e a='$S' ^G^C i='$t'/>", &pAccount->m_strJID, pContactOrGroup, pContactOrGroup, pEvent->m_tsEventID);
+				}
+			if (ppEvent == ppEventStop)
+				break;
+			}
+
+		//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coPurple), "CXmlExchanger::XmlExchangeEventPointers $B\n", pbinTemp);
+		AllocateAttributeValueCBinString("events", *pbinTemp);
+		//XmlExchange_PAllocateElementFromCBinString(chTagNameEvents, IN_MOD_TMP *pbinTemp);
+		}
+	else
+		{
+		Assert(m_pXmlNodeSerialize != NULL);
+		CXmlNode * pXmlNodeEvent = m_pXmlNodeSerialize->PFindAttribute("events");
+		//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "CXmlEchanger::XmlExchangeEventPointers attr=^N\n", pXmlNodeEvent);
+		// PFindElement(chTagNameEvents);
+		if (pXmlNodeEvent == NULL)
+			return;
+
+		pXmlNodeEvent->UpdateAttributeValueCBin('E', OUT &parraypEventsRecent->m_binXmlEvents);
+		} // if...else
+	}
+
+
 
 void
 CXmlExchanger::XmlExchangeWriteAttribute(PSZAC pszNameAttribute, PSZUC pszAttributeValue)
@@ -3825,4 +3875,9 @@ CXmlExchanger::AllocateAttributeValueCBinString(PSZAC pszaAttributeName, IN_MOD_
 	{
 	if (!binString.FIsEmptyBinary())
 		AllocateAttributePsz(pszaAttributeName, IN m_accumulatorText.PszuAllocateCopyCBinString(IN_MOD_TMP binString));
+	}
+
+void CXmlExchanger::AllocateAttributeValueCBinString(CHS chAttributeName, CBin & binString)
+	{
+	AllocateAttributeValueCBinString( (PSZA)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chAttributeName), binString);
 	}

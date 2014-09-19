@@ -245,6 +245,8 @@ class CEventBallotAttatchment;
 
 class CVaultEvents;
 
+class CArrayPtrEventsRecent;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiCambrian;
 class OJapiContact;

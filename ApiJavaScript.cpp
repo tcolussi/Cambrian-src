@@ -569,7 +569,7 @@ OJapiCambrian *TProfile::POJapiGetCambrian()
 			return new OJapiCambrian(this, NULL);
 }
 
-OJapiProfile::OJapiProfile(TProfile *pProfile) : m_oBrowsersList(this)
+OJapiProfile::OJapiProfile(TProfile *pProfile) : m_oBrowsersList(this) , m_oJurisdiction(this)
 	{
 	m_pProfile = pProfile;
 	}
@@ -590,6 +590,12 @@ POJapiBrowsersList
 OJapiProfile::browsers()
 	{
 	return &m_oBrowsersList;
+	}
+
+POJapiJurisdiction
+OJapiProfile::jurisdiction()
+	{
+	return &m_oJurisdiction;
 	}
 
 void
@@ -744,7 +750,7 @@ OCapiImageProvider::OCapiImageProvider()  : QQuickImageProvider(QQuickImageProvi
 	{
 	}
 
-QPixmap OCapiImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+QPixmap OCapiImageProvider::requestPixmap(const QString &id, QSize * /*size*/, const QSize & /*requestedSize*/)
 	{
 	/*
 	 * image://sopro/[:id:]
@@ -1016,6 +1022,11 @@ OJapiPeerRequest::name()
 }
 
 
+TProfile * OJapiPeerMessagesList::PGetProfileSelected_YZ()
+	{
+	return NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
+	}
+
 OJapiPeerMessagesList::OJapiPeerMessagesList(OCapiRootGUI *pParentCapiRoot)
 	{
 	m_pParentCapiRoot = pParentCapiRoot;
@@ -1024,10 +1035,13 @@ OJapiPeerMessagesList::OJapiPeerMessagesList(OCapiRootGUI *pParentCapiRoot)
 int
 OJapiPeerMessagesList::recentCount()
 	{
-	return g_arraypEventsReceived.GetSize();
+	TProfile *pProfile = PGetProfileSelected_YZ();
+	if (pProfile == NULL)
+		return 0;
+
+	return pProfile->m_arraypEventsRecentMessagesReceived.GetSize();
 	}
 
-CArrayPtrEvents g_arraypEventsReceived;
 
 QVariantList
 OJapiPeerMessagesList::recent(int nMax)
@@ -1035,25 +1049,34 @@ OJapiPeerMessagesList::recent(int nMax)
 	QVariantList list;
 	// Search the array from the end, as the event to search is likely to be a recent one
 	Assert(nMax >= 0);
-	IEvent ** ppEventStop;
-	IEvent ** ppEvent = g_arraypEventsReceived.PrgpGetEventsStopLast(OUT &ppEventStop, nMax);
-	//IEvent ** ppEvent = g_arraypEventsReceived.PrgpGetEventsStop(OUT &ppEventStop);
-	while (ppEvent != ppEventStop)
-		{
-		IEvent * pEvent = *--ppEventStop;
-		if ( pEvent->EGetEventClass() == CEventMessageTextReceived::c_eEventClass )
-		{
-		list.append(QVariant::fromValue(new OJapiPeerMessage((IEventMessageText*) pEvent)));
-		}
-		}
 
+	TProfile *pProfile = PGetProfileSelected_YZ();
+	if (pProfile != NULL)
+		{
+		IEvent ** ppEventStop;
+		IEvent ** ppEvent = pProfile->m_arraypEventsRecentMessagesReceived.PrgpGetEventsStopLast(OUT &ppEventStop);
+		//IEvent ** ppEvent = g_arraypEventsReceived.PrgpGetEventsStop(OUT &ppEventStop);
+		while (ppEvent != ppEventStop)
+			{
+			IEvent * pEvent = *--ppEventStop;
+			if ( pEvent->EGetEventClass() == CEventMessageTextReceived::c_eEventClass )
+				{
+				list.append(QVariant::fromValue(new OJapiPeerMessage(this, (IEventMessageText*) pEvent)));
+				}
+			}
+		}
 	return list;
 	}
 
 void
 OJapiPeerMessagesList::clearAll()
 	{
-	g_arraypEventsReceived.RemoveAllElements();
+	TProfile *pProfile = PGetProfileSelected_YZ();
+	if (pProfile != NULL)
+	{
+	pProfile->m_arraypEventsRecentMessagesReceived.Flush();
+	}
+	//g_arraypEventsReceived.RemoveAllElements();
 	/*
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = g_arraypEventsReceived.PrgpGetEventsStop(OUT &ppEventStop);
@@ -1068,17 +1091,16 @@ OJapiPeerMessagesList::clearAll()
 	*/
 	}
 
-OJapiPeerMessage::OJapiPeerMessage(IEventMessageText *pEventMessage)
+OJapiPeerMessage::OJapiPeerMessage(OJapiPeerMessagesList *pParent, IEventMessageText *pEventMessage)
 	{
 	m_pEventMessage = pEventMessage;
+	m_pParent = pParent;
 	}
 
 QString
 OJapiPeerMessage::message()
 	{
-	QString sMessage = m_pEventMessage->m_strMessageText;
-	sMessage.truncate(140);
-	return sMessage;
+	return m_pEventMessage->m_strMessageText;
 	}
 
 QDateTime OJapiPeerMessage::date()
@@ -1097,6 +1119,33 @@ OJapiPeerMessage::peer()
 
 void OJapiPeerMessage::clear()
 	{
-	g_arraypEventsReceived.RemoveElementFastF(m_pEventMessage);
+	TProfile *pProfile = m_pParent->PGetProfileSelected_YZ();
+	if ( pProfile != NULL )
+		{
+		pProfile->m_arraypEventsRecentMessagesReceived.RemoveEvent(m_pEventMessage);// TODO: handle memory leak //
+		}
 	}
+
+
+
+TProfile * OJapiJurisdiction::PGetProfile_NZ()
+	{
+	return m_pProfileParent->m_pProfile;
+	}
+
+OJapiJurisdiction::OJapiJurisdiction(OJapiProfile * pProfileParent)
+	{
+	m_pProfileParent = pProfileParent;
+	}
+
+void OJapiJurisdiction::setCurrent(const QString & sJurisdiction)
+	{
+	PGetProfile_NZ()->m_strJurisdiction = sJurisdiction;
+	}
+
+QString OJapiJurisdiction::current()
+	{
+	return PGetProfile_NZ()->m_strJurisdiction.ToQString();
+	}
+
 
