@@ -96,6 +96,7 @@ CVaultEvents::EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD 
 		}
 	paEvent->m_pVaultParent_NZ = this;
 	m_arraypaEvents.Add(PA_CHILD paEvent);
+	SetModified();	// Make sure the events are saved to disk
 
 	if (paEvent->EGetEventClass() & eEventClass_kfNeverSerializeToXCP)
 		return;	// The event is never serialized to XOSP, therefore there is nothing else to do
