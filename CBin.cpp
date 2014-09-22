@@ -2296,6 +2296,13 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				if (u.pGroup->EGetRuntimeClass() == RTI(TGroup))
 					BinAppendText_VE(" g='{h|}'", &u.pGroup->m_hashGroupIdentifier);
 				break;
+			case 'C':	// ^C
+				u.pContact = va_arg(vlArgs, TContact *);
+				if (u.pContact == NULL)
+					break;
+				if (u.pContact->EGetRuntimeClass() == RTI(TContact))
+					BinAppendText_VE(" c='$S'", &u.pContact->m_strJidBare);
+				break;
 			case d_chSourcePCArrayPsz:	// ^L
 				u.parraypsz = va_arg(vlArgs, CArrayPsz *);
 				if (u.parraypsz != NULL)

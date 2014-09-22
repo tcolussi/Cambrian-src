@@ -1928,3 +1928,84 @@ AssertValidEvent(const IEvent * pEvent)
 	Assert(eEventClass != eEventClass_eNull);
 	}
 #endif
+
+
+CArrayPtrEventsRecent::CArrayPtrEventsRecent(TProfile * pProfile, int cEventsMax)
+	{
+	Assert(pProfile != NULL);
+	m_pProfile   = pProfile;
+	m_cEventsMax = cEventsMax;
+	}
+
+void
+CArrayPtrEventsRecent::AddEvent(IEvent *pEvent)
+	{
+	Assert(pEvent != NULL);
+	Add(pEvent);
+	}
+
+int
+CArrayPtrEventsRecent::GetSize()
+	{
+	if ( m_paArrayHdr != NULL )
+		{
+		if ( m_paArrayHdr->cElements <= m_cEventsMax )
+			return m_paArrayHdr->cElements;
+
+		return m_cEventsMax;
+		}
+	return 0;
+	}
+
+void
+CArrayPtrEventsRecent::EventsUnserialize()
+	{
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "CArrayPtrEventsRecent::EventsUnserialize() -- $B\n", &m_binXmlEvents);
+	CXmlTree oXmlTree;
+	oXmlTree.m_binXmlFileData.BinInitFromCBin(&m_binXmlEvents);
+
+	if (oXmlTree.EParseFileDataToXmlNodes_ML() == errSuccess)
+		EventsUnserialize(IN &oXmlTree);
+	}
+
+void
+CArrayPtrEventsRecent::EventsUnserialize(const CXmlNode * pXmlNodeEvents)
+	{
+	Assert(pXmlNodeEvents != NULL);
+	if (pXmlNodeEvents == NULL)
+		return;
+	if(m_binXmlEvents.FIsEmptyBinary())// Serialize calls StopLast() which calls Unserialize
+		return;
+
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "CArrayPtrEventsRecent::Unserialize\n XmlNode = ^N|\n", pXmlNodeEvents);
+
+	CXmlNode * pXmlNodeEvent = pXmlNodeEvents->m_pElementsList;
+	while (pXmlNodeEvent  != NULL)
+		{
+		int idAccount = pXmlNodeEvent->UFindAttributeValueDecimal_ZZR('a');
+		int idContact = pXmlNodeEvent->UFindAttributeValueDecimal_ZZR('c');
+		int idGroup = pXmlNodeEvent->UFindAttributeValueDecimal_ZZR('g');
+		Assert(idContact > 0 || idGroup > 0);
+
+		TIMESTAMP tsEventId = pXmlNodeEvent->TsGetAttributeValueTimestamp_ML('i');
+
+		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coRed), "Xml::SerializePointers => (Account $i) (Contact $i) (Group $i) (tsEventId $t) (xml=^N) \n", idAccount, idContact, idGroup, tsEventId, pXmlNodeEvent);
+
+		TAccountXmpp *pAccount = (TAccountXmpp *) m_pProfile->m_arraypaAccountsXmpp.PFindObjectById(idAccount);
+		Report(pAccount != NULL);
+		if ( pAccount != NULL)
+			{
+			TContact * pContact = (TContact *) pAccount->m_arraypaContacts.PFindObjectById(idContact);
+			Report(pContact != NULL);
+			if ( pContact != NULL)
+				{
+				IEvent *pEvent = pContact->Vault_PGet_NZ()->PFindEventByID(tsEventId);
+				Report(pEvent != NULL);
+				if ( pEvent != NULL)
+					AddEvent(pEvent);
+				}
+			}
+
+		pXmlNodeEvent = pXmlNodeEvent->m_pNextSibling;
+		} // while
+	}

@@ -53,7 +53,7 @@ TProfile::S_PaAllocateProfile(PVOID pConfigurationParent)
 	}
 
 
-TProfile::TProfile(CChatConfiguration * pConfigurationParent)
+TProfile::TProfile(CChatConfiguration * pConfigurationParent) : m_arraypEventsRecentMessagesReceived(this, 100), m_strJurisdiction("Pantheon")
 	{
 	Assert(pConfigurationParent != NULL);
 	m_pConfigurationParent = pConfigurationParent;
@@ -161,6 +161,10 @@ TProfile::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) co
 void
 TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
+	if (pXmlExchanger->m_fSerializing )
+		m_arraypaAccountsXmpp.ForEach_UAssignObjectIds();
+
+
 	ITreeItem::XmlExchange(INOUT pXmlExchanger);
 	pXmlExchanger->XmlExchangeStr("Name", INOUT_F_UNCH_S &m_strNameProfile);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT_F_UNCH_S &m_strComment);
@@ -172,6 +176,12 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeObjects('B', INOUT &m_arraypaBrowsers, TBrowser::S_PaAllocateBrowser, this);
 	pXmlExchanger->XmlExchangeObjects('R', INOUT &m_arraypaBrowsersTabbed, TBrowserTabs::S_PaAllocateBrowserTabbed, this);
 	pXmlExchanger->XmlExchangeStr("Data", INOUT_F_UNCH_S &m_strData);
+	pXmlExchanger->XmlExchangeEventPointers('E', INOUT &m_arraypEventsRecentMessagesReceived, this);
+	pXmlExchanger->XmlExchangeStr("Jurisdiction", &m_strJurisdiction);
+
+	if ( m_strJurisdiction.FIsEmptyString() )
+		m_strJurisdiction = CStr("Pantheon"); /*??? Default value */
+
 	}
 
 //	TProfile::ITreeItem::TreeItem_PszGetNameDisplay()

@@ -10,6 +10,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "XcpApi.h"
+#include "ApiJavaScript.h"
 
 //	Entry point of all XCP stanzas
 void
@@ -844,6 +845,8 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 	arraypaEvents.SortEventsByChronology();	// First, sort by chronology, to display the events according to their timestamp
 
 	IEvent * pEvent = NULL;
+	TProfile * pProfile = pAccount->m_pProfileParent;
+
 	// Next, assign the current date & time to those events not having a timestamp
 	while (ppEvent != ppEventStop)
 		{
@@ -854,8 +857,10 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		EEventClass eEventClass = pEvent->EGetEventClass();
 		switch (eEventClass)
 			{
-		case CEventMessageTextSent::c_eEventClass:
 		case CEventMessageTextReceived::c_eEventClass:
+			pProfile->m_arraypEventsRecentMessagesReceived.AddEvent(pEvent);
+			// Fall through //
+		case CEventMessageTextSent::c_eEventClass:
 			pszExtra = ((IEventMessageText *)pEvent)->m_strMessageText;
 		default:
 			break;

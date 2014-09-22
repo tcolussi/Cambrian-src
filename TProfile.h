@@ -27,7 +27,9 @@ public:
 	CArrayPtrServices m_arraypaServices;			// Running services for the profile
 	CArrayPtrBrowsers m_arraypaBrowsers;			// This is a bit of a hack, however at the moment, it will work
 	CArrayPtrBrowsersTabbed m_arraypaBrowsersTabbed;
+	CArrayPtrEventsRecent m_arraypEventsRecentMessagesReceived;
 	CStr m_strData;									// Data of the profile (this variable is used for the JAPI)
+	CStr m_strJurisdiction;							// the current jurisdiction name, TODO: create an object TJurisdictoin
 	OJapiProfile * m_paoJapiProfile;
 
 private:

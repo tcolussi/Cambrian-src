@@ -326,6 +326,7 @@ _CEventBallotVote *
 IEventBallot::PAllocateNewVote()
 	{
 	_CEventBallotVote * pVote = new _CEventBallotVote;
+	pVote->m_paoJapiPollResultsComment = NULL;
 	m_arraypaVotes.Add(PA_CHILD pVote);
 	return pVote;
 	}
@@ -423,7 +424,6 @@ CEventBallotSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza *
 	// The contact never voted, therefore create a new entry
 	MessageLog_AppendTextFormatSev(eSeverityComment, "New vote by ^j: 0x$x\n", pContact, ukmChoices);
 	pVote = PAllocateNewVote();
-	pVote->m_paoJapiPollResultsComment = NULL;
 	pVote->m_pContact = pContact;
 	UpdateChoices:
 	pVote->m_ukmChoices = ukmChoices;
