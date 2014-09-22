@@ -36,16 +36,10 @@ OSettings::~OSettings()
 	//MessageLog_AppendTextFormatCo(d_coYellowDirty, "OSettings::~OSettings()\n");
 	}
 
-/*
-void
-OSettings::AudioEnabled(bool fEnable)
-	{
-	}
-*/
 bool
 OSettings::AudioEnabled() const
 	{
-	return true;
+	return ((g_uPreferences & P_kfDontPlaySoundWhenNewMessageArrive) == 0);
 	}
 
 void

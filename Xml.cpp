@@ -3774,7 +3774,7 @@ void CXmlExchanger::XmlExchangeEventPointers(CHS /*chTagNameEvents*/, CArrayPtrE
 			}
 
 		//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coPurple), "CXmlExchanger::XmlExchangeEventPointers $B\n", pbinTemp);
-		AllocateAttributeValueCBinString("events", *pbinTemp);
+//		AllocateAttributeValueCBinString("events", *pbinTemp);
 		//XmlExchange_PAllocateElementFromCBinString(chTagNameEvents, IN_MOD_TMP *pbinTemp);
 		}
 	else

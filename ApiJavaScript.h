@@ -579,9 +579,6 @@ public:
 	Q_PROPERTY(bool AudioEnabled READ AudioEnabled WRITE AudioEnabled)
 	bool AudioEnabled() const;
 	void AudioEnabled(bool fEnable);
-
-public slots:
-	//void AudioEnabled(int fEnable);
 };
 
 
