@@ -377,7 +377,7 @@ CStr ResolveAppPath(const CStr &strAppName)
 	Assert(pInfo != NULL && "Application doesn't exist");
 	if (pInfo != NULL)
 		{
-		strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+		strUrl = "file:///" + MainWindow_SGetPathOfApplication(pInfo->pszLocation);
 		QUrl qurlAbsolute(strUrl);
 
 		// underconstruction page if the file doesn't exist
@@ -391,7 +391,7 @@ CStr ResolveAppPath(const CStr &strAppName)
 				pInfo = PGetApplicationHtmlInfo("Underconstruction");
 				Assert(pInfo != NULL && "Underconstruction app doesn't exist");
 				if ( pInfo != NULL )
-					strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+					strUrl = "file:///" + MainWindow_SGetPathOfApplication(pInfo->pszLocation);
 				}
 			}
 		}
