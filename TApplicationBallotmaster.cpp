@@ -260,8 +260,8 @@ OJapiPollCore::status() const
     if ( m_pBallot->m_tsStarted != d_ts_zNA )
         return "started";
 
-	//return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "deleted" : "unstarted";
-	return "unsaved";
+	return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "unsaved" : "unstarted";
+	//return "unsaved";
 	}
 
 int
@@ -429,9 +429,11 @@ OJapiPoll::~OJapiPoll()
 bool
 OJapiPoll::save()
 	{
-	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($S)\n", &m_pBallot->m_strTitle);
 	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventDeleted;
 	m_pBallot->PGetAccount_NZ()->PGetConfiguration()->XmlConfigurationSaveToFile();	// Force a save to make sure if the machine crashes, the poll have been saved
+
+	QString sStatus = status();
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($S) - status=$Q\n", &m_pBallot->m_strTitle, &sStatus);
 	return true;
 	}
 

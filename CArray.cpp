@@ -32,6 +32,21 @@ CArray::S_PaAllocateElements(int cElementsAlloc)
 	return paArrayHdr;
 	}
 
+void **
+CArray::PrgpvGetElementsStopMax(OUT void *** pppvElementStop, int cElementsMax) const
+	{
+	Assert(pppvElementStop != NULL);
+	Assert(cElementsMax > 0);
+	if (m_paArrayHdr != NULL)
+		{
+		Assert(m_paArrayHdr->cElements <= m_paArrayHdr->cElementsAlloc);
+		*pppvElementStop = (void **)m_paArrayHdr->rgpvData + ((m_paArrayHdr->cElements < cElementsMax) ? m_paArrayHdr->cElements : cElementsMax);
+		return (void **)m_paArrayHdr->rgpvData;
+		}
+	*pppvElementStop = NULL;
+	return NULL;
+	}
+
 /////////////////////////////////////////////////////////////////////
 //	PrgpvGetElementsStop()
 //

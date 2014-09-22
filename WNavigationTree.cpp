@@ -256,6 +256,7 @@ WNavigationTree::NavigationTree_DisplayTreeItemsContainingText(const QString & s
 void
 WNavigationTree::SL_ToggleDocking()
 	{
+	MessageLog_AppendTextFormatSev(eSeverityComment, "WNavigationTree::SL_ToggleDocking()\n");
 	setFloating(!isFloating());
 	// Attempt to have a border when the widget is floating
 	//setStyleSheet("QWidget#Navigation { border: 1px solid red; }");

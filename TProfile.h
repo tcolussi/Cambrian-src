@@ -65,6 +65,9 @@ public:
 	void GetRecommendations_Links() const;	// NYI
 	void InitHashTablesOfIdentifiers(IOUT CHashTableIdentifiersOfContacts * pHashTableContacts, IOUT CHashTableIdentifiersOfGroups * pHashTableGroups) const;
 
+	void GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC;
+	void GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC;
+
 	IService * PAllocateService_YZ(RTI_ENUM rtiService);
 	IService * PGetService_NZ(RTI_ENUM rtiService) CONST_MCC;
 	inline CServiceBallotmaster * PGetServiceBallotmaster_NZ() { return (CServiceBallotmaster *)PGetService_NZ(RTI_SZ(CServiceBallotmaster)); }

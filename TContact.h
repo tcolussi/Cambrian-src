@@ -197,10 +197,11 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class CArrayPtrContacts : public CArrayPtrTreeItems
+class CArrayPtrContacts : public CArrayPtrTreeItemChatLogEvents
 {
 public:
 	inline TContact ** PrgpGetContactsStop(OUT TContact *** pppContactStop) const { return (TContact **)PrgpvGetElementsStop(OUT (void ***)pppContactStop); }
+	inline TContact ** PrgpGetContactsStopMax(OUT TContact *** pppContactStop, int cContactsMax) const { return (TContact **)PrgpvGetElementsStopMax(OUT (void ***)pppContactStop, cContactsMax); }
 	TContact * PFindContactByNameDisplay(PSZUC pszContactNameDisplay, const TContact * pContactExclude) const;
 	TContact * PFindChatContactByComment(PSZUC pszComment) const;
 	//TContact * PFindChatContactByJID(PSZUC pszContactJID) const;
