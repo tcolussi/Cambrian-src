@@ -1971,13 +1971,15 @@ CArrayPtrEventsRecent::EventsUnserialize()
 void
 CArrayPtrEventsRecent::EventsUnserialize(const CXmlNode * pXmlNodeEvents)
 	{
-	//Assert(pXmlNodeEvents != NULL);
+	Assert(pXmlNodeEvents != NULL);
+	if (pXmlNodeEvents == NULL)
+		return;
 	if(m_binXmlEvents.FIsEmptyBinary())// Serialize calls StopLast() which calls Unserialize
 		return;
 
 	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "CArrayPtrEventsRecent::Unserialize\n XmlNode = ^N|\n", pXmlNodeEvents);
 
-	CXmlNode * pXmlNodeEvent = pXmlNodeEvent->m_pElementsList;
+	CXmlNode * pXmlNodeEvent = pXmlNodeEvents->m_pElementsList;
 	while (pXmlNodeEvent  != NULL)
 		{
 		int idAccount = pXmlNodeEvent->UFindAttributeValueDecimal_ZZR('a');

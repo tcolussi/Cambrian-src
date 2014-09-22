@@ -370,29 +370,31 @@ OJapiPollResultsComment::name()
 OJapiPollResults::OJapiPollResults(CEventBallotPoll * pBallot) : OJapiPollCore(pBallot), m_oStats(pBallot)
 	{
 	Assert(pBallot != NULL);
-	//m_poJapiEventPollResults_YZ = pBallot->PGetEventBallotSend_YZ();
-	m_pEventBallotSent = pBallot->PGetEventBallotSend_YZ();
     }
 
 //	Return a list of comments from those who voted
 QVariant
 OJapiPollResults::comments() const
     {
-    //MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPollResults::comments($t)\n", &m_pBallot->m_tsEventID);
+	//MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPollResults::comments($t) m_pEventBallotSent=0x$p\n", &m_pBallot->m_tsEventID, m_pEventBallotSent);
     QVariantList lvComments;
-	if (m_pEventBallotSent != NULL)
+	CEventBallotSent * pEventBallotSent = m_pBallot->PGetEventBallotSend_YZ();
+	if (pEventBallotSent != NULL)
 		{
 		_CEventBallotVote ** ppVoteStop;
-		_CEventBallotVote ** ppVote = m_pEventBallotSent->m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
+		_CEventBallotVote ** ppVote = pEventBallotSent->m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
 		while (ppVote != ppVoteStop)
 			{
 			_CEventBallotVote * pVote = *ppVote++;
 			MessageLog_AppendTextFormatCo(d_coBlue, "comment: $t $S $S\n", pVote->m_tsVote, &pVote->m_pContact->m_strJidBare, &pVote->m_strComment);
 			if (pVote->m_strComment.FIsEmptyString())
 				continue;
+			#if 1
 			if (pVote->m_paoJapiPollResultsComment == NULL)
 				pVote->m_paoJapiPollResultsComment = new OJapiPollResultsComment(pVote);
 			lvComments.append(QVariant::fromValue(pVote->m_paoJapiPollResultsComment));
+			#endif
+			lvComments.append(QVariant::fromValue(new OJapiPollResultsComment(pVote)));
 			}
 		}
     return lvComments;
@@ -403,10 +405,11 @@ OJapiPollResults::counts() const
     {
     MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPollResults::counts()\n");
     QVariantList list;
-	if (m_pEventBallotSent != NULL)
+	CEventBallotSent * pEventBallotSent = m_pBallot->PGetEventBallotSend_YZ();
+	if (pEventBallotSent != NULL)
 		{
 		_CEventBallotChoice ** ppChoiceStop;
-		_CEventBallotChoice ** ppChoice = m_pEventBallotSent->PrgpGetChoicesStopWithTally(OUT &ppChoiceStop);
+		_CEventBallotChoice ** ppChoice = pEventBallotSent->PrgpGetChoicesStopWithTally(OUT &ppChoiceStop);
 		while (ppChoice != ppChoiceStop)
 			{
 			_CEventBallotChoice * pChoice = *ppChoice++;
@@ -431,9 +434,11 @@ OJapiPoll::~OJapiPoll()
 bool
 OJapiPoll::save()
 	{
-	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($S)\n", &m_pBallot->m_strTitle);
 	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventDeleted;
 	m_pBallot->PGetAccount_NZ()->PGetConfiguration()->XmlConfigurationSaveToFile();	// Force a save to make sure if the machine crashes, the poll have been saved
+
+	QString sStatus = status();
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($S) - status=$Q\n", &m_pBallot->m_strTitle, &sStatus);
 	return true;
 	}
 

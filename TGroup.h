@@ -99,10 +99,11 @@ public:
 	static IXmlExchange * S_PaAllocateGroup(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
 }; // TGroup
 
-class CArrayPtrGroups : public CArrayPtrTreeItems
+class CArrayPtrGroups : public CArrayPtrTreeItemChatLogEvents
 {
 public:
 	inline TGroup ** PrgpGetGroupsStop(OUT TGroup *** pppGroupStop) const { return (TGroup **)PrgpvGetElementsStop(OUT (void ***)pppGroupStop); }
+	inline TGroup ** PrgpGetGroupsStopMax(OUT TGroup *** pppGroupStop, int cGroupsMax) const { return (TGroup **)PrgpvGetElementsStopMax(OUT (void ***)pppGroupStop, cGroupsMax); }
 };
 
 

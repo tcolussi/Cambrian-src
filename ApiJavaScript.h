@@ -471,7 +471,6 @@ class OJapiPollResults : public OJapiPollCore
 {
 	Q_OBJECT
 	//OJapiEventPollResults * m_poJapiEventPollResults_YZ;		// Points to the object where the actual votes are tallied (counted) as well as the comments
-	CEventBallotSent * m_pEventBallotSent;
     OJapiPollResultsStats m_oStats;
 
 public:

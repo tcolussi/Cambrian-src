@@ -1838,7 +1838,7 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chSourcePCSZU					's'
 #define d_chSourcePCStr					'S'
 #define d_chSourcePCBin					'B'	// This is very similar to CStr* however different, since CBin returns the size of the binary data rather than the length of the string.
-#define d_chSourcePCBinOffset			'o'	// 32-bit offset of data within a CBin*.  This field has 3 parameters: CBin*, ibDataOffset, cbDataMax
+#define d_chSourcePCBinOffset			'o'	// 32-bit offset of data within a CBin*.  This field has 3 parameters: CBin*, ibDataOffset, cbDataMax.  cbDataMax may be negative.
 #define d_chSourcePQString				'Q'
 #define d_chSourcePQByteArray			'Y'
 #define d_chSourceHashGuid				'g'	// GUID, MD5 or any 128-bit value
@@ -2133,12 +2133,11 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 					{
 					// Fetch the 3 arguments from the stack
 					u.pbin = va_arg(vlArgs, CBin *);
-					const int ibDataOffset = va_arg(vlArgs, int);
-					const int cbDataMax = va_arg(vlArgs, int);
 					Assert(u.pbin != NULL);
+					const int ibDataOffset = va_arg(vlArgs, int);
 					Assert(ibDataOffset >= 0);
-					Assert(cbDataMax > 0);
-					if (u.pbin->m_paData != NULL)
+					const int cbDataMax = va_arg(vlArgs, int);
+					if (cbDataMax > 0 && u.pbin->m_paData != NULL)
 						{
 						const int cbDataAvailable = u.pbin->m_paData->cbData - ibDataOffset;
 						if (cbDataAvailable > 0)

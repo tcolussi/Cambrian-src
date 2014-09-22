@@ -49,36 +49,52 @@ CArray::S_PaAllocateElements(int cElementsAlloc)
 //		}
 //
 void **
-CArray::PrgpvGetElementsStop(OUT void *** pppvDataStop) const
+CArray::PrgpvGetElementsStop(OUT void *** pppvElementStop) const
 	{
-	Assert(pppvDataStop != NULL);
+	Assert(pppvElementStop != NULL);
 	if (m_paArrayHdr != NULL)
 		{
 		//ValidateHeapPointerDescr(m_paArrayHdr, "CArray::PpvGetElementsStop()");
 		Assert(m_paArrayHdr->cElements <= m_paArrayHdr->cElementsAlloc);
-		*pppvDataStop = (void **)m_paArrayHdr->rgpvData + m_paArrayHdr->cElements;
+		*pppvElementStop = (void **)m_paArrayHdr->rgpvData + m_paArrayHdr->cElements;
 		return (void **)m_paArrayHdr->rgpvData;
 		}
-	*pppvDataStop = NULL;
+	*pppvElementStop = NULL;
 	return NULL;
-}
+	}
+
 
 void **
-CArray::PrgpvGetElementsStopLast(void ***pppvDataStop, int cElementsLastMax) const
+CArray::PrgpvGetElementsStopMax(OUT void *** pppvElementStop, int cElementsMax) const
 	{
-	Assert(pppvDataStop != NULL);
+	Assert(pppvElementStop != NULL);
+	Assert(cElementsMax > 0);
+	if (m_paArrayHdr != NULL)
+		{
+		Assert(m_paArrayHdr->cElements <= m_paArrayHdr->cElementsAlloc);
+		*pppvElementStop = (void **)m_paArrayHdr->rgpvData + ((m_paArrayHdr->cElements < cElementsMax) ? m_paArrayHdr->cElements : cElementsMax);
+		return (void **)m_paArrayHdr->rgpvData;
+		}
+	*pppvElementStop = NULL;
+	return NULL;
+	}
+
+void **
+CArray::PrgpvGetElementsStopLast(void *** pppvElementStop, int cElementsLastMax) const
+	{
+	Assert(pppvElementStop != NULL);
 	Assert(cElementsLastMax > 0);
 	if (m_paArrayHdr != NULL)
 		{
 		Assert(m_paArrayHdr->cElements <= m_paArrayHdr->cElementsAlloc);
 		int cElements = m_paArrayHdr->cElements;
 		void ** ppElementStop = (void **)m_paArrayHdr->rgpvData + cElements;
-		*pppvDataStop = ppElementStop;
-		if ( cElements > cElementsLastMax )
+		*pppvElementStop = ppElementStop;
+		if (cElements > cElementsLastMax)
 			return ppElementStop - cElementsLastMax;
 		return (void **)m_paArrayHdr->rgpvData;
 		}
-	*pppvDataStop = NULL;
+	*pppvElementStop = NULL;
 	return NULL;
 	}
 

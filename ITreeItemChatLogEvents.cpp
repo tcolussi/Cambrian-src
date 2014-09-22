@@ -77,6 +77,7 @@ ITreeItemChatLogEvents::ITreeItemChatLogEvents(TAccountXmpp * pAccount)
 	m_paVaultEvents = NULL;
 	m_tsCreated = d_ts_zNULL;
 	m_tsEventIdLastSentCached = d_ts_zNA;
+	m_tsOtherLastReceived = d_ts_zNA;
 	m_cMessagesUnread = 0;
 	m_pawLayoutChatLog = NULL;
 	}
@@ -137,14 +138,9 @@ ITreeItemChatLogEvents::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 			}
 		}
 	pXmlExchanger->XmlExchangeTimestamp("tsCreated", INOUT_F_UNCH_S &m_tsCreated);
-	#if 0
-	pXmlExchanger->XmlExchangeTimestamp("tsEventSyncSent", INOUT_F_UNCH_S &m_synchronization.tsEventID);
-	pXmlExchanger->XmlExchangeTimestamp("tsEventSyncReceived", INOUT_F_UNCH_S &m_synchronization.tsOther);
-	#endif
+	pXmlExchanger->XmlExchangeTimestamp("tsOtherLastReceived", INOUT_F_UNCH_S &m_tsOtherLastReceived);
 	pXmlExchanger->XmlExchangeStr("DownloadFolder", INOUT_F_UNCH_S &m_strPathFolderDownload);
 	pXmlExchanger->XmlExchangeInt("MessagesUnread", INOUT_F_UNCH_S &m_cMessagesUnread);
-
-
 	}
 
 //	ITreeItemChatLogEvents::ITreeItem::TreeItem_EDoMenuAction()
@@ -576,3 +572,16 @@ ITreeItemChatLogEvents::Xmpp_QueryVersion()
 	Vault_AddEventToChatLogAndSendToContacts(PA_CHILD new CEventVersion);
 	}
 
+
+//	The sorting is reversed, where the most recent appear first
+NCompareResult
+ITreeItemChatLogEvents::S_NCompareSortByTimestampEventLastReceived(ITreeItemChatLogEvents * pChatLogA, ITreeItemChatLogEvents * pChatLogB, LPARAM)
+	{
+	return NCompareSortTimestamps(pChatLogB->m_tsOtherLastReceived, pChatLogA->m_tsOtherLastReceived);
+	}
+
+void
+CArrayPtrTreeItemChatLogEvents::SortByEventLastReceived()
+	{
+	Sort((PFn_NCompareSortElements)ITreeItemChatLogEvents::S_NCompareSortByTimestampEventLastReceived);
+	}

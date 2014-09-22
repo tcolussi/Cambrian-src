@@ -4,8 +4,8 @@
 //	Interface to display events in a Chat Log.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef CHATLOGEVENTS_H
-#define CHATLOGEVENTS_H
+#ifndef ITreeItemChatLogEvents_H
+#define ITreeItemChatLogEvents_H
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
@@ -48,10 +48,10 @@ public:
 	CVaultEvents * m_paVaultEvents;			// Vault containing the events of the Chat Log.  This vault contains a linked list of its chained history, however this implementation is transparently handled by CVaultEvents.
 	TIMESTAMP m_tsCreated;					// Date & time when the contact or group was created.  This gives an idea to the user when the contact was first added to the GUI.
 	TIMESTAMP m_tsEventIdLastSentCached;	// Cached version of the event last sent (this cache is useful when a user is only receiving message, aka listening, and therefore to prevent Cambrian to constantly search the entire vault of events to find the last message sent)
-//	TIMESTAMP m_tsOtherLastReceived;		// Timestamp of the last received message.  This timestamp is useful to display in the GUI how long it has been since a message was received, but most importantly it is used to synchronize to determine if there are any missing message(s)
+	TIMESTAMP m_tsOtherLastReceived;		// Timestamp of the last received message.  This timestamp is useful to display in the GUI how long it has been since a message was received, but most importantly it is used to synchronize to determine if there are any missing message(s)
 	CStr m_strPathFolderDownload;			// Path to store where the downloaded files should be stored (each contact may have a different folder, so it is easier to categorize the download by projects). This field is in this class because if a class is capable to display a Chat Log, then it is also capable to receive files.
-protected:
 	int m_cMessagesUnread;					// Number of unread messages from the contact (this number is displayed in parenthesis after the contact name)
+protected:
 	WLayoutChatLog * m_pawLayoutChatLog;	// Pointer to the allocated widget to display the Chat Log
 
 public:
@@ -112,7 +112,15 @@ public:
 	void DisplayDialogBallotSend(CEventBallotSent * pEventBallotInit = NULL);
 	void DisplayDialogSendFile();
 	BOOL DisplayDialogAddContactsToGroupFu();
+
+	static NCompareResult S_NCompareSortByTimestampEventLastReceived(ITreeItemChatLogEvents * pChatLogA, ITreeItemChatLogEvents * pChatLogB, LPARAM lParamCompareSort = d_zNA);
 	friend class CVaultEvents;
 }; // ITreeItemChatLogEvents
 
-#endif // CHATLOGEVENTS_H
+class CArrayPtrTreeItemChatLogEvents : public CArrayPtrTreeItems
+{
+public:
+	void SortByEventLastReceived();
+};
+
+#endif // ITreeItemChatLogEvents_H

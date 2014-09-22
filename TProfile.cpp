@@ -325,6 +325,32 @@ TProfile::GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecomme
 		} // while
 	}
 
+void
+TProfile::GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC
+	{
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		parraypGroups->Append(IN &pAccount->m_arraypaGroups);
+		}
+	parraypGroups->SortByEventLastReceived();
+	}
+
+void
+TProfile::GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC
+	{
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		parraypContacts->Append(IN &pAccount->m_arraypaContacts);
+		}
+	parraypContacts->SortByEventLastReceived();
+	}
+
 TContact *
 TProfile::PGetContactDummy_NZ() CONST_MCC
 	{

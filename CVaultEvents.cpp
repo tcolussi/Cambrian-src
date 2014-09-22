@@ -227,7 +227,7 @@ CVaultEvents::WriteEventsToDiskIfModified()
 		}
 	else
 		{
-		TRACE3("CVaultEvents::WriteEventsToDiskIfModified(^j) - m_pEventLastSaved=0x$p, pEventLastSaved=0x$p", m_pParent, m_pEventLastSaved, pEventLastSaved);
+		TRACE2("CVaultEvents::WriteEventsToDiskIfModified(^j) m_pEventLastSaved == pEventLastSaved = 0x$p", m_pParent, pEventLastSaved);
 		if (pEventLastSaved == NULL)
 			{
 			Assert(m_arraypaEvents.FIsEmpty());

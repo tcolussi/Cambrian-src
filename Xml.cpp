@@ -3743,7 +3743,7 @@ CXmlExchanger::XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CAr
 		} // if...else
 	} // XmlExchangePointers()
 
-void CXmlExchanger::XmlExchangeEventPointers(CHS chTagNameEvents, CArrayPtrEventsRecent *parraypEventsRecent, TProfile *pProfileParent)
+void CXmlExchanger::XmlExchangeEventPointers(CHS /*chTagNameEvents*/, CArrayPtrEventsRecent *parraypEventsRecent, TProfile *pProfileParent)
 	{
 	Assert(parraypEventsRecent != NULL);
 	Assert(pProfileParent != NULL);

@@ -3,6 +3,48 @@
 #endif
 #include "WDashboard.h"
 
+QFont g_oFontNormal;
+QFont g_oFontBold;
+QPen g_oPenDot;		// Pen to draw a dot to display a number within
+QPen g_oPenDefault;
+
+
+void
+CPainterCell::DrawTextWithinCell(const QString & sText)
+	{
+	drawText(IN m_rcCell, Qt::AlignVCenter, sText);
+	}
+
+void
+CPainterCell::DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...)
+	{
+	va_list vlArgs;
+	va_start(OUT vlArgs, pszFmtTemplate);
+	g_strScratchBufferStatusBar.Format_VL(pszFmtTemplate, vlArgs);
+	DrawTextWithinCell(g_strScratchBufferStatusBar);
+	}
+
+//	Return the number of pixels of the drawing.  This is useful to chain drawing.
+int
+CPainterCell::DrawNumberWithinCircle(int nNumber)
+	{
+	nNumber = qrand() % 10;
+	if (nNumber > 0)
+		{
+		QRect rc = m_rcCell;
+		rc.setLeft(m_rcCell.right() - 16);
+		QPoint ptCenter = rc.center();
+		setPen(g_oPenDot);
+		ptCenter.setY(ptCenter.y() + 2);
+		drawPoint(ptCenter);
+		setPen(g_oPenDefault);
+		drawText(rc, Qt::AlignVCenter | Qt::AlignCenter, QString::number(nNumber));
+		return 16;
+		}
+	return 0;
+	}
+
+
 WDashboard * g_pwDashboard;
 
 void
@@ -32,11 +74,6 @@ CArrayPtrDashboardSectionItems::AllocateItemForTreeItem(ITreeItem * piTreeItem)
 	Add(PA_CHILD new CDashboardSectionItem_ITreeItem(piTreeItem));
 	}
 
-QFont g_oFontNormal;
-QFont g_oFontBold;
-QPen g_oPenDot;		// Pen to draw a dot to display a number within
-QPen g_oPenDefault;
-
 class WDashboardSectionGroups : public WDashboardSection
 {
 public:
@@ -47,46 +84,103 @@ public:
 void
 WDashboardSectionGroups::InitItems(TProfile * pProfile)
 	{
-	TAccountXmpp * pAccount = pProfile->m_arraypaAccountsXmpp.PGetAccountFirst_YZ();	// Temporary fix until we have real OT IDs
-	if (pAccount != NULL)
+	CArrayPtrGroups arraypGroups;
+	pProfile->GetRecentGroups(OUT &arraypGroups);
+	TGroup ** ppGroupStop;
+	TGroup ** ppGroup = arraypGroups.PrgpGetGroupsStopMax(OUT &ppGroupStop, 5);
+	while (ppGroup != ppGroupStop)
 		{
-		int cGroups = 0;
-		TGroup ** ppGroupStop;
-		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
-		while (ppGroup != ppGroupStop)
-			{
-			TGroup * pGroup = *ppGroup++;
-			m_arraypaItems.AllocateItemForTreeItem(pGroup);
-			if (cGroups++ > 5)
-				break;
-			}
+		TGroup * pGroup = *ppGroup++;
+		m_arraypaItems.AddItem(new CDashboardSectionItem_TGroup(pGroup));
+		}
+	}
+
+class WDashboardSectionContacts : public WDashboardSection
+{
+public:
+	WDashboardSectionContacts(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
+	virtual void InitItems(TProfile * pProfile);
+};
+
+void
+WDashboardSectionContacts::InitItems(TProfile * pProfile)
+	{
+	CArrayPtrContacts arraypContacts;
+	pProfile->GetRecentContacts(OUT &arraypContacts);
+	TContact ** ppContactStop;
+	TContact ** ppContact = arraypContacts.PrgpGetContactsStopMax(OUT &ppContactStop, 5);
+	while (ppContact != ppContactStop)
+		{
+		TContact * pContact = *ppContact++;
+		m_arraypaItems.AddItem(new CDashboardSectionItem_TContact(pContact));
 		}
 	}
 
 void
 CDashboardSectionItem_ITreeItem::DrawItemText(CPainterCell * pPainter)
 	{
-	g_strScratchBufferStatusBar.Format("# $s", m_piTreeItem->TreeItem_PszGetNameDisplay());
-	pPainter->drawText(IN pPainter->m_rcCell, Qt::AlignVCenter, g_strScratchBufferStatusBar);
+	pPainter->DrawTextWithinCell_VE("? $s", m_piTreeItem->TreeItem_PszGetNameDisplay());
 	}
 
 int
 CDashboardSectionItem_ITreeItem::DrawItemIcons(CPainterCell * pPainter)
 	{
-	int cItems = 10; // pGroup->m_arraypaMembers.GetSize();
-	if (cItems > 0)
-		{
-		pPainter->m_rcCell.setLeft(pPainter->m_rcCell.right() - 16);
-		pPainter->setPen(g_oPenDot);
-		QPoint ptCenter = pPainter->m_rcCell.center();
-		ptCenter.setY(ptCenter.y() + 2);
-		pPainter->drawPoint(ptCenter);
-		pPainter->setPen(g_oPenDefault);
-		pPainter->drawText(pPainter->m_rcCell, Qt::AlignVCenter | Qt::AlignCenter, QString::number(cItems));
-		return 16;
-		}
-	return 0;
+	return pPainter->DrawNumberWithinCircle(qrand() % 10);	// Display a random number for demo purpose
 	}
+
+void
+CDashboardSectionItem_TGroup::DrawItemText(CPainterCell * pPainter)
+	{
+	pPainter->DrawTextWithinCell_VE("# $s", m_pGroup->TreeItem_PszGetNameDisplay());
+	}
+
+int
+CDashboardSectionItem_TGroup::DrawItemIcons(CPainterCell * pPainter)
+	{
+	Assert(m_pGroup != NULL);
+	Assert(m_pGroup->EGetRuntimeClass() == RTI(TGroup));
+	return pPainter->DrawNumberWithinCircle(m_pGroup->m_cMessagesUnread);
+	}
+
+void
+CDashboardSectionItem_TContact::DrawItemText(CPainterCell * pPainter)
+	{
+	pPainter->DrawTextWithinCell_VE("$s", m_pContact->TreeItem_PszGetNameDisplay());
+	}
+
+int
+CDashboardSectionItem_TContact::DrawItemIcons(CPainterCell * pPainter)
+	{
+	Assert(m_pContact != NULL);
+	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
+	return pPainter->DrawNumberWithinCircle(m_pContact->m_cMessagesUnread);
+	}
+
+singleton WDashboardCaption : public QWidget
+{
+public:
+	WDashboardCaption();
+};
+
+WDashboardCaption::WDashboardCaption()
+	{
+	QToolButton * pwButtonUndock = new QToolButton(this);
+	pwButtonUndock->setToolTip("Float / Unfloat");
+	pwButtonUndock->setStyleSheet("QToolButton { border: none; padding: 3px; }");
+	QPixmap oPixmap = style()->standardPixmap(QStyle::SP_TitleBarNormalButton);
+	pwButtonUndock->setIcon(oPixmap);
+	pwButtonUndock->setCursor(Qt::ArrowCursor);
+	pwButtonUndock->setFocusPolicy(Qt::ClickFocus);
+
+	QHBoxLayout * layout = new QHBoxLayout(this);
+	layout->setMargin(0);
+	layout->addStretch();
+	layout->addWidget(pwButtonUndock);
+	setLayout(layout);
+	setCursor(Qt::OpenHandCursor);		// This cursor shows to the user he/she may drag the widget to undock the Navigation Tree
+	}
+
+#include "WNavigationTree.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WDashboard::WDashboard()
@@ -101,11 +195,15 @@ WDashboard::WDashboard()
 	g_oFontBold = g_oFontNormal = font();
 	g_oFontBold.setWeight(QFont::Bold);
 	//setFont(g_oFontBold);
-	QLabel * pwLabel = new QLabel("Central Services Inc.");
-	pwLabel->setStyleSheet("background-color:#8080FF;");
-	pwLabel->setMargin(3);
-	pwLabel->setFont(g_oFontBold);;
-	setTitleBarWidget(pwLabel);
+	m_pwLabelCaption = new WLabel;
+	m_pwLabelCaption->setStyleSheet("background-color:#8080FF;");
+	m_pwLabelCaption->setMargin(3);
+	m_pwLabelCaption->setFont(g_oFontBold);
+	#if 1
+	setTitleBarWidget(m_pwLabelCaption);
+	#else
+	setTitleBarWidget(new WDashboardCaption);
+	#endif
 
 	QWidget * pwWidgetDashboard = new QWidget;	// Main widget for the dashboard
 	pwWidgetDashboard->setStyleSheet("background-color:#A0A0FF;");
@@ -116,7 +214,7 @@ WDashboard::WDashboard()
 	m_poLayoutVertial->setSpacing(0);
 	AddSection(new WDashboardSectionGroups("Ballots"));
 	AddSection(new WDashboardSectionGroups("Channels"));
-	AddSection(new WDashboardSectionGroups("Peers"));
+	AddSection(new WDashboardSectionContacts("Peers"));
 	AddSection(new WDashboardSectionGroups("Private Groups"));
 	}
 
@@ -131,18 +229,19 @@ WDashboard::AddSection(PA_CHILD WDashboardSection * pawSection)
 void
 WDashboard::ProfileSelectedChanged(TProfile * pProfile)
 	{
+	m_pwLabelCaption->Label_SetTextPlain((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
 	// Notify each section the selected profile changed
 	WDashboardSection ** ppSectionStop;
 	WDashboardSection ** ppSection = m_arraypSections.PrgpGetSectionsStop(OUT &ppSectionStop);
 	while (ppSection != ppSectionStop)
 		{
 		WDashboardSection * pSection = *ppSection++;
-		pSection->hide();
-		pSection->show();	// Temporary hack to update the geometry
 		pSection->m_arraypaItems.DeleteAllItems();
 		if (pProfile != NULL)
 			pSection->InitItems(pProfile);
+		pSection->updateGeometry();
 		}
+	//m_poLayoutVertial->invalidate();
 	//updateGeometry();
 	}
 
@@ -171,7 +270,7 @@ WDashboardSection::InitItems(TProfile * pProfile)
 QSize
 WDashboardSection::sizeHint() const
 	{
-	return QSize(0, m_arraypaItems.GetSize() * d_cyHeightSectionItem + 24);
+	return QSize(150, m_arraypaItems.GetSize() * d_cyHeightSectionItem + 24);
 	}
 
 //	WDashboardSection::QWidget::heightForWidth()
@@ -273,8 +372,6 @@ WDashboardSection::paintEvent(QPaintEvent *)
 	*/
 	oPainter.drawText(d_cxMarginSection, d_cyHeightSectionItem, m_sName);
 	oPainter.drawLine(rcSection.bottomLeft(), rcSection.bottomRight());
-	//oPainter.drawRect(0, 0, width() - 1, height() - 1);
-	//oPainter.drawPoint(10, 10);
 
 	/*
 	oPainter.drawRect( 10, 10, 85, 35 );

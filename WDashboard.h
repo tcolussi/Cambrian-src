@@ -13,7 +13,12 @@ public:
 
 public:
 	CPainterCell(QPaintDevice * poPaintDevice): OPainter(poPaintDevice) { }
+
+	void DrawTextWithinCell(const QString & sText);
+	void DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...);
+	int DrawNumberWithinCircle(int nNumber);
 };
+
 
 //	Interface to draw one item on the dashboard
 class IDashboardSectionItem	// (item)
@@ -36,7 +41,28 @@ public:
 	CDashboardSectionItem_ITreeItem(ITreeItem * piTreeItem) { m_piTreeItem = piTreeItem; }
 	virtual void DrawItemText(CPainterCell * pPainter);
 	virtual int DrawItemIcons(CPainterCell * pPainter);
+};
 
+class CDashboardSectionItem_TGroup : public IDashboardSectionItem
+{
+public:
+	TGroup * m_pGroup;
+
+public:
+	CDashboardSectionItem_TGroup(TGroup * pGroup) { m_pGroup = pGroup; }
+	virtual void DrawItemText(CPainterCell * pPainter);
+	virtual int DrawItemIcons(CPainterCell * pPainter);
+};
+
+class CDashboardSectionItem_TContact : public IDashboardSectionItem
+{
+public:
+	TContact * m_pContact;
+
+public:
+	CDashboardSectionItem_TContact(TContact * pContact) { m_pContact = pContact; }
+	virtual void DrawItemText(CPainterCell * pPainter);
+	virtual int DrawItemIcons(CPainterCell * pPainter);
 };
 
 
@@ -80,13 +106,12 @@ singleton WDashboard : public QDockWidget
 {
 	Q_OBJECT
 protected:
+	WLabel * m_pwLabelCaption;
 	OLayoutVerticalAlignTop * m_poLayoutVertial;	// Stack the sections vertically
 	CArrayPtrDashboardSections m_arraypSections;
 
 public:
 	WDashboard();
-
-public:
 	void AddSection(PA_CHILD WDashboardSection * pawSection);
 	void ProfileSelectedChanged(TProfile * pProfile);
 };

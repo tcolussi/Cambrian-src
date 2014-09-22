@@ -255,7 +255,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 	Menu_InitializeAllMenuActionsHavingAccelerators();
 
 	addDockWidget(Qt::LeftDockWidgetArea, PA_CHILD new WNavigationTree);
-	#if 0
+	#if 1
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
 	#endif
 

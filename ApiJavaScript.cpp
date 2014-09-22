@@ -918,7 +918,7 @@ IEvent::POJapiGet()
 	}
 */
 
-OJapiNotification::OJapiNotification(IEvent *pEvent)
+OJapiNotification::OJapiNotification(IEvent * /*pEvent*/)
 	{
 	}
 

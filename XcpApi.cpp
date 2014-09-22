@@ -254,7 +254,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 						m_cbStanzaThresholdBeforeSplittingIntoTasks = c_cbStanzaThresholdBeforeSplittingIntoTasks;	// Increase the threshold to its maximum value so the task data may be transmitted as fast as possible
 						#endif
 						BinAppendText_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataOffset_i d_szXa_TaskDataBinary_Bii"/>", pTaskUpload->m_tsTaskID, ibData, &pTaskUpload->m_binXmlData, ibData, CbGetAvailablePayloadToSendBinaryData());
-						Assert(m_paData->cbData < c_cbStanzaThresholdBeforeSplittingIntoTasks);
+						Assert(m_paData->cbData < c_cbStanzaThresholdBeforeSplittingIntoTasks + 50);
 						m_uFlags |= F_kfTaskAlreadyIncluded;
 						XospSendStanzaToContactAndEmpty(m_pContact);	// Send the data immediately, as the binary data from the task will fill the entire XMPP stanza
 						}
@@ -854,7 +854,8 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		if (pEvent->m_tsEventID == c_tsMax)
 			pEvent->m_tsEventID = Timestamp_GetCurrentDateTime();	// Assign the current date & time to new events
 		PSZUC pszExtra = NULL;
-		switch (pEvent->EGetEventClass())
+		EEventClass eEventClass = pEvent->EGetEventClass();
+		switch (eEventClass)
 			{
 		case CEventMessageTextReceived::c_eEventClass:
 			pProfile->m_arraypEventsRecentMessagesReceived.AddEvent(pEvent);
@@ -863,8 +864,9 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			pszExtra = ((IEventMessageText *)pEvent)->m_strMessageText;
 		default:
 			break;
-			}
-
+			} /// switch
+		if (eEventClass & eEventClass_kfReceivedByRemoteClient)
+			pContactOrGroup_NZ->m_tsOtherLastReceived = pEvent->m_tsOther;
 		MessageLog_AppendTextFormatCo(d_coBlue, "\t tsEventID $t ({tL}), tsOther $t ({tL}): {sm}\n", pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther, pEvent->m_tsOther, pszExtra);
 		} // while
 
