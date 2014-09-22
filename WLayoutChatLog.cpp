@@ -605,7 +605,8 @@ TContact::Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNo
 			}
 		}
 	//Vault_AddEventToChatLogAndSendToContacts(PA_CHILD pEvent);
-	pEvent->EventAddToVault(PA_PARENT Vault_PGet_NZ());
+	//pEvent->EventAddToVault(PA_PARENT Vault_PGet_NZ());
+	Vault_PGet_NZ()->EventAdd(PA_CHILD pEvent);
 	pwChatLog->ChatLog_EventDisplay(IN pEvent);
 	} // Event_AllocateEventMessageReceivedAndDisplayToChatLog()
 

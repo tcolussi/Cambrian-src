@@ -56,4 +56,5 @@ public slots:
 
 extern WNavigationTree * g_pwNavigationTree;
 
+
 #endif // WNAVIGATIONTREE_H

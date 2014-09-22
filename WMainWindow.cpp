@@ -12,6 +12,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "WNavigationTree.h"
+#include "WDashboard.h"
 #include "WLayoutContainer.h"
 #include <QSound>
 
@@ -254,6 +255,9 @@ WMainWindow::WMainWindow() : QMainWindow()
 	Menu_InitializeAllMenuActionsHavingAccelerators();
 
 	addDockWidget(Qt::LeftDockWidgetArea, PA_CHILD new WNavigationTree);
+	#if 0
+	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
+	#endif
 
 	g_pwChatLayoutContainer = new WLayoutContainer;
 	setCentralWidget(PA_CHILD g_pwChatLayoutContainer);

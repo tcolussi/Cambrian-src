@@ -78,8 +78,6 @@ void
 TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	Assert(pXmlExchanger != NULL);
-	if (pXmlExchanger->m_fSerializing)
-		Vault_WriteEventsToDiskIfModified();		// This line is important to be first because saving the events may modify some variables which may be serialized by ITreeItemChatLogEvents::XmlExchange()
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
 	pXmlExchanger->XmlExchangeStr("JID", INOUT &m_strJidBare);
 	pXmlExchanger->XmlExchangeUIntHexFlagsMasked("Flags", INOUT &m_uFlagsContact, FC_kmFlagsSerializeMask);

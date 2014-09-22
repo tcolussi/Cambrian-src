@@ -193,6 +193,7 @@ class CArrayPtrAccountsXmpp : public CArrayPtrAccountsCore
 {
 public:
 	inline TAccountXmpp ** PrgpGetAccountsStop(OUT TAccountXmpp *** pppAccountStop) const { return (TAccountXmpp **)PrgpvGetElementsStop(OUT (void ***)pppAccountStop); }
+	inline TAccountXmpp * PGetAccountFirst_YZ() const { return (TAccountXmpp *)PvGetElementFirst_YZ(); }
 	TAccountXmpp * PFindAccountByJID(PSZUC pszuAccountJID) const;
 	TAccountXmpp * PFindAccountByNameDisplay(PSZUC pszAccountNameDisplay) const;
 };

@@ -4,14 +4,6 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-class OPainter : public QPainter
-{
-public:
-	OPainter(QPaintDevice * poPaintDevice) : QPainter(poPaintDevice) { }
-	void DrawLineHorizontal(int xLeft, int xRight, int yPos);
-	void DrawLineVertical(int xPos, int yTop, int yBottom);
-};
-
 class OPainterGridCell : public OPainter
 {
 public:
