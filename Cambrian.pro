@@ -89,7 +89,8 @@ SOURCES += \
     IApplication.cpp \
     WLayoutTabbedBrowser.cpp \
     TBrowserTabs.cpp \
-    TBrowserTab.cpp
+    TBrowserTab.cpp \
+    WDashboard.cpp
 
 
 HEADERS += \
@@ -164,7 +165,8 @@ HEADERS += \
     IApplication.h \
     WLayoutTabbedBrowser.h \
     TBrowserTabs.h \
-    TBrowserTab.h
+    TBrowserTab.h \
+    WDashboard.h
 
 
 FORMS +=

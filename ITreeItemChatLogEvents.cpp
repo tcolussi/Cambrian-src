@@ -124,13 +124,17 @@ void
 ITreeItemChatLogEvents::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	ITreeItem::XmlExchange(pXmlExchanger);
-	if (pXmlExchanger->m_fSerializing && m_tsCreated == d_zNA && m_paVaultEvents != NULL)
+	if (pXmlExchanger->m_fSerializing && m_paVaultEvents != NULL)
 		{
-		IEvent * pEventFirst = (IEvent *)m_paVaultEvents->m_arraypaEvents.PvGetElementFirst_YZ();	// This code is a bit of legacy and should be moved when the Tree Item (contact) is created)
-		if (pEventFirst != NULL)
-			m_tsCreated = pEventFirst->m_tsEventID;
-		else
-			m_tsCreated = Timestamp_GetCurrentDateTime();
+		m_paVaultEvents->WriteEventsToDiskIfModified();		// This line is important to be first because saving the events may modify some variables which may be serialized by ITreeItemChatLogEvents::XmlExchange()
+		if (m_tsCreated == d_zNA)
+			{
+			IEvent * pEventFirst = (IEvent *)m_paVaultEvents->m_arraypaEvents.PvGetElementFirst_YZ();	// This code is a bit of legacy and should be moved when the Tree Item (contact) is created)
+			if (pEventFirst != NULL)
+				m_tsCreated = pEventFirst->m_tsEventID;
+			else
+				m_tsCreated = Timestamp_GetCurrentDateTime();
+			}
 		}
 	pXmlExchanger->XmlExchangeTimestamp("tsCreated", INOUT_F_UNCH_S &m_tsCreated);
 	#if 0
@@ -139,6 +143,8 @@ ITreeItemChatLogEvents::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	#endif
 	pXmlExchanger->XmlExchangeStr("DownloadFolder", INOUT_F_UNCH_S &m_strPathFolderDownload);
 	pXmlExchanger->XmlExchangeInt("MessagesUnread", INOUT_F_UNCH_S &m_cMessagesUnread);
+
+
 	}
 
 //	ITreeItemChatLogEvents::ITreeItem::TreeItem_EDoMenuAction()
@@ -199,20 +205,6 @@ ITreeItemChatLogEvents::Vault_AddEventToChatLogAndSendToContacts(PA_CHILD IEvent
 	if (m_pawLayoutChatLog != NULL)
 		//m_pawLayoutChatLog->ChatLog_EventAppend(IN paEvent);
 		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_EventDisplay(IN paEvent);
-	}
-
-void
-ITreeItemChatLogEvents::Vault_SetNotModified()
-	{
-	if (m_paVaultEvents != NULL)
-		m_paVaultEvents->SetNotModified();
-	}
-
-void
-ITreeItemChatLogEvents::Vault_SetModified()
-	{
-	if (m_paVaultEvents != NULL)
-		m_paVaultEvents->SetModified();
 	}
 
 IEvent *

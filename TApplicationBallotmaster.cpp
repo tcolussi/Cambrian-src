@@ -75,6 +75,7 @@ CServiceBallotmaster::PAllocateBallot(const IEventBallot * pEventBallotTemplate)
 	paEventBallot->m_pVaultParent_NZ = &m_oVaultBallots;
 	if (pEventBallotTemplate != NULL)
 		{
+		MessageLog_AppendTextFormatSev(eSeverityNoise, "CServiceBallotmaster::PAllocateBallot() - Template $t\n", pEventBallotTemplate->m_tsEventID);
 		Assert(pEventBallotTemplate->m_pVaultParent_NZ != NULL);
 		CBinXcpStanzaEventCopier binXcpStanzaCopier(m_oVaultBallots.m_pParent);
 		binXcpStanzaCopier.EventCopy(IN pEventBallotTemplate, OUT paEventBallot);

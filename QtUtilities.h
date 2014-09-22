@@ -579,4 +579,15 @@ public:
 	CFileOpenWrite(const CStr & strFileName);
 };
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class OPainter : public QPainter
+{
+public:
+	OPainter(QPaintDevice * poPaintDevice) : QPainter(poPaintDevice) { }
+	void DrawLineHorizontal(int xLeft, int xRight, int yPos);
+	void DrawLineVertical(int xPos, int yTop, int yBottom);
+};
+
+
 #endif // QTUTILITIES_H

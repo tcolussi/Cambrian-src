@@ -274,8 +274,6 @@ void
 TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	Assert(pXmlExchanger != NULL);
-	if (pXmlExchanger->m_fSerializing)
-		Vault_WriteEventsToDiskIfModified();		// This line is important to be first because saving the events may modify some variables which may be serialized by ITreeItemChatLogEvents::XmlExchange()
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
 	pXmlExchanger->XmlExchangeSha1("ID", INOUT_F_UNCH_S &m_hashGroupIdentifier);
 	pXmlExchanger->XmlExchangePointer('Y', PPX &m_pContactWhoRecommended_YZ, IN &m_pAccount->m_arraypaContacts);

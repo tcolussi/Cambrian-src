@@ -79,6 +79,16 @@ CVaultEvents::~CVaultEvents()
 	}
 
 
+void
+CVaultEvents::EventAdd(PA_CHILD IEvent * paEvent)
+	{
+	Assert(paEvent != NULL);
+	Assert(paEvent->m_tsOther == d_ts_zNA);
+	Assert(paEvent->m_pVaultParent_NZ == NULL);
+	m_arraypaEvents.Add(PA_CHILD paEvent);
+	SetModified();	// Make sure the events are saved to disk
+	}
+
 //	Core routine to add a new event to the vault and send it to the contact(s).
 //	Optionally this method may also send an 'Updater' event
 void
@@ -96,6 +106,7 @@ CVaultEvents::EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD 
 		}
 	paEvent->m_pVaultParent_NZ = this;
 	m_arraypaEvents.Add(PA_CHILD paEvent);
+	SetModified();	// Make sure the events are saved to disk
 
 	if (paEvent->EGetEventClass() & eEventClass_kfNeverSerializeToXCP)
 		return;	// The event is never serialized to XOSP, therefore there is nothing else to do
@@ -210,8 +221,17 @@ CVaultEvents::WriteEventsToDiskIfModified()
 		binXmlEvents.BinAppendText_VE("<E v='1' c='$i'>\n", cEvents);
 		m_arraypaEvents.EventsSerializeForDisk(INOUT &binXmlEvents);
 		binXmlEvents.BinAppendText_VE("</E>");
+		TRACE2("CVaultEvents::WriteEventsToDiskIfModified($Q) for ^j", &m_sPathFileName, m_pParent);
 		if (binXmlEvents.BinFileWriteE(m_sPathFileName) == errSuccess)
 			m_pEventLastSaved = pEventLastSaved;
+		}
+	else
+		{
+		TRACE3("CVaultEvents::WriteEventsToDiskIfModified(^j) - m_pEventLastSaved=0x$p, pEventLastSaved=0x$p", m_pParent, m_pEventLastSaved, pEventLastSaved);
+		if (pEventLastSaved == NULL)
+			{
+			Assert(m_arraypaEvents.FIsEmpty());
+			}
 		}
 	}
 

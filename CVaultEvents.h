@@ -54,6 +54,7 @@ public:
 	~CVaultEvents();
 	inline void SetNotModified() { m_pEventLastSaved = m_arraypaEvents.PGetEventLast_YZ(); }
 	inline void SetModified() { m_pEventLastSaved = NULL; }
+	void EventAdd(PA_CHILD IEvent * paEvent);
 	void EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD CEventUpdaterSent * paEventUpdater = NULL);
 	void EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const;
 	void EventsUnserialize(const CXmlNode * pXmlNodeEvents);

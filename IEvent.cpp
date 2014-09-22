@@ -184,7 +184,7 @@ IEvent::Event_InitFromDataOfEvent(const IEvent * pEventSource)
 	binXcpStanzaCopier.EventCopy(IN pEventSource, OUT this);
 	m_pVaultParent_NZ = NULL;
 	}
-
+/*
 void
 IEvent::EventAddToVault(PA_PARENT CVaultEvents * pVaultParent)
 	{
@@ -199,6 +199,7 @@ IEvent::EventAddToVault(PA_PARENT TContact * pContactParent)
 	Assert(pContactParent != NULL);
 	EventAddToVault(PA_PARENT pContactParent->Vault_PGet_NZ());
 	}
+*/
 
 TAccountXmpp *
 IEvent::PGetAccount() const
@@ -227,9 +228,9 @@ IEvent::EGetEventClassForXCP() const
 
 //	XmlSerializeCoreE(), virtual
 //
-//	Core virtual method to serialize the data of the event into an XML to be saved to disk or transmitted over the Cambrian Protocol (XCP).
+//	Virtual method to serialize the data of the event into an XML blob, to be saved to disk or transmitted over XOSP.
 //	Return eXml_zAttributesOnly if the event was serialized as attributes.  This is the typical case, a most events are made of simple data types, such as strings, numbers and timestamps.
-//	Return eXml_fElementPresent if the event contains one or more child XML element.  This is the case for events containing complex data types, such as lists of other objects which cannot be serialized as attributes.
+//	Return eXml_fElementPresent if the event contains one or more child XML element.  This is the case for events containing complex data types, such as lists of other objects which cannot be serialized as attributes.  A typical example is a ballot containing many questions and votes.
 //
 //	Originally this method was using a CBin object to store the XML information, however the Cambrian Protocol requires to know
 //	the destination contact.  As a result, the CBinXcpStanza is used to store the XML info as well as providing additional information for the XCP.
@@ -243,8 +244,7 @@ IEvent::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
 	Assert(pbinXmlAttributes != NULL);
 	Endorse(pbinXmlAttributes->m_pContact == NULL);	// NULL => Serialize to disk
-	Assert(FALSE && "No need to call this virtual method");
-	return eXml_zAttributesOnly;	// By default, there is no XML element
+	return eXml_NoSerialize;	// By default, there is nothing to serialize
 	}
 
 //	XmlUnserializeCore(), virtual

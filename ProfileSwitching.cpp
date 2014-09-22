@@ -340,6 +340,8 @@ CChatConfiguration::NavigationTree_DisplayAllCertificatesToggle()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
 
+void Dashboard_UpdateAccordingToSelectedProfile(TProfile * pProfileSelected);
+
 void
 NavigationTree_UpdateNameOfSelectedProfile()
 	{
@@ -352,6 +354,7 @@ NavigationTree_UpdateNameOfSelectedProfile()
 	else
 		g_strScratchBufferStatusBar.Format("Switch "d_sza_Profile);
 	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
+	Dashboard_UpdateAccordingToSelectedProfile(pProfileSelected);
 	}
 
 

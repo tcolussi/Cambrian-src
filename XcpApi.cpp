@@ -124,7 +124,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 				pXmlAttribute = pXmlAttribute->m_pNextSibling;
 				} // while
 			Report(pszApiName != NULL);
-			Report(pszXmlResponseName != NULL);
+			//Report(pszXmlResponseName != NULL);
 			if (pszApiName != NULL && pszXmlResponseName != NULL)
 				{
 				struct SXospApiExecute
@@ -871,6 +871,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 	pVault->m_arraypaEvents.AppendEventsSortedByIDs(PA_CHILD &arraypaEvents);	// Add the events to the vault
 	Assert(pVault->m_arraypaEvents.FEventsSortedByIDs());
 	pVault->SetModified();	// Make sure the vault gets saved
+	pVault->WriteEventsToDiskIfModified();	// This line is for debugging
 
 	// Display the new events into the Chat Log (if present)
 	if (fNewMessage)

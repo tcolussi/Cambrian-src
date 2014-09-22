@@ -215,10 +215,13 @@ CArrayPtrEvents::EventsUnserializeFromDisk(const CXmlNode * pXmlNodeEvent, ITree
 		// One (or more) event(s) was out-of-sync, so we take this opportunity to do some housekeeping
 		Assert(FEventsSortedByIDs());						// The events should always be sorted, regardless if one (or more) of them was out-of-sync
 		DeleteAllEventsReceivedHavingDuplicateTsOther();	// Take this opportunity to remove duplicate out-of-sync received events
-		pParent->Vault_SetModified();	// After a sorting, the vault is 'modified', which means it must be saved again to disk with the sorted results
+		pVault->SetModified();	// After a sorting, the vault is 'modified', which means it must be saved again to disk with the sorted results
 		}
 	else
-		pParent->Vault_SetNotModified();
+		{
+		//MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Vault ^j is NOT modified\n", pVault->m_pParent);
+		pVault->SetNotModified();
+		}
 	Assert(FEventsSortedByIDs());	// The events should always be sorted after being unserialized
 	} // EventsUnserializeFromDisk()
 
