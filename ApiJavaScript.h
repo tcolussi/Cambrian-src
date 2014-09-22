@@ -34,6 +34,7 @@ class OJapiProfile;
 class OJapiProfilesList;
 class OJapiBrowserTab;
 class OJapiBrowsersList;
+class OJapiJurisdiction;
 
 
 class CListVariants : public QVariantList
@@ -137,9 +138,29 @@ public slots:
 
 
 
+
+
+class OJapiJurisdiction : public OJapi
+{
+	OJapiProfile *m_pProfileParent;
+	Q_OBJECT
+
+	TProfile * PGetProfile_NZ();
+
+public:
+	OJapiJurisdiction(OJapiProfile *pProfileParent);
+	void setCurrent(const QString & sJurisdiction);
+	QString current();
+
+	Q_PROPERTY(QString current READ current WRITE setCurrent)
+};
+#define POJapiJurisdiction POJapi
+
+
 class OJapiProfile : public OJapi
 {
 	OJapiBrowsersList m_oBrowsersList;
+	OJapiJurisdiction m_oJurisdiction;
 	Q_OBJECT
 
 public:
@@ -149,10 +170,12 @@ public:
 	QString id();
 	QString name();
 	POJapiBrowsersList browsers();
+	POJapiJurisdiction jurisdiction();
 
 	Q_PROPERTY(QString name READ name)
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(POJapiBrowsersList browsers READ browsers)
+	Q_PROPERTY(POJapiJurisdiction jurisdiction READ jurisdiction)
 
 public slots:
 	void destroy();
@@ -183,6 +206,7 @@ signals:
 	void roleChanged ();
 };
 #define POJapiProfilesList	POJapi
+
 
 
 class OJapiAppInfo : public OJapi
@@ -247,7 +271,7 @@ public slots:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class OJapiPeerRequestsList : public QObject
+class OJapiPeerRequestsList : public OJapi
 {
 	Q_OBJECT
 public:
@@ -260,10 +284,7 @@ public slots:
 };
 #define POJapiPeerRequestsList POJapi
 
-
-
-
-class OJapiPeerRequest : public QObject
+class OJapiPeerRequest : public OJapi
 {
 	Q_OBJECT
 
@@ -278,12 +299,63 @@ public:
 
 
 
+class OJapiPeerMessagesList : public OJapi
+{
+	Q_OBJECT
+	OCapiRootGUI *m_pParentCapiRoot;
+public:
+
+	TProfile * PGetProfileSelected_YZ();
+	OJapiPeerMessagesList(OCapiRootGUI *pParentCapiRoot);
+
+	int recentCount();
+
+	Q_PROPERTY(int recentCount READ recentCount)
+
+public slots:
+	QVariantList recent(int nMax);
+	void clearAll();
+};
+#define POJapiPeerMessagesList POJapi
+
+class OJapiPeerMessage : public OJapi
+{
+	Q_OBJECT
+	OJapiPeerMessagesList * m_pParent;
+	IEventMessageText *m_pEventMessage;
+
+	inline TContact * PGetContact_YZ() { return m_pEventMessage->PGetContactForReply_YZ(); }
+
+public:
+	OJapiPeerMessage(OJapiPeerMessagesList *pParent, IEventMessageText *pEventMessage);
+
+	//QString peerName();
+	//QString peerId();
+	QString message();
+	QDateTime date();
+	POJapiContact peer();
+
+	//Q_PROPERTY(QString peerName READ peerName)
+	//Q_PROPERTY(QString peerId READ peerId)
+	Q_PROPERTY(QString message READ message)
+	Q_PROPERTY(QDateTime date READ date)
+	Q_PROPERTY(POJapiContact peer READ peer)
+
+public slots:
+	void clear();
+};
+#define POJapiPeerMessage POJapi
+
+
+
+
 class OCapiRootGUI : public OJapi
 {
 	Q_OBJECT
 	OJapiProfilesList m_oProfiles;
 	OJapiNotificationsList m_oNotificationsList;
 	OJapiPeerRequestsList m_oPeerRequestsList;
+	OJapiPeerMessagesList m_oPeerMessagesList;
 
 public:
 	OCapiRootGUI();
@@ -291,11 +363,13 @@ public:
 	POJapiProfilesList roles();
 	POJapiNotificationsList notifications();
 	POJapiPeerRequestsList peerRequests();
+	POJapiPeerMessagesList peerMessages();
 
 	Q_PROPERTY(QVariantList apps READ apps)
 	Q_PROPERTY(POJapiProfilesList roles READ roles)
 	Q_PROPERTY(POJapiNotificationsList notifications READ notifications)
 	Q_PROPERTY(POJapiPeerRequestsList peerRequests READ peerRequests)
+	Q_PROPERTY(POJapiPeerMessagesList peerMessages READ peerMessages)
 };
 #define POCapiRootGUI	POJapi
 

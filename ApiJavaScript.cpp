@@ -556,7 +556,7 @@ OJapiCambrian *TProfile::POJapiGetCambrian()
 			return new OJapiCambrian(this, NULL);
 }
 
-OJapiProfile::OJapiProfile(TProfile *pProfile) : m_oBrowsersList(this)
+OJapiProfile::OJapiProfile(TProfile *pProfile) : m_oBrowsersList(this) , m_oJurisdiction(this)
 	{
 	m_pProfile = pProfile;
 	}
@@ -577,6 +577,12 @@ POJapiBrowsersList
 OJapiProfile::browsers()
 	{
 	return &m_oBrowsersList;
+	}
+
+POJapiJurisdiction
+OJapiProfile::jurisdiction()
+	{
+	return &m_oJurisdiction;
 	}
 
 void
@@ -643,7 +649,7 @@ OJapiProfilesList::create(const QString & /*name*/)
 	}
 
 
-OCapiRootGUI::OCapiRootGUI() : m_oProfiles(this)
+OCapiRootGUI::OCapiRootGUI() : m_oProfiles(this), m_oPeerMessagesList(this)
 	{
 	}
 
@@ -720,11 +726,17 @@ OCapiRootGUI::peerRequests()
 	return &m_oPeerRequestsList;
 	}
 
+POJapiPeerMessagesList
+OCapiRootGUI::peerMessages()
+	{
+	return &m_oPeerMessagesList;
+	}
+
 OCapiImageProvider::OCapiImageProvider()  : QQuickImageProvider(QQuickImageProvider::Pixmap)
 	{
 	}
 
-QPixmap OCapiImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+QPixmap OCapiImageProvider::requestPixmap(const QString &id, QSize * /*size*/, const QSize & /*requestedSize*/)
 	{
 	/*
 	 * image://sopro/[:id:]
@@ -1005,4 +1017,133 @@ QString
 OJapiPeerRequest::name()
 	{
 	return "Plato";
+}
+
+
+TProfile * OJapiPeerMessagesList::PGetProfileSelected_YZ()
+	{
+	return NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
 	}
+
+OJapiPeerMessagesList::OJapiPeerMessagesList(OCapiRootGUI *pParentCapiRoot)
+	{
+	m_pParentCapiRoot = pParentCapiRoot;
+	}
+
+int
+OJapiPeerMessagesList::recentCount()
+	{
+	TProfile *pProfile = PGetProfileSelected_YZ();
+	if (pProfile == NULL)
+		return 0;
+
+	return pProfile->m_arraypEventsRecentMessagesReceived.GetSize();
+	}
+
+
+QVariantList
+OJapiPeerMessagesList::recent(int nMax)
+	{
+	QVariantList list;
+	// Search the array from the end, as the event to search is likely to be a recent one
+	Assert(nMax >= 0);
+
+	TProfile *pProfile = PGetProfileSelected_YZ();
+	if (pProfile != NULL)
+		{
+		IEvent ** ppEventStop;
+		IEvent ** ppEvent = pProfile->m_arraypEventsRecentMessagesReceived.PrgpGetEventsStopLast(OUT &ppEventStop);
+		//IEvent ** ppEvent = g_arraypEventsReceived.PrgpGetEventsStop(OUT &ppEventStop);
+		while (ppEvent != ppEventStop)
+			{
+			IEvent * pEvent = *--ppEventStop;
+			if ( pEvent->EGetEventClass() == CEventMessageTextReceived::c_eEventClass )
+				{
+				list.append(QVariant::fromValue(new OJapiPeerMessage(this, (IEventMessageText*) pEvent)));
+				}
+			}
+		}
+	return list;
+	}
+
+void
+OJapiPeerMessagesList::clearAll()
+	{
+	TProfile *pProfile = PGetProfileSelected_YZ();
+	if (pProfile != NULL)
+	{
+	pProfile->m_arraypEventsRecentMessagesReceived.Flush();
+	}
+	//g_arraypEventsReceived.RemoveAllElements();
+	/*
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = g_arraypEventsReceived.PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		IEvent * pEvent = *--ppEventStop;
+		if ( pEvent->EGetEventClass() == CEventMessageTextReceived::c_eEventClass )
+			{
+			pEvent->m_uFlagsEvent |= IEvent::FE_kfArchived;
+			}
+		}
+	*/
+	}
+
+OJapiPeerMessage::OJapiPeerMessage(OJapiPeerMessagesList *pParent, IEventMessageText *pEventMessage)
+	{
+	m_pEventMessage = pEventMessage;
+	m_pParent = pParent;
+	}
+
+QString
+OJapiPeerMessage::message()
+	{
+	return m_pEventMessage->m_strMessageText;
+	}
+
+QDateTime OJapiPeerMessage::date()
+	{
+	return Timestamp_ToQDateTime(m_pEventMessage->m_tsEventID);
+	}
+
+POJapiContact
+OJapiPeerMessage::peer()
+	{
+	TContact *pContact = PGetContact_YZ();
+	if ( pContact != NULL)
+		return pContact->POJapiGet();
+	return NULL;
+	}
+
+void OJapiPeerMessage::clear()
+	{
+	TProfile *pProfile = m_pParent->PGetProfileSelected_YZ();
+	if ( pProfile != NULL )
+		{
+		pProfile->m_arraypEventsRecentMessagesReceived.RemoveEvent(m_pEventMessage);// TODO: handle memory leak //
+		}
+	}
+
+
+
+TProfile * OJapiJurisdiction::PGetProfile_NZ()
+	{
+	return m_pProfileParent->m_pProfile;
+	}
+
+OJapiJurisdiction::OJapiJurisdiction(OJapiProfile * pProfileParent)
+	{
+	m_pProfileParent = pProfileParent;
+	}
+
+void OJapiJurisdiction::setCurrent(const QString & sJurisdiction)
+	{
+	PGetProfile_NZ()->m_strJurisdiction = sJurisdiction;
+	}
+
+QString OJapiJurisdiction::current()
+	{
+	return PGetProfile_NZ()->m_strJurisdiction.ToQString();
+	}
+
+

@@ -331,6 +331,7 @@ public:
 	void XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject2_YZ pfnPaAllocatorObject2_YZ, PVOID pvContextAllocate = d_zNA);
 	void XmlExchangePointer(CHS chTagNamePointer, INOUT_F_UNCH_S ITreeItem ** ppObject, const CArrayPtrTreeItems * parraypObjectsLookup);
 	void XmlExchangePointers(PSZAC pszuTagNamePointers, INOUT_F_UNCH_S CArrayPtrTreeItems * parraypObjects, const CArrayPtrXmlSerializableObjects & arraypObjectsLookup);
+	void XmlExchangeEventPointers(CHS chTagNameEvents , INOUT CArrayPtrEventsRecent * parraypEventsRecent, TProfile * pProfileParent);
 	void XmlExchangeWriteAttribute(PSZAC pszNameAttribute, PSZUC pszAttributeValue);
 	void XmlExchangeWriteAttributeUSZU(PSZAC pszNameAttribute, USZU uszuAttributeValue);
 	void XmlExchangeWriteAttributeRtiSz(PSZAC pszNameAttribute, RTI_ENUM rtiAttributeValue);
@@ -344,6 +345,7 @@ protected:
 	void AllocateAttributeValueGuid(PSZAC pszaAttributeName, const GUID * pGuid);
 	void AllocateAttributeValueStringQ(PSZAC pszaAttributeName, const QString & sString);
 	void AllocateAttributeValueCBinString(PSZAC pszaAttributeName, IN_MOD_TMP CBin & binString);
+	void AllocateAttributeValueCBinString(CHS chAttributeName, IN_MOD_TMP CBin & binString);
 }; // CXmlExchanger
 
 #define PPX		(ITreeItem **)	// The purpose of this macro is suppressing the compiler error: warning: invalid conversion from 'TProfile**' to 'ITreeItem**' [-fpermissive]

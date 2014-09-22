@@ -100,21 +100,22 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Display "d_sza_Profile " Details" _ "s=Display details about a role" _ d_sza_IconProfile _, // eMenuAction_DisplayProfileInfo
 	"Display Certificates" _ "s=Display the certificates securing (encrypting) the communication" _ "i=Certificate" _, // eMenuAction_DisplayCertificates
 	"Ballot" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
+	"Groups" _ "s=Manage groups" _,
 
 	"Developer Apps"    _ "i=Browser" _, // eMenuAction_WikiSubMenu
-	"Navshell Peers"	_ "s=Apps/navshell-contacts/index.html"		_"i=Browser" _,
-	"Navshell Sidebar"  _ "s=Apps/navshell-stack/index.html"		_"i=Browser" _,
-	"Navshell Header"   _ "s=Apps/navshell-header/index.html"		_"i=Browser" _,
+	//"Navshell Peers"	_ "s=Apps/navshell-contacts/index.html"		_"i=Browser" _,
+	//"Navshell Sidebar"  _ "s=Apps/navshell-stack/index.html"		_"i=Browser" _,
+	//"Navshell Header"   _ "s=Apps/navshell-header/index.html"		_"i=Browser" _,
 	"Office Kingpin"    _ "s=Apps/html5-office-kingpin/index.html"	_"i=Browser" _,
 	"Pomodoro"          _ "s=Apps/html5-pomodoro/index.html"		_"i=Browser" _,
 	"JAPI Tests"        _ "s=Apps/japi/test/test.html"              _"i=Browser" _,
 	"Scratch"           _ "s=Apps/html5-scratch/index.html"			_"i=Browser" _,
-	"HTML5 xik"         _ "s=Apps/html5-xik/index.html"				_"i=Browser" _,
-	"Group Manager"		_ "s=Apps/html5-group-manager/index.html"				_"i=Browser" _,
-	"Ballotmaster"		_ "s=Apps/html5-pollmaster/index.html"					_"i=Browser" _,
+	//"HTML5 xik"         _ "s=Apps/html5-xik/index.html"				_"i=Browser" _,
+	//"Group Manager"		_ "s=Apps/html5-group-manager/index.html"				_"i=Browser" _,
+	//"Ballotmaster"		_ "s=Apps/html5-pollmaster/index.html"					_"i=Browser" _,
 	"Default NewTab"	_ "s=Apps/html5-static/default-new-tab/index.html"		_"i=Browser" _,
 	"Underconstruction"	_ "s=Apps/html5-static/underconstruction/index.html"	_"i=Browser" _,
-	"Home"				_ "s=Apps/html5-home/index.html"						_"i=Browser" _,
+	//"Home"				_ "s=Apps/html5-home/index.html"						_"i=Browser" _,
 
 	"New Wallet" _ "i=Bitcoin" _, // eMenuAction_DisplayWallet
 	"New Web Browser" _ "i=Browser" _, // eMenuAction_DisplaySecureWebBrowsing
@@ -691,6 +692,7 @@ const EMenuActionByte c_rgzeActionsMenuContacts[] =
 const EMenuActionByte c_rgzeActionsMenuTools[] =
 	{
 	eMenuAction_DisplayBallotMaster,
+	eMenuAction_DisplayGroupManager,
 	ezMenuActionNone
 	};
 
@@ -715,19 +717,19 @@ const EMenuActionByte c_rgzeActionsMenuAdvanced[] =
 
 const EMenuActionByte c_rgzeActionsMenuWiki[] =
 {
-    eMenuAction_WikiNavShellContacts,
-    eMenuAction_WikiNavShellSideBar,
-    eMenuAction_WikiNavShellHeader,
+	//eMenuAction_WikiNavShellContacts,
+	//eMenuAction_WikiNavShellSideBar,
+	//eMenuAction_WikiNavShellHeader,
     eMenuAction_WikiOfficeKingpin,
     eMenuAction_WikiPomodoro,
     eMenuAction_WikiJapiTests,
     eMenuAction_WikiScratch,
-    eMenuAction_WikiHtml5Xik,
-	eMenuAction_WikiGroupManager,
-	eMenuAction_WikiBallotMaster,
+	//eMenuAction_WikiHtml5Xik,
+	//eMenuAction_WikiGroupManager,
+	//eMenuAction_WikiBallotMaster,
 	eMenuAction_AppDefaultNewTab,
 	eMenuAction_AppUnderconstruction,
-	eMenuAction_AppHome,
+	//eMenuAction_AppHome,
     ezMenuActionNone
 };
 
@@ -887,19 +889,23 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		LaunchApplication("ballotmaster");
 		return;
 
-    case eMenuAction_WikiNavShellContacts:
-    case eMenuAction_WikiNavShellSideBar:
-    case eMenuAction_WikiNavShellHeader:
+	case eMenuAction_DisplayGroupManager:
+		LaunchApplication("Group Manager");
+		return;
+
+	//case eMenuAction_WikiNavShellContacts:
+	//case eMenuAction_WikiNavShellSideBar:
+	//case eMenuAction_WikiNavShellHeader:
     case eMenuAction_WikiOfficeKingpin:
     case eMenuAction_WikiPomodoro:
     case eMenuAction_WikiJapiTests:
     case eMenuAction_WikiScratch:
-    case eMenuAction_WikiHtml5Xik:
-	case eMenuAction_WikiGroupManager:
-	case eMenuAction_WikiBallotMaster:
+	//case eMenuAction_WikiHtml5Xik:
+	//case eMenuAction_WikiGroupManager:
+	//case eMenuAction_WikiBallotMaster:
 	case eMenuAction_AppDefaultNewTab:
 	case eMenuAction_AppUnderconstruction:
-	case eMenuAction_AppHome:
+	//case eMenuAction_AppHome:
 		//void LaunchBrowser(const QString & sName, const QString & sUrl);
 		//LaunchBrowser( pAction->text(), "");
 		LaunchApplication(pAction->text());
