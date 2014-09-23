@@ -2044,8 +2044,10 @@ union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outs
 //		^Y - Append/encode to XML the content of QByteArray* (the QByteArray is always null-terminated)
 //		^N - Append/encode to XML the content of CXmlNode*
 //		^A - Append/encode an XML attribute of a CXmlNode*
-//		^G - Append the group identifier (SHA-1) if pointer is a TGroup.  This is somewhat complement to ^i
+//		^G - Append the attribute g='' with the SHA1 value of the group identifier (if pointer is a TGroup).  This is somewhat complement to ^i
 //		^E - Same as ^G except the the pointer is IEvent.
+//		^C - Append the attribute c='' with the identifier of the contact if the pointer is a TContact.
+//		^I - Append the identity attribute (g='' or c='') depending of the pointer is a TGroup or a TContact.
 //		^L - Append an HTML list items from a CArrayPsz*
 //		^Lo
 //		^:		Append an attribute named "xmlns".  Of course this may appear as pollution in this routine, however those xmlns attributes are everywhere
@@ -2282,6 +2284,9 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				if (u.pXmlNode != NULL)
 					BinAppendXmlAttributeText((PSZAC)u.pXmlNode->m_pszuTagName, u.pXmlNode->m_pszuTagValue);
 				break;
+			case 'I':	// ^I
+				Assert(FALSE && "NIY");
+				break;
 			case 'E':	// ^E
 				u.pEvent = va_arg(vlArgs, IEvent *);
 				Assert(u.pEvent != NULL);
@@ -2345,7 +2350,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 						}
 					else
 						{
-						Report(FALSE && "Invalid runtime class for ^J");
+						Report(FALSE && "Invalid runtime class for ^j or ^J");
 						}
 					}
 				break;

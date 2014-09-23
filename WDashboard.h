@@ -66,6 +66,18 @@ public:
 };
 
 
+class CDashboardSectionItem_IEventBallot : public IDashboardSectionItem
+{
+public:
+	IEventBallot * m_pBallot;
+
+public:
+	CDashboardSectionItem_IEventBallot(IEventBallot * pBallot) { m_pBallot = pBallot; }
+	virtual void DrawItemText(CPainterCell * pPainter);
+	virtual int DrawItemIcons(CPainterCell * pPainter);
+};
+
+
 class CArrayPtrDashboardSectionItems : private CArray
 {
 public:
@@ -101,19 +113,53 @@ public:
 	inline WDashboardSection ** PrgpGetSectionsStop(OUT WDashboardSection *** pppSectionStop) const { return (WDashboardSection **)PrgpvGetElementsStop(OUT (void ***)pppSectionStop); }
 };
 
+class WDashboardSectionGroups : public WDashboardSection
+{
+public:
+	WDashboardSectionGroups(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
+	virtual void InitItems(TProfile * pProfile);
+};
+
+class WDashboardSectionContacts : public WDashboardSection
+{
+public:
+	WDashboardSectionContacts(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
+	virtual void InitItems(TProfile * pProfile);
+};
+
+class WDashboardSectionBallots : public WDashboardSection
+{
+public:
+	WDashboardSectionBallots(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
+	virtual void InitItems(TProfile * pProfile);
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 //	The dashboard is a widget showing recent events related to a profile
 singleton WDashboard : public QDockWidget
 {
 	Q_OBJECT
 protected:
+	TProfile * m_pProfile;							// Pointer of the profile the dashboard is displaying
 	WLabel * m_pwLabelCaption;
 	OLayoutVerticalAlignTop * m_poLayoutVertial;	// Stack the sections vertically
-	CArrayPtrDashboardSections m_arraypSections;
+//	CArrayPtrDashboardSections m_arraypSections;
+	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section
+		{
+		WDashboardSectionBallots * pwSectionBalots;
+		WDashboardSectionGroups * pwSectionGroups;
+		WDashboardSectionContacts * pwSectionContacts;
+		} m_sections;
 
 public:
 	WDashboard();
 	void AddSection(PA_CHILD WDashboardSection * pawSection);
 	void ProfileSelectedChanged(TProfile * pProfile);
-};
+	void NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
+	void NewEventRelatedToBallot(IEventBallot * pEventBallot);
+	void RefreshContact(TContact * pContact);
+	void RefreshGroup(TGroup * pGroup);
+}; // WDashboard
 
 #endif // WDASHBOARD_H

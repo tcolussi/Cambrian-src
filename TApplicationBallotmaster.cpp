@@ -2,7 +2,6 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "TApplicationBallotmaster.h"
-#include "IEventBallot.h"
 #include "WLayoutBrowser.h"
 
 
@@ -654,7 +653,9 @@ OJapiAppBallotmaster::PCreateNewPollFromTemplate(CEventBallotPoll * pPollTemplat
 	CEventBallotPoll * pPollNew = m_pServiceBallotmaster->PAllocateBallot(pPollTemplate);
 	Assert(pPollNew != NULL);
 	pPollNew->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;	// When allocating a new poll, assume it has never been saved
-	return PGetOJapiPoll(pPollNew);
+	OJapiPoll * poJapiPoll = (OJapiPoll *)PGetOJapiPoll(pPollNew);
+	Assert(poJapiPoll->status() == "unsaved");
+	return poJapiPoll;
 	}
 
 

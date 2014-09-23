@@ -49,13 +49,6 @@ TContact::Contact_FCanBePermenentlyDeleted() const
 	return TreeItemFlags_FuIsInvisible();
 	}
 
-CChatConfiguration *
-TContact::PGetConfiguration() const
-	{
-	return m_pAccount->PGetConfiguration();
-	}
-
-
 //	TContact::IRuntimeObject::PGetRuntimeInterface()
 //
 //	Enable the TContact object to respond to the interface of its parent, the TAccountXmpp

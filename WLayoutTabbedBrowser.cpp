@@ -4,7 +4,6 @@
 #include "WLayoutTabbedBrowser.h"
 #include "TBrowserTabs.h"
 #include "TBrowserTab.h"
-#include "ApiJavaScript.h"
 
 WLayoutTabbedBrowser::WLayoutTabbedBrowser(TBrowserTabs *pBrowserTabs, TProfile * pProfile)
 	{

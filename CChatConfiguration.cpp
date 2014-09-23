@@ -180,7 +180,11 @@ CChatConfiguration::XmlConfigurationExchange(INOUT CXmlExchanger * pXmlExchanger
 
 	m_arraypaProfiles.ForEach_UAssignObjectIds();	// Assign a unique identifier for each profile.  This is necessary to serialize the pointer of the selected profile
 
+	//g_uPreferences = 123; // |= P_kfDontPlaySoundWhenNewMessageArrive;
 	pXmlExchanger->XmlExchangeUInt("Preferences", INOUT &g_uPreferences);	// TODO: This should not be there, but in the Registry
+	#if 0
+	MessageLog_AppendTextFormatSev(eSeverityComment, "CChatConfiguration::XmlConfigurationExchange() - Preferences = 0x$x\n", g_uPreferences);
+	#endif
 
 	pXmlExchanger->XmlExchangeObjects('P', INOUT &m_arraypaProfiles, TProfile::S_PaAllocateProfile, this);
 	if (!pXmlExchanger->m_fSerializing && m_arraypaProfiles.FIsEmpty())

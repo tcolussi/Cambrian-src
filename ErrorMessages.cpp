@@ -716,9 +716,9 @@ CMessageLog::AppendTextU(QRGBX coxTextColor, PSZUC pszuTextAppend, PSZAC pszText
 		CreateLogWindow();
 	if (!IsWindow(m_hwndRichEdit))
 		{
-		::OutputDebugStringA("MessageLog: Rich Edit is unavailable");
+		::OutputDebugStringA("MessageLog: Rich Edit is unavailable\n");
 		if (this != &g_oErrorLog)
-			ErrorLog_AddNewMessage("MessageLog: Rich Edit is unavailable", pszuTextAppend);
+			ErrorLog_AddNewMessage("MessageLog: Rich Edit is unavailable\n", pszuTextAppend);
 		/*
 		if (g_pwMainWindow != NULL)
 			g_pwMainWindow->setWindowTitle(QString::fromUtf8((const char *)pszuTextAppend));	// Try to display something to the user using the caption as the "Message Log"

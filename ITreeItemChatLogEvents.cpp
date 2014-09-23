@@ -95,6 +95,12 @@ ITreeItemChatLogEvents::Vault_RemoveAllReferencesToObjectsAboutBeingDeleted()
 		m_paVaultEvents->m_arraypaEvents.ForEach_DetachFromObjectsAboutBeingDeleted();
 	}
 
+TProfile *
+ITreeItemChatLogEvents::PGetProfile() const
+	{
+	return m_pAccount->m_pProfileParent;
+	}
+
 CChatConfiguration *
 ITreeItemChatLogEvents::PGetConfiguration() const
 	{

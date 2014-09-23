@@ -304,8 +304,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 
 WMainWindow::~WMainWindow()
 	{
-	//Configuration_Save();	// Before destroy the main window, save all open configurations
-	SettingsSave();			// Also remember the settings (window position)
+	//EMessageBoxInformation("WMainWindow::~WMainWindow()");
 
 	// We are destroying the WMainWindow, so flush everything (both for performance, and also to prevent the application to crash)
 	g_listaNoticesRoaming.Notices_DeleteAll();
@@ -314,6 +313,17 @@ WMainWindow::~WMainWindow()
 	g_pwChatLayoutContainer = NULL;		// Make sure the Navigation Tree does not call TreeItem_GotFocus() when receiving a signal that a new Tree Item was selected.
 	g_pwNavigationTree->NavigationTree_TreeItemUnselect();
 	g_oConfiguration.Destroy();	// Destroy the configuration, with the accounts, contacts and groups.
+	MessageLog_ModuleShutdown();
+	}
+
+
+// Save anything worth saving before the application quits. This method is called before the destructor of the Main Window and the Navigation Tree.
+void
+WMainWindow::SL_Quitting()
+	{
+	//EMessageBoxInformation("WMainWindow::SL_Quitting()");
+	Configuration_Save();	// Before destroy the main window, save all open configurations
+	SettingsSave();			// Also remember the settings (window position)
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -348,41 +358,6 @@ WNavigationTree::SL_TreeItemSelectionChanged(QTreeWidgetItem * pItemCurrent, QTr
 		}
 	} // SL_TreeItemSelectionChanged()
 
-#if 0
-//	WMainWindow::QWidget::closeEvent()
-void
-WMainWindow::closeEvent(QCloseEvent * pEvent)
-	{
-	/*
-	showMinimized();
-	pEvent->ignore();
-	*/
-	SettingsSave();
-	Configuration_Save();
-	QMainWindow::closeEvent(pEvent);
-	}
-
-//	WMainWindow::QWidget::changeEvent()
-void
-WMainWindow::changeEvent(QEvent * pEvent)
-	{
-	Assert(pEvent != NULL);
-	const QEvent::Type eEvent = pEvent->type();
-	//MessageLog_AppendTextFormatCo(d_coRed, "changeEvent($i)\n", eEvent);
-	if (eEvent == QEvent::ActivationChange)
-		{
-		// 2014-04-09: I don't think setIcon() is necessary, and I think the killTimer() should be moved with the destruction of g_poSystemTrayIcon
-		g_poSystemTrayIcon->setIcon(*g_pIconCambrian);	// Restore the default Cambrian icon
-		if (m_tidFlashIconNewMessage != d_zNA)
-			{
-			killTimer(m_tidFlashIconNewMessage);
-			m_tidFlashIconNewMessage = d_zNA;
-			}
-		}
-	QMainWindow::changeEvent(pEvent);
-	}
-#endif
-
 //	WMainWindow::QObject::event()
 //
 //	Filter the global events of Cambrian.  This virtual method is mostly used to detect when the user is no longer idle.
@@ -394,8 +369,8 @@ WMainWindow::event(QEvent * pEvent)
 //	MessageLog_AppendTextFormatCo(d_coRed, "[$@] event($i)\n", eEvent);
 	switch (eEvent)
 		{
-	case QEvent::Close:	// The close button was clicked
-		Configuration_Save();
+	case QEvent::Close:	// The close button was clicked.  This is NOT the same a quitting the application, as the user may click on the Quit menu item to exit.
+		//EMessageBoxInformation("QEvent::Close");
 		#ifdef DEBUG
 		QCoreApplication::exit(0);	// This line is necessary so the QWebInspector is closed when the application closes
 		break;		// When debugging, close Cambrian
@@ -406,8 +381,7 @@ WMainWindow::event(QEvent * pEvent)
 		return true;	// The event was processed
 	case QEvent::Quit:
 		TRACE0("WMainWindow::event(Quit)\n");
-		void MessageLog_ModuleShutdown();
-		MessageLog_ModuleShutdown();
+		EMessageBoxInformation("WMainWindow::event(Quit) - If you see this message, please contact Dan.  I am doing a test to see if this event is ever used!");
 		break;
 	case QEvent::ActivationChange:
 		// 2014-04-09: I don't think setIcon() is necessary, and I think the killTimer() should be moved with the destruction of g_poSystemTrayIcon

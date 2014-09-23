@@ -6,7 +6,6 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "IEventBallot.h"
 #ifdef DEBUG
 	//#define DEBUG_DISPLAY_TIMESTAMPS	// Always display the timestamps on the debug build
 #else
@@ -1610,85 +1609,6 @@ CVaultEvents::PFindEventReceivedByTimestampOther(TIMESTAMP tsOther, TContact * p
 	return NULL;
 	} // PFindEventReceivedByTimestampOther()
 
-//	Find the next event after tsEventID, and return how many events are remaining.
-//	Since this method is for XCP, the method will skip returning non-XCP events and only return events which may be transmitted throught XCP.
-//	For instance, a 'ping' event will not be returned by this method.
-//
-IEvent *
-CArrayPtrEvents::PFindEventNextForXcp(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const
-	{
-	Endorse(tsEventID == d_ts_zNULL);	// Return the first event in the array
-	Assert(pcEventsRemaining != NULL);
-	if (m_paArrayHdr != NULL)
-		{
-		int cEvents = m_paArrayHdr->cElements;
-		if (cEvents > 0)
-			{
-			IEvent ** ppEventFirst = (IEvent **)m_paArrayHdr->rgpvData;
-			IEvent ** ppEventStop = ppEventFirst + cEvents;
-			IEvent ** ppEventCompare = ppEventStop;
-			// Search from the end until we find an event smaller or equal than tsEventID.  This means the next event (if any) in the array is the one to return;
-			while (--ppEventCompare >= ppEventFirst)
-				{
-				IEvent * pEvent = *ppEventCompare;
-				AssertValidEvent(pEvent);
-				Assert(pEvent->m_tsEventID != d_ts_zNULL);
-				if (pEvent->m_tsEventID <= tsEventID)
-					break;
-				} // while
-
-			// Loop until we have a valid event for XCP
-			while (++ppEventCompare < ppEventStop)
-				{
-				IEvent * pEvent = *ppEventCompare;	// Get the next event
-				if ((pEvent->EGetEventClass() & eEventClass_kfNeverSerializeToXCP) == 0)
-					{
-					*pcEventsRemaining = (ppEventStop - ppEventCompare) - 1;
-					Assert(*pcEventsRemaining >= 0);
-					return pEvent;
-					}
-				} // while
-			} // if
-		} // if
-	*pcEventsRemaining = 0;
-	return NULL;
-	} // PFindEventNextForXcp()
-
-IEvent *
-CVaultEvents::PFindEventNext(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) CONST_MCC
-	{
-	return m_arraypaEvents.PFindEventNextForXcp(tsEventID, OUT pcEventsRemaining);
-	}
-
-//	Very similar as PFindEventNext()
-IEvent *
-CVaultEvents::PFindEventNextReceivedByOtherGroupMembers(TIMESTAMP tsEventID, TContact * pContactExclude, OUT int * pcEventsRemaining) CONST_MCC
-	{
-	Assert(pContactExclude != NULL);
-	int cEventsRemaining = -1;
-	IEvent * pEventNext = NULL;
-	IEvent ** ppEventStop;
-	IEvent ** ppEventFirst = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
-	IEvent ** ppEventCompare = ppEventStop;
-	// Search from the end until we find an event smaller or equal than tsEventID.  This means the next event (if any) in the array is the one to return;
-	while (--ppEventCompare >= ppEventFirst)
-		{
-		IEvent * pEvent = *ppEventCompare;
-		AssertValidEvent(pEvent);
-		Assert(pEvent->m_tsEventID != d_ts_zNULL);
-		if (pEvent->m_tsEventID <= tsEventID)
-			break;
-		if (pEvent->m_pContactGroupSender_YZ == pContactExclude)
-			continue;
-		if ((pEvent->EGetEventClass() & (eEventClass_kfReceivedByRemoteClient | eEventClass_kfNeverSerializeToXCP)) == eEventClass_kfReceivedByRemoteClient)
-			{
-			pEventNext = pEvent;
-			cEventsRemaining++;
-			}
-		} // while
-	*pcEventsRemaining = cEventsRemaining;
-	return pEventNext;
-	} // PFindEventNextReceivedByOtherGroupMembers()
 
 IEvent *
 CArrayPtrEvents::PFindEventByID(TIMESTAMP tsEventID) const
@@ -1960,6 +1880,8 @@ CArrayPtrEventsRecent::GetSize()
 void
 CArrayPtrEventsRecent::EventsUnserialize()
 	{
+	return;
+
 	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "CArrayPtrEventsRecent::EventsUnserialize() -- $B\n", &m_binXmlEvents);
 	CXmlTree oXmlTree;
 	oXmlTree.m_binXmlFileData.BinInitFromCBin(&m_binXmlEvents);
@@ -1971,6 +1893,8 @@ CArrayPtrEventsRecent::EventsUnserialize()
 void
 CArrayPtrEventsRecent::EventsUnserialize(const CXmlNode * pXmlNodeEvents)
 	{
+	return;
+
 	Assert(pXmlNodeEvents != NULL);
 	if (pXmlNodeEvents == NULL)
 		return;

@@ -147,8 +147,6 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include "IEventBallot.h"
-
 class DDialogBallotSend;
 
 class _OLayoutBallotChoice : public OLayoutHorizontal

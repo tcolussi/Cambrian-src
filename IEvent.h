@@ -153,15 +153,6 @@ enum EErrorXcpApi
 	eErrorXcpApi_ParameterInvalid,		// One of the parameter is invalid
 };
 
-/*
-///////////////////////////////////////////////////////////////////////////////////////////////////
-enum EStanzaType
-	{
-	eStanzaType_zInformation,		// The stanza is sent directly to the remote client, or it is ignored if the remote client is unavailable
-	eStanzaType_eMessage,			// The stanza is cached on the XMPP server if the remote client is unavailable to receive it
-	eStanzaType_eBroadcast			// The stanza is broadcasted by the server to every contact on the roster
-	};
-*/
 
 #define DEBUG_XCP_TASKS				// Extra code to use tasks to transmit data via the XMPP protocol so we can test this code path.  This is done by lowering the threshold to split XMPP stanzas into tasks.
 
@@ -451,7 +442,6 @@ public:
 	inline IEvent ** PrgpGetEventsStopLast(OUT IEvent *** pppEventStop, int cElementsLastMax) const { return (IEvent **)PrgpvGetElementsStopLast(OUT (void ***)pppEventStop, cElementsLastMax); }
 	inline IEvent * PGetEventLast_YZ() const { return (IEvent *)PvGetElementLast_YZ(); }
 	IEvent * PFindEventLastSent() const;
-	IEvent * PFindEventNextForXcp(TIMESTAMP tsEventID, OUT int * pcEventsRemaining) const;
 	TIMESTAMP TsEventIdLastEventSent() const;
 	TIMESTAMP TsEventOtherLastEventReceived() const;
 	TIMESTAMP TsEventOtherLast() const;

@@ -221,13 +221,13 @@ CVaultEvents::WriteEventsToDiskIfModified()
 		binXmlEvents.BinAppendText_VE("<E v='1' c='$i'>\n", cEvents);
 		m_arraypaEvents.EventsSerializeForDisk(INOUT &binXmlEvents);
 		binXmlEvents.BinAppendText_VE("</E>");
-		TRACE2("CVaultEvents::WriteEventsToDiskIfModified($Q) for ^j", &m_sPathFileName, m_pParent);
+		TRACE3("CVaultEvents::WriteEventsToDiskIfModified($Q) for $s ^C", &m_sPathFileName, m_pParent->TreeItem_PszGetNameDisplay(), m_pParent);
 		if (binXmlEvents.BinFileWriteE(m_sPathFileName) == errSuccess)
 			m_pEventLastSaved = pEventLastSaved;
 		}
 	else
 		{
-		TRACE2("CVaultEvents::WriteEventsToDiskIfModified(^j) m_pEventLastSaved == pEventLastSaved = 0x$p", m_pParent, pEventLastSaved);
+		//TRACE2("CVaultEvents::WriteEventsToDiskIfModified(^s) m_pEventLastSaved == pEventLastSaved = 0x$p", m_pParent->TreeItem_PszGetNameDisplay(), pEventLastSaved);
 		if (pEventLastSaved == NULL)
 			{
 			Assert(m_arraypaEvents.FIsEmpty());

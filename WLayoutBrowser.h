@@ -3,8 +3,6 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "ApiJavaScript.h"
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class WLayoutBrowser  : public WLayout

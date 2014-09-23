@@ -64,6 +64,7 @@ public:
 }; // CErrorMessage
 
 void MessageLog_ModuleInitialize();
+void MessageLog_ModuleShutdown();
 
 void MessageLog_Show();
 void MessageLog_AppendTextWithNewLine(QRGBX coxTextColor, PSZUC pszuTextAppend);

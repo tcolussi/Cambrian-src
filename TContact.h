@@ -92,8 +92,6 @@ public:
 	inline void Contact_SetFlagSynchronizeWhenPresenceOnline() { m_uFlagsContact |= FC_kfXospSynchronizeWhenPresenceOnline; }
 	inline BOOL Contact_FuIsOnline() const { return (m_uFlagsContact & FC_kmPresenceMaskOnline); }
 
-	CChatConfiguration * PGetConfiguration() const;
-
 	void Invitation_InitFromXml(const CStr & strInvitationXml);
 	void Invitation_ReplyWithBase64(const CStr & strInvitationBase64);
 	BOOL Contact_FIsInvitationRecommended();

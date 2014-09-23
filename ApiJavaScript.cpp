@@ -3,9 +3,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "ApiJavaScript.h"
 #include "TApplicationBallotmaster.h"
-#include "IEventBallot.h"
 
 
 OJapiApps::OJapiApps(OJapiCambrian * poCambrian)

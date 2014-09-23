@@ -1,9 +1,8 @@
+//	IEventBallot.cpp
+
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "IEventBallot.h"
-#include "ApiJavaScript.h"
-
 
 #define d_chXMLa_IEventBallot_strTitle							't'		// Ballot title / headline
 #define d_chXMLa_IEventBallot_strDescription					'd'		// Description of what/why the vote

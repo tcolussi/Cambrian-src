@@ -100,7 +100,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Display "d_sza_Profile " Details" _ "s=Display details about a role" _ d_sza_IconProfile _, // eMenuAction_DisplayProfileInfo
 	"Display Certificates" _ "s=Display the certificates securing (encrypting) the communication" _ "i=Certificate" _, // eMenuAction_DisplayCertificates
 	"Ballot" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
-	"Groups" _ "s=Manage groups" _,
+	"Groups" _ "s=Manage groups" _,								// eMenuAction_DisplayGroupManager
 
 	"Developer Apps"    _ "i=Browser" _, // eMenuAction_WikiSubMenu
 	//"Navshell Peers"	_ "s=Apps/navshell-contacts/index.html"		_"i=Browser" _,

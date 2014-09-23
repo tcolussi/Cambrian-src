@@ -53,7 +53,10 @@ TProfile::S_PaAllocateProfile(PVOID pConfigurationParent)
 	}
 
 
-TProfile::TProfile(CChatConfiguration * pConfigurationParent) : m_arraypEventsRecentMessagesReceived(this, 100), m_strJurisdiction("Pantheon")
+TProfile::TProfile(CChatConfiguration * pConfigurationParent) :
+	m_arraypEventsRecentMessagesReceived(this, 100),
+	m_arraypEventsRecentBallots(this, 20),
+	m_strJurisdiction("Pantheon")
 	{
 	Assert(pConfigurationParent != NULL);
 	m_pConfigurationParent = pConfigurationParent;
@@ -335,6 +338,7 @@ TProfile::GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC
 		TAccountXmpp * pAccount = *ppAccount++;
 		parraypGroups->Append(IN &pAccount->m_arraypaGroups);
 		}
+	parraypGroups->RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfObjectInvisible);
 	parraypGroups->SortByEventLastReceived();
 	}
 
@@ -348,6 +352,7 @@ TProfile::GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC
 		TAccountXmpp * pAccount = *ppAccount++;
 		parraypContacts->Append(IN &pAccount->m_arraypaContacts);
 		}
+	parraypContacts->RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfObjectInvisible);
 	parraypContacts->SortByEventLastReceived();
 	}
 

@@ -58,7 +58,7 @@ public:
 	ITreeItemChatLogEvents(TAccountXmpp * pAccount);
 	~ITreeItemChatLogEvents();
 	void Vault_RemoveAllReferencesToObjectsAboutBeingDeleted();
-
+	TProfile * PGetProfile() const;
 	CChatConfiguration * PGetConfiguration() const;
 
 	CVaultEvents * Vault_PGet_NZ();

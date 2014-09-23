@@ -131,6 +131,7 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 
 WNavigationTree::~WNavigationTree()
 	{
+	//EMessageBoxInformation("WNavigationTree::~WNavigationTree()");
 	}
 
 //	Unselect any Tree Item from the Navigation Tree.

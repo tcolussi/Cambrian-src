@@ -28,7 +28,7 @@ CPainterCell::DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...)
 int
 CPainterCell::DrawNumberWithinCircle(int nNumber)
 	{
-	nNumber = qrand() % 10;
+	nNumber = qrand() % 100;
 	if (nNumber > 0)
 		{
 		QRect rc = m_rcCell;
@@ -37,6 +37,7 @@ CPainterCell::DrawNumberWithinCircle(int nNumber)
 		setPen(g_oPenDot);
 		ptCenter.setY(ptCenter.y() + 2);
 		drawPoint(ptCenter);
+		//DrawLineHorizontal(rc.left(), rc.right(), ptCenter.y());	// Draw a longer line for large numbers
 		setPen(g_oPenDefault);
 		drawText(rc, Qt::AlignVCenter | Qt::AlignCenter, QString::number(nNumber));
 		return 16;
@@ -74,20 +75,14 @@ CArrayPtrDashboardSectionItems::AllocateItemForTreeItem(ITreeItem * piTreeItem)
 	Add(PA_CHILD new CDashboardSectionItem_ITreeItem(piTreeItem));
 	}
 
-class WDashboardSectionGroups : public WDashboardSection
-{
-public:
-	WDashboardSectionGroups(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
-	virtual void InitItems(TProfile * pProfile);
-};
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void
 WDashboardSectionGroups::InitItems(TProfile * pProfile)
 	{
 	CArrayPtrGroups arraypGroups;
 	pProfile->GetRecentGroups(OUT &arraypGroups);
 	TGroup ** ppGroupStop;
-	TGroup ** ppGroup = arraypGroups.PrgpGetGroupsStopMax(OUT &ppGroupStop, 5);
+	TGroup ** ppGroup = arraypGroups.PrgpGetGroupsStopMax(OUT &ppGroupStop, 10);
 	while (ppGroup != ppGroupStop)
 		{
 		TGroup * pGroup = *ppGroup++;
@@ -95,24 +90,29 @@ WDashboardSectionGroups::InitItems(TProfile * pProfile)
 		}
 	}
 
-class WDashboardSectionContacts : public WDashboardSection
-{
-public:
-	WDashboardSectionContacts(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
-	virtual void InitItems(TProfile * pProfile);
-};
-
 void
 WDashboardSectionContacts::InitItems(TProfile * pProfile)
 	{
 	CArrayPtrContacts arraypContacts;
 	pProfile->GetRecentContacts(OUT &arraypContacts);
 	TContact ** ppContactStop;
-	TContact ** ppContact = arraypContacts.PrgpGetContactsStopMax(OUT &ppContactStop, 5);
+	TContact ** ppContact = arraypContacts.PrgpGetContactsStopMax(OUT &ppContactStop, 10);
 	while (ppContact != ppContactStop)
 		{
 		TContact * pContact = *ppContact++;
 		m_arraypaItems.AddItem(new CDashboardSectionItem_TContact(pContact));
+		}
+	}
+
+void
+WDashboardSectionBallots::InitItems(TProfile * pProfile)
+	{
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = pProfile->m_arraypEventsRecentBallots.PrgpGetEventsStopLast(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		IEvent * pEvent = *--ppEventStop;
+		m_arraypaItems.AddItem(new CDashboardSectionItem_IEventBallot((IEventBallot *)pEvent));
 		}
 	}
 
@@ -133,7 +133,6 @@ CDashboardSectionItem_TGroup::DrawItemText(CPainterCell * pPainter)
 	{
 	pPainter->DrawTextWithinCell_VE("# $s", m_pGroup->TreeItem_PszGetNameDisplay());
 	}
-
 int
 CDashboardSectionItem_TGroup::DrawItemIcons(CPainterCell * pPainter)
 	{
@@ -147,7 +146,6 @@ CDashboardSectionItem_TContact::DrawItemText(CPainterCell * pPainter)
 	{
 	pPainter->DrawTextWithinCell_VE("$s", m_pContact->TreeItem_PszGetNameDisplay());
 	}
-
 int
 CDashboardSectionItem_TContact::DrawItemIcons(CPainterCell * pPainter)
 	{
@@ -155,6 +153,18 @@ CDashboardSectionItem_TContact::DrawItemIcons(CPainterCell * pPainter)
 	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
 	return pPainter->DrawNumberWithinCircle(m_pContact->m_cMessagesUnread);
 	}
+
+void
+CDashboardSectionItem_IEventBallot::DrawItemText(CPainterCell * pPainter)
+	{
+	pPainter->DrawTextWithinCell_VE("$S", &m_pBallot->m_strTitle);
+	}
+int
+CDashboardSectionItem_IEventBallot::DrawItemIcons(CPainterCell * pPainter)
+	{
+	return 0;
+	}
+
 
 singleton WDashboardCaption : public QWidget
 {
@@ -187,14 +197,11 @@ WDashboard::WDashboard()
 	{
 	Assert(g_pwDashboard == NULL);
 	g_pwDashboard = this;
+	m_pProfile = NULL;
 	setObjectName("Dashboard");
-	/*
-	setWindowTitle("Central Services Inc.");
-	setStyleSheet("background-color:#8080FF;");
-	*/
 	g_oFontBold = g_oFontNormal = font();
 	g_oFontBold.setWeight(QFont::Bold);
-	//setFont(g_oFontBold);
+
 	m_pwLabelCaption = new WLabel;
 	m_pwLabelCaption->setStyleSheet("background-color:#8080FF;");
 	m_pwLabelCaption->setMargin(3);
@@ -208,16 +215,27 @@ WDashboard::WDashboard()
 	QWidget * pwWidgetDashboard = new QWidget;	// Main widget for the dashboard
 	pwWidgetDashboard->setStyleSheet("background-color:#A0A0FF;");
 	setWidget(PA_CHILD pwWidgetDashboard);
-
 	m_poLayoutVertial = new OLayoutVerticalAlignTop(pwWidgetDashboard);
 	Layout_MarginsClear(INOUT m_poLayoutVertial);
 	m_poLayoutVertial->setSpacing(0);
+
+	InitToGarbage(OUT &m_sections, sizeof(m_sections));
+	m_sections.pwSectionBalots = new WDashboardSectionBallots("Ballots");
+	m_sections.pwSectionGroups = new WDashboardSectionGroups("Channels");
+	m_sections.pwSectionContacts = new WDashboardSectionContacts("Peers");
+
+	// Add each section to the vertical layout
+	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
+		m_poLayoutVertial->addWidget(*ppwSection);
+
+	/*
 	AddSection(new WDashboardSectionGroups("Ballots"));
 	AddSection(new WDashboardSectionGroups("Channels"));
 	AddSection(new WDashboardSectionContacts("Peers"));
 	AddSection(new WDashboardSectionGroups("Private Groups"));
+	*/
 	}
-
+/*
 void
 WDashboard::AddSection(PA_CHILD WDashboardSection * pawSection)
 	{
@@ -225,26 +243,56 @@ WDashboard::AddSection(PA_CHILD WDashboardSection * pawSection)
 	m_arraypSections.Add(pawSection);
 	m_poLayoutVertial->addWidget(pawSection);
 	}
+*/
 
 void
 WDashboard::ProfileSelectedChanged(TProfile * pProfile)
 	{
+	m_pProfile = pProfile;
 	m_pwLabelCaption->Label_SetTextPlain((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
 	// Notify each section the selected profile changed
-	WDashboardSection ** ppSectionStop;
-	WDashboardSection ** ppSection = m_arraypSections.PrgpGetSectionsStop(OUT &ppSectionStop);
-	while (ppSection != ppSectionStop)
+	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
 		{
-		WDashboardSection * pSection = *ppSection++;
-		pSection->m_arraypaItems.DeleteAllItems();
+		WDashboardSection * pwSection = *ppwSection;
+		pwSection->m_arraypaItems.DeleteAllItems();
 		if (pProfile != NULL)
-			pSection->InitItems(pProfile);
-		pSection->updateGeometry();
+			pwSection->InitItems(pProfile);
+		pwSection->updateGeometry();
 		}
 	//m_poLayoutVertial->invalidate();
 	//updateGeometry();
+	repaint();
 	}
 
+void
+WDashboard::NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ)
+	{
+	Assert(pContactOrGroup_NZ != NULL);
+	if (pContactOrGroup_NZ->PGetProfile() == m_pProfile)
+		ProfileSelectedChanged(m_pProfile);	// At the moment, refresh the entire thing.  This is not efficient, but it works
+	}
+
+void
+WDashboard::NewEventRelatedToBallot(IEventBallot * pEventBallot)
+	{
+	// Search if the ballot is already there, and if not, add it
+	//m_sections.pwSectionBalots->m_arraypaItems
+	}
+
+void
+WDashboard::RefreshContact(TContact * pContact)
+	{
+	Assert(pContact != NULL);
+	if (pContact->PGetProfile() == m_pProfile)
+		m_sections.pwSectionContacts->repaint();
+	}
+
+void
+WDashboard::RefreshGroup(TGroup * pGroup)
+	{
+	if (pGroup->PGetProfile() == m_pProfile)
+		m_sections.pwSectionGroups->repaint();
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WDashboardSection::WDashboardSection(PSZAC pszSectionName) : WWidget(NULL)
@@ -320,50 +368,6 @@ WDashboardSection::paintEvent(QPaintEvent *)
 		oPainter.m_rcCell.moveTop(yTop);
 		}
 
-	#if 0
-	CStr strName;
-	TProfile * pProfile = g_oConfiguration.m_pProfileSelected;
-	if (pProfile != NULL)
-		{
-		TAccountXmpp * pAccount = pProfile->m_arraypaAccountsXmpp.PGetAccountFirst_YZ();	// Temporary fix until we have real OT IDs
-		if (pAccount != NULL)
-			{
-			int cGroups = 0;
-			TGroup ** ppGroupStop;
-			TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
-			while (ppGroup != ppGroupStop)
-				{
-				TGroup * pGroup = *ppGroup++;
-				strName.Format("#$s", pGroup->TreeItem_PszGetNameDisplay());
-				//p.drawRect(rcItem);
-				oPainter.drawText(IN rcItemText, Qt::AlignVCenter, strName);
-				strName.Format("$i", pGroup->m_arraypaMembers.GetSize());
-
-				oPainter.setPen(oPenDot);
-				//oPainter.drawEllipse(rcItemNumber);
-				oPainter.drawPoint(xDot, yTop + d_cyHeightSectionItem / 2 + 1);
-				oPainter.setPen(oPenDefault);
-				//oPainter.drawText(xDot, yTop + d_cyHeightSectionItem / 2, strName);
-				oPainter.drawText(rcItemNumber, Qt::AlignVCenter | Qt::AlignCenter, strName);
-
-
-				//p.drawText(4, yTop, strName);
-				/*
-				rcItem.setTop(yTop);
-				yTop += d_cyHeightSectionItem;
-				rcItem.setBottom(yTop);
-				*/
-				yTop += d_cyHeightSectionItem;
-				rcItemText.moveTop(yTop);
-				rcItemNumber.moveTop(yTop);
-				//rcItem.moveCenter(d_cyHeightSectionItem
-				if (cGroups++ > 2)
-					break;
-				}
-			}
-	//p.drawText(3, 10, Qt::AlignBottom, m_sName);
-		}
-	#endif
 	// Draw the caption last using the bold font
 	oPainter.setFont(g_oFontBold);
 	/*
@@ -372,7 +376,6 @@ WDashboardSection::paintEvent(QPaintEvent *)
 	*/
 	oPainter.drawText(d_cxMarginSection, d_cyHeightSectionItem, m_sName);
 	oPainter.drawLine(rcSection.bottomLeft(), rcSection.bottomRight());
-
 	/*
 	oPainter.drawRect( 10, 10, 85, 35 );
 	oPainter.drawRoundRect( 10, 55, 85, 35 );
@@ -389,4 +392,32 @@ Dashboard_UpdateAccordingToSelectedProfile(TProfile * pProfileSelected)
 	Endorse(pProfileSelected == NULL);
 	if (g_pwDashboard != NULL)
 		g_pwDashboard->ProfileSelectedChanged(pProfileSelected);
+	}
+
+void
+Dashboard_UpdateContact(TContact * pContact)
+	{
+	if (g_pwDashboard != NULL)
+		g_pwDashboard->RefreshContact(pContact);
+	}
+
+void
+Dashboard_UpdateGroup(TGroup * pGroup)
+	{
+	if (g_pwDashboard != NULL)
+		g_pwDashboard->RefreshGroup(pGroup);
+	}
+
+void
+Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ)
+	{
+	if (g_pwDashboard != NULL)
+		g_pwDashboard->NewEventsFromContactOrGroup(pContactOrGroup_NZ);
+	}
+
+void
+Dashboard_NewEventRelatedToBallot(IEventBallot * pEventBallot)
+	{
+	if (g_pwDashboard != NULL)
+		g_pwDashboard->NewEventRelatedToBallot(pEventBallot);
 	}

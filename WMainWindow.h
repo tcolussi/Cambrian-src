@@ -38,6 +38,7 @@ public:
 	void TimerStartFlashIconNewMessage();
 
 public slots:
+	void SL_Quitting();
 	void SL_MenuAboutToShow();
 	void SL_MenuActionTriggered(QAction * pAction);
 	void SL_SystemTrayMessageClicked();

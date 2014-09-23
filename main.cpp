@@ -176,6 +176,7 @@ main(int argc, char *argv[])
 
 	//oApplication.setStyleSheet("QPushButton { padding: 3 10 3 10; }");
 	WMainWindow wMainWindow;
+	QObject::connect(&oApplication, SIGNAL(aboutToQuit()), &wMainWindow, SLOT(SL_Quitting()));
 
 	#ifdef DEBUG
 	// Run the test suites just after creating the main window and before showing the application to the user

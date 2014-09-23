@@ -293,6 +293,8 @@ TContact::TreeItem_IconUpdateOnMessagesRead()
 			}
 		}
 	*/
+	void Dashboard_UpdateContact(TContact * pContact);
+	Dashboard_UpdateContact(this);
 	}
 
 //	TGroup::ITreeItem::TreeItem_IconUpdateOnMessagesRead()
@@ -319,6 +321,8 @@ TGroup::TreeItem_IconUpdateOnMessagesRead()
 			}
 		}
 	TreeItemChatLog_UpdateTextAndIcon();
+	void Dashboard_UpdateGroup(TGroup * pGroup);
+	Dashboard_UpdateGroup(this);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

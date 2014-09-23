@@ -10,7 +10,6 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "XcpApi.h"
-#include "ApiJavaScript.h"
 
 //	Entry point of all XCP stanzas
 void
@@ -857,11 +856,17 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		EEventClass eEventClass = pEvent->EGetEventClass();
 		switch (eEventClass)
 			{
+		case CEventBallotReceived::c_eEventClass:
+			pProfile->m_arraypEventsRecentBallots.AddEvent(pEvent);
+			void Dashboard_NewEventRelatedToBallot(IEventBallot * pEventBallot);
+			Dashboard_NewEventRelatedToBallot((IEventBallot *)pEvent);
+			break;
 		case CEventMessageTextReceived::c_eEventClass:
 			pProfile->m_arraypEventsRecentMessagesReceived.AddEvent(pEvent);
 			// Fall through //
 		case CEventMessageTextSent::c_eEventClass:
 			pszExtra = ((IEventMessageText *)pEvent)->m_strMessageText;
+			break;
 		default:
 			break;
 			} /// switch
@@ -885,6 +890,9 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 	Assert(pEvent != NULL);
 	if (pEvent != NULL)
 		pContactOrGroup_NZ->TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(IN pEvent->PszGetTextOfEventForSystemTray(OUT_IGNORED &g_strScratchBufferStatusBar), m_pContact, pMember);
+
+	void Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
+	Dashboard_NewEventsFromContactOrGroup(pContactOrGroup_NZ);
 
 	} // BinXmlAppendXcpApiMessageSynchronization()
 

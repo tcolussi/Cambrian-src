@@ -8,7 +8,6 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "IEventBallot.h"
 
 const QBrush c_brushSilver(d_coSilver);			// Display messages from Cambrian in a silver (light gray) color
 const QBrush c_brushGreenSuperPale(d_coGreenSuperPale);

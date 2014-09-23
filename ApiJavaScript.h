@@ -1,4 +1,4 @@
-//	ApiJavaScript.h //
+//	ApiJavaScript.h
 //	Cambrian objects available in JavaScript
 #ifndef APIJAVASCRIPT_H
 #define APIJAVASCRIPT_H
