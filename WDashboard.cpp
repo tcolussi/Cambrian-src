@@ -144,6 +144,9 @@ CDashboardSectionItem_TGroup::DrawItemIcons(CPainterCell * pPainter)
 void
 CDashboardSectionItem_TContact::DrawItemText(CPainterCell * pPainter)
 	{
+	EMenuAction eMenuIconPresence = m_pContact->Contact_EGetMenuActionPresence();
+	///pPainter->drawImage(QPointF(pPainter->m_rcCell.left(), pPainter->m_rcCell.top()), PGetMenuAction(eMenuIconPresence)->icon());
+
 	pPainter->DrawTextWithinCell_VE("$s", m_pContact->TreeItem_PszGetNameDisplay());
 	}
 int
@@ -227,23 +230,7 @@ WDashboard::WDashboard()
 	// Add each section to the vertical layout
 	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
 		m_poLayoutVertial->addWidget(*ppwSection);
-
-	/*
-	AddSection(new WDashboardSectionGroups("Ballots"));
-	AddSection(new WDashboardSectionGroups("Channels"));
-	AddSection(new WDashboardSectionContacts("Peers"));
-	AddSection(new WDashboardSectionGroups("Private Groups"));
-	*/
 	}
-/*
-void
-WDashboard::AddSection(PA_CHILD WDashboardSection * pawSection)
-	{
-	Assert(pawSection != NULL);
-	m_arraypSections.Add(pawSection);
-	m_poLayoutVertial->addWidget(pawSection);
-	}
-*/
 
 void
 WDashboard::ProfileSelectedChanged(TProfile * pProfile)

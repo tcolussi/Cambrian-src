@@ -253,45 +253,6 @@ OJapiPollCore::id() const
 	}
 
 QString
-OJapiPollCore::status() const
-	{
-    if ( m_pBallot->m_tsStopped != d_ts_zNA )
-        return "stopped";
-
-    if ( m_pBallot->m_tsStarted != d_ts_zNA )
-        return "started";
-
-	return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "unsaved" : "unstarted";
-	//return "unsaved";
-	}
-
-int
-OJapiPollCore::pollTimeLength() const
-    {
-    //MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::pollTimeLength get");
-    return m_pBallot->m_cSecondsPollLength;
-    }
-
-void
-OJapiPollCore::pollTimeLength(int cSeconds)
-    {
-    //MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPoll::pollTimeLength set");
-    m_pBallot->m_cSecondsPollLength = cSeconds;
-    }
-void
-OJapiPollCore::pollTargetId(const CString & sTargetId)
-	{
-	m_pBallot->m_strTargetIdentifier = sTargetId;
-	}
-
-QString
-OJapiPollCore::pollTargetId() const
-	{
-	return m_pBallot->m_strTargetIdentifier;
-	}
-
-
-QString
 OJapiPollCore::title() const
 	{
 	return m_pBallot->m_strTitle;
@@ -313,15 +274,112 @@ OJapiPollCore::description(const QString & sDescription)
 	{
 	m_pBallot->m_strDescription = sDescription;
 	}
-QStringList
-OJapiPollCore::options() const
+
+bool
+OJapiPollCore::allowComments() const
 	{
-	return m_pBallot->LsGetChoices();
+	return ((m_pBallot->m_uFlagsBallot & IEventBallot::FB_kfAllowNoComments) == 0);
 	}
 void
-OJapiPollCore::options(const QStringList & lsChoices)
+OJapiPollCore::allowComments(bool fAllowComments)
 	{
-	return m_pBallot->SetChoices(lsChoices);
+	if (fAllowComments)
+		m_pBallot->m_uFlagsBallot &= ~IEventBallot::FB_kfAllowNoComments;
+	else
+		m_pBallot->m_uFlagsBallot |= IEventBallot::FB_kfAllowNoComments;
+	}
+
+bool
+OJapiPollCore::allowMultipleChoices() const
+	{
+	return ((m_pBallot->m_uFlagsBallot & IEventBallot::FB_kfAllowMultipleChoices) != 0);
+	}
+void
+OJapiPollCore::allowMultipleChoices(bool fAllowMultipleChoices)
+	{
+	if (fAllowMultipleChoices)
+		m_pBallot->m_uFlagsBallot |= IEventBallot::FB_kfAllowMultipleChoices;
+	else
+		m_pBallot->m_uFlagsBallot &= ~IEventBallot::FB_kfAllowMultipleChoices;
+	}
+
+int
+OJapiPollCore::pollTimeLength() const
+	{
+	//MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::pollTimeLength get");
+	return m_pBallot->m_cSecondsPollLength;
+	}
+
+void
+OJapiPollCore::pollTimeLength(int cSeconds)
+	{
+	//MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPoll::pollTimeLength set");
+	m_pBallot->m_cSecondsPollLength = cSeconds;
+	}
+
+QVariantList
+OJapiPollCore::options() const
+	{
+	Assert(m_pBallot != NULL);
+	// Fetching the options is a bit more complex because we also want the vote tally/counts.
+	// Therefore we have to see if there has been a ballot sent, and get the options from there.
+	CEventBallotSent * pEventBallotSent = m_pBallot->PGetEventBallotSend_YZ();
+	if (pEventBallotSent == NULL)
+		pEventBallotSent = m_pBallot;	// Use the poll template
+	return pEventBallotSent->LsGetChoices();
+	}
+void
+OJapiPollCore::options(const QVariantList & lsOptions)
+	{
+	return m_pBallot->SetChoices(lsOptions);
+	}
+QString
+OJapiPollCore::dismissText() const
+	{
+	return m_pBallot->m_strButtonDismiss;
+	}
+void
+OJapiPollCore::dismissText(const QString & sText)
+	{
+	m_pBallot->m_strButtonDismiss = sText;
+	}
+
+QString
+OJapiPollCore::submitText() const
+	{
+	return m_pBallot->m_strButtonSubmit;
+	}
+void
+OJapiPollCore::submitText(const QString & sText)
+	{
+	m_pBallot->m_strButtonSubmit = sText;
+	}
+
+void
+OJapiPollCore::pollTargetId(const CString & sTargetId)
+	{
+	m_pBallot->m_strTargetIdentifier = sTargetId;
+	}
+QString
+OJapiPollCore::pollTargetId() const
+	{
+	return m_pBallot->m_strTargetIdentifier;
+	}
+
+QString
+OJapiPollCore::originator() const
+	{
+	return m_pBallot->PGetProfile()->m_strNameProfile;	// At the moment, the originator is the profile/role who sent the ballot
+	}
+
+QString
+OJapiPollCore::status() const
+	{
+	if ( m_pBallot->m_tsStopped != d_ts_zNA )
+		return "stopped";
+	if ( m_pBallot->m_tsStarted != d_ts_zNA )
+		return "started";
+	return (m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted) ? "unsaved" : "unstarted";
 	}
 
 QDateTime
@@ -329,7 +387,6 @@ OJapiPollCore::dateStarted() const
 	{
     return Timestamp_ToQDateTime(m_pBallot->m_tsStarted);
 	}
-
 QDateTime
 OJapiPollCore::dateStopped() const
 	{
@@ -341,7 +398,26 @@ OJapiPollResultsStats::OJapiPollResultsStats(CEventBallotPoll * pBallot)
     m_pBallot = pBallot;
     }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+OJapiPollOption::OJapiPollOption(_CEventBallotChoice * pChoice)
+	{
+	Assert(pChoice != NULL);
+	m_pChoice = pChoice;
+	}
 
+QString
+OJapiPollOption::text() const
+	{
+	return m_pChoice->m_strQuestion;
+	}
+int
+OJapiPollOption::count() const
+	{
+	return m_pChoice->m_cVotes;
+	}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 OJapiPollResultsComment::OJapiPollResultsComment(_CEventBallotVote * pComment )
 	{
     m_pComment = pComment;
@@ -392,8 +468,9 @@ OJapiPollResults::comments() const
 			if (pVote->m_paoJapiPollResultsComment == NULL)
 				pVote->m_paoJapiPollResultsComment = new OJapiPollResultsComment(pVote);
 			lvComments.append(QVariant::fromValue(pVote->m_paoJapiPollResultsComment));
-			#endif
+			#else
 			lvComments.append(QVariant::fromValue(new OJapiPollResultsComment(pVote)));
+			#endif
 			}
 		}
     return lvComments;

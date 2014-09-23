@@ -82,6 +82,9 @@ public:
 	UINT m_uFlagsBallot;							// Various options for the ballot
 	CStr m_strTitle;
 	CStr m_strDescription;
+	CStr m_strButtonSubmit;
+	CStr m_strButtonDismiss;
+
 protected:
 	CArrayPtrBallotChoices m_arraypaChoices;		// Which choices are available on the ballot
 public:
@@ -98,8 +101,8 @@ public:
 	virtual void DetachFromObjectsAboutBeingDeleted();
 
 	void DeleteChoicesAndVotes();
-	void SetChoices(const QStringList & lsChoices);
-	QStringList LsGetChoices() const;
+	void SetChoices(const QVariantList & lsChoices);
+	QVariantList LsGetChoices() CONST_MCC;
 
 	_CEventBallotChoice ** PrgpGetChoicesStopWithTally(OUT _CEventBallotChoice *** pppChoiceStop) CONST_MCC;
 

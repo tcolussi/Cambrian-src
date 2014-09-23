@@ -7,6 +7,8 @@
 #define d_chXMLa_IEventBallot_strTitle							't'		// Ballot title / headline
 #define d_chXMLa_IEventBallot_strDescription					'd'		// Description of what/why the vote
 #define d_chXMLa_IEventBallot_uxFlagsBallot						'b'		// Various options for the ballot
+#define d_chXMLa_IEventBallot_strButtonSubmit					'S'		// Customize the button text to submit a vote
+#define d_chXMLa_IEventBallot_strButtonDismiss					'D'		// Customize the button text to dismiss a vote
 
 #define d_chXMLa_CEventBallotReceived_uxVotedChoice				'v'		// What was voted (which choice(s) the user selected)
 #define d_szXMLa_CEventBallotReceived_uxVotedChoice_ux			" v='$x'"
@@ -18,13 +20,14 @@
 #define d_chXMLa_CEventBallotPoll_tsStopped						'S'
 #define d_chXMLa_CEventBallotPoll_cSecondsPollLength			'l'
 #define d_chXMLa_CEventBallotPoll_strTargetId					'T'
-#define d_chXMLa_CEventBallotPoll_tsEventIdBallot				'E'
 
 #define d_chXMLe_BallotChoices						'C'
 #define d_szXMLe_BallotChoices						"C"
 #define d_chXMLe_BallotChoice						'C'
 #define d_szXMLe_BallotChoice_S						"C t='^S'"
+#define d_szXMLe_BallotChoice_S_i					"C t='^S' c='$i'"
 #define d_chXMLa_BallotChoice_strText				't'				// Text to appear for one ballot choice
+#define d_chXMLa_BallotChoice_cCount				'c'				// Number of votes for the choice
 #define d_chXMLa_BallotChoice_strGroup				'g'				// NYI: Which sub-group to automatically create
 
 #define d_chXMLe_BallotVotes						'V'
@@ -81,21 +84,25 @@ CArrayPtrBallotVotes::DeleteAllVotes()
 EXml
 IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	{
+	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chXMLa_IEventBallot_uxFlagsBallot, m_uFlagsBallot);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_IEventBallot_strTitle, m_strTitle);
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_IEventBallot_strDescription, m_strDescription);
-	pbinXmlAttributes->BinAppendXmlAttributeUIntHexadecimal(d_chXMLa_IEventBallot_uxFlagsBallot, m_uFlagsBallot);
+	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_IEventBallot_strButtonSubmit, m_strButtonSubmit);
+	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_IEventBallot_strButtonDismiss, m_strButtonDismiss);
 
-	pbinXmlAttributes->BinAppendText("><" d_szXMLe_BallotChoices ">");
+	const BOOL fSerializeVotes = pbinXmlAttributes->FuSerializingEventToDisk();	// Serialize the votes only when saving to disk.  Transmitting via XOSP or cloning does not serialize the votes.
+	PSZAC pszFmtTemplateBallotChoice_S_i = fSerializeVotes ? "<"d_szXMLe_BallotChoice_S_i"/>" : "<"d_szXMLe_BallotChoice_S"/>";
+	pbinXmlAttributes->BinAppendText("><"d_szXMLe_BallotChoices">");
 	_CEventBallotChoice ** ppChoiceStop;
 	_CEventBallotChoice ** ppChoice = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
 		{
 		_CEventBallotChoice * pChoice = *ppChoice++;
-		pbinXmlAttributes->BinAppendText_VE("<" d_szXMLe_BallotChoice_S "/>", &pChoice->m_strQuestion);
+		pbinXmlAttributes->BinAppendText_VE(pszFmtTemplateBallotChoice_S_i, &pChoice->m_strQuestion, pChoice->m_cVotes);
 		}
-	pbinXmlAttributes->BinAppendText("</" d_szXMLe_BallotChoices ">");
+	pbinXmlAttributes->BinAppendText("</"d_szXMLe_BallotChoices">");
 
-	if (pbinXmlAttributes->FuSerializingEventToDisk())
+	if (fSerializeVotes)
 		{
 		// Do not transmit the votes to the contacts; only serialize the vote to disk.
 		pbinXmlAttributes->BinAppendText("><" d_szXMLe_BallotVotes ">");
@@ -115,9 +122,11 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 void
 IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	{
+	pXmlNodeElement->UpdateAttributeValueUIntHexadecimal(d_chXMLa_IEventBallot_uxFlagsBallot, OUT_F_UNCH &m_uFlagsBallot);
 	pXmlNodeElement->UpdateAttributeValueCStr(d_chXMLa_IEventBallot_strTitle, OUT_F_UNCH &m_strTitle);
 	pXmlNodeElement->UpdateAttributeValueCStr(d_chXMLa_IEventBallot_strDescription, OUT_F_UNCH &m_strDescription);
-	pXmlNodeElement->UpdateAttributeValueUIntHexadecimal(d_chXMLa_IEventBallot_uxFlagsBallot, OUT_F_UNCH &m_uFlagsBallot);
+	pXmlNodeElement->UpdateAttributeValueCStr(d_chXMLa_IEventBallot_strButtonSubmit, OUT_F_UNCH &m_strButtonSubmit);
+	pXmlNodeElement->UpdateAttributeValueCStr(d_chXMLa_IEventBallot_strButtonDismiss, OUT_F_UNCH &m_strButtonDismiss);
 
 	const CXmlNode * pXmlNodeChoices = pXmlNodeElement->PFindElement(d_chXMLe_BallotChoices);
 	if (pXmlNodeChoices != NULL)
@@ -128,6 +137,7 @@ IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 			{
 			_CEventBallotChoice * pChoice = PAllocateNewChoice();
 			pXmlNodeChoice->UpdateAttributeValueCStr(d_chXMLa_BallotChoice_strText, OUT_F_UNCH &pChoice->m_strQuestion);
+			pXmlNodeChoice->UpdateAttributeValueInt(d_chXMLa_BallotChoice_cCount, OUT &pChoice->m_cVotes);
 			pXmlNodeChoice = pXmlNodeChoice->m_pNextSibling;
 			}
 		}
@@ -339,8 +349,13 @@ IEventBallot::PrgpGetChoicesStopWithTally(OUT _CEventBallotChoice *** pppChoiceS
 	if ((m_uFlagsBallot & FB_kfVotesTailied) == 0)
 		{
 		m_uFlagsBallot |= FB_kfVotesTailied;
-		// Calculate the votes
+		//	Clear the previous votes
 		const int cChoices = *pppChoiceStop - prgpChoices;
+		_CEventBallotChoice ** ppChoice = prgpChoices;
+		while (ppChoice != *pppChoiceStop)
+			(*ppChoice++)->m_cVotes = 0;
+
+		// Calculate the votes
 		_CEventBallotVote ** ppVoteStop;
 		_CEventBallotVote ** ppVote = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
 		while (ppVote != ppVoteStop)
@@ -357,7 +372,7 @@ IEventBallot::PrgpGetChoicesStopWithTally(OUT _CEventBallotChoice *** pppChoiceS
 		}
 	return prgpChoices;
 	}
-
+/*
 void
 IEventBallot::SetChoices(const QStringList & lsChoices)
 	{
@@ -367,19 +382,29 @@ IEventBallot::SetChoices(const QStringList & lsChoices)
 		PAllocateNewChoice()->m_strQuestion = sChoice;
 		}
 	}
-
-QStringList
-IEventBallot::LsGetChoices() const
+*/
+void
+IEventBallot::SetChoices(const QVariantList & lsChoices)
 	{
-	QStringList lsChoices;
+	DeleteChoicesAndVotes();	// Delete any previous choice(s)
+	foreach(const QVariant & vChoice, lsChoices)
+		{
+		PAllocateNewChoice()->m_strQuestion = vChoice.toString();
+		}
+	}
+
+QVariantList
+IEventBallot::LsGetChoices() CONST_MCC
+	{
+	QVariantList oList;
 	_CEventBallotChoice ** ppChoiceStop;
-	_CEventBallotChoice ** ppChoice = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
+	_CEventBallotChoice ** ppChoice = PrgpGetChoicesStopWithTally(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
 		{
 		_CEventBallotChoice * pChoice = *ppChoice++;
-		lsChoices.append(pChoice->m_strQuestion);
+		oList.append(QVariant::fromValue(new OJapiPollOption(pChoice)));
 		}
-	return lsChoices;
+	return oList;
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

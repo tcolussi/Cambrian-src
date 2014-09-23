@@ -19,6 +19,7 @@ class OJapi;
 		class OJapiPollResults;
 	class OJapiPollResultsStats;
 	class OJapiPollResultsComment;
+	class OJapiPollAttatchment;
 
 	class OJapiContact;
 	class OJapiGroup;
@@ -401,27 +402,45 @@ public:
 	void title(const QString & sTitle);
 	QString description() const;
 	void description(const QString & sDescription);
-	QStringList options() const;
-	void options(const QStringList & lsChoices);
-	QDateTime dateStarted() const;
-	QDateTime dateStopped() const;
-	QString status() const;
+	QVariantList options() const;
+	void options(const QVariantList & lsOptions);
+	bool allowComments() const;
+	void allowComments(bool fAllowComments);
+	bool allowMultipleChoices() const;
+	void allowMultipleChoices(bool fAllowMultipleChoices);
     int pollTimeLength() const;
     void pollTimeLength(int cSeconds);
+	QString dismissText() const;
+	void dismissText(const QString & sText);
+	QString submitText() const;
+	void submitText(const QString & sText);
 	void pollTargetId(const CString & sTargetId);
 	QString pollTargetId() const;
+
+	//	These values are after the poll started
+	QString originator() const;
+	QString status() const;
+	QDateTime dateStarted() const;
+	QDateTime dateStopped() const;
+
 
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString type READ type)
 	Q_PROPERTY(QString title READ title WRITE title)
 	Q_PROPERTY(QString description READ description WRITE description)
-	Q_PROPERTY(QStringList options READ options WRITE options)
-	Q_PROPERTY(QDateTime dateStarted READ dateStarted)
-	Q_PROPERTY(QDateTime dateStopped READ dateStopped)
-	Q_PROPERTY(QString status READ status)
+	Q_PROPERTY(QVariantList options READ options WRITE options)
+	//Q_PROPERTY(QStringList options WRITE options)
+	Q_PROPERTY(bool allowComments READ allowComments WRITE allowComments)
+	Q_PROPERTY(bool allowMultipleChoices READ allowMultipleChoices WRITE allowMultipleChoices)
 	Q_PROPERTY(int pollTimeLength READ pollTimeLength WRITE pollTimeLength)
+	Q_PROPERTY(QString dismissText READ dismissText WRITE dismissText)
+	Q_PROPERTY(QString submitText READ submitText WRITE submitText)
 	Q_PROPERTY(QString pollTargetId READ pollTargetId WRITE pollTargetId)
 
+	Q_PROPERTY(QString originator READ originator)
+	Q_PROPERTY(QString status READ status)
+	Q_PROPERTY(QDateTime dateStarted READ dateStarted)
+	Q_PROPERTY(QDateTime dateStopped READ dateStopped)
 }; // OJapiPollCore
 
 
@@ -446,6 +465,21 @@ public:
     Q_PROPERTY(int sent READ sent)
 };
 #define POJapiPollResultsStats		POJapi
+
+class _CEventBallotChoice;
+class OJapiPollOption : public OJapi	// Display an option/choice to vote
+{
+	Q_OBJECT
+	_CEventBallotChoice * m_pChoice;
+
+public:
+	OJapiPollOption(_CEventBallotChoice * pChoice);
+	QString text() const;
+	int count() const;
+
+	Q_PROPERTY(QString text READ text)
+	Q_PROPERTY(int count READ count)
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class _CEventBallotVote;

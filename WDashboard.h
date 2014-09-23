@@ -154,7 +154,6 @@ protected:
 
 public:
 	WDashboard();
-	void AddSection(PA_CHILD WDashboardSection * pawSection);
 	void ProfileSelectedChanged(TProfile * pProfile);
 	void NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 	void NewEventRelatedToBallot(IEventBallot * pEventBallot);
