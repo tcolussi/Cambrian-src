@@ -28,7 +28,7 @@ CPainterCell::DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...)
 int
 CPainterCell::DrawNumberWithinCircle(int nNumber)
 	{
-	nNumber = qrand() % 100;
+//	nNumber = qrand() % 100;
 	if (nNumber > 0)
 		{
 		QRect rc = m_rcCell;
