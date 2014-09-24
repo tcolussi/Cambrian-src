@@ -281,7 +281,7 @@ WDashboardSection::DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvD
 QSize
 WDashboardSection::sizeHint() const
 	{
-	return QSize(150, m_arraypaItems.GetSize() * d_cyHeightSectionItem + 24);
+	return QSize(150, m_arraypaItems.GetSize() * d_cyHeightSectionItem + 28);
 	}
 
 //	WDashboardSection::QWidget::heightForWidth()
@@ -309,6 +309,7 @@ WDashboardSection::paintEvent(QPaintEvent *)
 	g_oPenDot.setCapStyle(Qt::RoundCap);
 //	oPainter.setOpacity(0.7);
 
+	oPainter.setPen(g_oPenDefault);
 
 	QRect rcSection = rect();
 	qreal xRight = rcSection.width();
@@ -330,7 +331,6 @@ WDashboardSection::paintEvent(QPaintEvent *)
 		}
 
 	// Draw the caption last using the bold font
-	oPainter.setPen(g_oPenDefault);
 	oPainter.setFont(g_oFontBold);
 	/*
 	rcSection.setHeight(d_cyHeightSectionItem);

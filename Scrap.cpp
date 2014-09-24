@@ -1619,3 +1619,49 @@ CVaultEvents::PFindEventNextReceivedByOtherGroupMembers(TIMESTAMP tsEventID, TCo
 	return pEventNext;
 	} // PFindEventNextReceivedByOtherGroupMembers()
 */
+
+
+class CDashboardSectionItem_ITreeItem : public IDashboardSectionItem
+{
+public:
+	ITreeItem * m_piTreeItem;
+public:
+	CDashboardSectionItem_ITreeItem(ITreeItem * piTreeItem) { m_piTreeItem = piTreeItem; }
+	virtual void DrawItemText(CPainterCell * pPainter);
+	virtual int DrawItemIcons(CPainterCell * pPainter);
+};
+
+class CDashboardSectionItem_TGroup : public IDashboardSectionItem
+{
+public:
+	TGroup * m_pGroup;
+
+public:
+	CDashboardSectionItem_TGroup(TGroup * pGroup) { m_pGroup = pGroup; }
+	virtual void DrawItemText(CPainterCell * pPainter);
+	virtual int DrawItemIcons(CPainterCell * pPainter);
+};
+
+class CDashboardSectionItem_TContact : public IDashboardSectionItem
+{
+public:
+	TContact * m_pContact;
+
+public:
+	CDashboardSectionItem_TContact(TContact * pContact) { m_pContact = pContact; }
+	virtual void DrawItemText(CPainterCell * pPainter);
+	virtual int DrawItemIcons(CPainterCell * pPainter);
+};
+
+
+class CDashboardSectionItem_IEventBallot : public IDashboardSectionItem
+{
+public:
+	IEventBallot * m_pBallot;
+
+public:
+	CDashboardSectionItem_IEventBallot(IEventBallot * pBallot) { m_pBallot = pBallot; }
+	virtual void DrawItemText(CPainterCell * pPainter);
+	virtual int DrawItemIcons(CPainterCell * pPainter);
+};
+

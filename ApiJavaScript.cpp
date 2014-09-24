@@ -730,6 +730,7 @@ OCapiRootGUI::peerMessages()
 	return &m_oPeerMessagesList;
 	}
 
+#ifdef TEST_QT_IMAGE_PROVIDER
 OCapiImageProvider::OCapiImageProvider()  : QQuickImageProvider(QQuickImageProvider::Pixmap)
 	{
 	}
@@ -762,8 +763,7 @@ QPixmap OCapiImageProvider::requestPixmap(const QString &id, QSize * /*size*/, c
 
 	return profilepic;
 	}
-
-
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////////

@@ -636,6 +636,12 @@ OJapiPoll::send(const QString & sGroupId)
 	return false;
 	}
 
+bool
+OJapiPoll::submit()
+	{
+	return true;
+	}
+
 
 void OJapiAppBallotmaster::open()
     {

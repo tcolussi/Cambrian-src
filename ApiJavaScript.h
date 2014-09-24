@@ -5,7 +5,9 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#ifdef TEST_QT_IMAGE_PROVIDER
 #include <QQuickImageProvider>
+#endif
 #include "TApplicationBallotmaster.h"
 
 // HTML js API
@@ -375,14 +377,14 @@ public:
 #define POCapiRootGUI	POJapi
 
 
-
+#ifdef TEST_QT_IMAGE_PROVIDER
 class OCapiImageProvider : public QQuickImageProvider
 {
 public:
 	OCapiImageProvider();
 	QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize);
 };
-
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -547,6 +549,7 @@ public slots:
 	bool start();
 	void stop();
 	bool send(const QString & sGroupId);
+	bool submit();
 	POJapiPollResults getResults() CONST_MCC;
 
 	// attatchments sections
