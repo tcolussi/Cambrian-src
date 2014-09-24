@@ -1,17 +1,8 @@
 //	ApiJavaScript.h
 //	Cambrian objects available in JavaScript
-#ifndef APIJAVASCRIPT_H
-#define APIJAVASCRIPT_H
-#ifndef PRECOMPILEDHEADERS_H
-	#include "PreCompiledHeaders.h"
-#endif
-#ifdef TEST_QT_IMAGE_PROVIDER
-#include <QQuickImageProvider>
-#endif
-#include "TApplicationBallotmaster.h"
 
 // HTML js API
-class OJapi;	
+class OJapi;
 	class OJapiCambrian;
 	class OJapiApps;
 	class OJapiAppBallotmaster;
@@ -39,6 +30,15 @@ class OJapiBrowserTab;
 class OJapiBrowsersList;
 class OJapiJurisdiction;
 
+#ifndef APIJAVASCRIPT_H
+#define APIJAVASCRIPT_H
+#ifndef PRECOMPILEDHEADERS_H
+	#include "PreCompiledHeaders.h"
+#endif
+#ifdef TEST_QT_IMAGE_PROVIDER
+#include <QQuickImageProvider>
+#endif
+#include "TApplicationBallotmaster.h"
 
 class CListVariants : public QVariantList
 {
