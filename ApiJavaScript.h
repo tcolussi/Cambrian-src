@@ -757,6 +757,7 @@ class OJapiCambrian : public OJapi
 public:
 	TProfile * m_pProfile;
 	CArrayPtrRuntimeObjects m_arraypaTemp;
+	static OJapiAppBallotmaster * s_pAppBallotmaster;	// Pointer to the last ballotmaster
 
 protected:
 	OSettings m_oSettings;

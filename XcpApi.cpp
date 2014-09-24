@@ -857,8 +857,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		switch (eEventClass)
 			{
 		case CEventBallotReceived::c_eEventClass:
-			pProfile->m_arraypEventsRecentBallots.AddEvent(pEvent);
-			Dashboard_NewEventRelatedToBallot((IEventBallot *)pEvent);
+			pProfile->BallotMaster_EventNewBallotReceived((CEventBallotReceived *)pEvent);
 			break;
 		case CEventMessageTextReceived::c_eEventClass:
 			pProfile->m_arraypEventsRecentMessagesReceived.AddEvent(pEvent);

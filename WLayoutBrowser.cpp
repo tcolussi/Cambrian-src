@@ -53,7 +53,7 @@ OSettings::AudioEnabled(bool fEnable)
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
+OJapiAppBallotmaster * OJapiCambrian::s_pAppBallotmaster;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oApps(this), m_oGroupList(this), m_oMe(this)
@@ -66,7 +66,10 @@ OJapiCambrian::~OJapiCambrian()
 	{
 	//MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OJapiCambrian::~OJapiCambrian()\n");
 	m_arraypaTemp.DeleteAllRuntimeObjects();// Delete all temporary object
+	if (m_paAppBallotmaster == s_pAppBallotmaster)
+		s_pAppBallotmaster = NULL;
 	delete m_paAppBallotmaster;
+
 	}
 
 QVariant
@@ -86,12 +89,13 @@ OJapiCambrian::Settings()
 	return v;
 	}
 
-
 POJapiAppBallotmaster
 OJapiCambrian::polls()
 	{
 	if (m_paAppBallotmaster == NULL)
-		m_paAppBallotmaster = new OJapiAppBallotmaster(this, PGetApplicationHtmlInfoBallotmaster());
+		{
+		s_pAppBallotmaster = m_paAppBallotmaster = new OJapiAppBallotmaster(this, PGetApplicationHtmlInfoBallotmaster());
+		}
 	return m_paAppBallotmaster;
 	/*
 	if (FDeniedBySecurityPolicy())

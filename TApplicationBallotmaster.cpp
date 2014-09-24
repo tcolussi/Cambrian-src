@@ -99,6 +99,24 @@ TProfile::BallotMaster_EventBallotAddAsTemplate(IEventBallot * pEventBallot)
 	PGetServiceBallotmaster_NZ()->EventBallotAddAsTemplate(pEventBallot);
 	}
 
+void
+TProfile::BallotMaster_EventNewBallotReceived(CEventBallotReceived * pEventBallotReceived)
+	{
+	m_arraypEventsRecentBallots.AddEvent(pEventBallotReceived);
+	Dashboard_NewEventRelatedToBallot(pEventBallotReceived);
+	if (OJapiCambrian::s_pAppBallotmaster != NULL)
+		{
+		emit OJapiCambrian::s_pAppBallotmaster->onEventBallotReceived(Timestamp_ToStringBase85(pEventBallotReceived->m_tsEventID));
+		}
+	/*
+	CServiceBallotmaster * pServiceBallotmaster = (CServiceBallotmaster *)m_arraypaServices.PFindRuntimeObject(RTI_SZ(CServiceBallotmaster));
+	if (pServiceBallotmaster != NULL)
+		{
+		emit OJapiAppBallotmaster::onEventBallotReceived(Timestamp_ToStringBase85(pEventBallotReceived->m_tsEventID));
+		}
+	*/
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 TApplicationBallotmaster::TApplicationBallotmaster(TProfile * pProfileParent) : IApplication(pProfileParent, eMenuIconVote)
@@ -772,7 +790,6 @@ POJapiPoll
 OJapiAppBallotmaster::build()
 	{
 	//MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::build()\n");
-	emit onEventBallotReceived("ballot123");
 	return PCreateNewPollFromTemplate(NULL);
 	}
 
@@ -855,15 +872,3 @@ OJapiAppInfo * PaAllocateJapiGeneric(SApplicationHtmlInfo * pInfo)
 	{
 	return new OJapiAppInfo(pInfo);
 	}
-/*
-OJapiAppInfo * PaAllocateJapiBallotMaster(SApplicationHtmlInfo * pInfo)
-	{
-	TProfile * pProfileParent = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
-	if ( pProfileParent != NULL)
-		return new OJapiAppBallotmaster(pProfileParent->POJapiGet(), pInfo);
-	else
-		return PaAllocateJapiGeneric(pInfo);
-	}
-
-*/
-
