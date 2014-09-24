@@ -234,73 +234,97 @@ TApplicationBallotmaster::ApiBallotsList(OUT CBin * pbinXmlBallots)
 	}
 */
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+OJapiBallot::OJapiBallot(IEventBallot * pEventBallot)
+	{
+	Assert(pEventBallot != NULL);
+	m_pEventBallot = pEventBallot;
+	}
+
+QString
+OJapiBallot::id() const
+	{
+	return Timestamp_ToStringBase85(m_pEventBallot->m_tsEventID);
+	}
+
+QString
+OJapiBallot::title() const
+	{
+	return m_pEventBallot->m_strTitle;
+	}
+void
+OJapiBallot::title(const QString & sTitle)
+	{
+	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::title($Q)\n", &sTitle);
+	m_pEventBallot->m_strTitle = sTitle;
+	}
+
+QString
+OJapiBallot::description() const
+	{
+	return m_pEventBallot->m_strDescription;
+	}
+void
+OJapiBallot::description(const QString & sDescription)
+	{
+	m_pEventBallot->m_strDescription = sDescription;
+	}
+
+QVariantList
+OJapiBallot::options() const
+	{
+	Assert(m_pEventBallot != NULL);
+	IEventBallot * pEvent = m_pEventBallot;
+	if (pEvent->EGetEventClass() == CEventBallotPoll::c_eEventClass)
+		{
+		// Fetching the options is a bit more complex because we also want the vote tally/counts.
+		// Therefore we have to see if there has been a ballot sent, and get the options from there.
+		pEvent = ((CEventBallotPoll *)pEvent)->PGetEventBallotSend_YZ();
+		if (pEvent == NULL)
+			pEvent = m_pEventBallot;	// Use the poll template
+		}
+	return pEvent->LsGetChoices();
+	}
+
+void
+OJapiBallot::options(const QVariantList & lsOptions)
+	{
+	return m_pEventBallot->SetChoices(lsOptions);
+	}
+bool
+OJapiBallot::allowComments() const
+	{
+	return ((m_pEventBallot->m_uFlagsBallot & IEventBallot::FB_kfAllowNoComments) == 0);
+	}
+void
+OJapiBallot::allowComments(bool fAllowComments)
+	{
+	if (fAllowComments)
+		m_pEventBallot->m_uFlagsBallot &= ~IEventBallot::FB_kfAllowNoComments;
+	else
+		m_pEventBallot->m_uFlagsBallot |= IEventBallot::FB_kfAllowNoComments;
+	}
+
+bool
+OJapiBallot::allowMultipleChoices() const
+	{
+	return ((m_pEventBallot->m_uFlagsBallot & IEventBallot::FB_kfAllowMultipleChoices) != 0);
+	}
+void
+OJapiBallot::allowMultipleChoices(bool fAllowMultipleChoices)
+	{
+	if (fAllowMultipleChoices)
+		m_pEventBallot->m_uFlagsBallot |= IEventBallot::FB_kfAllowMultipleChoices;
+	else
+		m_pEventBallot->m_uFlagsBallot &= ~IEventBallot::FB_kfAllowMultipleChoices;
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiPollCore::OJapiPollCore(CEventBallotPoll * pBallot)
+OJapiPollCore::OJapiPollCore(CEventBallotPoll * pBallot) : OJapiBallot(pBallot)
 	{
 	Assert(pBallot != NULL);
     Assert(pBallot->EGetEventClass() == eEventClass_eBallotPoll);
 	m_pBallot = pBallot;
-	}
-
-QString
-OJapiPollCore::id() const
-	{
-    Assert(m_pBallot->EGetEventClass() == eEventClass_eBallotPoll);
-	QString s = Timestamp_ToStringBase85(m_pBallot->m_tsEventID);
-	//MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::id($t) returns $Q\n", m_pBallot->m_tsEventID, &s);
-	return s;
-	}
-
-QString
-OJapiPollCore::title() const
-	{
-	return m_pBallot->m_strTitle;
-	}
-void
-OJapiPollCore::title(const QString & sTitle)
-	{
-	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::title($Q)\n", &sTitle);
-	m_pBallot->m_strTitle = sTitle;
-	}
-
-QString
-OJapiPollCore::description() const
-	{
-	return m_pBallot->m_strDescription;
-	}
-void
-OJapiPollCore::description(const QString & sDescription)
-	{
-	m_pBallot->m_strDescription = sDescription;
-	}
-
-bool
-OJapiPollCore::allowComments() const
-	{
-	return ((m_pBallot->m_uFlagsBallot & IEventBallot::FB_kfAllowNoComments) == 0);
-	}
-void
-OJapiPollCore::allowComments(bool fAllowComments)
-	{
-	if (fAllowComments)
-		m_pBallot->m_uFlagsBallot &= ~IEventBallot::FB_kfAllowNoComments;
-	else
-		m_pBallot->m_uFlagsBallot |= IEventBallot::FB_kfAllowNoComments;
-	}
-
-bool
-OJapiPollCore::allowMultipleChoices() const
-	{
-	return ((m_pBallot->m_uFlagsBallot & IEventBallot::FB_kfAllowMultipleChoices) != 0);
-	}
-void
-OJapiPollCore::allowMultipleChoices(bool fAllowMultipleChoices)
-	{
-	if (fAllowMultipleChoices)
-		m_pBallot->m_uFlagsBallot |= IEventBallot::FB_kfAllowMultipleChoices;
-	else
-		m_pBallot->m_uFlagsBallot &= ~IEventBallot::FB_kfAllowMultipleChoices;
 	}
 
 int
@@ -317,22 +341,6 @@ OJapiPollCore::pollTimeLength(int cSeconds)
 	m_pBallot->m_cSecondsPollLength = cSeconds;
 	}
 
-QVariantList
-OJapiPollCore::options() const
-	{
-	Assert(m_pBallot != NULL);
-	// Fetching the options is a bit more complex because we also want the vote tally/counts.
-	// Therefore we have to see if there has been a ballot sent, and get the options from there.
-	CEventBallotSent * pEventBallotSent = m_pBallot->PGetEventBallotSend_YZ();
-	if (pEventBallotSent == NULL)
-		pEventBallotSent = m_pBallot;	// Use the poll template
-	return pEventBallotSent->LsGetChoices();
-	}
-void
-OJapiPollCore::options(const QVariantList & lsOptions)
-	{
-	return m_pBallot->SetChoices(lsOptions);
-	}
 QString
 OJapiPollCore::dismissText() const
 	{
@@ -375,6 +383,8 @@ OJapiPollCore::originator() const
 QString
 OJapiPollCore::status() const
 	{
+	Assert(m_pBallot != NULL);
+
 	if ( m_pBallot->m_tsStopped != d_ts_zNA )
 		return "stopped";
 	if ( m_pBallot->m_tsStarted != d_ts_zNA )
@@ -536,7 +546,8 @@ CEventBallotPoll::PGetGroupTarget_YZ()
 		pContactOrGroup = pAccount->Group_PFindByIdentifier_YZ(pszGroupIdentifier);
 	if (pContactOrGroup != NULL)
 		return pContactOrGroup;
-	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventBallotPoll::PGetGroupTarget_YZ() - Invalid pollTargetId '$s'\n", pszGroupIdentifier);
+	if (*pszGroupIdentifier != '\0')
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "CEventBallotPoll::PGetGroupTarget_YZ() - Invalid pollTargetId '$s'\n", pszGroupIdentifier);
 	return NULL;
 	}
 
@@ -636,6 +647,7 @@ OJapiPoll::send(const QString & sGroupId)
 	return false;
 	}
 
+//	Submit a vote back to the sender of the poll
 bool
 OJapiPoll::submit()
 	{
@@ -721,6 +733,14 @@ OJapiAppBallotmaster::PFindPollByID(const QString & sIdPoll) const
 	return PFindPollByID(Timestamp_FromStringW_ML(sIdPoll));
 	}
 
+POJapiPoll
+OJapiAppBallotmaster::PGetOJapiBallot(CEventBallotReceived * pBallot)
+	{
+	if (pBallot != NULL)
+		return new OJapiBallot(pBallot);	//	This code causes a memory leak.  Until Qt has a reference counter of QObjects, Cambrian must provide a mechanism to minimize the memory leaks.
+	return NULL;
+	}
+
 //	Return the JavaScript object for a ballot
 POJapiPoll
 OJapiAppBallotmaster::PGetOJapiPoll(CEventBallotPoll * pBallot)
@@ -752,6 +772,7 @@ POJapiPoll
 OJapiAppBallotmaster::build()
 	{
 	//MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::build()\n");
+	emit onEventBallotReceived("ballot123");
 	return PCreateNewPollFromTemplate(NULL);
 	}
 
@@ -778,25 +799,31 @@ OJapiAppBallotmaster::get(const QString & sIdPoll)
 	}
 
 //	getList(), slot
-//	Return a list of polls.
+//	Return a list of polls and ballots.
 QVariant
 OJapiAppBallotmaster::getList()
 	{
-	//CVaultEvents * pVaultPolls = m_pBallotmaster->PGetVault_NZ();
+	Assert(m_pServiceBallotmaster != NULL);
 	QVariantList oList;
+
+	TProfile * pProfile = m_pServiceBallotmaster->m_pProfileParent;
 	IEvent ** ppEventStop;
-	IEvent ** ppEvent = m_pServiceBallotmaster->m_oVaultBallots.m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	IEvent ** ppEvent = pProfile->m_arraypEventsRecentBallots.PrgpGetEventsStopLast(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		CEventBallotReceived * pEventBallot = (CEventBallotReceived *)*ppEvent++;
+		Assert(pEventBallot->EGetEventClass() == CEventBallotReceived::c_eEventClass);
+		oList.append(QVariant::fromValue(PGetOJapiBallot(pEventBallot)));
+		}
+
+	ppEvent = m_pServiceBallotmaster->m_oVaultBallots.m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
 		{
         CEventBallotPoll * pEvent = (CEventBallotPoll *)*ppEvent++;
 		if (pEvent->EGetEventClass() != eEventClass_eBallotPoll)
             continue;
 		if ((pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted) == 0)
-			{
-			//OPoll oPoll(pEvent);
-			//oList.append(QVariant::fromValue(&oPoll));
 			oList.append(QVariant::fromValue(PGetOJapiPoll(pEvent)));	// List only non-deleted polls
-            }
 		}
 	MessageLog_AppendTextFormatCo(d_coBlue, "OPolls::list() - $i elements\n", oList.size());
 	return QVariant::fromValue(oList);

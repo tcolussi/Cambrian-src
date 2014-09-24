@@ -858,7 +858,6 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			{
 		case CEventBallotReceived::c_eEventClass:
 			pProfile->m_arraypEventsRecentBallots.AddEvent(pEvent);
-			void Dashboard_NewEventRelatedToBallot(IEventBallot * pEventBallot);
 			Dashboard_NewEventRelatedToBallot((IEventBallot *)pEvent);
 			break;
 		case CEventMessageTextReceived::c_eEventClass:
@@ -889,7 +888,11 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 	// Update the GUI about the new event
 	Assert(pEvent != NULL);
 	if (pEvent != NULL)
-		pContactOrGroup_NZ->TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(IN pEvent->PszGetTextOfEventForSystemTray(OUT_IGNORED &g_strScratchBufferStatusBar), m_pContact, pMember);
+		{
+		CStr str;
+		PSZUC pszMessage = pEvent->PszGetTextOfEventForSystemTray(OUT_IGNORED &str);
+		pContactOrGroup_NZ->TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(IN pszMessage, m_pContact, pMember);
+		}
 
 	void Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 	Dashboard_NewEventsFromContactOrGroup(pContactOrGroup_NZ);

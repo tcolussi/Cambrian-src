@@ -386,17 +386,15 @@ public:
 };
 #endif
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Core object shared with OPoll and OPollResults
-class OJapiPollCore : public OJapi
+//	Base class for all ballots related JAPI
+class OJapiBallot : public OJapi
 {
 	Q_OBJECT
-public:
-    CEventBallotPoll * m_pBallot;
+protected:
+	IEventBallot * m_pEventBallot;
 
 public:
-    OJapiPollCore(CEventBallotPoll * pBallot);
+	OJapiBallot(IEventBallot * pEventBallot);
 
 	QString id() const;
 	QString type() const { return c_sEmpty; }
@@ -410,6 +408,27 @@ public:
 	void allowComments(bool fAllowComments);
 	bool allowMultipleChoices() const;
 	void allowMultipleChoices(bool fAllowMultipleChoices);
+
+	Q_PROPERTY(QString id READ id)
+	Q_PROPERTY(QString type READ type)
+	Q_PROPERTY(QString title READ title WRITE title)
+	Q_PROPERTY(QString description READ description WRITE description)
+	Q_PROPERTY(QVariantList options READ options WRITE options)
+	Q_PROPERTY(bool allowComments READ allowComments WRITE allowComments)
+	Q_PROPERTY(bool allowMultipleChoices READ allowMultipleChoices WRITE allowMultipleChoices)
+
+}; // OJapiBallot
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Core object shared with OPoll and OPollResults
+class OJapiPollCore : public OJapiBallot
+{
+	Q_OBJECT
+public:
+    CEventBallotPoll * m_pBallot;
+
+public:
+	OJapiPollCore(CEventBallotPoll * pBallot);
     int pollTimeLength() const;
     void pollTimeLength(int cSeconds);
 	QString dismissText() const;
@@ -425,15 +444,6 @@ public:
 	QDateTime dateStarted() const;
 	QDateTime dateStopped() const;
 
-
-	Q_PROPERTY(QString id READ id)
-	Q_PROPERTY(QString type READ type)
-	Q_PROPERTY(QString title READ title WRITE title)
-	Q_PROPERTY(QString description READ description WRITE description)
-	Q_PROPERTY(QVariantList options READ options WRITE options)
-	//Q_PROPERTY(QStringList options WRITE options)
-	Q_PROPERTY(bool allowComments READ allowComments WRITE allowComments)
-	Q_PROPERTY(bool allowMultipleChoices READ allowMultipleChoices WRITE allowMultipleChoices)
 	Q_PROPERTY(int pollTimeLength READ pollTimeLength WRITE pollTimeLength)
 	Q_PROPERTY(QString dismissText READ dismissText WRITE dismissText)
 	Q_PROPERTY(QString submitText READ submitText WRITE submitText)
@@ -590,6 +600,7 @@ protected:
 public:
 	OJapiAppBallotmaster(OJapiCambrian * poCambrian, const SApplicationHtmlInfo *pApplicationInfo);
 	~OJapiAppBallotmaster();
+	POJapiPoll PGetOJapiBallot(CEventBallotReceived * pBallot);
     POJapiPoll PGetOJapiPoll(CEventBallotPoll * pBallot);
     POJapiPoll PCreateNewPollFromTemplate(CEventBallotPoll * pPollTemplate);
 	CEventBallotPoll * PFindPollByID(TIMESTAMP tsIdPoll) const;
@@ -602,6 +613,9 @@ public slots:
 	POJapiPoll get(const QString & sIdPoll);
 	QVariant getList();
 	void open();
+
+signals:
+	void onEventBallotReceived(const QString & sBallotId);
 };
 #define POJapiAppBallotmaster		POJapi
 
