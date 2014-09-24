@@ -340,8 +340,6 @@ CChatConfiguration::NavigationTree_DisplayAllCertificatesToggle()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
 
-void Dashboard_UpdateAccordingToSelectedProfile(TProfile * pProfileSelected);
-
 void
 NavigationTree_UpdateNameOfSelectedProfile()
 	{

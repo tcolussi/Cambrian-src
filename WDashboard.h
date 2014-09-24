@@ -10,6 +10,7 @@ class CPainterCell : public OPainter
 {
 public:
 	QRect m_rcCell;
+	int m_yCenter;		// Center point of the cell.
 
 public:
 	CPainterCell(QPaintDevice * poPaintDevice): OPainter(poPaintDevice) { }
@@ -17,76 +18,46 @@ public:
 	void DrawTextWithinCell(const QString & sText);
 	void DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...);
 	int DrawNumberWithinCircle(int nNumber);
+	void DrawIconLeft(const QIcon & oIcon);
 };
 
 
 //	Interface to draw one item on the dashboard
-class IDashboardSectionItem	// (item)
+class CDashboardSectionItem	// (item)
 {
 public:
-	UINT m_uFlags;
+	enum
+		{
+		FI_kfDrawBold		= 0x0001,	// Draw the item in bold
+		FI_kfSelected		= 0x0002
+
+		};
+	UINT m_uFlagsItem;
+	union
+		{
+		void * pvDataItem;			// Generic pointer for the data related to the item
+
+		ITreeItem * piTreeItem;
+		TContact * pContact;
+		TGroup * pGroup;
+
+		IEvent * pEvent;
+		IEventBallot * pEventBallot;
+		} m_data;
 
 public:
-	IDashboardSectionItem() { m_uFlags = 0; }
-	virtual ~IDashboardSectionItem() { }
-	virtual void DrawItemText(CPainterCell * pPainter) = 0;
-	virtual int DrawItemIcons(CPainterCell * pPainter) = 0;
+	CDashboardSectionItem(void * pvDataItem) { m_uFlagsItem = 0; m_data.pvDataItem = pvDataItem; }
 };
-
-class CDashboardSectionItem_ITreeItem : public IDashboardSectionItem
-{
-public:
-	ITreeItem * m_piTreeItem;
-public:
-	CDashboardSectionItem_ITreeItem(ITreeItem * piTreeItem) { m_piTreeItem = piTreeItem; }
-	virtual void DrawItemText(CPainterCell * pPainter);
-	virtual int DrawItemIcons(CPainterCell * pPainter);
-};
-
-class CDashboardSectionItem_TGroup : public IDashboardSectionItem
-{
-public:
-	TGroup * m_pGroup;
-
-public:
-	CDashboardSectionItem_TGroup(TGroup * pGroup) { m_pGroup = pGroup; }
-	virtual void DrawItemText(CPainterCell * pPainter);
-	virtual int DrawItemIcons(CPainterCell * pPainter);
-};
-
-class CDashboardSectionItem_TContact : public IDashboardSectionItem
-{
-public:
-	TContact * m_pContact;
-
-public:
-	CDashboardSectionItem_TContact(TContact * pContact) { m_pContact = pContact; }
-	virtual void DrawItemText(CPainterCell * pPainter);
-	virtual int DrawItemIcons(CPainterCell * pPainter);
-};
-
-
-class CDashboardSectionItem_IEventBallot : public IDashboardSectionItem
-{
-public:
-	IEventBallot * m_pBallot;
-
-public:
-	CDashboardSectionItem_IEventBallot(IEventBallot * pBallot) { m_pBallot = pBallot; }
-	virtual void DrawItemText(CPainterCell * pPainter);
-	virtual int DrawItemIcons(CPainterCell * pPainter);
-};
-
 
 class CArrayPtrDashboardSectionItems : private CArray
 {
 public:
-	inline IDashboardSectionItem ** PrgpGetItemsStop(OUT IDashboardSectionItem *** pppItemStop) const { return (IDashboardSectionItem **)PrgpvGetElementsStop(OUT (void ***)pppItemStop); }
+	inline CDashboardSectionItem ** PrgpGetItemsStop(OUT CDashboardSectionItem *** pppItemStop) const { return (CDashboardSectionItem **)PrgpvGetElementsStop(OUT (void ***)pppItemStop); }
 	inline int GetSize() const { return CArray::GetSize(); }
-	void DeleteAllItems();
-	void AddItem(IDashboardSectionItem * pItem);
-	void AllocateItemForTreeItem(ITreeItem * piTreeItem);
 
+	void DeleteAllItems();
+	void AllocateItem(void * pvDataItem);
+	void AllocateItems(const CArray & arraypDataItems, int cDataItemsMax);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,11 +71,11 @@ public:
 	WDashboardSection(PSZAC pszSectionName);
 	~WDashboardSection();
 	virtual void InitItems(TProfile * pProfile);
+	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvDataItem);
 
-	// From QWidget
-	virtual QSize sizeHint() const;
-	virtual int heightForWidth(int cxWidth) const;
-	virtual void paintEvent(QPaintEvent *);
+	virtual void paintEvent(QPaintEvent *);			// From QWidget
+	virtual QSize sizeHint() const;					// From QWidget
+	virtual int heightForWidth(int cxWidth) const;	// From QWidget
 };
 
 class CArrayPtrDashboardSections : public CArray
@@ -113,11 +84,13 @@ public:
 	inline WDashboardSection ** PrgpGetSectionsStop(OUT WDashboardSection *** pppSectionStop) const { return (WDashboardSection **)PrgpvGetElementsStop(OUT (void ***)pppSectionStop); }
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class WDashboardSectionGroups : public WDashboardSection
 {
 public:
 	WDashboardSectionGroups(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
 	virtual void InitItems(TProfile * pProfile);
+	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroup);
 };
 
 class WDashboardSectionContacts : public WDashboardSection
@@ -125,6 +98,7 @@ class WDashboardSectionContacts : public WDashboardSection
 public:
 	WDashboardSectionContacts(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
 	virtual void InitItems(TProfile * pProfile);
+	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvContact);
 };
 
 class WDashboardSectionBallots : public WDashboardSection

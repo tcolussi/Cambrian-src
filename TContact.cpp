@@ -194,6 +194,8 @@ TContact::TreeItem_IconUpdate()
 		pAlias->ContactAlias_IconChanged(eMenuIconDisplay, eMenuIconPresence);
 		pAlias = pAlias->m_pNextAlias;
 		}
+
+	Dashboard_UpdateContact(this);	// TODO: Need to optimize this
 	} // TreeItem_IconUpdate()
 
 const EMenuActionByte c_rgzeActionsMenuContact[] =

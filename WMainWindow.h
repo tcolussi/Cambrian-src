@@ -80,4 +80,10 @@ void NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProf
 void NavigationTree_DisplayProfilesToogle();
 void NavigationTree_DisplayCertificatesToogle();
 
+void Dashboard_UpdateAccordingToSelectedProfile(TProfile * pProfileSelected);
+void Dashboard_UpdateContact(TContact * pContact);
+void Dashboard_UpdateGroup(TGroup * pGroup);
+void Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
+void Dashboard_NewEventRelatedToBallot(IEventBallot * pEventBallot);
+
 #endif // MAINWINDOW_H

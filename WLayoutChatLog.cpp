@@ -293,7 +293,6 @@ TContact::TreeItem_IconUpdateOnMessagesRead()
 			}
 		}
 	*/
-	void Dashboard_UpdateContact(TContact * pContact);
 	Dashboard_UpdateContact(this);
 	}
 
