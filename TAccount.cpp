@@ -484,6 +484,10 @@ TAccountXmpp::SetJIDwithResource(PSZUC pszJIDwithResource)
 	m_strJIDwithResource.InitOnlyIfEmpty(IN m_strJID);	// Just make sure m_strJIDwithResource is never empty, otherwise this would catastrophic.
 	}
 
+#ifdef DEBUG_DELETE_TEMP_ACCOUNTS
+int g_cContactsRemoved;
+#endif
+
 PSZUC
 TAccountXmpp::Contact_RosterUpdateItem(const CXmlNode * pXmlNodeItemRoster)
 	{
@@ -493,6 +497,15 @@ TAccountXmpp::Contact_RosterUpdateItem(const CXmlNode * pXmlNodeItemRoster)
 	PSZUC pszSubscription = pXmlNodeItemRoster->PszuFindAttributeValue_NZ("subscription");	/* // The attribute "subscription" is not present for a "<iq type='set'>" */
 	if (!FCompareStrings(pszSubscription, "remove"))
 		{
+		#ifdef DEBUG_DELETE_TEMP_ACCOUNTS
+		if (PszrCompareStringBeginNoCase(pszJid, "temp") != NULL)
+			{
+			MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "#$I Removing contact $s from roster...\n", ++g_cContactsRemoved, pszJid);
+			if (m_paSocket != NULL)
+				m_paSocket->Socket_WriteXmlFormatted("<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^s' subscription='remove'></item></query></iq>", pszJid);
+			return NULL;
+			}
+		#endif
 		TContact * pContact = Contact_PFindByJID(pszJid, eFindContact_kfCreateNew);
 		Endorse(pContact == NULL);	// The attribute "jid" may not be valid (for example, missing the '@' character)
 		if (pContact != NULL)
@@ -553,8 +566,19 @@ TAccountXmpp::Contact_RosterSubscribe(INOUT TContact * pContact)
 		return;
 	if (pContact->TreeItemFlags_FuIsInvisible())
 		return;	// Don't add invisible contacts to the roster
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Adding constact ^j to roster... (m_uFlagsTreeItem = 0x$x)\n", pContact, m_uFlagsTreeItem);
+	/*
+	if (pContact->m_strJidBare.FStringBeginsWith("temp"))
+		{
+		MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Removing contact ^j from roster...\n", pContact);
+		m_paSocket->Socket_WriteXmlFormatted("<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^S' subscription='remove'></item></query></iq>", &pContact->m_strJidBare);
+		return;
+		}
+	*/
+	#if 1
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Adding contact ^j to roster...\n", pContact);
 	m_paSocket->Socket_WriteXmlFormatted("<iq id='$p' type='set'><query xmlns='jabber:iq:roster'><item jid='^j'></item></query></iq>", pContact, pContact);
+	#endif
+
 	//m_paSocket->Socket_WriteXmlFormatted("<presence to='^j' type='subscribe'/>", pContact);
 	//m_paSocket->Socket_WriteXmlFormatted("<presence ^:jc from='^J' to='^j' type='subscribe'/>", this, pContact);
 	}
@@ -567,7 +591,7 @@ TAccountXmpp::Contact_RosterUnsubscribe(INOUT TContact * pContact)
 		return;
 	if (m_paSocket->Socket_FuIsReadyToSendMessages())
 		{
-		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Unsubscribing from peer ^j...\n", pContact);
+		MessageLog_AppendTextFormatCo(COX_MakeBold(d_coOrange), "Unsubscribing from contact ^j...\n", pContact);
 		m_paSocket->Socket_WriteXmlFormatted("<iq type='set'><query xmlns='jabber:iq:roster'><item jid='^j' subscription='remove'></item></query></iq>", pContact);
 		}
 	}

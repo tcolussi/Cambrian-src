@@ -83,8 +83,8 @@ void
 CVaultEvents::EventAdd(PA_CHILD IEvent * paEvent)
 	{
 	Assert(paEvent != NULL);
-	Assert(paEvent->m_tsOther == d_ts_zNA);
 	Assert(paEvent->m_pVaultParent_NZ == NULL);
+	paEvent->m_pVaultParent_NZ = this;
 	m_arraypaEvents.Add(PA_CHILD paEvent);
 	SetModified();	// Make sure the events are saved to disk
 	}
