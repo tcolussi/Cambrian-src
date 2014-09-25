@@ -408,6 +408,10 @@ public:
 	void allowComments(bool fAllowComments);
 	bool allowMultipleChoices() const;
 	void allowMultipleChoices(bool fAllowMultipleChoices);
+	bool isTemplate();
+	void isTemplate(bool fIsTemplate);
+	bool isSelected();
+	void isSelected(bool fIsSelected);
 
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString type READ type)
@@ -416,6 +420,8 @@ public:
 	Q_PROPERTY(QVariantList options READ options WRITE options)
 	Q_PROPERTY(bool allowComments READ allowComments WRITE allowComments)
 	Q_PROPERTY(bool allowMultipleChoices READ allowMultipleChoices WRITE allowMultipleChoices)
+	Q_PROPERTY(bool isTemplate READ isTemplate WRITE isTemplate)
+	Q_PROPERTY(bool isSelected READ isSelected WRITE isSelected)
 
 }; // OJapiBallot
 

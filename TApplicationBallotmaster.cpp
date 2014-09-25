@@ -24,29 +24,6 @@ DisplayApplicationBallotMaster()
 	pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}
 
-/*
-//	This function must have the same interface as PFn_PaAllocateApplication()
-IApplication *
-PaAllocateApplicationBallotmaster(TProfile * pProfileParent)
-	{
-	return new TApplicationBallotmaster(pProfileParent);
-	}
-*/
-
-/*
-TApplicationBallotmaster *
-TProfile::PGetApplicationBallotmaster_NZ()
-	{
-	TApplicationBallotmaster * pApplication = (TApplicationBallotmaster *)m_arraypaApplications.PFindRuntimeObject(RTI(TApplicationBallotmaster));
-	if (pApplication == NULL)
-		{
-		pApplication = (TApplicationBallotmaster *)PaAllocateApplicationBallotmaster(this);
-		m_arraypaApplications.Add(PA_CHILD pApplication);
-		pApplication->TreeItemApplication_DisplayWithinNavigationTree();
-		}
-	return pApplication;
-	}
-*/
 
 CServiceBallotmaster::CServiceBallotmaster(TProfile * pProfileParent) : IService(pProfileParent), m_oVaultBallots(pProfileParent->PGetContactDummy_NZ())
 	{
@@ -117,141 +94,6 @@ void
 TProfile::BallotMaster_onEventVoteReceived(CEventBallotSent * pEventBallotSent)
 	{
 	Assert(pEventBallotSent->EGetEventClass() == CEventBallotSent::c_eEventClass);
-	}
-*/
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-TApplicationBallotmaster::TApplicationBallotmaster(TProfile * pProfileParent) : IApplication(pProfileParent, eMenuIconVote)
-	{
-	m_paVaultBallots = NULL;
-	m_paContactDummy = NULL;
-	m_pawLayoutBrowser = NULL;
-	}
-
-TApplicationBallotmaster::~TApplicationBallotmaster()
-	{
-	delete m_pawLayoutBrowser;
-	delete m_paContactDummy;
-	}
-
-void
-TApplicationBallotmaster::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
-	{
-	IApplication::XmlExchange(INOUT pXmlExchanger);
-	pXmlExchanger->XmlExchangeStr("URL", INOUT &m_strUrlAddress);
-	CVaultEvents * pVault = PGetVault_NZ();
-	pVault->XmlExchange("Ballots", INOUT pXmlExchanger);
-	}
-
-const EMenuActionByte c_rgzeActionsMenuApplication[] =
-	{
-	eMenuAction_ApplicationHide,
-	ezMenuActionNone
-	};
-
-//	TApplicationBallotmaster::ITreeItem::TreeItem_MenuAppendActions()
-void
-TApplicationBallotmaster::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
-	{
-	pMenu->ActionsAdd(c_rgzeActionsMenuApplication);
-	}
-
-//	TApplicationBallotmaster::ITreeItem::TreeItem_EDoMenuAction()
-EMenuAction
-TApplicationBallotmaster::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
-	{
-	switch (eMenuAction)
-		{
-	case eMenuAction_ApplicationHide:
-		TreeItemW_Hide();
-		return ezMenuActionNone;
-	default:
-		return IApplication::TreeItem_EDoMenuAction(eMenuAction);
-		}
-	}
-
-//	TApplicationBallotmaster::ITreeItem::TreeItem_GotFocus()
-void
-TApplicationBallotmaster::TreeItem_GotFocus()
-	{
-	if (m_strUrlAddress.FIsEmptyString())
-		m_strUrlAddress = "file:///" + m_pProfileParent->m_pConfigurationParent->SGetPathOfFileName("Apps/Ballotmaster/default.htm");
-	if (m_pawLayoutBrowser == NULL)
-		m_pawLayoutBrowser = new WLayoutBrowser(m_pProfileParent, INOUT_LATER &m_strUrlAddress);
-	MainWindow_SetCurrentLayout(IN m_pawLayoutBrowser);
-	}
-*/
-#if 0
-//	This method is somewhat a hack to create a vault to store events. At the moment, Cambrian needs something to store the ballots.
-CVaultEvents *
-TApplicationBallotmaster::PGetVault_NZ()
-	{
-	if (m_paVaultBallots == NULL)
-		{
-		if (m_paContactDummy == NULL)
-			{
-			TAccountXmpp * pAccount = (TAccountXmpp *)m_pProfileParent->m_arraypaAccountsXmpp.PvGetElementFirst_YZ();
-			if (pAccount == NULL)
-				pAccount = new TAccountXmpp(m_pProfileParent);	// This will cause a memory leak.  At the moment, I just want the code to work as a proof of concept
-			m_paContactDummy = new TContact(pAccount);
-			}
-		SHashSha1 hashFileName;
-		InitToZeroes(OUT &hashFileName, sizeof(hashFileName));	// This also needs to be fixed
-		m_paVaultBallots = new CVaultEvents(m_paContactDummy, IN &hashFileName);
-		}
-	return m_paVaultBallots;
-
-	}
-CEventBallotPoll *
-TApplicationBallotmaster::PAllocateBallot(const IEventBallot * pEventBallotTemplate)
-	{
-	CVaultEvents * pVault = PGetVault_NZ();	// Get the vault first because it will initialize m_paContactDummy
-    CEventBallotPoll * paEventBallot = new CEventBallotPoll;
-	paEventBallot->m_pVaultParent_NZ = pVault;
-	if (pEventBallotTemplate != NULL)
-		{
-		Assert(pEventBallotTemplate->m_pVaultParent_NZ != NULL);
-		CBinXcpStanzaEventCopier binXcpStanzaCopier(m_paContactDummy);
-		binXcpStanzaCopier.EventCopy(IN pEventBallotTemplate, OUT paEventBallot);
-		}
-    //Assert(paEventBallot->m_pVaultParent_NZ == pVault);
-	pVault->m_arraypaEvents.Add(PA_CHILD paEventBallot);
-	//MessageLog_AppendTextFormatSev(eSeverityNoise, "TApplicationBallotmaster::PAllocateBallot(0x$p) - Returning $t\n", pEventBallotTemplate, paEventBallot->m_tsEventID);
-	return paEventBallot;
-	}
-
-//	Make a copy of an existing ballot and add it to the Ballotmaster
-void
-TApplicationBallotmaster::EventBallotAddAsTemplate(IEventBallot * pEventBallot)
-	{
-	Assert(pEventBallot != NULL);
-	(void)PAllocateBallot(pEventBallot);
-	/*
-	CBinXcpStanzaEventCopier binXcpStanzaCopier(m_paContactDummy);
-	CEventBallotSent * paEventBallotTemplate = new CEventBallotSent();	// When adding a template, always use the 'sent' ballot
-	binXcpStanzaCopier.EventCopy(IN pEventBallot, OUT paEventBallotTemplate);
-	paEventBallotTemplate->m_pVaultParent_NZ = pVault;
-	pVault->m_arraypaEvents.Add(PA_CHILD paEventBallotTemplate);
-	*/
-	}
-#endif
-
-/*
-void
-TApplicationBallotmaster::ApiBallotSave(IN PSZUC pszXmlBallot)
-	{
-	CVaultEvents * pVault = PGetVault_NZ();
-	pVault->EventsUnserialize(pszXmlBallot);
-	}
-
-void
-TApplicationBallotmaster::ApiBallotsList(OUT CBin * pbinXmlBallots)
-	{
-	CBinXcpStanzaTypeInfo binXmlEvents;
-	CVaultEvents * pVault = PGetVault_NZ();
-	pVault->EventsSerializeForMemory(IOUT &binXmlEvents);
-	pbinXmlBallots->BinInitFromCBinStolen(INOUT &binXmlEvents);
 	}
 */
 
@@ -339,6 +181,34 @@ OJapiBallot::allowMultipleChoices(bool fAllowMultipleChoices)
 	else
 		m_pEventBallot->m_uFlagsBallot &= ~IEventBallot::FB_kfAllowMultipleChoices;
 	}
+
+bool
+OJapiBallot::isTemplate()
+	{
+	return ((m_pEventBallot->m_uFlagsBallot & IEventBallot::FB_kfBallotmasterTemplate) != 0);
+	}
+void
+OJapiBallot::isTemplate(bool fIsTemplate)
+	{
+	if (fIsTemplate)
+		m_pEventBallot->m_uFlagsBallot |= IEventBallot::FB_kfBallotmasterTemplate;
+	else
+		m_pEventBallot->m_uFlagsBallot &= ~IEventBallot::FB_kfBallotmasterTemplate;
+	}
+bool
+OJapiBallot::isSelected()
+	{
+	return ((m_pEventBallot->m_uFlagsBallot & IEventBallot::FB_kfBallotmasterTemplate) != 0);
+	}
+void
+OJapiBallot::isSelected(bool fIsSelected)
+	{
+	if (fIsSelected)
+		m_pEventBallot->m_uFlagsEvent |= IEvent::FE_kfEventSelected;
+	else
+		m_pEventBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventSelected;
+	}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 OJapiPollCore::OJapiPollCore(CEventBallotPoll * pBallot) : OJapiBallot(pBallot)
@@ -768,7 +638,7 @@ OJapiAppBallotmaster::PFindPollByTimeStarted(TIMESTAMP tsStarted) const
 		if (pEvent->m_tsStarted == tsStarted)
 			return pEvent;
 		}
-	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OJapiAppBallotmaster::PFindPollByTimeStarted() - Unable to find matchint tsStarted $t\n", tsStarted);
+	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OJapiAppBallotmaster::PFindPollByTimeStarted() - Unable to find poll matching tsStarted $t\n", tsStarted);
 	return NULL;
 	}
 

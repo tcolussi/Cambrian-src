@@ -1665,3 +1665,117 @@ public:
 	virtual int DrawItemIcons(CPainterCell * pPainter);
 };
 
+
+#if 0
+class TApplicationBallotmaster : public IApplication
+{
+protected:
+	CStr m_strUrlAddress;				// Address to start the application (of course, this solution is not 100% portable, because the HTML files for the application are stored into the "user folder", however remembering the last URL is better than nothing)
+	WLayoutBrowser * m_pawLayoutBrowser;
+	CVaultEvents * m_paVaultBallots;	// Ballots are 'events' because they may be sent to other users, and therefore require a vault for their storage.
+private:
+	TContact * m_paContactDummy;		// Temporary hack to have a dummy contact as the 'parent' of the vault.  This is necessary because the vault was designed to have a contact as its parent, and need to be refactored.
+
+public:
+	TApplicationBallotmaster(TProfile * pProfileParent);
+	~TApplicationBallotmaster();
+	virtual PSZAC PszGetClassNameApplication() { return c_szaApplicationClass_Ballotmaster; }	// From IApplication
+	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);			// From IXmlExchange
+	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);			// From ITreeItem
+	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);	// From ITreeItem
+	virtual void TreeItem_GotFocus();										// From ITreeItem
+
+	CVaultEvents * PGetVault_NZ();
+
+	CEventBallotPoll * PAllocateBallot(const IEventBallot * pEventBallotTemplate = NULL);
+	void EventBallotAddAsTemplate(IEventBallot * pEventBallot);
+	/*
+	void ApiBallotSave(IN PSZUC pszXmlBallot);
+	void ApiBallotsList(OUT CBin * pbinXmlBallots);
+	*/
+	RTI_IMPLEMENTATION(TApplicationBallotmaster)
+};
+#endif
+/*
+//	This function must have the same interface as PFn_PaAllocateApplication()
+IApplication *
+PaAllocateApplicationBallotmaster(TProfile * pProfileParent)
+	{
+	return new TApplicationBallotmaster(pProfileParent);
+	}
+*/
+
+/*
+TApplicationBallotmaster *
+TProfile::PGetApplicationBallotmaster_NZ()
+	{
+	TApplicationBallotmaster * pApplication = (TApplicationBallotmaster *)m_arraypaApplications.PFindRuntimeObject(RTI(TApplicationBallotmaster));
+	if (pApplication == NULL)
+		{
+		pApplication = (TApplicationBallotmaster *)PaAllocateApplicationBallotmaster(this);
+		m_arraypaApplications.Add(PA_CHILD pApplication);
+		pApplication->TreeItemApplication_DisplayWithinNavigationTree();
+		}
+	return pApplication;
+	}
+*/
+/*
+TApplicationBallotmaster::TApplicationBallotmaster(TProfile * pProfileParent) : IApplication(pProfileParent, eMenuIconVote)
+	{
+	m_paVaultBallots = NULL;
+	m_paContactDummy = NULL;
+	m_pawLayoutBrowser = NULL;
+	}
+
+TApplicationBallotmaster::~TApplicationBallotmaster()
+	{
+	delete m_pawLayoutBrowser;
+	delete m_paContactDummy;
+	}
+
+void
+TApplicationBallotmaster::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
+	{
+	IApplication::XmlExchange(INOUT pXmlExchanger);
+	pXmlExchanger->XmlExchangeStr("URL", INOUT &m_strUrlAddress);
+	CVaultEvents * pVault = PGetVault_NZ();
+	pVault->XmlExchange("Ballots", INOUT pXmlExchanger);
+	}
+
+const EMenuActionByte c_rgzeActionsMenuApplication[] =
+	{
+	eMenuAction_ApplicationHide,
+	ezMenuActionNone
+	};
+
+//	TApplicationBallotmaster::ITreeItem::TreeItem_MenuAppendActions()
+void
+TApplicationBallotmaster::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
+	{
+	pMenu->ActionsAdd(c_rgzeActionsMenuApplication);
+	}
+
+//	TApplicationBallotmaster::ITreeItem::TreeItem_EDoMenuAction()
+EMenuAction
+TApplicationBallotmaster::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
+	{
+	switch (eMenuAction)
+		{
+	case eMenuAction_ApplicationHide:
+		TreeItemW_Hide();
+		return ezMenuActionNone;
+	default:
+		return IApplication::TreeItem_EDoMenuAction(eMenuAction);
+		}
+	}
+
+//	TApplicationBallotmaster::ITreeItem::TreeItem_GotFocus()
+void
+TApplicationBallotmaster::TreeItem_GotFocus()
+	{
+	if (m_strUrlAddress.FIsEmptyString())
+		m_strUrlAddress = "file:///" + m_pProfileParent->m_pConfigurationParent->SGetPathOfFileName("Apps/Ballotmaster/default.htm");
+	if (m_pawLayoutBrowser == NULL)
+		m_pawLayoutBrowser = new WLayoutBrowser(m_pProfileParent, INOUT_LATER &m_strUrlAddress);
+	MainWindow_SetCurrentLayout(IN m_pawLayoutBrowser);
+	}

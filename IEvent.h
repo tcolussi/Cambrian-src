@@ -349,6 +349,7 @@ public:
 		FE_kfEventProtocolWarning	= 0x0100,	// Therew was a minor error while transmitting the event.  This bit is set to give a second chance to retry, however to prevent an infinite loop to retry over and over
 		FE_kfEventProtocolError		= 0x0200,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)
 		FE_kfEventError				= 0x0400,	// There has been an error related to the event.  Perhaps next time SocietyPro restarts the error will go away.  This flag is there to prevent to repeat displaying an error message, or performing an expensive computation, over and over again.
+		FE_kfEventSelected			= 0x0800,	// The event is selected (flagged) for an operation.  At the moment this is used within the Ballotmaster.
 		};
 	mutable UINT m_uFlagsEvent;				// Flags related to the event.  Most of those flags are never serialized, however under rare cases some bits are serialized.
 	POJapiEvent m_paoJapiEvent;				// Object to allow the event to interact with JavaScript

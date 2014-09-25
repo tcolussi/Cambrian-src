@@ -534,12 +534,13 @@ CEventBallotPoll::PAllocateNewAttatchment()
 	}
 
 CEventBallotPoll::CEventBallotPoll(const TIMESTAMP * ptsEventID) : CEventBallotSent(ptsEventID)
-    {
-    m_tsStarted = d_ts_zNA;
-    m_tsStopped = d_ts_zNA;
-    m_cSecondsPollLength = d_zNA;
+	{
+	m_tsStarted = d_ts_zNA;
+	m_tsStopped = d_ts_zNA;
+	m_cSecondsPollLength = d_zNA;
 	m_pEventBallotSent = NULL;
-    }
+	m_uFlagsBallot |= FB_kfAllowNoComments;	// By default, do not allow feedback comments
+	}
 
 //  CEventBallotPoll::IEvent::XmlSerializeCoreE()
 EXml

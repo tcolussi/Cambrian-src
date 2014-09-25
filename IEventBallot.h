@@ -79,6 +79,7 @@ public:
 		FB_kfStopAcceptingVotes				= 0x0004,	// Do not accept votes from user (this is the case when a poll is stopped)
 		FB_kfVotesTailied					= 0x0008,	// The votes have been calculated.  When a new vote arrives, clear this flag to force a recompilation.
 		FB_kfFromBallotmaster				= 0x0010,	// The event was created by the Ballotmaster, and therefore update should also notify the Ballotmaster
+		FB_kfBallotmasterTemplate			= 0x0020,	// The poll is a template for the Ballotmaster.  Templates are 'favorite' polls which designed to be reused.
 		};
 	UINT m_uFlagsBallot;							// Various options for the ballot
 	CStr m_strTitle;
