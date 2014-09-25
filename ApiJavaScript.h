@@ -605,6 +605,8 @@ public:
     POJapiPoll PCreateNewPollFromTemplate(CEventBallotPoll * pPollTemplate);
 	CEventBallotPoll * PFindPollByID(TIMESTAMP tsIdPoll) const;
 	CEventBallotPoll * PFindPollByID(const QString & sIdPoll) const;
+	CEventBallotPoll * PFindPollByTimeStarted(TIMESTAMP tsStarted) const;
+	void OnEventVoteReceived(const CEventBallotSent * pEventBallotSent);
 
 public slots:
 	POJapiPoll build();
@@ -616,8 +618,8 @@ public slots:
 
 signals:
 	void onEventBallotReceived(const QString & sBallotId);	// This signal is emitted when a new ballot arrives from a contact.  The signal handler should display a 'card' to the user so he/she may vote.
-	void onEventVoteReceived(const QString & sBallotId);	// This signal is emitted when a vote arrives from a contact.  The signal handler should update the poll to tally the new vote (typically updating the pie chart)
-};
+	void onEventVoteReceived(POJapiPoll oPoll);				// This signal is emitted when a vote arrives from a contact.  The signal handler should update the poll to tally the new vote (typically updating the pie chart)
+}; // OJapiAppBallotmaster
 #define POJapiAppBallotmaster		POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

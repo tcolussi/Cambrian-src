@@ -112,16 +112,13 @@ TProfile::BallotMaster_onEventNewBallotReceived(CEventBallotReceived * pEventBal
 		}
 	}
 
+/*
 void
 TProfile::BallotMaster_onEventVoteReceived(CEventBallotSent * pEventBallotSent)
 	{
 	Assert(pEventBallotSent->EGetEventClass() == CEventBallotSent::c_eEventClass);
-	if (OJapiCambrian::s_pAppBallotmaster != NULL)
-		{
-		MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onEventVoteReceived($t)\n", pEventBallotSent->m_tsEventID);
-		emit OJapiCambrian::s_pAppBallotmaster->onEventVoteReceived(Timestamp_ToStringBase85(pEventBallotSent->m_tsEventID));
-		}
 	}
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /*
@@ -495,7 +492,7 @@ OJapiPollResults::comments() const
 		while (ppVote != ppVoteStop)
 			{
 			_CEventBallotVote * pVote = *ppVote++;
-			MessageLog_AppendTextFormatCo(d_coBlue, "comment: $t $S $S\n", pVote->m_tsVote, &pVote->m_pContact->m_strJidBare, &pVote->m_strComment);
+			//MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPollResults::comments($t) - tsVote=$t, $S: $S\n", m_pBallot->m_tsEventID, pVote->m_tsVote, &pVote->m_pContact->m_strJidBare, &pVote->m_strComment);
 			if (pVote->m_strComment.FIsEmptyString())
 				continue;
 			#if 1
@@ -587,8 +584,9 @@ CEventBallotPoll::PGetEventBallotSend_YZ() CONST_MCC
 			m_pEventBallotSent = (CEventBallotSent *)pGroup->Vault_PGet_NZ()->PFindEventByID(m_tsStarted);
 			if (m_pEventBallotSent == NULL || m_pEventBallotSent->EGetEventClass() != CEventBallotSent::c_eEventClass)
 				{
+				MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "CEventBallotPoll::PGetEventBallotSend_YZ($t) - Unable to find m_pEventBallotSent matching $t\n", m_tsEventID, m_tsStarted);
 				m_pEventBallotSent = NULL;
-				m_uFlagsEvent |= FE_kfEventError;;
+				m_uFlagsEvent |= FE_kfEventError;
 				}
 			}
 		}
@@ -613,6 +611,7 @@ CEventBallotPoll::FStartPoll()
 		// To send a poll, we need to clone the template and add it to the Chat Log of the group (or contact)
 		m_pEventBallotSent = new CEventBallotSent(IN &m_tsStarted);		// Create a ballot with the same Event ID
 		m_pEventBallotSent->Event_InitFromDataOfEvent(this);
+		m_pEventBallotSent->m_uFlagsBallot |= FB_kfFromBallotmaster;
 		pGroup->Vault_AddEventToChatLogAndSendToContacts(PA_CHILD m_pEventBallotSent);
 		}
 	return true;
@@ -741,7 +740,7 @@ OJapiAppBallotmaster::PFindPollByID(TIMESTAMP tsIdPoll) const
 	while (ppEvent != ppEventStop)
 		{
 		CEventBallotPoll * pEvent = (CEventBallotPoll *)*ppEvent++;
-        //Assert(pEvent->EGetEventClass() == CEventBallotPoll::c_eEventClass);
+		Assert(pEvent->EGetEventClass() == CEventBallotPoll::c_eEventClass);
 		if (pEvent->m_tsEventID == tsIdPoll && (pEvent->m_uFlagsEvent & IEvent::FE_kfEventDeleted) == 0)
 			{
 			//MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiAppBallotmaster::PFindPollByID($t) -> 0x$p $t\n", tsIdPoll, pEvent, pEvent->m_tsEventID);
@@ -755,6 +754,36 @@ CEventBallotPoll *
 OJapiAppBallotmaster::PFindPollByID(const QString & sIdPoll) const
 	{
 	return PFindPollByID(Timestamp_FromStringW_ML(sIdPoll));
+	}
+
+CEventBallotPoll *
+OJapiAppBallotmaster::PFindPollByTimeStarted(TIMESTAMP tsStarted) const
+	{
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = m_pServiceBallotmaster->m_oVaultBallots.m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		CEventBallotPoll * pEvent = (CEventBallotPoll *)*--ppEventStop;
+		Assert(pEvent->EGetEventClass() == CEventBallotPoll::c_eEventClass);
+		if (pEvent->m_tsStarted == tsStarted)
+			return pEvent;
+		}
+	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OJapiAppBallotmaster::PFindPollByTimeStarted() - Unable to find matchint tsStarted $t\n", tsStarted);
+	return NULL;
+	}
+
+void
+OJapiAppBallotmaster::OnEventVoteReceived(const CEventBallotSent * pEventBallotSent)
+	{
+	Assert(pEventBallotSent != NULL);
+	// Find the event matching the Event ID
+	CEventBallotPoll * pPoll = PFindPollByTimeStarted(pEventBallotSent->m_tsEventID);
+	if (pPoll != NULL)
+		{
+		MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onEventVoteReceived($t)\n", pPoll->m_tsEventID);
+		//emit onEventVoteReceived(Timestamp_ToStringBase85(pPoll->m_tsEventID));
+		emit onEventVoteReceived(PGetOJapiPoll(pPoll));
+		}
 	}
 
 POJapiPoll

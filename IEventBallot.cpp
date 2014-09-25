@@ -349,6 +349,7 @@ IEventBallot::PrgpGetChoicesStopWithTally(OUT _CEventBallotChoice *** pppChoiceS
 	if ((m_uFlagsBallot & FB_kfVotesTailied) == 0)
 		{
 		m_uFlagsBallot |= FB_kfVotesTailied;
+		//MessageLog_AppendTextFormatCo(d_coRed, "PrgpGetChoicesStopWithTally() - tsEventID = $t\n", m_tsEventID);
 		//	Clear the previous votes
 		const int cChoices = *pppChoiceStop - prgpChoices;
 		_CEventBallotChoice ** ppChoice = prgpChoices;
@@ -369,6 +370,10 @@ IEventBallot::PrgpGetChoicesStopWithTally(OUT _CEventBallotChoice *** pppChoiceS
 				iChoice++;
 				} // while
 			} // while
+		}
+	else
+		{
+		// MessageLog_AppendTextFormatCo(d_coGreen, "PrgpGetChoicesStopWithTally() - tsEventID $t is up-to-date\n", m_tsEventID);
 		}
 	return prgpChoices;
 	}
@@ -441,12 +446,12 @@ CEventBallotSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza *
 			{
 			if (pVote->m_ukmChoices == ukmChoices && pVote->m_strComment.FCompareBinary(strComment))
 				return eGui_NoUpdate;		// This vote is a duplicate
-			MessageLog_AppendTextFormatSev(eSeverityComment, "Updating vote by ^j from 0x$x to 0x$x\n", pContact, pVote->m_ukmChoices, ukmChoices);
+			MessageLog_AppendTextFormatSev(eSeverityComment, "Ballot $t: Updating vote by ^j from 0x$x to 0x$x\n", m_tsEventID, pContact, pVote->m_ukmChoices, ukmChoices);
 			goto UpdateChoices;
 			}
 		}
 	// The contact never voted, therefore create a new entry
-	MessageLog_AppendTextFormatSev(eSeverityComment, "New vote by ^j: 0x$x\n", pContact, ukmChoices);
+	MessageLog_AppendTextFormatSev(eSeverityComment, "Ballot $t: New vote by ^j: 0x$x\n", m_tsEventID, pContact, ukmChoices);
 	pVote = PAllocateNewVote();
 	pVote->m_pContact = pContact;
 	UpdateChoices:
@@ -456,7 +461,14 @@ CEventBallotSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza *
 	m_pVaultParent_NZ->SetModified();
 	m_uFlagsBallot &= ~FB_kfVotesTailied;	// Force a recount of the votes
 
-	pContact->PGetProfile()->BallotMaster_onEventVoteReceived(this);
+	if (m_uFlagsBallot & FB_kfFromBallotmaster)
+		{
+		// The ballot sent was created by the Ballotmaster, therefore notify it
+		if (OJapiCambrian::s_pAppBallotmaster != NULL)
+			OJapiCambrian::s_pAppBallotmaster->OnEventVoteReceived(this);
+		}
+	// pContact->PGetProfile()->BallotMaster_onEventVoteReceived(this);
+
 	return eGui_zUpdate;
 	} // XospDataE()
 

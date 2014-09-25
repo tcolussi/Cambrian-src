@@ -77,7 +77,8 @@ public:
 		FB_kfAllowMultipleChoices			= 0x0001,	// Voters may select multiple choices
 		FB_kfAllowNoComments				= 0x0002,	// Prevent voters to send feedback comments (this flag uses the negation, so by default comments are enabled)
 		FB_kfStopAcceptingVotes				= 0x0004,	// Do not accept votes from user (this is the case when a poll is stopped)
-		FB_kfVotesTailied					= 0x0008	// The votes have been calculated.  When a new vote arrives, clear this flag to force a recompilation.
+		FB_kfVotesTailied					= 0x0008,	// The votes have been calculated.  When a new vote arrives, clear this flag to force a recompilation.
+		FB_kfFromBallotmaster				= 0x0010,	// The event was created by the Ballotmaster, and therefore update should also notify the Ballotmaster
 		};
 	UINT m_uFlagsBallot;							// Various options for the ballot
 	CStr m_strTitle;
@@ -152,6 +153,8 @@ public:
 class CEventBallotPoll : public CEventBallotSent
 {
 public:
+	static const EEventClass c_eEventClass = eEventClass_eBallotPoll;
+public:
     TIMESTAMP m_tsStarted;
     TIMESTAMP m_tsStopped;
     int m_cSecondsPollLength;
@@ -163,10 +166,10 @@ private:
 	CEventBallotSent * m_pEventBallotSent;	// Pointer to the actual ballot sent.  This event will accumulate/tally the votes.  The identifier (m_tsEventID) is the same as m_tsStarted, so this is how the two events may be linked.
 
 public:
-    CEventBallotPoll(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);
-    virtual EEventClass EGetEventClass() const { return eEventClass_eBallotPoll; }
-    virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
-    virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
+	CEventBallotPoll(const TIMESTAMP * ptsEventID = d_ts_pNULL_AssignToNow);
+	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
+	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	CEventBallotAttatchment * PAllocateNewAttatchment();
 
 	bool FStartPoll();
