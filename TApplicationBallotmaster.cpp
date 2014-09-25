@@ -100,21 +100,27 @@ TProfile::BallotMaster_EventBallotAddAsTemplate(IEventBallot * pEventBallot)
 	}
 
 void
-TProfile::BallotMaster_EventNewBallotReceived(CEventBallotReceived * pEventBallotReceived)
+TProfile::BallotMaster_onEventNewBallotReceived(CEventBallotReceived * pEventBallotReceived)
 	{
+	Assert(pEventBallotReceived->EGetEventClass() == CEventBallotReceived::c_eEventClass);
 	m_arraypEventsRecentBallots.AddEvent(pEventBallotReceived);
 	Dashboard_NewEventRelatedToBallot(pEventBallotReceived);
 	if (OJapiCambrian::s_pAppBallotmaster != NULL)
 		{
+		MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onEventBallotReceived($t)\n", pEventBallotReceived->m_tsEventID);
 		emit OJapiCambrian::s_pAppBallotmaster->onEventBallotReceived(Timestamp_ToStringBase85(pEventBallotReceived->m_tsEventID));
 		}
-	/*
-	CServiceBallotmaster * pServiceBallotmaster = (CServiceBallotmaster *)m_arraypaServices.PFindRuntimeObject(RTI_SZ(CServiceBallotmaster));
-	if (pServiceBallotmaster != NULL)
+	}
+
+void
+TProfile::BallotMaster_onEventVoteReceived(CEventBallotSent * pEventBallotSent)
+	{
+	Assert(pEventBallotSent->EGetEventClass() == CEventBallotSent::c_eEventClass);
+	if (OJapiCambrian::s_pAppBallotmaster != NULL)
 		{
-		emit OJapiAppBallotmaster::onEventBallotReceived(Timestamp_ToStringBase85(pEventBallotReceived->m_tsEventID));
+		MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onEventVoteReceived($t)\n", pEventBallotSent->m_tsEventID);
+		emit OJapiCambrian::s_pAppBallotmaster->onEventVoteReceived(Timestamp_ToStringBase85(pEventBallotSent->m_tsEventID));
 		}
-	*/
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

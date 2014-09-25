@@ -402,7 +402,7 @@ IEventBallot::LsGetChoices() CONST_MCC
 	while (ppChoice != ppChoiceStop)
 		{
 		_CEventBallotChoice * pChoice = *ppChoice++;
-		oList.append(QVariant::fromValue(new OJapiPollOption(pChoice)));
+		oList.append(QVariant::fromValue(new OJapiPollOption(pChoice)));	// This causes a memory... need to be fixed
 		}
 	return oList;
 	}
@@ -455,6 +455,8 @@ CEventBallotSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza *
 	pVote->m_tsVote = Timestamp_GetCurrentDateTime();
 	m_pVaultParent_NZ->SetModified();
 	m_uFlagsBallot &= ~FB_kfVotesTailied;	// Force a recount of the votes
+
+	pContact->PGetProfile()->BallotMaster_onEventVoteReceived(this);
 	return eGui_zUpdate;
 	} // XospDataE()
 

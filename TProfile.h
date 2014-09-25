@@ -80,7 +80,8 @@ public:
 	POJapiProfile POJapiGet();
 	OJapiCambrian * POJapiGetCambrian();
 	void BallotMaster_EventBallotAddAsTemplate(IEventBallot * pEventBallot);
-	void BallotMaster_EventNewBallotReceived(CEventBallotReceived * pEventBallotReceived);
+	void BallotMaster_onEventNewBallotReceived(CEventBallotReceived * pEventBallotReceived);
+	void BallotMaster_onEventVoteReceived(CEventBallotSent * pEventBallotSent);
 
 public:
 	static IXmlExchange * S_PaAllocateProfile(PVOID pConfigurationParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()

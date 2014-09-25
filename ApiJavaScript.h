@@ -615,7 +615,8 @@ public slots:
 	void open();
 
 signals:
-	void onEventBallotReceived(const QString & sBallotId);
+	void onEventBallotReceived(const QString & sBallotId);	// This signal is emitted when a new ballot arrives from a contact.  The signal handler should display a 'card' to the user so he/she may vote.
+	void onEventVoteReceived(const QString & sBallotId);	// This signal is emitted when a vote arrives from a contact.  The signal handler should update the poll to tally the new vote (typically updating the pie chart)
 };
 #define POJapiAppBallotmaster		POJapi
 
