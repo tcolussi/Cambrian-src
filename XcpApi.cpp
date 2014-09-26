@@ -660,7 +660,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				IEvent * pEvent = pVault->PFindEventReceivedByTimestampOther(tsOther, pContactOther);
 				if (pEvent == NULL)
 					{
-					MessageLog_AppendTextFormatSev(eSeverityInfoTextBlueDark, "\t Missing Event tsOther $t from ^j\n", tsOther, pContactOther);
+					MessageLog_AppendTextFormatSev(eSeverityInfoTextBlueDark, "\t Missing Event tsOther $t ({tL}) from ^j\n", tsOther, tsOther, pContactOther);
 					BinAppendTimestampSpace(tsOther);	// Add the timestamp to request the data of the missing event
 					chXSop = d_chXSop_zNULL;				// Do not update the synchronization timestamp if an event is missing
 					}
@@ -674,7 +674,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			break;
 
 		case d_chXSop_FetchEvents:	// Request to return the data of my events (this is the typical case where a contact is missing events)
-			BinAppendText_VE("<" d_szXSop_EventsData_tsO ">", pXmlNodeSync->TsGetAttributeValueTimestamp_ML(d_chXSa_tsEventID));
+			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<" d_szXSop_EventsData_tsO ">", pXmlNodeSync->TsGetAttributeValueTimestamp_ML(d_chXSa_tsEventID));
 			while (TRUE)
 				{
 				TIMESTAMP tsEventID;
@@ -686,7 +686,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				else
 					MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Unable to find Event ID $t\n", tsEventID);
 				} // while
-			BinAppendText_VE("</" d_szXSop_EventsData ">");
+			BinAppendTextOffsetsTruncateIfEmpty_VE(IN &oOffsets, "</" d_szXSop_EventsData ">");
 			break;
 		case d_chXSop_FetchEventsMine:	// Return the data of events of the contact (this is somewhat a backup recovery when the contact lost its own Chat Log)
 			BinAppendText_VE("<" d_szXSop_EventsDataMine ">");
@@ -747,7 +747,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			BinAppendText("<"d_szXSop_EventsConfirmation_);
 			tsOther = d_ts_zNA;
 			pXmlNodeEvent = pXmlNodeSync->m_pElementsList;
-			Assert(pXmlNodeEvent != NULL);
+			Report(pXmlNodeEvent != NULL);
 			while (pXmlNodeEvent != NULL)
 				{
 				tsOther = pXmlNodeEvent->TsGetAttributeValueTimestamp_ML(d_chXCPa_tsOther);
