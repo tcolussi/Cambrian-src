@@ -32,6 +32,12 @@ CPainterCell::DrawIconLeft(const QIcon & oIcon)
 	m_rcCell.setLeft(m_rcCell.left() + 19);
 	}
 
+void
+CPainterCell::DrawIconLeft(EMenuAction eMenuIcon)
+	{
+	DrawIconLeft(PGetMenuAction(eMenuIcon)->icon());
+	}
+
 //	Return the number of pixels of the drawing.  This is useful to chain drawing.
 int
 CPainterCell::DrawNumberWithinCircle(int nNumber)

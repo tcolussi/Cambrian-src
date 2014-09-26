@@ -457,10 +457,23 @@ bool
 OJapiPoll::save()
 	{
 	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventDeleted;
-	m_pBallot->PGetAccount_NZ()->PGetConfiguration()->XmlConfigurationSaveToFile();	// Force a save to make sure if the machine crashes, the poll have been saved
+	TProfile * pProfile = m_pBallot->PGetProfile();
+	pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();	// Force a save to make sure if the machine crashes, the poll have been saved
 
 	QString sStatus = status();
 	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($S) - status=$Q\n", &m_pBallot->m_strTitle, &sStatus);
+
+	// Notify each Ballotmaster app the poll has been saved
+	OJapiAppBallotmaster * pBallotmaster = OJapiAppBallotmaster::s_plistBallotmasters;
+	while (pBallotmaster != NULL)
+		{
+		if (pBallotmaster->PGetProfile() == pProfile)
+			{
+			MessageLog_AppendTextFormatCo(d_coBlue, "emitting onPollSaved() - Poll ID $t\n", m_pBallot->m_tsEventID);
+			emit pBallotmaster->onPollSaved(this);
+			}
+		pBallotmaster = pBallotmaster->m_pNext;
+		}
 	return true;
 	}
 
@@ -663,6 +676,12 @@ OJapiAppBallotmaster::~OJapiAppBallotmaster()
 		pBallotmaster = pBallotmaster->m_pNext;
 		Assert(pBallotmaster != NULL && "The OJapiAppBallotmaster should be in the list");
 		}
+	}
+
+TProfile *
+OJapiAppBallotmaster::PGetProfile() const
+	{
+	return m_pServiceBallotmaster->m_pProfileParent;
 	}
 
 CEventBallotPoll*

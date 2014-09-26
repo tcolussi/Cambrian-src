@@ -19,6 +19,7 @@ public:
 	void DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...);
 	int DrawNumberWithinCircle(int nNumber);
 	void DrawIconLeft(const QIcon & oIcon);
+	void DrawIconLeft(EMenuAction eMenuIcon);
 };
 
 
