@@ -575,7 +575,8 @@ TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier)
 	SHashSha1 shaGroupIdentifier;
 	if (!HashSha1_FInitFromStringBase85_ZZR_ML(OUT &shaGroupIdentifier, IN pszGroupIdentifier))
 		{
-		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Invalid group identifier $s\n", pszGroupIdentifier);
+		if (pszGroupIdentifier != NULL && *pszGroupIdentifier != '\0')
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Invalid group identifier '$s'\n", pszGroupIdentifier);
 		return NULL;
 		}
 	TGroup * pGroup;

@@ -147,6 +147,7 @@ public:
 
 	void DisplayDialogBallotVote(BOOL fPreviewMode = FALSE);
 	void UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditTextArea * pwEditComments);
+	BOOL SubmitVoteViaXospF(UINT_BALLOT_CHOICES ukmChoices, const CStr & strFeedbackComments);
 };
 
 // This event is used by the poll master, it is not an event by itself however used as a template to send ballots
@@ -173,11 +174,12 @@ public:
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	CEventBallotAttatchment * PAllocateNewAttatchment();
 
+	PSZAC PszGetStatus() const;
 	bool FStartPoll();
 	void StopPoll();
 	ITreeItemChatLogEvents * PGetGroupTarget_YZ();
 	CEventBallotSent * PGetEventBallotSend_YZ() CONST_MCC;
-};
+}; // CEventBallotPoll
 
 
 #endif // IEVENTBALLOT_H

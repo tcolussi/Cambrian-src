@@ -661,7 +661,8 @@ DDialogBallotVote::SL_ButtonVote()
 		EMessageBoxWarning("Please select a choice!");
 		return;
 		}
-	m_pEventBallotVote->UpdateBallotChoices(ukmChoices, m_pwEditComments);
+	if (m_pEventBallotVote->SubmitVoteViaXospF(ukmChoices, *m_pwEditComments))
+		m_pEventBallotVote->ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree();
 	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
 	}
 

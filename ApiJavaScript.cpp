@@ -537,22 +537,18 @@ OJapiBrowsersList::newBrowser()
 	}
 
 
-
-
-
 POJapiProfile
 TProfile::POJapiGet()
 	{
 	if ( m_paoJapiProfile == NULL)
 		m_paoJapiProfile = new OJapiProfile(this);
-
 	return m_paoJapiProfile;
-}
+	}
 
 OJapiCambrian *TProfile::POJapiGetCambrian()
-{
-			return new OJapiCambrian(this, NULL);
-}
+	{
+	return new OJapiCambrian(this, NULL);
+	}
 
 OJapiProfile::OJapiProfile(TProfile *pProfile) : m_oBrowsersList(this) , m_oJurisdiction(this)
 	{

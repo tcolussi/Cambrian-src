@@ -463,9 +463,13 @@ CEventBallotSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza *
 
 	if (m_uFlagsBallot & FB_kfFromBallotmaster)
 		{
-		// The ballot sent was created by the Ballotmaster, therefore notify it
-		if (OJapiCambrian::s_pAppBallotmaster != NULL)
-			OJapiCambrian::s_pAppBallotmaster->OnEventVoteReceived(this);
+		// The ballot sent was created by the Ballotmaster, therefore notify every Ballotmaster instance
+		OJapiAppBallotmaster * pBallotmaster = OJapiAppBallotmaster::s_plistBallotmasters;
+		while (pBallotmaster != NULL)
+			{
+			pBallotmaster->OnEventVoteReceived(this);
+			pBallotmaster = pBallotmaster->m_pNext;
+			}
 		}
 	// pContact->PGetProfile()->BallotMaster_onEventVoteReceived(this);
 
@@ -507,23 +511,34 @@ CEventBallotReceived::PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScrat
 
 #include "XcpApi.h"
 
+/*
 //	Update the GUI and send the ballot via XOSP
 void
 CEventBallotReceived::UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditTextArea * pwEditComments)
 	{
-	CStr strComments = *pwEditComments;
+	SubmitVoteViaXosp(*pwEditComments;
 	if (strComments.FCompareBinary(m_strComment) && ukmChoices == m_ukmChoices)
 		return;	// Nothing changed
 	m_ukmChoices = ukmChoices;
 	m_strComment = strComments;
 	m_pVaultParent_NZ->SetModified();
 	ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree();
+	}
+*/
 
+BOOL
+CEventBallotReceived::SubmitVoteViaXospF(UINT_BALLOT_CHOICES ukmChoices, const CStr & strFeedbackComments)
+	{
+	if (strFeedbackComments.FCompareBinary(m_strComment) && ukmChoices == m_ukmChoices)
+		return FALSE;	// Nothing changed
+	m_ukmChoices = ukmChoices;
+	m_strComment = strFeedbackComments;
+	m_pVaultParent_NZ->SetModified();
 	// Send the selected choices to the ballot creator
 	CBinXcpStanza binXcpStanza;
 	binXcpStanza.XcpApi_SendDataToEvent_VE(this, "<v" d_szXMLa_CEventBallotReceived_uxVotedChoice_ux d_szXMLa_CEventBallotReceived_strNote "/>", m_ukmChoices, &m_strComment);
+	return TRUE;
 	}
-
 
 CEventBallotAttatchment *
 CEventBallotPoll::PAllocateNewAttatchment()

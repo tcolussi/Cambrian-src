@@ -857,7 +857,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		switch (eEventClass)
 			{
 		case CEventBallotReceived::c_eEventClass:
-			pProfile->BallotMaster_onEventNewBallotReceived((CEventBallotReceived *)pEvent);
+			pProfile->BallotMaster_OnEventNewBallotReceived((CEventBallotReceived *)pEvent);
 			break;
 		case CEventMessageTextReceived::c_eEventClass:
 			pProfile->m_arraypEventsRecentMessagesReceived.AddEvent(pEvent);
@@ -942,6 +942,13 @@ ITreeItem::TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay)
 	m_strNameDisplayTyped = pszNameDisplay;
 	m_uFlagsTreeItem = (m_uFlagsTreeItem & ~FTI_kfTreeItem_NameDisplayedGenerated) | FTI_kfTreeItem_NameDisplayedSuggested;
 	}
+
+CString
+ITreeItem::TreeItem_SGetNameDisplay() CONST_MCC
+	{
+	return TreeItem_PszGetNameDisplay();
+	}
+
 
 void
 TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * pbinXcpApiExtraRequest)

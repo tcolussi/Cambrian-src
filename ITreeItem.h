@@ -102,6 +102,7 @@ public:
 	void TreeItem_MarkForDeletion();
 
 	void TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay);
+	CString TreeItem_SGetNameDisplay() CONST_MCC;
 
 	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);	// From IXmlExchange

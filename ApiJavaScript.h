@@ -397,7 +397,9 @@ public:
 	OJapiBallot(IEventBallot * pEventBallot);
 
 	QString id() const;
-	QString type() const { return c_sEmpty; }
+	QString type() const;
+	QString originator() const;
+	QString status() const;
 	QString title() const;
 	void title(const QString & sTitle);
 	QString description() const;
@@ -415,6 +417,8 @@ public:
 
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString type READ type)
+	Q_PROPERTY(QString originator READ originator)
+	Q_PROPERTY(QString status READ status)
 	Q_PROPERTY(QString title READ title WRITE title)
 	Q_PROPERTY(QString description READ description WRITE description)
 	Q_PROPERTY(QVariantList options READ options WRITE options)
@@ -423,7 +427,10 @@ public:
 	Q_PROPERTY(bool isTemplate READ isTemplate WRITE isTemplate)
 	Q_PROPERTY(bool isSelected READ isSelected WRITE isSelected)
 
+public slots:
+	void submit(int kmOptions, const QString & sComment);
 }; // OJapiBallot
+#define POJapiBallot		POJapi
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Core object shared with OPoll and OPollResults
@@ -443,10 +450,6 @@ public:
 	void submitText(const QString & sText);
 	void pollTargetId(const CString & sTargetId);
 	QString pollTargetId() const;
-
-	//	These values are after the poll started
-	QString originator() const;
-	QString status() const;
 	QDateTime dateStarted() const;
 	QDateTime dateStopped() const;
 
@@ -454,9 +457,6 @@ public:
 	Q_PROPERTY(QString dismissText READ dismissText WRITE dismissText)
 	Q_PROPERTY(QString submitText READ submitText WRITE submitText)
 	Q_PROPERTY(QString pollTargetId READ pollTargetId WRITE pollTargetId)
-
-	Q_PROPERTY(QString originator READ originator)
-	Q_PROPERTY(QString status READ status)
 	Q_PROPERTY(QDateTime dateStarted READ dateStarted)
 	Q_PROPERTY(QDateTime dateStopped READ dateStopped)
 }; // OJapiPollCore
@@ -601,7 +601,6 @@ class OJapiAppBallotmaster : public OJapiAppInfo
 	Q_OBJECT
 protected:
 	CServiceBallotmaster * m_pServiceBallotmaster;
-//	TApplicationBallotmaster * m_pBallotmaster;
 
 public:
 	OJapiAppBallotmaster(OJapiCambrian * poCambrian, const SApplicationHtmlInfo *pApplicationInfo);
@@ -612,6 +611,7 @@ public:
 	CEventBallotPoll * PFindPollByID(TIMESTAMP tsIdPoll) const;
 	CEventBallotPoll * PFindPollByID(const QString & sIdPoll) const;
 	CEventBallotPoll * PFindPollByTimeStarted(TIMESTAMP tsStarted) const;
+	void OnEventBallotReceived(CEventBallotReceived * pEventBallotReceived);
 	void OnEventVoteReceived(const CEventBallotSent * pEventBallotSent);
 
 public slots:
@@ -623,8 +623,13 @@ public slots:
 	void open();
 
 signals:
-	void onEventBallotReceived(const QString & sBallotId);	// This signal is emitted when a new ballot arrives from a contact.  The signal handler should display a 'card' to the user so he/she may vote.
+	void onEventBallotReceived(POJapiBallot oBallot);	// This signal is emitted when a new ballot arrives from a contact.  The signal handler should display a 'card' to the user so he/she may vote.
 	void onEventVoteReceived(POJapiPoll oPoll);				// This signal is emitted when a vote arrives from a contact.  The signal handler should update the poll to tally the new vote (typically updating the pie chart)
+
+public:
+	OJapiAppBallotmaster * m_pNext;						// Next Ballotmaster in the linked list.  This is important because every OJapiAppBallotmaster must be notified when a new ballot or vote arrives.
+	static OJapiAppBallotmaster * s_plistBallotmasters;	// Pointer to the last ballotmaster
+
 }; // OJapiAppBallotmaster
 #define POJapiAppBallotmaster		POJapi
 
@@ -692,18 +697,17 @@ public slots:
 
 class OJapiContact : public OJapi
 {
+public:
+	TContact * m_pContact;
 
 public:
 	OJapiContact(TContact * pContact);
-
-	TContact * m_pContact;
-
 	QString id();
 	QString name();
 
-	Q_OBJECT
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name)
+	Q_OBJECT
 };
 #define POJapiContact		POJapi
 
@@ -716,8 +720,6 @@ class OJapiGroupList : public OJapi
 
 public:
 	OJapiGroupList(OJapiCambrian * poCambrian);
-
-
 	//Q_PROPERTY(OJapiList list READ list)
 
 public slots:
@@ -766,7 +768,6 @@ class OJapiCambrian : public OJapi
 public:
 	TProfile * m_pProfile;
 	CArrayPtrRuntimeObjects m_arraypaTemp;
-	static OJapiAppBallotmaster * s_pAppBallotmaster;	// Pointer to the last ballotmaster
 
 protected:
 	OSettings m_oSettings;
