@@ -319,6 +319,8 @@ void
 OJapiPollCore::pollTargetId(const CString & sTargetId)
 	{
 	m_pBallot->m_strTargetIdentifier = sTargetId;
+	Report((m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventError) == 0);	// I think this will fail, however it is good documentation
+	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventError;				// Remove any previous error
 	}
 QString
 OJapiPollCore::pollTargetId() const
@@ -382,7 +384,7 @@ OJapiPollResultsComment::comment()
 QString
 OJapiPollResultsComment::name()
 	{
-    return m_pComment->m_pContact->m_strJidBare;
+	return m_pComment->m_pContact->TreeItem_SGetNameDisplay();
 	}
 
 
