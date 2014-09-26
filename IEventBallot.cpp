@@ -24,10 +24,11 @@
 #define d_chXMLe_BallotChoices						'C'
 #define d_szXMLe_BallotChoices						"C"
 #define d_chXMLe_BallotChoice						'C'
-#define d_szXMLe_BallotChoice_S						"C t='^S'"
-#define d_szXMLe_BallotChoice_S_i					"C t='^S' c='$i'"
+#define d_szXMLe_BallotChoice_S_ux					"C t='^S' f='$x'"
+#define d_szXMLe_BallotChoice_S_ux_i				"C t='^S' f='$x' c='$i'"
 #define d_chXMLa_BallotChoice_strText				't'				// Text to appear for one ballot choice
-#define d_chXMLa_BallotChoice_cCount				'c'				// Number of votes for the choice
+#define d_chXMLa_BallotChoice_uxFlags				'f'
+#define d_chXMLa_BallotChoice_cVotes				'c'				// Number of votes for the choice
 #define d_chXMLa_BallotChoice_strGroup				'g'				// NYI: Which sub-group to automatically create
 
 #define d_chXMLe_BallotVotes						'V'
@@ -91,14 +92,14 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_IEventBallot_strButtonDismiss, m_strButtonDismiss);
 
 	const BOOL fSerializeVotes = pbinXmlAttributes->FuSerializingEventToDisk();	// Serialize the votes only when saving to disk.  Transmitting via XOSP or cloning does not serialize the votes.
-	PSZAC pszFmtTemplateBallotChoice_S_i = fSerializeVotes ? "<"d_szXMLe_BallotChoice_S_i"/>" : "<"d_szXMLe_BallotChoice_S"/>";
+	PSZAC pszFmtTemplateBallotChoice_S_ux_i = fSerializeVotes ? "<"d_szXMLe_BallotChoice_S_ux_i"/>" : "<"d_szXMLe_BallotChoice_S_ux"/>";
 	pbinXmlAttributes->BinAppendText("><"d_szXMLe_BallotChoices">");
 	_CEventBallotChoice ** ppChoiceStop;
 	_CEventBallotChoice ** ppChoice = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
 		{
 		_CEventBallotChoice * pChoice = *ppChoice++;
-		pbinXmlAttributes->BinAppendText_VE(pszFmtTemplateBallotChoice_S_i, &pChoice->m_strQuestion, pChoice->m_cVotes);
+		pbinXmlAttributes->BinAppendText_VE(pszFmtTemplateBallotChoice_S_ux_i, &pChoice->m_strQuestion, pChoice->m_uFlags, pChoice->m_cVotes);
 		}
 	pbinXmlAttributes->BinAppendText("</"d_szXMLe_BallotChoices">");
 
@@ -137,7 +138,8 @@ IEventBallot::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 			{
 			_CEventBallotChoice * pChoice = PAllocateNewChoice();
 			pXmlNodeChoice->UpdateAttributeValueCStr(d_chXMLa_BallotChoice_strText, OUT_F_UNCH &pChoice->m_strQuestion);
-			pXmlNodeChoice->UpdateAttributeValueInt(d_chXMLa_BallotChoice_cCount, OUT &pChoice->m_cVotes);
+			pXmlNodeChoice->UpdateAttributeValueUIntHexadecimal(d_chXMLa_BallotChoice_uxFlags, OUT &pChoice->m_uFlags);
+			pXmlNodeChoice->UpdateAttributeValueInt(d_chXMLa_BallotChoice_cVotes, OUT &pChoice->m_cVotes);
 			pXmlNodeChoice = pXmlNodeChoice->m_pNextSibling;
 			}
 		}
@@ -321,12 +323,16 @@ IEventBallot::DetachFromObjectsAboutBeingDeleted()
 		}
 	}
 
+_CEventBallotChoice::_CEventBallotChoice()
+	{
+	m_uFlags = 0;
+	m_cVotes = 0;		// So far, nobody voted for this choice!
+	}
 
 _CEventBallotChoice *
 IEventBallot::PAllocateNewChoice()
 	{
 	_CEventBallotChoice * pChoice = new _CEventBallotChoice;
-	pChoice->m_cVotes = 0;		// So far, nobody voted for this choice!
 	m_arraypaChoices.Add(PA_CHILD pChoice);
 	return pChoice;
 	}

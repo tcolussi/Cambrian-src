@@ -119,17 +119,31 @@ OJapiBallot::type() const
 	}
 
 //	submit(), slot
+//	Submit a vote back to the sender of the poll.
 //	This method should be called only for received ballots to send the vote back to the poll sender.
-void
-OJapiBallot::submit(int kmOptions, const QString & sComment)
+bool
+OJapiBallot::submit(const QString & sComment)
 	{
-	//MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OJapiBallot::submit() - Event ID $t: $x $Q\n", m_pEventBallot->m_tsEventID, kmOptions, &sComment);
 	if (m_pEventBallot->EGetEventClass() == CEventBallotReceived::c_eEventClass)
 		{
-		((CEventBallotReceived *)m_pEventBallot)->SubmitVoteViaXospF(kmOptions, sComment);
-		return;
+		CEventBallotReceived * pEventBallotReceived = (CEventBallotReceived *)m_pEventBallot;
+		// Calculate the bitmask from the selected choices
+		UINT_BALLOT_CHOICES ukmChoices = 0;
+		UINT iChoice = 0;
+		_CEventBallotChoice ** ppChoiceStop;
+		_CEventBallotChoice ** ppChoice = pEventBallotReceived->PrgpGetChoicesStop(OUT &ppChoiceStop);
+		while (ppChoice != ppChoiceStop)
+			{
+			_CEventBallotChoice * pChoice = *ppChoice++;
+			Assert(_CEventBallotChoice::F_kfIsSelected == 1);
+			ukmChoices |= (pChoice->m_uFlags & _CEventBallotChoice::F_kfIsSelected) << iChoice++;
+			}
+		MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiBallot::submit() - Event ID $t: $x $Q\n", m_pEventBallot->m_tsEventID, ukmChoices, &sComment);
+		pEventBallotReceived->SubmitVoteViaXospF(ukmChoices, sComment);
+		return true;
 		}
 	MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OJapiBallot::submit() - Event ID $t is not allowed to vote\n", m_pEventBallot->m_tsEventID);
+	return false;
 	}
 
 QString
@@ -356,6 +370,20 @@ OJapiPollOption::text() const
 	{
 	return m_pChoice->m_strQuestion;
 	}
+bool
+OJapiPollOption::isSelected()
+	{
+	return ((m_pChoice->m_uFlags & _CEventBallotChoice::F_kfIsSelected) != 0);
+	}
+void
+OJapiPollOption::isSelected(bool fIsSelected)
+	{
+	if (fIsSelected)
+		m_pChoice->m_uFlags |= _CEventBallotChoice::F_kfIsSelected;
+	else
+		m_pChoice->m_uFlags &= ~_CEventBallotChoice::F_kfIsSelected;
+	}
+
 int
 OJapiPollOption::count() const
 	{
@@ -469,7 +497,7 @@ OJapiPoll::save()
 		{
 		if (pBallotmaster->PGetProfile() == pProfile)
 			{
-			MessageLog_AppendTextFormatCo(d_coBlue, "emitting onPollSaved() - Poll ID $t\n", m_pBallot->m_tsEventID);
+			MessageLog_AppendTextFormatCo(d_coBlue, "0x$p: emitting onPollSaved() - Poll ID $t\n", pBallotmaster, m_pBallot->m_tsEventID);
 			emit pBallotmaster->onPollSaved(this);
 			}
 		pBallotmaster = pBallotmaster->m_pNext;
@@ -598,14 +626,6 @@ OJapiPoll::send(const QString & sGroupId)
 		}
 	return false;
 	}
-
-//	Submit a vote back to the sender of the poll
-bool
-OJapiPoll::submit()
-	{
-	return true;
-	}
-
 
 void OJapiAppBallotmaster::open()
     {

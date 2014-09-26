@@ -13,7 +13,15 @@ class _CEventBallotChoice
 public:
 	CStr m_strQuestion;				// Question/choice to appear on the ballot
 	CStr m_strGroupAutoAssign;		// Which sub-group to automatically assign when a user selects a choice
+	enum
+		{
+		F_kfIsSelected			= 0x0001,	// The choice has been selected. This value must be set to 1 for OJapiBallot::submit()
+		};
+	UINT m_uFlags;					// Various option for a choice (such as its pre-selection)
 	int m_cVotes;					// How many people voted for this question.  This value is a caching of _CEventBallotVote::m_ukmChoices
+
+public:
+	_CEventBallotChoice();
 };
 
 class CArrayPtrBallotChoices : public CArray
@@ -106,6 +114,7 @@ public:
 	void SetChoices(const QVariantList & lsChoices);
 	QVariantList LsGetChoices() CONST_MCC;
 
+	inline _CEventBallotChoice ** PrgpGetChoicesStop(OUT _CEventBallotChoice *** pppChoiceStop) const { return m_arraypaChoices.PrgpGetChoicesStop(OUT pppChoiceStop); }
 	_CEventBallotChoice ** PrgpGetChoicesStopWithTally(OUT _CEventBallotChoice *** pppChoiceStop) CONST_MCC;
 
 	_CEventBallotChoice * PAllocateNewChoice();

@@ -134,8 +134,8 @@ void
 WDashboardSectionContacts::DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvContact)
 	{
 	TContact * pContact = (TContact *)pvContact;
-	EMenuAction eMenuIconPresence = pContact->Contact_EGetMenuActionPresence();
-	pPainter->DrawIconLeft(PGetMenuAction(eMenuIconPresence)->icon());
+	//EMenuAction eMenuIconPresence = pContact->Contact_EGetMenuActionPresence();
+	pPainter->DrawIconLeft(pContact->Contact_FuIsOnline() ? eMenuAction_PresenceAccountOnline : eMenuAction_PresenceAccountOffline);
 	pPainter->DrawNumberWithinCircle(pContact->m_cMessagesUnread);
 	pPainter->DrawTextWithinCell_VE("$s", pContact->TreeItem_PszGetNameDisplay());
 	}

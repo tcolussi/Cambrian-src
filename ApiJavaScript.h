@@ -428,7 +428,7 @@ public:
 	Q_PROPERTY(bool isSelected READ isSelected WRITE isSelected)
 
 public slots:
-	void submit(int kmOptions, const QString & sComment);
+	bool submit(const QString & sComment);
 }; // OJapiBallot
 #define POJapiBallot		POJapi
 
@@ -493,9 +493,12 @@ class OJapiPollOption : public OJapi	// Display an option/choice to vote
 public:
 	OJapiPollOption(_CEventBallotChoice * pChoice);
 	QString text() const;
+	bool isSelected();
+	void isSelected(bool fIsSelected);
 	int count() const;
 
 	Q_PROPERTY(QString text READ text)
+	Q_PROPERTY(bool isSelected READ isSelected WRITE isSelected)
 	Q_PROPERTY(int count READ count)
 };
 
@@ -565,7 +568,6 @@ public slots:
 	bool start();
 	void stop();
 	bool send(const QString & sGroupId);
-	bool submit();
 	POJapiPollResults getResults() CONST_MCC;
 
 	// attatchments sections

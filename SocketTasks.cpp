@@ -137,7 +137,7 @@ CListTasksSendReceive::DeleteTaskMatchingID(TIMESTAMP tsTaskID, BOOL fDeleteTask
 		ppTaskPrevious = &pTask->m_pNext;
 		pTask = pTask->m_pNext;
 		}
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coPurple), "DeleteTaskMatchingID() - Cannot delete Task ID $t because its ID is no cannot be found!\n", tsTaskID);
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coPurple), "DeleteTaskMatchingID() - Cannot delete Task ID $t because its ID cannot be found!\n", tsTaskID);
 	}
 
 //	Delete a task from the list.
