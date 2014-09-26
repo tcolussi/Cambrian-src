@@ -296,14 +296,12 @@ OJapiPollCore::OJapiPollCore(CEventBallotPoll * pBallot) : OJapiBallot(pBallot)
 int
 OJapiPollCore::pollTimeLength() const
 	{
-	//MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::pollTimeLength get");
 	return m_pBallot->m_cSecondsPollLength;
 	}
 
 void
 OJapiPollCore::pollTimeLength(int cSeconds)
 	{
-	//MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "OPoll::pollTimeLength set");
 	m_pBallot->m_cSecondsPollLength = cSeconds;
 	}
 
@@ -482,14 +480,14 @@ OJapiPoll::~OJapiPoll()
 	}
 
 bool
-OJapiPoll::save()
+OJapiPoll::save(const QString & sDebugContext)
 	{
 	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventDeleted;
 	TProfile * pProfile = m_pBallot->PGetProfile();
 	pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();	// Force a save to make sure if the machine crashes, the poll have been saved
 
 	QString sStatus = status();
-	MessageLog_AppendTextFormatCo(d_coBlue, "OPoll::save($S) - status=$Q\n", &m_pBallot->m_strTitle, &sStatus);
+	MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPoll::save($Q) - Poll ID $t, status=$Q\n", &sDebugContext, m_pBallot->m_tsEventID, &sStatus);
 
 	// Notify each Ballotmaster app the poll has been saved
 	OJapiAppBallotmaster * pBallotmaster = OJapiAppBallotmaster::s_plistBallotmasters;
@@ -497,7 +495,7 @@ OJapiPoll::save()
 		{
 		if (pBallotmaster->PGetProfile() == pProfile)
 			{
-			MessageLog_AppendTextFormatCo(d_coBlue, "0x$p: emitting onPollSaved() - Poll ID $t\n", pBallotmaster, m_pBallot->m_tsEventID);
+			MessageLog_AppendTextFormatCo(d_coBlue, "Ballotmaster 0x$p: emitting onPollSaved() - Poll ID $t\n", pBallotmaster, m_pBallot->m_tsEventID);
 			emit pBallotmaster->onPollSaved(this);
 			}
 		pBallotmaster = pBallotmaster->m_pNext;
