@@ -674,6 +674,7 @@ SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 	{"Home"		         , "html5-static/home/index.html"				, PaAllocateJapiGeneric, NULL },
 	{"Default NewTab"	 , "html5-static/default-new-tab/index.html"	, PaAllocateJapiGeneric, NULL },
 	{"Underconstruction" , "html5-static/underconstruction/index.html"	, PaAllocateJapiGeneric, NULL },
+	{"Configuration"	 , "html5-config/index.html"					, PaAllocateJapiGeneric, NULL },
 };
 
 SApplicationHtmlInfo * PGetApplicationHtmlInfoBallotmaster() { return &g_rgApplicationHtmlInfo[9]; }

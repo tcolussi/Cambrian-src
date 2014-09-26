@@ -102,6 +102,10 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Ballot" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
 	"Groups" _ "s=Manage groups" _,								// eMenuAction_DisplayGroupManager
 
+
+	/*
+	 * THIS section must be in sync with ApiJavaScript.cpp : g_rgApplicationHtmlInfo
+	 */
 	"Developer Apps"    _ "i=Browser" _, // eMenuAction_WikiSubMenu
 	//"Navshell Peers"	_ "s=Apps/navshell-contacts/index.html"		_"i=Browser" _,
 	//"Navshell Sidebar"  _ "s=Apps/navshell-stack/index.html"		_"i=Browser" _,
@@ -110,12 +114,17 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Pomodoro"          _ "s=Apps/html5-pomodoro/index.html"		_"i=Browser" _,
 	"JAPI Tests"        _ "s=Apps/japi/test/test.html"              _"i=Browser" _,
 	"Scratch"           _ "s=Apps/html5-scratch/index.html"			_"i=Browser" _,
-	//"HTML5 xik"         _ "s=Apps/html5-xik/index.html"				_"i=Browser" _,
-	//"Group Manager"		_ "s=Apps/html5-group-manager/index.html"				_"i=Browser" _,
-	//"Ballotmaster"		_ "s=Apps/html5-pollmaster/index.html"					_"i=Browser" _,
+	//"HTML5 xik"       _ "s=Apps/html5-xik/index.html"				_"i=Browser" _,
+	//"Group Manager"	_ "s=Apps/html5-group-manager/index.html"				_"i=Browser" _,
+	//"Ballotmaster"	_ "s=Apps/html5-pollmaster/index.html"					_"i=Browser" _,
 	"Default NewTab"	_ "s=Apps/html5-static/default-new-tab/index.html"		_"i=Browser" _,
 	"Underconstruction"	_ "s=Apps/html5-static/underconstruction/index.html"	_"i=Browser" _,
-	//"Home"				_ "s=Apps/html5-home/index.html"						_"i=Browser" _,
+	//"Home"			_ "s=Apps/html5-home/index.html"						_"i=Browser" _,
+	"Configuration"		_ "s=Apps/html5-config/index.html"						_"i=Browser" _,
+
+
+
+
 
 	"New Wallet" _ "i=Bitcoin" _, // eMenuAction_DisplayWallet
 	"New Web Browser" _ "i=Browser" _, // eMenuAction_DisplaySecureWebBrowsing
@@ -730,6 +739,7 @@ const EMenuActionByte c_rgzeActionsMenuWiki[] =
 	eMenuAction_AppDefaultNewTab,
 	eMenuAction_AppUnderconstruction,
 	//eMenuAction_AppHome,
+	eMenuAction_AppConfiguration,
     ezMenuActionNone
 };
 
@@ -906,6 +916,7 @@ MainWindow_MenuActionExecute(QAction * pAction)
 	case eMenuAction_AppDefaultNewTab:
 	case eMenuAction_AppUnderconstruction:
 	//case eMenuAction_AppHome:
+	case eMenuAction_AppConfiguration:
 		//void LaunchBrowser(const QString & sName, const QString & sUrl);
 		//LaunchBrowser( pAction->text(), "");
 		LaunchApplication(pAction->text());
