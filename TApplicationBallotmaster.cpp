@@ -296,40 +296,47 @@ OJapiPollCore::OJapiPollCore(CEventBallotPoll * pBallot) : OJapiBallot(pBallot)
 int
 OJapiPollCore::pollTimeLength() const
 	{
+	Assert(m_pBallot != NULL);
 	return m_pBallot->m_cSecondsPollLength;
 	}
 
 void
 OJapiPollCore::pollTimeLength(int cSeconds)
 	{
+	Assert(m_pBallot != NULL);
 	m_pBallot->m_cSecondsPollLength = cSeconds;
 	}
 
 QString
 OJapiPollCore::dismissText() const
 	{
+	Assert(m_pBallot != NULL);
 	return m_pBallot->m_strButtonDismiss;
 	}
 void
 OJapiPollCore::dismissText(const QString & sText)
 	{
+	Assert(m_pBallot != NULL);
 	m_pBallot->m_strButtonDismiss = sText;
 	}
 
 QString
 OJapiPollCore::submitText() const
 	{
+	Assert(m_pBallot != NULL);
 	return m_pBallot->m_strButtonSubmit;
 	}
 void
 OJapiPollCore::submitText(const QString & sText)
 	{
+	Assert(m_pBallot != NULL);
 	m_pBallot->m_strButtonSubmit = sText;
 	}
 
 void
 OJapiPollCore::pollTargetId(const CString & sTargetId)
 	{
+	Assert(m_pBallot != NULL);
 	m_pBallot->m_strTargetIdentifier = sTargetId;
 	Report((m_pBallot->m_uFlagsEvent & IEvent::FE_kfEventError) == 0);	// I think this will fail, however it is good documentation
 	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventError;				// Remove any previous error
@@ -337,17 +344,20 @@ OJapiPollCore::pollTargetId(const CString & sTargetId)
 QString
 OJapiPollCore::pollTargetId() const
 	{
+	Assert(m_pBallot != NULL);
 	return m_pBallot->m_strTargetIdentifier;
 	}
 
 QDateTime
 OJapiPollCore::dateStarted() const
 	{
+	Assert(m_pBallot != NULL);
     return Timestamp_ToQDateTime(m_pBallot->m_tsStarted);
 	}
 QDateTime
 OJapiPollCore::dateStopped() const
 	{
+	Assert(m_pBallot != NULL);
     return Timestamp_ToQDateTime(m_pBallot->m_tsStopped);
 	}
 
@@ -534,12 +544,12 @@ CEventBallotPoll::PGetEventBallotSend_YZ() CONST_MCC
 		{
 		// Attempt to find the ballot
 		ITreeItemChatLogEvents * pGroup = PGetGroupTarget_YZ();
-		if (pGroup != NULL)
+		if (pGroup != NULL && m_tsStarted != d_ts_zNA)
 			{
 			m_pEventBallotSent = (CEventBallotSent *)pGroup->Vault_PGet_NZ()->PFindEventByID(m_tsStarted);
 			if (m_pEventBallotSent == NULL || m_pEventBallotSent->EGetEventClass() != CEventBallotSent::c_eEventClass)
 				{
-				MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "CEventBallotPoll::PGetEventBallotSend_YZ($t) - Unable to find m_pEventBallotSent matching $t\n", m_tsEventID, m_tsStarted);
+				MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "CEventBallotPoll::PGetEventBallotSend_YZ($t) - Unable to find m_pEventBallotSent matching timestamp $t\n", m_tsEventID, m_tsStarted);
 				m_pEventBallotSent = NULL;
 				m_uFlagsEvent |= FE_kfEventError;
 				}
