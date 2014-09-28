@@ -97,18 +97,20 @@ CStr::InitFromStringQTrimmed(const QString & sString)
 void
 CStr::InitFromQLineEditTrimmed(const QLineEdit & wLineEdit)
 	{
+	Assert(&wLineEdit != NULL);
 	InitFromStringQTrimmed(wLineEdit.text());
 	}
 
 void
 CStr::InitFromQTextEditTrimmed(const QPlainTextEdit & wTextEdit)
 	{
+	Assert(&wTextEdit != NULL);
 	InitFromStringQTrimmed(wTextEdit.toPlainText());
 	}
 void
 CStr::InitFromQTextEditTrimmed(const QTextEdit & wTextEdit)
 	{
-	InitFromStringQTrimmed(wTextEdit.toPlainText());
+	InitFromStringQTrimmed((&wTextEdit != NULL) ? wTextEdit.toPlainText() : (const QString &)c_sEmpty);
 	}
 
 void
