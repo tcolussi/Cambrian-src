@@ -490,14 +490,14 @@ OJapiPoll::~OJapiPoll()
 	}
 
 bool
-OJapiPoll::save(const QString & sDebugContext)
+OJapiPoll::save(/*const QString & sDebugContext*/)
 	{
 	m_pBallot->m_uFlagsEvent &= ~IEvent::FE_kfEventDeleted;
 	TProfile * pProfile = m_pBallot->PGetProfile();
 	pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();	// Force a save to make sure if the machine crashes, the poll have been saved
 
 	QString sStatus = status();
-	MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPoll::save($Q) - Poll ID $t, status=$Q\n", &sDebugContext, m_pBallot->m_tsEventID, &sStatus);
+	MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPoll::save() - Poll ID $t, status=$Q\n", /*&sDebugContext,*/ m_pBallot->m_tsEventID, &sStatus);
 
 	// Notify each Ballotmaster app the poll has been saved
 	OJapiAppBallotmaster * pBallotmaster = OJapiAppBallotmaster::s_plistBallotmasters;

@@ -351,6 +351,8 @@ WNavigationTree::SL_TreeItemSelectionChanged(QTreeWidgetItem * pItemCurrent, QTr
 		{
 		pTreeItem->TreeItem_GotFocus();		// Call the virtual  method which will take care of calling MainWindow_SetCurrentChatLayout() with the proper WLayout
 		NoticeListRoaming_TreeItemGotFocus(IN pTreeItem);
+		void Dashboard_RemoveSelection();
+		//Dashboard_RemoveSelection();
 		}
 	else
 		{

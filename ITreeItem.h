@@ -160,6 +160,7 @@ class CArrayPtrTreeItems : public CArrayPtrXmlSerializableObjects
 {
 public:
 	inline ITreeItem ** PrgpGetTreeItemsStop(OUT ITreeItem *** pppTreeItemStop) const { return (ITreeItem **)PrgpvGetElementsStop(OUT (void ***)pppTreeItemStop); }
+	inline ITreeItem ** PrgpGetTreeItemsStopMax(OUT ITreeItem *** pppTreeItemStop, int cTreeItemsMax) const { return (ITreeItem **)PrgpvGetElementsStopMax(OUT (void ***)pppTreeItemStop, cTreeItemsMax); }
 	void DeleteTreeItem(PA_DELETING ITreeItem * paTreeItem);
 	void DeleteAllTreeItems();
 

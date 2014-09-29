@@ -563,7 +563,7 @@ public:
 	~OJapiPoll();
 
 public slots:
-	bool save(const QString & sDebugContext);
+	bool save(/*const QString & sDebugContext*/);
 	void destroy();
 	bool start();
 	void stop();

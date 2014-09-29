@@ -27,6 +27,7 @@ public:
 	void Widget_DetachFromParent() PA_CAST_FROM_P;
 	void Widget_SetTextFormat_VE_Gsb(PSZAC pszFmtTemplate, ...);
 	void Widget_SetTextFormat_VL_Gsb(PSZAC pszFmtTemplate, va_list vlArgs);
+	void Widget_Invalidate() { update(); }			// Schedule a paint event for processing when Qt returns to the main event loop.
 };
 
 //	By default, the text of QLabel is not selectable.
