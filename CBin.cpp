@@ -8,6 +8,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include "XcpApi.h"
 
 #ifdef DEBUG
 //	#define _ALLOCATE_EXACT_BINARY_SIZE	// Force the bin to allocate the exact size (this is very slow, but good for debugging)
@@ -2299,7 +2300,12 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 					break;
 				AppendGroupIdentifier:
 				if (u.pGroup->EGetRuntimeClass() == RTI(TGroup))
-					BinAppendText_VE(" g='{h|}'", &u.pGroup->m_hashGroupIdentifier);
+					{
+					if (!u.pGroup->m_strNameChannel_YZ.FIsEmptyString())
+						BinAppendText_VE(d_szXa_GroupChannel_strName, &u.pGroup->m_strNameChannel_YZ);
+					else
+						BinAppendText_VE(d_szXa_GroupIdentifier_shaBase85, &u.pGroup->m_hashGroupIdentifier);
+					}
 				break;
 			case 'C':	// ^C
 				u.pContact = va_arg(vlArgs, TContact *);

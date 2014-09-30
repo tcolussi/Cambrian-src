@@ -289,7 +289,7 @@ OJapiBallot::isSelected(bool fIsSelected)
 OJapiPollCore::OJapiPollCore(CEventBallotPoll * pBallot) : OJapiBallot(pBallot)
 	{
 	Assert(pBallot != NULL);
-    Assert(pBallot->EGetEventClass() == eEventClass_eBallotPoll);
+	Assert(pBallot->EGetEventClass() == CEventBallotPoll::c_eEventClass);
 	m_pBallot = pBallot;
 	}
 
@@ -517,6 +517,17 @@ void
 OJapiPoll::destroy()
 	{
 	m_pBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;
+
+	OJapiAppBallotmaster * pBallotmaster = OJapiAppBallotmaster::s_plistBallotmasters;
+	while (pBallotmaster != NULL)
+		{
+		if (pBallotmaster->PGetProfile() == m_pBallot->PGetProfile())
+			{
+			MessageLog_AppendTextFormatCo(d_coBlue, "Ballotmaster 0x$p: emitting onPollSaved() - Poll ID $t\n", pBallotmaster, m_pBallot->m_tsEventID);
+			emit pBallotmaster->onPollDestroyed(this);
+			}
+		pBallotmaster = pBallotmaster->m_pNext;
+		}
 	}
 
 //	This method return a pointer to a group or a contact.
@@ -712,7 +723,28 @@ OJapiAppBallotmaster::PGetProfile() const
 	return m_pServiceBallotmaster->m_pProfileParent;
 	}
 
-CEventBallotPoll*
+IEventBallot **
+OJapiAppBallotmaster::PrgpGetEventsBallotsStop(OUT IEventBallot *** pppEventBallotStop) const
+	{
+	return (IEventBallot **)m_pServiceBallotmaster->m_pProfileParent->m_arraypEventsRecentBallots.PrgpGetEventsStopLast(OUT (IEvent ***)pppEventBallotStop);
+	}
+
+
+CEventBallotReceived *
+OJapiAppBallotmaster::PFindBallotByID(TIMESTAMP tsIdBallot) const
+	{
+	IEventBallot ** ppEventBallotStop;
+	IEventBallot ** ppEventBallot = PrgpGetEventsBallotsStop(OUT &ppEventBallotStop);
+	while (ppEventBallot != ppEventBallotStop)
+		{
+		CEventBallotReceived * pEventBallot = (CEventBallotReceived *)*ppEventBallot++;
+		if (pEventBallot->m_tsEventID == tsIdBallot && pEventBallot->EGetEventClass() == CEventBallotReceived::c_eEventClass)
+			return pEventBallot;
+		}
+	return NULL;
+	}
+
+CEventBallotPoll *
 OJapiAppBallotmaster::PFindPollByID(TIMESTAMP tsIdPoll) const
 	{
 	//MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiAppBallotmaster::PFindPollByID($t)\n", tsIdPoll);
@@ -757,8 +789,8 @@ void
 OJapiAppBallotmaster::OnEventBallotReceived(CEventBallotReceived * pEventBallotReceived)
 	{
 	Assert(pEventBallotReceived != NULL);
-	MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onEventBallotReceived($t)\n", pEventBallotReceived->m_tsEventID);
-	emit onEventBallotReceived(PGetOJapiBallot(pEventBallotReceived));
+	MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onBallotReceived($t)\n", pEventBallotReceived->m_tsEventID);
+	emit onBallotReceived(PGetOJapiBallot(pEventBallotReceived));
 	}
 
 void
@@ -771,8 +803,8 @@ OJapiAppBallotmaster::OnEventVoteReceived(const CEventBallotSent * pEventBallotS
 		CEventBallotPoll * pPoll = PFindPollByTimeStarted(pEventBallotSent->m_tsEventID);
 		if (pPoll != NULL)
 			{
-			MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onEventVoteReceived($t)\n", pPoll->m_tsEventID);
-			emit onEventVoteReceived(PGetOJapiPoll(pPoll));
+			MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onVoteReceived($t)\n", pPoll->m_tsEventID);
+			emit onVoteReceived(PGetOJapiPoll(pPoll));
 			}
 		}
 	}
@@ -838,7 +870,10 @@ OJapiAppBallotmaster::build(const QString & sIdPollTemplate)
 POJapiPoll
 OJapiAppBallotmaster::get(const QString & sIdPoll)
 	{
-	return PGetOJapiPoll(PFindPollByID(sIdPoll));
+	CEventBallotPoll * pEventBallotPoll = PFindPollByID(sIdPoll);
+	if (pEventBallotPoll != NULL)
+		return PGetOJapiPoll(pEventBallotPoll);
+	return PGetOJapiBallot(PFindBallotByID(Timestamp_FromStringW_ML(sIdPoll)));	// Search for ballots as well
 	}
 
 //	getList(), slot
@@ -849,17 +884,17 @@ OJapiAppBallotmaster::getList()
 	Assert(m_pServiceBallotmaster != NULL);
 	QVariantList oList;
 
-	TProfile * pProfile = m_pServiceBallotmaster->m_pProfileParent;
-	IEvent ** ppEventStop;
-	IEvent ** ppEvent = pProfile->m_arraypEventsRecentBallots.PrgpGetEventsStopLast(OUT &ppEventStop);
-	while (ppEvent != ppEventStop)
+	IEventBallot ** ppEventBallotStop;
+	IEventBallot ** ppEventBallot = PrgpGetEventsBallotsStop(OUT &ppEventBallotStop);
+	while (ppEventBallot != ppEventBallotStop)
 		{
-		CEventBallotReceived * pEventBallot = (CEventBallotReceived *)*ppEvent++;
+		CEventBallotReceived * pEventBallot = (CEventBallotReceived *)*ppEventBallot++;
 		if (pEventBallot->EGetEventClass() == CEventBallotReceived::c_eEventClass)
 			oList.append(QVariant::fromValue(PGetOJapiBallot(pEventBallot)));
 		}
 
-	ppEvent = m_pServiceBallotmaster->m_oVaultBallots.m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = m_pServiceBallotmaster->m_oVaultBallots.m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
 		{
         CEventBallotPoll * pEvent = (CEventBallotPoll *)*ppEvent++;

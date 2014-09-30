@@ -1,3 +1,9 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	TGroup.h
+//
+//	Class enabling communication with multiple contacts.
+//	There are many types of groups: open groups, private groups (distribution lists), and channels.
+//
 #ifndef TGROUP_H
 #define TGROUP_H
 #ifndef PRECOMPILEDHEADERS_H
@@ -38,16 +44,19 @@ public:
 enum EGroupType
 	{
 	eGroupType_Open,		// Default group type which shows in the Navigation Tree
-	eGroupType_Audience		// Private distribution list to send polls (at the moment)
+	eGroupType_Audience,	// Private distribution list to send polls (at the moment)
+	eGroupType_Channel
 	};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	Class holding information for group chat
+//	Class holding information for communicating with multiple contacts.
+
 class TGroup : public ITreeItemChatLogEvents	// (group)
 {
 	RTI_IMPLEMENTATION(TGroup)
 public:
 	SHashSha1 m_hashGroupIdentifier;		// Unique identifier for the group
+	CStr m_strNameChannel_YZ;				// Channel name without the # hashtag (Example: "Bitcoin").  A channel is a topic for group conversation.  If this field is empty, then the group is not a channel.
 	TContact * m_pContactWhoRecommended_YZ;	// Contact who recommended the group
 	CArrayPtrGroupMembers m_arraypaMembers;
 	EGroupType m_eGroupType;

@@ -162,6 +162,9 @@ ITreeItemChatLogEvents::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	case eMenuAction_FindText:
 		ChatLog_FindText();
 		return ezMenuActionNone;
+	case eMenuAction_BallotSend:
+		DisplayDialogBallotSend();
+		return ezMenuActionNone;
 	case eMenuSpecialAction_ITreeItemRenamed:
 		ChatLog_ResetNickname();
 		if (m_pawLayoutChatLog != NULL)

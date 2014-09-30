@@ -40,6 +40,8 @@ Xv_		Xml value for an attribute
 
 	#define d_chXa_GroupIdentifier_shaBase85			'g'		// The group identifier may present for XOSP messages (d_chXop_Message*) and APIs (d_chXop_Api*)
 	#define d_szXa_GroupIdentifier_shaBase85			" g='{h|}'"	// This is how a group identifier is encoded.  To simplify the code, the string g='{h|}' is present in many #define
+	#define d_chXa_GroupChannel_strName					'h'
+	#define d_szXa_GroupChannel_strName					" h='^S'"
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

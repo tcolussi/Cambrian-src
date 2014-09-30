@@ -336,10 +336,40 @@ TProfile::GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
-		parraypGroups->Append(IN &pAccount->m_arraypaGroups);
+		TGroup ** ppGroupStop;
+		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+		while (ppGroup != ppGroupStop)
+			{
+			TGroup * pGroup = *ppGroup++;
+			Assert(pGroup != NULL);
+			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && pGroup->m_strNameChannel_YZ.FIsEmptyString())
+				parraypGroups->Add(pGroup);
+			}
 		}
-	parraypGroups->RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfObjectInvisible);
 	parraypGroups->SortByEventLastReceived();
+	}
+
+void
+TProfile::GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC
+	{
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		TGroup ** ppGroupStop;
+		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+		while (ppGroup != ppGroupStop)
+			{
+			TGroup * pGroup = *ppGroup++;
+			Assert(pGroup != NULL);
+			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && !pGroup->m_strNameChannel_YZ.FIsEmptyString())
+				parraypChannels->Add(pGroup);
+			}
+		}
+	parraypChannels->SortByEventLastReceived();
 	}
 
 void

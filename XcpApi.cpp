@@ -46,28 +46,6 @@ TContact::PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttrib
 	if (pXmlAttributeGroupIdentifier == NULL)
 		return this;
 	return m_pAccount->Group_PFindByIdentifier_YZ(IN pXmlAttributeGroupIdentifier->m_pszuTagValue);
-	/*
-	// Search for the contact matching the identifier
-	SHashSha1 shaGroupIdentifier;
-	if (!HashSha1_FInitFromStringBase85_ZZR_ML(OUT &shaGroupIdentifier, IN pXmlAttributeGroupIdentifier->m_pszuTagValue))
-		{
-		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Invalid group identifier $s\n", pXmlAttributeGroupIdentifier->m_pszuTagValue);
-		return NULL;
-		}
-	TGroup * pGroup;
-	TGroup ** ppGroupStop;
-	TGroup ** ppGroup = m_pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
-	while (ppGroup != ppGroupStop)
-		{
-		pGroup = *ppGroup++;
-		Assert(pGroup != NULL);
-		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-		Assert(sizeof(pGroup->m_hashGroupIdentifier) == sizeof(shaGroupIdentifier));
-		if (HashSha1_FCompareEqual(IN &pGroup->m_hashGroupIdentifier, IN &shaGroupIdentifier))
-			return pGroup;
-		}
-	return NULL;
-	*/
 	}
 
 //	Core method to execute multiple XCP APIs
@@ -80,6 +58,8 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 	while (pXmlNodeApiList != NULL)
 		{
 		const CXmlNode * pXmlAttributeGroupIdentifier = pXmlNodeApiList->PFindAttribute(d_chXa_GroupIdentifier_shaBase85);	// Since the Group Identifier is used for almost every opcode, fetch it here
+		if (pXmlAttributeGroupIdentifier == NULL)
+			pXmlAttributeGroupIdentifier = pXmlNodeApiList->PFindAttribute(d_chXa_GroupChannel_strName);
 		Assert(pXmlNodeApiList->m_pszuTagName != NULL);
 		const CHS chXop = pXmlNodeApiList->m_pszuTagName[0];
 		if (chXop == d_chXop_MessageNew || chXop == d_chXop_MessagesSynchronize)
@@ -524,7 +504,9 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		{
 		PSZUC pszGroupIdentifier = pXmlAttributeGroupIdentifier->m_pszuTagValue;
 		Assert(pszGroupIdentifier != NULL);
-		pContactOrGroup_NZ = pGroup = pAccount->Group_PFindByIdentifier_YZ(IN pszGroupIdentifier, INOUT this, TAccountXmpp::eFindGroupCreate);	// Find the group matching the identifier, and if the group is not there, then create it
+		pContactOrGroup_NZ = pGroup = (pXmlAttributeGroupIdentifier->m_pszuTagName[0] == d_chXa_GroupChannel_strName) ?
+			pAccount->GroupChannel_PFindByNameOrCreate_YZ(IN IN pszGroupIdentifier, INOUT this) :
+			pAccount->Group_PFindByIdentifier_YZ(IN pszGroupIdentifier, INOUT this, TAccountXmpp::eFindGroupCreate);	// Find the group matching the identifier, and if the group is not there, then create it
 		if (pGroup == NULL)
 			{
 			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "The group identifier '$s' is not valid\n", pszGroupIdentifier);

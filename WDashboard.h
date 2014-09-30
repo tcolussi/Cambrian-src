@@ -19,6 +19,7 @@ public:
 
 	void DrawTextWithinCell(const QString & sText);
 	void DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...);
+	void DrawTextUnderlineDotted(const QString & sText);
 	int DrawNumberWithinCircle(int nNumber);
 	void DrawIconLeft(const QIcon & oIcon);
 	void DrawIconLeft(EMenuAction eMenuIcon);
@@ -111,6 +112,15 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+class WDashboardSectionChannels : public WDashboardSection
+{
+public:
+	WDashboardSectionChannels(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
+	virtual void InitItems(TProfile * pProfile);
+	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroupChannel);
+	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsItem);
+};
+
 class WDashboardSectionGroups : public WDashboardSection
 {
 public:
@@ -149,8 +159,9 @@ protected:
 	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section
 		{
 		WDashboardSectionBallots * pwSectionBalots;
-		WDashboardSectionGroups * pwSectionGroups;
+		WDashboardSectionChannels * pwSectionChannels;
 		WDashboardSectionContacts * pwSectionContacts;
+		WDashboardSectionGroups * pwSectionGroups;		// Private groups
 		} m_sections;
 	CDashboardSectionItem * m_pItemSelected;		// Which item is selected (has the focus)
 

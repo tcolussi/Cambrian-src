@@ -605,12 +605,14 @@ protected:
 	CServiceBallotmaster * m_pServiceBallotmaster;
 
 public:
-	OJapiAppBallotmaster(OJapiCambrian * poCambrian, const SApplicationHtmlInfo *pApplicationInfo);
+	OJapiAppBallotmaster(OJapiCambrian * poCambrian, const SApplicationHtmlInfo * pApplicationInfo);
 	~OJapiAppBallotmaster();
 	TProfile * PGetProfile() const;
+	IEventBallot ** PrgpGetEventsBallotsStop(OUT IEventBallot *** pppEventBallotStop) const;
 	POJapiPoll PGetOJapiBallot(CEventBallotReceived * pBallot);
     POJapiPoll PGetOJapiPoll(CEventBallotPoll * pBallot);
     POJapiPoll PCreateNewPollFromTemplate(CEventBallotPoll * pPollTemplate);
+	CEventBallotReceived * PFindBallotByID(TIMESTAMP tsIdBallot) const;
 	CEventBallotPoll * PFindPollByID(TIMESTAMP tsIdPoll) const;
 	CEventBallotPoll * PFindPollByID(const QString & sIdPoll) const;
 	CEventBallotPoll * PFindPollByTimeStarted(TIMESTAMP tsStarted) const;
@@ -626,9 +628,12 @@ public slots:
 	void open();
 
 signals:
-	void onEventBallotReceived(POJapiBallot oBallot);	// This signal is emitted when a new ballot arrives from a contact.  The signal handler should display a 'card' to the user so he/she may vote.
-	void onEventVoteReceived(POJapiPoll oPoll);				// This signal is emitted when a vote arrives from a contact.  The signal handler should update the poll to tally the new vote (typically updating the pie chart)
+	// Signals for JavaScript to update its HTML when an event occurs
+	void onBallotReceived(POJapiBallot oBallot);	// This signal is emitted when a new ballot arrives from a contact.  The signal handler should display a 'card' to the user so he/she may vote.
+	void onVoteReceived(POJapiPoll oPoll);				// This signal is emitted when a vote arrives from a contact.  The signal handler should update the poll to tally the new vote (typically updating the pie chart)
 	void onPollSaved(POJapiPoll oPoll);
+	void onPollStopped(POJapiPoll oPoll);
+	void onPollDestroyed(POJapiPoll oPoll);
 
 public:
 	OJapiAppBallotmaster * m_pNext;						// Next Ballotmaster in the linked list.  This is important because every OJapiAppBallotmaster must be notified when a new ballot or vote arrives.

@@ -1,3 +1,5 @@
+//	TGroup.cpp
+
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
@@ -276,6 +278,7 @@ TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	Assert(pXmlExchanger != NULL);
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
 	pXmlExchanger->XmlExchangeSha1("ID", INOUT_F_UNCH_S &m_hashGroupIdentifier);
+	pXmlExchanger->XmlExchangeStr("h", INOUT &m_strNameChannel_YZ);
 	pXmlExchanger->XmlExchangePointer('Y', PPX &m_pContactWhoRecommended_YZ, IN &m_pAccount->m_arraypaContacts);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Members, INOUT_F_UNCH_S &m_arraypaMembers, TGroupMember::S_PaAllocateGroupMember, this);
 	pXmlExchanger->XmlExchangeInt("Type", INOUT (int *)&m_eGroupType);
@@ -321,10 +324,16 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	case eMenuAction_GroupProperties:
 		DisplayDialogProperties();
 		return ezMenuActionNone;
-	case eMenuAction_BallotSend:
-		DisplayDialogBallotSend();
-		return ezMenuActionNone;
+	case eMenuSpecialAction_ITreeItemRenamed:
+		// If the name of the group begins with the hashtag (#) then the group is upgraded to a channel
+		m_strNameChannel_YZ.Empty();
+		if (m_strNameDisplayTyped.FStringBeginsWith("#"))
+			{
+			m_strNameChannel_YZ = m_strNameDisplayTyped;
+			}
+		goto Default;
 	default:
+		Default:
 		return ITreeItemChatLogEvents::TreeItem_EDoMenuAction(eMenuAction);
 		} // switch
 	} // TreeItem_EDoMenuAction()
@@ -527,6 +536,33 @@ TAccountXmpp::Group_AddNewMember_UI(TContact * pContact, int iGroup)
 	*/
 	} // Group_AddNewMember_UI()
 
+
+TGroup *
+TAccountXmpp::GroupChannel_PFindByNameOrCreate_YZ(PSZUC pszChannelName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest)
+	{
+	Assert(pszChannelName != NULL);
+	Report(pszChannelName[0] != '\0');	// Creating a channel without a name is not recommended!
+	Assert(pbinXcpApiExtraRequest != NULL);
+	TGroup * pGroup;
+	TGroup ** ppGroupStop;
+	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+	while (ppGroup != ppGroupStop)
+		{
+		pGroup = *ppGroup++;
+		Assert(pGroup != NULL);
+		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+		Assert(pGroup->m_pAccount == this);
+		if (pGroup->m_strNameChannel_YZ.FCompareStringsNoCase(pszChannelName))
+			return pGroup;
+		}
+	pGroup = new TGroup(this);
+	m_arraypaGroups.Add(PA_CHILD pGroup);
+	pGroup->GroupInitNewIdentifier();
+	pGroup->m_strNameDisplayTyped = pGroup->m_strNameChannel_YZ = pszChannelName;
+	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
+	pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_Group_Profile_Get(pszChannelName);	// If the channel does not exist, then query the contact who sent the stanza to get more information about the group
+	return pGroup;
+	}
 
 //	Find the group matching the identifier, and if not found and eFindGroupCreate then allocate a new group.
 //	This method may return NULL despite eFindGroupCreate if the identifier is not valid.

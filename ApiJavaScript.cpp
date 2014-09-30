@@ -294,7 +294,6 @@ OJapiGroup::destroy()
 	m_pGroup->Group_MarkForDeletion();
 	m_poCambrian->m_arraypaTemp.ElementTransferFrom(m_pGroup, INOUT &m_pGroup->m_pAccount->m_arraypaGroups);	// Transfer the group back to the 'temp' array
 
-
 	/*
 	if ( !m_pGroup || m_pGroup->m_eGroupType != eGroupType_Audience)
 		return;

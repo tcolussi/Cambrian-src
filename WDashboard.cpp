@@ -24,6 +24,26 @@ CPainterCell::DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...)
 	}
 
 void
+CPainterCell::DrawTextUnderlineDotted(const QString & sText)
+	{
+	return;
+	drawText(m_rcCell, sText);
+	QFontMetrics oFontMetrics = fontMetrics();
+	int cxWidth = oFontMetrics.width(sText);
+	QPen oPenOld = pen();
+	QPen oPen = oPenOld;
+	oPen.setStyle(Qt::DotLine);
+	setPen(oPen);
+	DrawLineHorizontal(m_rcCell.left() + 2, cxWidth + 4, m_rcCell.top() + oFontMetrics.height() + 1);
+	setPen(oPenOld);
+	/*
+	QFont oFontFooter = g_oFontNormal;
+	oFontFooter.setUnderline(true);
+	oPainter.setFont(oFontFooter);
+	*/
+	}
+
+void
 CPainterCell::DrawIconLeft(const QIcon & oIcon)
 	{
 	QRect rcIcon = m_rcCell;
@@ -110,6 +130,14 @@ CArrayPtrDashboardSectionItems::AllocateTreeItems(const CArrayPtrTreeItems & arr
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void
+WDashboardSectionChannels::InitItems(TProfile * pProfile)
+	{
+	CArrayPtrGroups arraypGroups;
+	pProfile->GetRecentChannels(OUT &arraypGroups);
+	m_arraypaItems.AllocateTreeItems(arraypGroups, 10);
+	}
+
+void
 WDashboardSectionGroups::InitItems(TProfile * pProfile)
 	{
 	CArrayPtrGroups arraypGroups;
@@ -140,15 +168,29 @@ WDashboardSectionBallots::InitItems(TProfile * pProfile)
 	}
 
 void
-WDashboardSectionGroups::DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroup)
+WDashboardSectionChannels::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvGroupChannel)
 	{
-	TGroup * pGroup = (TGroup *)pvGroup;
+	TGroup * pGroup = (TGroup *)pvGroupChannel;
 	pPainter->DrawNumberWithinCircle(pGroup->m_cMessagesUnread);
-	pPainter->DrawTextWithinCell_VE("# $s", pGroup->TreeItem_PszGetNameDisplay());
+	pPainter->DrawTextWithinCell(pGroup->TreeItem_SGetNameDisplay());
 	}
 
 void
-WDashboardSectionContacts::DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvContact)
+WDashboardSectionChannels::DrawFooter(CPainterCell * pPainter, UINT uFlagsItem)
+	{
+	pPainter->DrawTextUnderlineDotted("+10 more...");
+	}
+
+void
+WDashboardSectionGroups::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvGroup)
+	{
+	TGroup * pGroup = (TGroup *)pvGroup;
+	pPainter->DrawNumberWithinCircle(pGroup->m_cMessagesUnread);
+	pPainter->DrawTextWithinCell(pGroup->TreeItem_SGetNameDisplay());
+	}
+
+void
+WDashboardSectionContacts::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvContact)
 	{
 	TContact * pContact = (TContact *)pvContact;
 	//EMenuAction eMenuIconPresence = pContact->Contact_EGetMenuActionPresence();
@@ -159,7 +201,7 @@ WDashboardSectionContacts::DrawItem(CPainterCell * pPainter, UINT uFlagsItem, vo
 
 
 void
-WDashboardSectionContacts::DrawFooter(CPainterCell * pPainter, UINT uFlagsItem)
+WDashboardSectionContacts::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsItem*/)
 	{
 	pPainter->DrawTextWithinCell_VE("+ $I more peers", 10);
 	}
@@ -225,8 +267,9 @@ WDashboard::WDashboard()
 
 	InitToGarbage(OUT &m_sections, sizeof(m_sections));
 	m_sections.pwSectionBalots = new WDashboardSectionBallots("Ballots");
-	m_sections.pwSectionGroups = new WDashboardSectionGroups("Channels");
+	m_sections.pwSectionChannels = new WDashboardSectionChannels("Channels");
 	m_sections.pwSectionContacts = new WDashboardSectionContacts("Peers");
+	m_sections.pwSectionGroups = new WDashboardSectionGroups("Private Groups");
 
 	// Add each section to the vertical layout
 	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
@@ -325,12 +368,12 @@ WDashboardSection::InitItems(TProfile * pProfile)
 	}
 
 void
-WDashboardSection::DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvDataItem)
+WDashboardSection::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvDataItem)
 	{
 	}
 
 void
-WDashboardSection::DrawFooter(CPainterCell * pPainter, UINT uFlagsItem)
+WDashboardSection::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsItem*/)
 	{
 	}
 
@@ -347,7 +390,7 @@ WDashboardSection::OnItemSelected(CDashboardSectionItem * pItem)
 
 	}
 
-#define d_cxMarginSection		4
+#define d_cxMarginSection		5
 #define d_cxWidthNumber			20
 #define d_cyHeightSectionItem	18
 #define d_yPosFirstItem			3 + d_cyHeightSectionItem
@@ -427,6 +470,12 @@ WDashboardSection::paintEvent(QPaintEvent *)
 		}
 	// Draw the footer
 	DrawFooter(&oPainter, 0);
+	/*
+	//Qt::DashDotDotLine
+	QTextCharFormat warningFormat;
+	warningFormat.setUnderlineStyle(QTextCharFormat::WaveUnderline);
+	warningFormat.setUnderlineColor(Qt::darkYellow);
+	*/
 
 	// Draw the caption last using the bold font
 	oPainter.setFont(g_oFontBold);
@@ -434,6 +483,7 @@ WDashboardSection::paintEvent(QPaintEvent *)
 	rcSection.setHeight(d_cyHeightSectionItem);
 	p.drawText(d_cxMarginSection, IN rcSection, Qt::AlignVCenter, m_sName);
 	*/
+
 	oPainter.drawText(d_cxMarginSection, d_cyHeightSectionItem, m_sName);
 	oPainter.drawLine(rcSection.bottomLeft(), rcSection.bottomRight());
 	/*
@@ -504,7 +554,7 @@ WDashboardSection::mouseReleaseEvent(QMouseEvent * pEventMouse)
 		CDashboardSectionItem * pItemMouseClicked = _PGetItemAtPosY(pEventMouse->pos().y(), OUT &eHitTestSection);
 		if (pItemMouseClicked == m_pItemMouseHovering)
 			{
-			if (m_pParent->FSelectItem(pItemMouseClicked))
+			if (m_pParent->FSelectItem(pItemMouseClicked) && pItemMouseClicked != NULL)
 				OnItemSelected(pItemMouseClicked);
 			}
 		}

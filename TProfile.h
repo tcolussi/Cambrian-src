@@ -67,6 +67,7 @@ public:
 	void InitHashTablesOfIdentifiers(IOUT CHashTableIdentifiersOfContacts * pHashTableContacts, IOUT CHashTableIdentifiersOfGroups * pHashTableGroups) const;
 
 	void GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC;
+	void GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC;
 	void GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC;
 
 	IService * PAllocateService_YZ(RTI_ENUM rtiService);

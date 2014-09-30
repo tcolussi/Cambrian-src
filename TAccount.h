@@ -64,7 +64,7 @@ public:
 	CStr m_strUsername;		// The username is typically the JID (in lowercase) until the @, however because XMPP authentication requires the an exact username with proper case, it is more reliable to store the username in a separate field rather than extracting it from the JID, as the user may type his/her JID with different case than how the username is stored on the server.
 	CStr m_strPassword;		// Password for the XMPP account.  This password will be hashed with the username during XMPP authentication.
 	CArrayPtrContacts m_arraypaContacts;	// Contacts related to the XMPP account.
-	CArrayPtrGroups m_arraypaGroups;
+	CArrayPtrGroups m_arraypaGroups;		// Groups and channels related to the account
 	CArrayPtrContacts m_arraypContactsComposing;		// All contacts currently composing (this list is important for optimization)
 
 protected:
@@ -177,6 +177,7 @@ public:
 		};
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanza * pbinXcpApiExtraRequest, EFindGroup eFindGroup);
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier);
+	TGroup * GroupChannel_PFindByNameOrCreate_YZ(PSZUC pszChannelName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest);
 
 	void Group_AddToNavigationTree(PA_CHILD TGroup * paGroup);
 
