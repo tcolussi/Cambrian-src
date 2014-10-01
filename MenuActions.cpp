@@ -43,7 +43,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"New Message" _ "i=ChatMessage3" _,	// eMenuAction_MessageNew
 
 	"Delete "d_sza_Profile _ "i=Remove" _, // eMenuAction_ProfileDelete
-	d_sza_Profile" Properties" _ "s=Display the properties of my "d_sza_profile _, // eMenuAction_ProfileProperties
+	d_sza_Profile" Properties..." _ "s=Display the properties of my "d_sza_profile _ "i=Properties" _, // eMenuAction_ProfileProperties
 	"My Recommendations" _ "s=Display all the recommendations I made" _ "i=Reputation",  // eMenuAction_ProfileMyRecommendations
 	"Show Deleted Objects" _ "s=Display all hidden objects such as peers and groups" _ "i=Deleted" _, // eMenuAction_ProfileShowDeletedObjects
 	"Permanently Delete" _ "s=Permanently delete a hidden object" _ "i=Delete" _, // eMenuAction_ProfilePermanentlyDeleteObject

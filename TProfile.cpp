@@ -80,6 +80,7 @@ void
 TProfile::GenerateKeys()
 	{
 	// At the moment, since we do not have PGP code, make both keys the SHA-1 of the name
+	m_strNymID.BinInitFromText("MyNymID123");
 	m_binKeyPrivate.BinInitFromCalculatingHashSha1(m_strNameProfile);
 	m_binKeyPublic = m_binKeyPrivate;
 	}
@@ -171,6 +172,7 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	ITreeItem::XmlExchange(INOUT pXmlExchanger);
 	pXmlExchanger->XmlExchangeStr("Name", INOUT_F_UNCH_S &m_strNameProfile);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT_F_UNCH_S &m_strComment);
+	pXmlExchanger->XmlExchangeStr("NymID", INOUT_F_UNCH_S &m_strNymID);
 	pXmlExchanger->XmlExchangeBin("KeyPrivate", INOUT_F_UNCH_S &m_binKeyPrivate);
 	pXmlExchanger->XmlExchangeBin("KeyPublic", INOUT_F_UNCH_S &m_binKeyPublic);
 	pXmlExchanger->XmlExchangeObjects(d_chElementName_Accounts, INOUT &m_arraypaAccountsXmpp, TAccountXmpp::S_PaAllocateAccount, this);
@@ -204,7 +206,7 @@ const EMenuActionByte c_rgzeActionsMenuProfile[] =
 	eMenuActionSeparator,
 	#endif
 	eMenuAction_ProfileDelete,
-	//eMenuAction_ProfileProperties,
+	eMenuAction_ProfileProperties,
 	ezMenuActionNone
 	};
 
@@ -277,6 +279,9 @@ TProfile::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 			m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING this);
 			NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(NULL);	// After deleting a profile, display all the remaining profiles
 			}
+		return ezMenuActionNone;
+	case eMenuAction_ProfileProperties:
+		DisplayDialogProperties();
 		return ezMenuActionNone;
 	default:
 		return ITreeItem::TreeItem_EDoMenuAction(eMenuAction);

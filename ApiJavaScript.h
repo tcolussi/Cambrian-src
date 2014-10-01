@@ -610,7 +610,7 @@ public:
 	TProfile * PGetProfile() const;
 	IEventBallot ** PrgpGetEventsBallotsStop(OUT IEventBallot *** pppEventBallotStop) const;
 	POJapiPoll PGetOJapiBallot(CEventBallotReceived * pBallot);
-    POJapiPoll PGetOJapiPoll(CEventBallotPoll * pBallot);
+	POJapiPoll PGetOJapiPoll(CEventBallotPoll * pEventBallotPoll);
     POJapiPoll PCreateNewPollFromTemplate(CEventBallotPoll * pPollTemplate);
 	CEventBallotReceived * PFindBallotByID(TIMESTAMP tsIdBallot) const;
 	CEventBallotPoll * PFindPollByID(TIMESTAMP tsIdPoll) const;
@@ -618,6 +618,7 @@ public:
 	CEventBallotPoll * PFindPollByTimeStarted(TIMESTAMP tsStarted) const;
 	void OnEventBallotReceived(CEventBallotReceived * pEventBallotReceived);
 	void OnEventVoteReceived(const CEventBallotSent * pEventBallotSent);
+	void OnEventPollStopped(CEventBallotPoll * pEventBallotPoll);
 
 public slots:
 	POJapiPoll build();

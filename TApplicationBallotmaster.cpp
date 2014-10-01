@@ -4,6 +4,18 @@
 #include "TApplicationBallotmaster.h"
 #include "WLayoutBrowser.h"
 
+//	Must have the same interface as PFn_TimerQueueEventCallback()
+void
+TimerQueueEventCallback_PollStop(PVPARAM pvEventBallotPoll)
+	{
+	CEventBallotPoll * pEventBallotPoll = (CEventBallotPoll *)pvEventBallotPoll;
+	OJapiAppBallotmaster * pBallotmaster = OJapiAppBallotmaster::s_plistBallotmasters;
+	while (pBallotmaster != NULL)
+		{
+		pBallotmaster->OnEventPollStopped(pEventBallotPoll);
+		pBallotmaster = pBallotmaster->m_pNext;
+		}
+	}
 
 void
 DisplayApplicationBallotMaster()
@@ -35,6 +47,26 @@ CServiceBallotmaster::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	IService::XmlExchange(pXmlExchanger);
 	m_oVaultBallots.XmlExchange("Ballots", INOUT pXmlExchanger);
+	// Initialize the timers for polls to automatically stop
+	TIMESTAMP tsNow = Timestamp_GetCurrentDateTime();
+	IEvent ** ppEventStop;
+	IEvent ** ppEvent = m_oVaultBallots.m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	while (ppEvent != ppEventStop)
+		{
+		CEventBallotPoll * pEventBallotPoll = (CEventBallotPoll *)*ppEvent++;
+		Assert(pEventBallotPoll->EGetEventClass() == CEventBallotPoll::c_eEventClass);
+		if (pEventBallotPoll->m_tsStarted != d_ts_zNA && pEventBallotPoll->m_tsStopped == d_ts_zNA && pEventBallotPoll->m_cSecondsPollLength > 0)
+			{
+			TIMESTAMP tsStop = pEventBallotPoll->m_tsStarted + pEventBallotPoll->m_cSecondsPollLength * (TIMESTAMP_DELTA)d_ts_cSeconds;
+			int cSeconds = (tsStop - tsNow) / d_ts_cSeconds;
+			if (cSeconds > 0)
+				{
+				MessageLog_AppendTextFormatSev(eSeverityNoise, "Poll ID $t will automatically stop in $T\n", tsStop - tsNow);
+				TimerQueue_CallbackAdd(cSeconds, TimerQueueEventCallback_PollStop, pEventBallotPoll);
+				}
+			}
+		}
+	TimerQueue_DisplayToMessageLog();
 	}
 
 //	CServiceBallotmaster::IService::DetachFromObjectsAboutBeingDeleted()
@@ -59,6 +91,7 @@ CServiceBallotmaster::PAllocateBallot(const IEventBallot * pEventBallotTemplate)
 		paEventBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;
 		}
 	m_oVaultBallots.m_arraypaEvents.Add(PA_CHILD paEventBallot);
+	Assert(paEventBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted);
 	return paEventBallot;
 	}
 
@@ -809,6 +842,13 @@ OJapiAppBallotmaster::OnEventVoteReceived(const CEventBallotSent * pEventBallotS
 		}
 	}
 
+void
+OJapiAppBallotmaster::OnEventPollStopped(CEventBallotPoll * pEventBallotPoll)
+	{
+	MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onPollStopped($t)\n", pEventBallotPoll->m_tsEventID);
+	emit onPollStopped(PGetOJapiPoll(pEventBallotPoll));
+	}
+
 POJapiPoll
 OJapiAppBallotmaster::PGetOJapiBallot(CEventBallotReceived * pBallot)
 	{
@@ -819,10 +859,10 @@ OJapiAppBallotmaster::PGetOJapiBallot(CEventBallotReceived * pBallot)
 
 //	Return the JavaScript object for a ballot
 POJapiPoll
-OJapiAppBallotmaster::PGetOJapiPoll(CEventBallotPoll * pBallot)
+OJapiAppBallotmaster::PGetOJapiPoll(CEventBallotPoll * pEventBallotPoll)
 	{
-	if (pBallot != NULL)
-		return new OJapiPoll(pBallot);	//	This code causes a memory leak.  Until Qt has a reference counter of QObjects, Cambrian must provide a mechanism to minimize the memory leaks.
+	if (pEventBallotPoll != NULL)
+		return new OJapiPoll(pEventBallotPoll);	//	This code causes a memory leak.  Until Qt has a reference counter of QObjects, Cambrian must provide a mechanism to minimize the memory leaks.
 	return NULL;
 	}
 

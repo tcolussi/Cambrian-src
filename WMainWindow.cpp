@@ -34,11 +34,12 @@ WMenu * g_pMenuSystemTray;					// Context menu for the System Tray
 QIcon * g_pIconCambrian;
 QIcon * g_pIconNewMessage;
 
-#define d_ttiReconnectFirst		200		// The first timer interval is very short so the chat program may establish immediately
+#define d_ttiReconnectFirst		200		// The first timer interval is very short so the application may establish a socket connection quickly
 #define d_ttiReconnectMinute	60000	// Attempt to reconnect every minute
 TIMESTAMP_MINUTES g_tsmMinutesSinceApplicationStarted;	// Total number of minutes since the application started (this counter keeps increasing until overflow... every 11650 years)
-TIMESTAMP_MINUTES g_cMinutesIdleKeyboardOrMouse;				// Total number of minutes the user has been idle, from the keyboard or mouse.  This variable is used to send a <presence> to indicate the user is either 'away' or 'extended away'
-TIMESTAMP_MINUTES g_cMinutesIdleNetworkDataReceived;				// Total number of minutes the network has been idle (this is the number of minutes since the last network packet was received)
+TIMESTAMP_MINUTES g_tsmTimerQueueNextEventToTrigger = d_tsm_cMinutesMax;	// Which minute it is time to trigger the next event in the queue
+TIMESTAMP_MINUTES g_cMinutesIdleKeyboardOrMouse;		// Total number of minutes the user has been idle, from the keyboard or mouse.  This variable is used to send a <presence> to indicate the user is either 'away' or 'extended away'
+TIMESTAMP_MINUTES g_cMinutesIdleNetworkDataReceived;	// Total number of minutes the network has been idle (this is the number of minutes since the last network packet was received)
 enum EIdleState
 	{
 	eIdleState_zActive,
@@ -425,6 +426,12 @@ WMainWindow::SettingsSave()
 	}
 
 void
+TimerEventCallback(PVPARAM pvParam)
+	{
+	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "TimerEventCallback($I)\n", pvParam);
+	}
+
+void
 WMainWindow::SettingsRestore()
 	{
 	OSettingsRegistry oSettings;
@@ -452,6 +459,14 @@ WMainWindow::SettingsRestore()
 	else if (!g_sPathHtmlApplications.startsWith("file:", Qt::CaseInsensitive))
 		g_sPathHtmlApplications = QUrl::fromLocalFile(g_sPathHtmlApplications).toString();	// Make sure the URL begins with "file://"
 	//MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "$Q\n", &g_sPathHtmlApplications);
+
+	#if 0
+	TimerQueue_CallbackAdd(119, TimerEventCallback, 0);
+	TimerQueue_CallbackAdd(129, TimerEventCallback, 0);
+	TimerQueue_CallbackAdd(109, TimerEventCallback, 0);
+	TimerQueue_CallbackAdd(99, TimerEventCallback, 0);
+	TimerQueue_DisplayToMessageLog();
+	#endif
 
 	#ifdef DEBUG
 	return;		// Don't save the path if running a debug build
@@ -575,10 +590,10 @@ UINT g_cTimerFailures;
 
 //	WMainWindow::QObject::timerEvent()
 void
-WMainWindow::timerEvent(QTimerEvent * pTimerEvent)
+WMainWindow::timerEvent(QTimerEvent * pTimerCallback)
 	{
-//	MessageLog_AppendTextFormatCo(d_coRed, "WMainWindow::timerEvent($i)\n", pTimerEvent->timerId());
-	const int tidEvent = pTimerEvent->timerId();
+//	MessageLog_AppendTextFormatCo(d_coRed, "WMainWindow::timerEvent($i)\n", pTimerCallback->timerId());
+	const int tidEvent = pTimerCallback->timerId();
 	if (tidEvent ==  m_tidReconnect)
 		{
 		if (g_oMutex.tryLock())
@@ -599,15 +614,20 @@ WMainWindow::timerEvent(QTimerEvent * pTimerEvent)
 					{
 					// We received a tick count within 30 seconds or less
 					g_cTimerFailures++;
-					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "[$@] Timer failure #$I!  (interval of $I miliseconds)\n", g_cTimerFailures, nInterval);
+					MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "[$@] Timer failure #$I!  (interval of $I miliseconds)\n", g_cTimerFailures, nInterval);
 					}
 				#endif
 				}
 
+			//MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "g_tsmMinutesSinceApplicationStarted = $I, g_tsmTimerQueueNextEventToTrigger = $I\n", g_tsmMinutesSinceApplicationStarted + 1, g_tsmTimerQueueNextEventToTrigger);
+			if (++g_tsmMinutesSinceApplicationStarted >= g_tsmTimerQueueNextEventToTrigger)
+				{
+				// We have at least one event in the queue
+				TimerQueue_ExecuteExpiredCallbacks();
+				}
 			// Periodically attempt to reconnect
 			Configuration_NetworkReconnectIfDisconnected();
-
-			if ((++g_tsmMinutesSinceApplicationStarted & 0x0F) == 0)
+			if ((g_tsmMinutesSinceApplicationStarted & 0x0F) == 0)
 				{
 				// Every 15 minutes, do some processing
 				//TRACE1("Autosave begins at timestamp $i", g_tsmMinutesSinceApplicationStarted);
@@ -618,8 +638,11 @@ WMainWindow::timerEvent(QTimerEvent * pTimerEvent)
 				g_strScratchBufferStatusBar.FreeBuffer();
 				g_strScratchBufferSocket.FreeBuffer();
 				}
-			//if ((++g_cMinutesIdleNetworkDataReceived & 0x03) == 0)
+			#if 0
+			if ((++g_cMinutesIdleNetworkDataReceived & 0x03) == 0)
+			#else
 			if (++g_cMinutesIdleNetworkDataReceived > 0)		// This line is for debugging by forcing an 'idle' every timer tick.  This helps to test the code paths which may rarely be taken
+			#endif
 				{
 				// Every 4 minutes, ping each socket to make sure the connection is alive.
 				Configuration_OnTimerNetworkIdle();	// Send a 'ping' to the server.  This is workaround because the socket(s) get disconnected without any notification.  I have the feeling this 'temporary' workaround will stay there for many decades.
@@ -638,7 +661,7 @@ WMainWindow::timerEvent(QTimerEvent * pTimerEvent)
 			}
 		else
 			{
-			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "WMainWindow::timerEvent() - g_oMutex is locked!\n");
+			MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "WMainWindow::timerEvent() - g_oMutex is locked!\n");
 			}
 		}
 	else if (tidEvent == m_tidFlashIconNewMessage)
@@ -646,7 +669,7 @@ WMainWindow::timerEvent(QTimerEvent * pTimerEvent)
 		m_fuAlternateDisplayIconNewMessage = ~m_fuAlternateDisplayIconNewMessage;
 		g_poSystemTrayIcon->setIcon(m_fuAlternateDisplayIconNewMessage ? *g_pIconNewMessage : *g_pIconCambrian);
 		}
-	QMainWindow::timerEvent(pTimerEvent);
+	QMainWindow::timerEvent(pTimerCallback);
 	} // timerEvent()
 
 TIMESTAMP_MINUTES g_tsmSoundPlayedLast;	// Last timestamp where the sound was played
@@ -818,4 +841,99 @@ void
 StatusBar_SetTextFormatSev_VL(ESeverity eSeverity, PSZAC pszFmtTemplate, va_list vlArgs)
 	{
 	g_pfnStatusBarDisplayFunction(eSeverity, g_strScratchBufferStatusBar.Format_VL(pszFmtTemplate, vlArgs));
+	}
+
+
+struct STimerQueueCallback
+{
+	STimerQueueCallback * pNext;				// Next callback in the timer queue
+	TIMESTAMP_MINUTES tsmTrigger;				// Timestamp to trigger the callback
+	PFn_TimerQueueEventCallback pfnCallback;	// Callback function then the event is triggered
+	PVPARAM pvParam;							// Parameter for the callback function
+};
+
+STimerQueueCallback * g_pTimerCallbackNext;
+STimerQueueCallback * g_pTimerCallbackDeleted;
+CMemoryAccumulator g_accumulatorTimer;
+
+STimerQueueCallback *
+_PAllocateTimerEvent(TIMESTAMP_MINUTES tsmTrigger)
+	{
+	STimerQueueCallback * pTimerCallbackNew = g_pTimerCallbackDeleted;	// Try to recycle previously allocated timer events
+	if (pTimerCallbackNew != NULL)
+		g_pTimerCallbackDeleted = g_pTimerCallbackDeleted->pNext;
+	else
+		pTimerCallbackNew = (STimerQueueCallback *)g_accumulatorTimer.PvAllocateData(sizeof(STimerQueueCallback));	// We have to allocate a new structure
+	pTimerCallbackNew->tsmTrigger = tsmTrigger;
+	if (g_pTimerCallbackNext == NULL || tsmTrigger < g_pTimerCallbackNext->tsmTrigger)
+		{
+		pTimerCallbackNew->pNext = g_pTimerCallbackNext;
+		g_pTimerCallbackNext = pTimerCallbackNew;
+		g_tsmTimerQueueNextEventToTrigger = pTimerCallbackNew->tsmTrigger;
+		return pTimerCallbackNew;
+		}
+	// Insert the STimerQueueCallback to make sure all events are sorted
+	STimerQueueCallback * pTimerCallbackQueued = g_pTimerCallbackNext;
+	while (TRUE)
+		{
+		STimerQueueCallback * pTimerCallbackQueuedNext = pTimerCallbackQueued->pNext;
+		if (pTimerCallbackQueuedNext == NULL || tsmTrigger < pTimerCallbackQueuedNext->tsmTrigger)
+			break;
+		pTimerCallbackQueued = pTimerCallbackQueuedNext;
+		} // while
+	pTimerCallbackNew->pNext = pTimerCallbackQueued->pNext;
+	pTimerCallbackQueued->pNext = pTimerCallbackNew;
+	return pTimerCallbackNew;
+	}
+
+void
+TimerQueue_CallbackAdd(int cSeconds, PFn_TimerQueueEventCallback pfnCallback, PVPARAM pvParam)
+	{
+	Assert(cSeconds > 0);
+	pvParam = (PVPARAM)cSeconds;
+	STimerQueueCallback * pTimerCallback = _PAllocateTimerEvent(g_tsmMinutesSinceApplicationStarted + (cSeconds / 60));
+	pTimerCallback->pfnCallback = pfnCallback;
+	pTimerCallback->pvParam = pvParam;
+	}
+
+void
+TimerQueue_ExecuteExpiredCallbacks()
+	{
+	Assert(g_pTimerCallbackNext != NULL);
+	STimerQueueCallback * pTimerCallback = g_pTimerCallbackNext;
+	while (pTimerCallback != NULL)
+		{
+		if (pTimerCallback->tsmTrigger > g_tsmMinutesSinceApplicationStarted)
+			{
+			g_tsmTimerQueueNextEventToTrigger = pTimerCallback->tsmTrigger;
+			MessageLog_AppendTextFormatSev(eSeverityNoise, "[$@] TimerQueue_ExecutePendingEvents() - Next event in $I minutes.\n", g_tsmTimerQueueNextEventToTrigger - g_tsmMinutesSinceApplicationStarted);
+			break;
+			}
+		//MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "TimerQueue_ExecutePendingEvents() Executing 0x$p pfnCallback(0x$p)\n", pTimerCallback->pfnCallback, pTimerCallback->pvParam);
+		pTimerCallback->pfnCallback(pTimerCallback->pvParam);	// Invoke the callback
+		// Remove the event from the main queue and put it into the recycled queue
+		STimerQueueCallback * pTimerCallbackNext = pTimerCallback->pNext;
+		pTimerCallback->pNext = g_pTimerCallbackDeleted;
+		g_pTimerCallbackDeleted = pTimerCallback;
+		pTimerCallback = pTimerCallbackNext;
+		if (pTimerCallback == NULL)
+			{
+			g_tsmTimerQueueNextEventToTrigger = d_tsm_cMinutesMax;
+			MessageLog_AppendTextFormatSev(eSeverityNoise, "[$@] TimerQueue_ExecutePendingEvents() - Queue is now empty.\n");
+			break;
+			}
+		} // while
+	g_pTimerCallbackNext = pTimerCallback;
+	}
+
+void
+TimerQueue_DisplayToMessageLog()
+	{
+	STimerQueueCallback * pTimerCallback = g_pTimerCallbackNext;
+	while (pTimerCallback != NULL)
+		{
+		MessageLog_AppendTextFormatCo(d_coRed, "\t [+$I min] $I: pfnCallback = 0x$p, pvParam = 0x$p\n",
+			pTimerCallback->tsmTrigger - g_tsmMinutesSinceApplicationStarted, pTimerCallback->tsmTrigger, pTimerCallback->pfnCallback, pTimerCallback->pvParam);
+		pTimerCallback = pTimerCallback->pNext;
+		}
 	}

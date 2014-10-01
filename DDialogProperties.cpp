@@ -67,7 +67,7 @@ DDialogProperties::SL_ButtonCancel_clicked()
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogPropertiyPageAccountGeneral::DDialogPropertiyPageAccountGeneral(TAccountXmpp * pAccount) : DDialogPropertyPage("General")
+DDialogPropertyPageAccountGeneral::DDialogPropertyPageAccountGeneral(TAccountXmpp * pAccount) : DDialogPropertyPage("General")
 	{
 	m_pAccount = pAccount;
 	/*
@@ -88,7 +88,7 @@ DDialogPropertiyPageAccountGeneral::DDialogPropertiyPageAccountGeneral(TAccountX
 	setMinimumWidth(500);
 	}
 
-DDialogPropertiyPageAccountTest::DDialogPropertiyPageAccountTest(PSZAC pszName) : DDialogPropertyPage(pszName)
+DDialogPropertyPageAccountTest::DDialogPropertyPageAccountTest(PSZAC pszName) : DDialogPropertyPage(pszName)
 	{
 	new QLabel(pszName, this);
 	}
@@ -97,11 +97,11 @@ DDialogPropertiesAccount::DDialogPropertiesAccount(TAccountXmpp * pAccount)
 	{
 	m_pAccount = pAccount;
 	Dialog_SetCaptionFormat_VE("Account - ^j", pAccount);
-	PageAdd(new DDialogPropertiyPageAccountGeneral(pAccount));
-	PageAdd(new DDialogPropertiyPageAccountTest("RootID"));
-	PageAdd(new DDialogPropertiyPageAccountTest("PGP"));
-	PageAdd(new DDialogPropertiyPageAccountTest("Bitcoin"));
-	PageAdd(new DDialogPropertiyPageAccountTest("Notes"));
+	PageAdd(new DDialogPropertyPageAccountGeneral(pAccount));
+	PageAdd(new DDialogPropertyPageAccountTest("RootID"));
+	PageAdd(new DDialogPropertyPageAccountTest("PGP"));
+	PageAdd(new DDialogPropertyPageAccountTest("Bitcoin"));
+	PageAdd(new DDialogPropertyPageAccountTest("Notes"));
 	m_pwPagesList->setFixedWidth(100);
 	}
 
@@ -114,7 +114,7 @@ TAccountXmpp::DisplayDialogProperties()
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogPropertiyPageContactGeneral::DDialogPropertiyPageContactGeneral(TContact * pContact) : DDialogPropertyPage("General")
+DDialogPropertyPageContactGeneral::DDialogPropertyPageContactGeneral(TContact * pContact) : DDialogPropertyPage("General")
 	{
 	m_pContact = pContact;
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(this);
@@ -127,11 +127,11 @@ DDialogPropertiesContact::DDialogPropertiesContact(TContact * pContact)
 	{
 	m_pContact = pContact;
 	Dialog_SetCaptionFormat_VE("Peer - ^j", pContact);
-	PageAdd(new DDialogPropertiyPageContactGeneral(pContact));
-	PageAdd(new DDialogPropertiyPageAccountTest("RootID"));
-	PageAdd(new DDialogPropertiyPageAccountTest("PGP"));
-	PageAdd(new DDialogPropertiyPageAccountTest("Bitcoin"));
-	PageAdd(new DDialogPropertiyPageAccountTest("Notes"));
+	PageAdd(new DDialogPropertyPageContactGeneral(pContact));
+	PageAdd(new DDialogPropertyPageAccountTest("RootID"));
+	PageAdd(new DDialogPropertyPageAccountTest("PGP"));
+	PageAdd(new DDialogPropertyPageAccountTest("Bitcoin"));
+	PageAdd(new DDialogPropertyPageAccountTest("Notes"));
 	m_pwPagesList->setFixedWidth(100);
 	}
 
@@ -150,7 +150,7 @@ TGroup::DisplayDialogProperties()
 	dialog.FuExec();
 	}
 
-DDialogPropertiyPageGroupGeneral::DDialogPropertiyPageGroupGeneral(TGroup * pGroup) : DDialogPropertyPage("General")
+DDialogPropertyPageGroupGeneral::DDialogPropertyPageGroupGeneral(TGroup * pGroup) : DDialogPropertyPage("General")
 	{
 	m_pGroup = pGroup;
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(this);
@@ -170,7 +170,37 @@ DDialogPropertiesGroup::DDialogPropertiesGroup(TGroup * pGroup)
 	{
 	m_pGroup = pGroup;
 	Dialog_SetCaptionFormat_VE("Group - $s", pGroup->TreeItem_PszGetNameDisplay());
-	PageAdd(new DDialogPropertiyPageGroupGeneral(pGroup));
+	PageAdd(new DDialogPropertyPageGroupGeneral(pGroup));
+	m_pwPagesList->setFixedWidth(100);
+	setMinimumWidth(600);
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void
+TProfile::DisplayDialogProperties()
+	{
+	DDialogPropertiesProfile dialog(this);
+	dialog.FuExec();
+	}
+
+DDialogPropertyPageProfileGeneral::DDialogPropertyPageProfileGeneral(TProfile * pProfile) : DDialogPropertyPage("General")
+	{
+	m_pProfile = pProfile;
+	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(this);
+	/*
+	OLayoutHorizontal * poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
+	poLayout->Layout_AddLabelAndWidgetH_PA("Nym ID", new WEditReadOnly(pProfile->m_strNymID));
+	*/
+	poLayoutVertical->Layout_PwAddRowLabelEditReadOnly("Nym ID", pProfile->m_strNymID);
+	poLayoutVertical->Layout_PwAddRowLabelEditReadOnlyToHex("Public Key", pProfile->m_binKeyPublic);
+	poLayoutVertical->Layout_PwAddRowLabelEditReadOnlyToHex("Private Key", pProfile->m_binKeyPrivate);
+	}
+
+DDialogPropertiesProfile::DDialogPropertiesProfile(TProfile * pProfile)
+	{
+	m_pProfile = pProfile;
+	Dialog_SetCaptionFormat_VE("Role - $s", pProfile->TreeItem_PszGetNameDisplay());
+	PageAdd(new DDialogPropertyPageProfileGeneral(pProfile));
 	m_pwPagesList->setFixedWidth(100);
 	setMinimumWidth(600);
 	}
@@ -666,3 +696,11 @@ DDialogBallotVote::SL_ButtonVote()
 	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
 	}
 
+/*
+void
+TProfile::DisplayDialogProperties()
+	{
+	DDialogPropertiesAccount dialog(this);
+	dialog.FuExec();
+	}
+*/

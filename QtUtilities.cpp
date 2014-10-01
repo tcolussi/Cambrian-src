@@ -413,6 +413,11 @@ WEditReadOnly::WEditReadOnly(PSZUC pszText) : WEdit(pszText)
 	setReadOnly(true);
 	}
 
+WEditReadOnly::WEditReadOnly(const CStr & strText) : WEdit(strText)
+	{
+	setReadOnly(true);
+	}
+
 WEditReadOnly::WEditReadOnly(const QString & sText) : WEdit(sText)
 	{
 	setReadOnly(true);
@@ -1179,6 +1184,24 @@ OLayoutVertical::Layout_PwAddRowButtonAndLabel(PSZAC pszmButtonTextAndToolTip, E
 	OLayoutHorizontalAlignLeft * pLayout = new OLayoutHorizontalAlignLeft(PA_PARENT this);
 	pLayout->Layout_AddWidgetsH_VEZA(pwButton, pwLabel, NULL);
 	return pwButton;
+	}
+
+WEdit *
+OLayoutVertical::Layout_PwAddRowLabelEditReadOnly(PSZAC pszmLabelTextAndToolTipEdit, PSZUC pszEditText)
+	{
+	WEdit * pwEdit = new WEditReadOnly(pszEditText);
+	OLayoutHorizontal * poLayout = new OLayoutHorizontalAlignLeft(this);
+	poLayout->Layout_AddLabelAndWidgetH_PA(pszmLabelTextAndToolTipEdit, pwEdit);
+	return pwEdit;
+	}
+
+WEdit *
+OLayoutVertical::Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszmLabelTextAndToolTipEdit, const CBin & binHex)
+	{
+	g_strScratchBufferStatusBar.Empty();
+	g_strScratchBufferStatusBar.BinAppendStringBase16FromBinaryData(binHex);
+	g_strScratchBufferStatusBar.BinAppendNullTerminator();
+	return Layout_PwAddRowLabelEditReadOnly(pszmLabelTextAndToolTipEdit, g_strScratchBufferStatusBar);
 	}
 
 WLabel *

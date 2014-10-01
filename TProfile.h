@@ -17,6 +17,7 @@ class TProfile : public ITreeItem	// (profile)
 public:
 	CChatConfiguration * m_pConfigurationParent;	// Configuration holding the profile. In the future, the GUI will be able to open multiple configurations simultaneously.
 	CStr m_strNameProfile;		// Name of the profile (aka "nym")
+	CStr m_strNymID;			// OT nym
 	CBin m_binKeyPrivate;
 	CBin m_binKeyPublic;
 	CStr m_strComment;			// Description of the profile (this is useful for a user having multiple profiles)
@@ -83,6 +84,8 @@ public:
 	void BallotMaster_EventBallotAddAsTemplate(IEventBallot * pEventBallot);
 	void BallotMaster_OnEventNewBallotReceived(CEventBallotReceived * pEventBallotReceived);
 	void BallotMaster_OnEventVoteReceived(CEventBallotSent * pEventBallotSent);
+
+	void DisplayDialogProperties();
 
 public:
 	static IXmlExchange * S_PaAllocateProfile(PVOID pConfigurationParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()

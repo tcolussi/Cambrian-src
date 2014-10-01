@@ -36,19 +36,19 @@ public slots:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class DDialogPropertiyPageAccountGeneral : public DDialogPropertyPage
+class DDialogPropertyPageAccountGeneral : public DDialogPropertyPage
 {
 protected:
 	TAccountXmpp * m_pAccount;
 	WEditPassword * m_pwEditPassword;
 public:
-	DDialogPropertiyPageAccountGeneral(TAccountXmpp * pAccount);
+	DDialogPropertyPageAccountGeneral(TAccountXmpp * pAccount);
 };
 
-class DDialogPropertiyPageAccountTest : public DDialogPropertyPage
+class DDialogPropertyPageAccountTest : public DDialogPropertyPage
 {
 public:
-	DDialogPropertiyPageAccountTest(PSZAC pszName);
+	DDialogPropertyPageAccountTest(PSZAC pszName);
 };
 
 class DDialogPropertiesAccount : public DDialogProperties
@@ -61,12 +61,12 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class DDialogPropertiyPageContactGeneral : public DDialogPropertyPage
+class DDialogPropertyPageContactGeneral : public DDialogPropertyPage
 {
 protected:
 	TContact * m_pContact;
 public:
-	DDialogPropertiyPageContactGeneral(TContact * pContact);
+	DDialogPropertyPageContactGeneral(TContact * pContact);
 };
 
 class DDialogPropertiesContact : public DDialogProperties
@@ -79,12 +79,12 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-class DDialogPropertiyPageGroupGeneral : public DDialogPropertyPage
+class DDialogPropertyPageGroupGeneral : public DDialogPropertyPage
 {
 protected:
 	TGroup * m_pGroup;
 public:
-	DDialogPropertiyPageGroupGeneral(TGroup * pGroup);
+	DDialogPropertyPageGroupGeneral(TGroup * pGroup);
 };
 
 class DDialogPropertiesGroup : public DDialogProperties
@@ -94,6 +94,24 @@ protected:
 public:
 	DDialogPropertiesGroup(TGroup * pGroup);
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class DDialogPropertyPageProfileGeneral : public DDialogPropertyPage
+{
+protected:
+	TProfile * m_pProfile;
+public:
+	DDialogPropertyPageProfileGeneral(TProfile * pProfile);
+};
+
+class DDialogPropertiesProfile : public DDialogProperties
+{
+protected:
+	TProfile * m_pProfile;
+public:
+	DDialogPropertiesProfile(TProfile * pProfile);
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Widget displaying a list of contacts

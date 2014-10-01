@@ -160,6 +160,7 @@ class WEditReadOnly : public WEdit
 public:
 	WEditReadOnly();
 	WEditReadOnly(PSZUC pszText);
+	WEditReadOnly(const CStr & strText);
 	WEditReadOnly(const QString & sText);
 };
 
@@ -406,6 +407,8 @@ public:
 	OLayoutHorizontalAlignLeft * Layout_PoAddRowLabelsAndWidgets_VEZA(PSZAC pszmFirstLabelAndToolTip, ...);
 	OLayoutHorizontalAlignLeft * Layout_PoAddRowLabelsAndWidgets_VLZA(PSZAC pszmFirstLabelAndToolTip, va_list vlArgs);
 	WButtonTextWithIcon * Layout_PwAddRowButtonAndLabel(PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIconButton, PSZAC pszmLabelTextAndToolTip);
+	WEdit * Layout_PwAddRowLabelEditReadOnly(PSZAC pszmLabelTextAndToolTipEdit, PSZUC pszEditText);
+	WEdit * Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszmLabelTextAndToolTipEdit, const CBin & binHex);
 	WLabel * Layout_PwAddRowLabelEditButton(PSZAC pszmLabelTextAndToolTipEdit, PA_CHILD WEdit * pwEdit, PA_CHILD QWidget * pawButton);
 	WLabel * Layout_PwAddRowLabelAndButton(PSZAC pszmLabelTextAndToolTip, PA_CHILD QWidget * pawButton);
 	WLabel * Layout_PwAddRowLabel(PSZAC pszmLabelTextAndToolTip);

@@ -27,7 +27,7 @@ public:
 
 	//virtual void closeEvent(QCloseEvent * pEvent);		// From QWidget
 	//virtual void changeEvent(QEvent * pEvent);			// From QWidget
-	virtual void timerEvent(QTimerEvent * pTimerEvent);	// From QObject
+	virtual void timerEvent(QTimerEvent * pTimerCallback);	// From QObject
 	virtual bool event(QEvent * pEvent);				// From QObject
 
 public:
@@ -85,5 +85,10 @@ void Dashboard_UpdateContact(TContact * pContact);
 void Dashboard_UpdateGroup(TGroup * pGroup);
 void Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 void Dashboard_NewEventRelatedToBallot(IEventBallot * pEventBallot);
+
+void TimerQueue_CallbackAdd(int cSeconds, PFn_TimerQueueEventCallback pfnCallback, PVPARAM pvParam);
+void TimerQueue_CallbackAddOrPostpone(int cSeconds, PFn_TimerQueueEventCallback pfnCallback, PVPARAM pvParam);
+void TimerQueue_ExecuteExpiredCallbacks();
+void TimerQueue_DisplayToMessageLog();
 
 #endif // MAINWINDOW_H

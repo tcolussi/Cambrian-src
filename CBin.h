@@ -152,6 +152,7 @@ public:
 	void BinAppendText_VE(PSZAC pszFmtTemplate, ...);
 	PSZU BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs);
 	void BinAppendStringBase16FromBinaryData(const void * pvBinaryData, int cbBinaryData);
+	void BinAppendStringBase16FromBinaryData(const CBin & bin);
 	void BinAppendTextFormattedFromFingerprintBinary(const void * pvFingerprintBinary, int cbFingerprintBinary);
 	BOOL BinAppendBinaryFingerprintF_MB(PSZUC pszTextFingerprint) OUT_F_UNCH;
 	BOOL BinAppendBinaryFromTextBase16F(PSZUC pszTextBase16);

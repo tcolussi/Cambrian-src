@@ -65,6 +65,7 @@ public:
 		{
 		FTI_kfTreeItem_IsExpanded					= 0x00000001,	// Expand this Tree Item when adding it to the Navigation Tree.  For instance, a user may wish to expand a group to see each group member.
 		FTI_kfTreeItem_NameDisplayedSuggested		= 0x00000002,	// The content of member variable m_strNameDisplayTyped was suggested by another contact, typically when querying a group for its name and list of contacts.
+		FTI_kfTreeItem_RequiresEventOnTimer			= 0x00000004,	// The Tree Item has time sensitive information and requires a timer event.  This flag is in the base class because any parent of the Tree Item also has this flag set when one of its child needs a timer event.  This way, it is possible to optimize timer requirements.
 		FTI_kfRecommended							= 0x00000010,	// The Tree Item (typically a contact or a group) was recommended by the user.  This flag is used for /api Contact.Recommendations.Get
 		FTI_kfFavorites								= 0x00000020,	// NYI: The Tree Item is among the user's favorites.  A favorite is private to the user, while a recommendation is public.
 		FTI_kfObjectInvisible						= 0x00000040,	// The Tree Item is no longer visible (by default) in the Navigation Tree.  This is typically when a contact or group has been deleted and accessible in the 'Recycle Bin'.  An invisible item is something 'half deleted' which may permanently deleted later.
@@ -76,10 +77,11 @@ public:
 		//FTI_kfTreeItem_CannotBeDeletedFromMemory	= 0x00040000,	// The Tree Item cannot be deleted because it is in used by another object(s) which cannot be deleted from memory.  A typical case is a JavaScript object OJapi having a reference to the Tree Item.  Deleting such an object would crash the application.
 		FTI_kfTreeItem_NameDisplayedGenerated		= 0x00080000,	// The member variable m_strNameDisplayTyped has been generated, and therefore should not be serialized (saved to disk).  Since this flag is not stored to disk nor m_strNameDisplayTyped, the display name will be re-geneated each time Cambrian starts.
 
-		FTI_kezIconNone								= 0x00000000,
-		FTI_kefIconWarning							= 0x00100000,
-		FTI_kefIconError							= 0x00200000,
-		FTI_kemIconMask								= 0x00F00000,
+		FTI_keIcon_zNone							= 0x00000000,
+		FTI_keIcon_Warning							= 0x00100000,
+		FTI_keIcon_Error							= 0x00200000,
+		FTI_keIcon_Composing						= 0x00300000,	// The user is typing something, and therefore display the pencil icon next to the Tree Item.  Originally, this flag was related to a contact, however was used later when a user was typing something in a group chat, and now used for almost any object where the user is typing something.  Also, this flag is propagated to its parent if the Tree Item is not visible in the Navigation Tree.
+		FTI_kmIconMask								= 0x00F00000,
 		FTI_kfTreeItem_fBit							= 0x01000000,	// Generic bit to store a boolean value (this bit is used to efficiently merge or delete arrays)
 
 		// The following flags FTI_kfChatLog* are used by ITreeItemChatLog and ITreeItemChatLogEvents.  The motivation for storing those flags in m_uFlagsTreeItem is avoiding another member variable.

@@ -725,7 +725,7 @@ TAccountXmpp::TreeItemAccount_UpdateIcon()
 	TreeItemW_SetTextColor(coText);
 	if (g_fIsConnectedToInternet)
 		{
-		if ((m_uFlagsTreeItem & FTI_kemIconMask) != 0)
+		if ((m_uFlagsTreeItem & FTI_kmIconMask) != 0)
 			return;
 		}
 	else
@@ -842,7 +842,7 @@ TAccountXmpp::TreeItemAccount_SetIconConnectingToServer_Gsb()
 void
 TAccountXmpp::TreeItemAccount_SetIconOnline()
 	{
-	m_uFlagsTreeItem &= ~FTI_kemIconMask;	// Clear any previous icon error
+	m_uFlagsTreeItem &= ~FTI_kmIconMask;	// Clear any previous icon error
 	TreeItemAccount_UpdateIcon();	// Update the icon (this is likely to be eMenuAction_PresenceAccountOnline, however it may be the "away", "busy" and so on)
 	}
 
@@ -860,7 +860,7 @@ void
 TAccountXmpp::TreeItemAccount_SetIconDisconnected()
 	{
 	// Set the disconnected icon only if there is no error
-	if ((m_uFlagsTreeItem & FTI_kemIconMask) == 0)
+	if ((m_uFlagsTreeItem & FTI_kmIconMask) == 0)
 		TreeItemW_SetIcon(eMenuAction_PresenceAccountDisconnected);
 	TreeItemAccount_UpdateIconOfAllContacts();
 	}

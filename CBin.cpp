@@ -2792,6 +2792,16 @@ CBin::BinAppendStringBase16FromBinaryData(const void * pvBinaryData, int cbBinar
 		Base16_StringFromBinary(OUT pszHex, (const BYTE *)pvBinaryData, cbBinaryData);
 		}
 	}
+
+void
+CBin::BinAppendStringBase16FromBinaryData(const CBin & bin)
+	{
+	Assert(&bin != this);
+	SHeaderWithData * pData = bin.m_paData;
+	if (pData != NULL)
+		BinAppendStringBase16FromBinaryData(pData->rgbData, pData->cbData);
+	}
+
 //	Encode binary data into Base41
 void
 CBin::BinAppendStringBase41FromBinaryData(const void * pvDataBinary, int cbDataBinary)

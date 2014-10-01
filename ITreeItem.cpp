@@ -287,7 +287,7 @@ ITreeItem::TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
 	{
 	Assert(pszuErrorMessage != NULL);
 	CString sError(pszuErrorMessage);
-	if (m_uFlagsTreeItem & FTI_kefIconError)
+	if (m_uFlagsTreeItem & FTI_keIcon_Error)
 		{
 		// There is already an error, so concatenate both, unless this is the same error.
 		// Sometimes a server may send two stanzas with the same identical error.  I have no idea what is the motivation (or if it is a bug), however the same error should be displayed only once
@@ -311,7 +311,7 @@ ITreeItem::TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
 	//qApp->setStyleSheet("QToolTip { background-color: red }");
 	//qApp->setStyleSheet("QToolTip { indent: 3 }");
 	TreeItemW_SetIconWithToolTip(eMenuIcon, sError);
-	m_uFlagsTreeItem = (m_uFlagsTreeItem & ~FTI_kemIconMask) | FTI_kefIconError;
+	m_uFlagsTreeItem = (m_uFlagsTreeItem & ~FTI_kmIconMask) | FTI_keIcon_Error;
 	} // TreeItemW_SetIconError()
 
 BOOL
