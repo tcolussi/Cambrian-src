@@ -548,6 +548,8 @@ DDialogBallotSend::PaAllocateBallot()
 	paEventBallot->m_strDescription = m_pwEditDescription;
 	if (m_pwButtonAllowMultipleChoices->isChecked())
 		paEventBallot->m_uFlagsBallot |= CEventBallotSent::FB_kfAllowMultipleChoices;
+	if (!m_pwButtonAllowComments->isChecked())
+		paEventBallot->m_uFlagsBallot |= CEventBallotSent::FB_kfAllowNoComments;
 
 	CStr strQuestion;
 	// Add the ballot questions to the event
@@ -692,12 +694,3 @@ DDialogBallotVote::SL_ButtonVote()
 		m_pEventBallotVote->ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree();
 	DDialogOkCancelWithLayouts::SL_ButtonOK_clicked();
 	}
-
-/*
-void
-TProfile::DisplayDialogProperties()
-	{
-	DDialogPropertiesAccount dialog(this);
-	dialog.FuExec();
-	}
-*/

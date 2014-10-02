@@ -890,7 +890,8 @@ void
 TimerQueue_CallbackAdd(int cSeconds, PFn_TimerQueueEventCallback pfnCallback, PVPARAM pvParam)
 	{
 	Assert(cSeconds > 0);
-	pvParam = (PVPARAM)cSeconds;
+	Assert(pfnCallback != NULL);
+	//MessageLog_AppendTextFormatCo(d_coRed, "TimerQueue_CallbackAdd($I, 0x$p, 0x$p)\n", cSeconds, pfnCallback, pvParam);
 	STimerQueueCallback * pTimerCallback = _PAllocateTimerEvent(g_tsmMinutesSinceApplicationStarted + (cSeconds / 60));
 	pTimerCallback->pfnCallback = pfnCallback;
 	pTimerCallback->pvParam = pvParam;

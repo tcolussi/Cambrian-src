@@ -363,12 +363,16 @@ LaunchBrowser(const QString & sName, const QString & sUrlRelative)
 CStr ResolveAppPath(const CStr &strAppName)
 	{
 	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(strAppName.PszaGetUtf8NZ());
-	CStr strUrl("");
+	CStr strUrl;
 
 	Assert(pInfo != NULL && "Application doesn't exist");
 	if (pInfo != NULL)
 		{
+		#if 0
 		strUrl = "file:///" + MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+		#else
+		strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+		#endif
 		QUrl qurlAbsolute(strUrl);
 
 		// underconstruction page if the file doesn't exist
@@ -376,13 +380,18 @@ CStr ResolveAppPath(const CStr &strAppName)
 			{
 			QFile oHtmlFile(qurlAbsolute.toLocalFile());
 			QString strTest = qurlAbsolute.toString();
-
 			if ( !oHtmlFile.exists() )
 				{
 				pInfo = PGetApplicationHtmlInfo("Underconstruction");
 				Assert(pInfo != NULL && "Underconstruction app doesn't exist");
 				if ( pInfo != NULL )
+					{
+					#if 0
 					strUrl = "file:///" + MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+					#else
+					strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+					#endif
+					}
 				}
 			}
 		}

@@ -8,13 +8,8 @@
 void
 TimerQueueEventCallback_PollStop(PVPARAM pvEventBallotPoll)
 	{
-	CEventBallotPoll * pEventBallotPoll = (CEventBallotPoll *)pvEventBallotPoll;
-	OJapiAppBallotmaster * pBallotmaster = OJapiAppBallotmaster::s_plistBallotmasters;
-	while (pBallotmaster != NULL)
-		{
-		pBallotmaster->OnEventPollStopped(pEventBallotPoll);
-		pBallotmaster = pBallotmaster->m_pNext;
-		}
+	Assert(pvEventBallotPoll != NULL);
+	((CEventBallotPoll *)pvEventBallotPoll)->StopPoll();
 	}
 
 void
@@ -47,6 +42,8 @@ CServiceBallotmaster::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	IService::XmlExchange(pXmlExchanger);
 	m_oVaultBallots.XmlExchange("Ballots", INOUT pXmlExchanger);
+	if (pXmlExchanger->m_fSerializing)
+		return;
 	// Initialize the timers for polls to automatically stop
 	TIMESTAMP tsNow = Timestamp_GetCurrentDateTime();
 	IEvent ** ppEventStop;
@@ -58,16 +55,21 @@ CServiceBallotmaster::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		if (pEventBallotPoll->m_tsStarted != d_ts_zNA && pEventBallotPoll->m_tsStopped == d_ts_zNA && pEventBallotPoll->m_cSecondsPollLength > 0)
 			{
 			TIMESTAMP tsStop = pEventBallotPoll->m_tsStarted + pEventBallotPoll->m_cSecondsPollLength * (TIMESTAMP_DELTA)d_ts_cSeconds;
-			int cSeconds = (tsStop - tsNow) / d_ts_cSeconds;
-			if (cSeconds > 0)
+			TIMESTAMP_DELTA dtsStopping = tsStop - tsNow;
+			if (dtsStopping > 0)
 				{
-				MessageLog_AppendTextFormatSev(eSeverityNoise, "Poll ID $t will automatically stop in $T\n", tsStop - tsNow);
-				TimerQueue_CallbackAdd(cSeconds, TimerQueueEventCallback_PollStop, pEventBallotPoll);
+				MessageLog_AppendTextFormatSev(eSeverityNoise, "Poll ID $t which started on {tL} lasting $I seconds will automatically stop at {tL} in $I seconds ($T).\n", pEventBallotPoll->m_tsEventID, pEventBallotPoll->m_tsStarted, pEventBallotPoll->m_cSecondsPollLength, tsStop, (int)(dtsStopping / d_ts_cSeconds), dtsStopping);
+				TimerQueue_CallbackAdd(dtsStopping / d_ts_cSeconds, TimerQueueEventCallback_PollStop, pEventBallotPoll);
+				}
+			else
+				{
+				// What about a poll which started, however expired when SocietyPro was not running?  What about the ballots sent in the meantime? Should those vote be counted?
+
 				}
 			}
-		}
+		} // while
 	TimerQueue_DisplayToMessageLog();
-	}
+	} // XmlExchange()
 
 //	CServiceBallotmaster::IService::DetachFromObjectsAboutBeingDeleted()
 void
@@ -91,7 +93,7 @@ CServiceBallotmaster::PAllocateBallot(const IEventBallot * pEventBallotTemplate)
 		paEventBallot->m_uFlagsEvent |= IEvent::FE_kfEventDeleted;
 		}
 	m_oVaultBallots.m_arraypaEvents.Add(PA_CHILD paEventBallot);
-	Assert(paEventBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted);
+//	Assert(paEventBallot->m_uFlagsEvent & IEvent::FE_kfEventDeleted);
 	return paEventBallot;
 	}
 
@@ -622,6 +624,11 @@ CEventBallotPoll::FStartPoll()
 		m_pEventBallotSent->Event_InitFromDataOfEvent(this);
 		m_pEventBallotSent->m_uFlagsBallot |= FB_kfFromBallotmaster;
 		pGroup->Vault_AddEventToChatLogAndSendToContacts(PA_CHILD m_pEventBallotSent);
+		if (m_cSecondsPollLength > 0)
+			{
+			TimerQueue_CallbackAdd(m_cSecondsPollLength, TimerQueueEventCallback_PollStop, this);
+			//TimerQueue_DisplayToMessageLog();
+			}
 		}
 	return true;
 	}
@@ -629,11 +636,24 @@ CEventBallotPoll::FStartPoll()
 void
 CEventBallotPoll::StopPoll()
 	{
-	if (m_tsStarted != d_ts_zNA)
-		m_tsStopped = Timestamp_GetCurrentDateTime();
+	Assert(EGetEventClass() == c_eEventClass);
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "Stopping Poll ID $t\n", m_tsEventID);
 	m_uFlagsBallot |= FB_kfStopAcceptingVotes;
 	if (PGetEventBallotSend_YZ() != NULL)
 		m_pEventBallotSent->m_uFlagsBallot |= FB_kfStopAcceptingVotes;
+	if (m_tsStarted != d_ts_zNA && m_tsStopped == d_ts_zNA)
+		{
+		// Stop the poll if it was started and not already stopped
+		m_tsStopped = Timestamp_GetCurrentDateTime();
+		// Notify each Ballotmaster about the event
+		MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onPollStopped($t)\n", m_tsEventID);
+		OJapiAppBallotmaster * pBallotmaster = OJapiAppBallotmaster::s_plistBallotmasters;
+		while (pBallotmaster != NULL)
+			{
+			pBallotmaster->OnEventPollStopped(this);
+			pBallotmaster = pBallotmaster->m_pNext;
+			}
+		}
 	}
 
 bool
