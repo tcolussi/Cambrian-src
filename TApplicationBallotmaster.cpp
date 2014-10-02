@@ -525,7 +525,7 @@ void
 CEventBallotSent::CalculateStatistics(OUT SEventPollStatistics * pStatistics)
 	{
 	Assert(pStatistics != NULL);
-	ZeroMemory(OUT pStatistics, sizeof(*pStatistics));
+	InitToZeroes(OUT pStatistics, sizeof(*pStatistics));
 	pStatistics->cSent = 1;	// The ballot was sent to an indivdiual
 	// To determine how many recipients received the ballot, we need to look at the vault.
 	TGroup * pGroup = (TGroup *)m_pVaultParent_NZ->m_pParent;
