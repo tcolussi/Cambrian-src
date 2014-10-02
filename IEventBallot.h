@@ -136,7 +136,7 @@ public:
 	virtual EEventClass EGetEventClassForXCP() const { return eEventClass_eBallotReceived_class; }
 	virtual EGui XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply);
 
-	void CalculateStatistics(OUT SEventPollStatistics * pStatistics);
+	void CalculateStatistics(OUT struct SEventPollStatistics * pStatistics);
 };
 
 class CEventBallotReceived : public IEventBallot
