@@ -408,7 +408,7 @@ public:
 	OLayoutHorizontalAlignLeft * Layout_PoAddRowLabelsAndWidgets_VLZA(PSZAC pszmFirstLabelAndToolTip, va_list vlArgs);
 	WButtonTextWithIcon * Layout_PwAddRowButtonAndLabel(PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIconButton, PSZAC pszmLabelTextAndToolTip);
 	WEdit * Layout_PwAddRowLabelEditReadOnly(PSZAC pszmLabelTextAndToolTipEdit, PSZUC pszEditText);
-	WEdit * Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszmLabelTextAndToolTipEdit, const CBin & binHex);
+	WEdit * Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszmLabelTextAndToolTipEdit, const CBin & bin);
 	WLabel * Layout_PwAddRowLabelEditButton(PSZAC pszmLabelTextAndToolTipEdit, PA_CHILD WEdit * pwEdit, PA_CHILD QWidget * pawButton);
 	WLabel * Layout_PwAddRowLabelAndButton(PSZAC pszmLabelTextAndToolTip, PA_CHILD QWidget * pawButton);
 	WLabel * Layout_PwAddRowLabel(PSZAC pszmLabelTextAndToolTip);
@@ -436,6 +436,7 @@ public:
 	WEdit * Layout_PwAddRowLabelEdit(PSZAC pszLabel, const CString & sEditText);
 	WEdit * Layout_PwAddRowLabelEditReadOnly(PSZAC pszLabel, const CString & sEditText);
 	WEdit * Layout_PwAddRowLabelEditReadOnlyInt(PSZAC pszLabel, int nValue);
+	WEdit * Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszLabel, const CBin & bin);
 	WEdit * Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszLabel, const QByteArray & arrayb);
 	WEdit * Layout_PwAddRowLabelEditReadOnlyFingerprint(PSZAC pszLabel, const QByteArray & arraybFingerprint);
 	WEdit * Layout_PwAddRowLabelEditReadOnlyFingerprint(PSZAC pszLabel, const CBin & binFingerprint);

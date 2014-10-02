@@ -168,7 +168,6 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	if (pXmlExchanger->m_fSerializing )
 		m_arraypaAccountsXmpp.ForEach_UAssignObjectIds();
 
-
 	ITreeItem::XmlExchange(INOUT pXmlExchanger);
 	pXmlExchanger->XmlExchangeStr("Name", INOUT_F_UNCH_S &m_strNameProfile);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT_F_UNCH_S &m_strComment);

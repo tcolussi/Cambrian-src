@@ -328,6 +328,7 @@ WaTabWidget::WaTabWidget(QWidget *parent) : QTabWidget(parent)
 	{
 	WaTabBar *tabBar = new WaTabBar();
 	setTabBar(tabBar);
+//	setMovable(true);
 
 	//QObject::connect(this, &QTabWidget::currentChanged, this, &WaTabWidget::SL_currentChanged);
 

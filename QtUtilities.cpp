@@ -1196,12 +1196,9 @@ OLayoutVertical::Layout_PwAddRowLabelEditReadOnly(PSZAC pszmLabelTextAndToolTipE
 	}
 
 WEdit *
-OLayoutVertical::Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszmLabelTextAndToolTipEdit, const CBin & binHex)
+OLayoutVertical::Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszmLabelTextAndToolTipEdit, const CBin & bin)
 	{
-	g_strScratchBufferStatusBar.Empty();
-	g_strScratchBufferStatusBar.BinAppendStringBase16FromBinaryData(binHex);
-	g_strScratchBufferStatusBar.BinAppendNullTerminator();
-	return Layout_PwAddRowLabelEditReadOnly(pszmLabelTextAndToolTipEdit, g_strScratchBufferStatusBar);
+	return Layout_PwAddRowLabelEditReadOnly(pszmLabelTextAndToolTipEdit, IN g_strScratchBufferStatusBar.InitFromBinaryToHexPsz(bin));
 	}
 
 WLabel *
@@ -1343,6 +1340,12 @@ WEdit *
 OLayoutForm::Layout_PwAddRowLabelEditReadOnlyInt(PSZAC pszLabel, int nValue)
 	{
 	return Layout_PwAddRowLabelEditReadOnly(pszLabel, QString::number(nValue));
+	}
+
+WEdit *
+OLayoutForm::Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszLabel, const CBin & bin)
+	{
+	return Layout_PwAddRowLabelEditReadOnly(pszLabel, IN g_strScratchBufferStatusBar.InitFromBinaryToHexPsz(bin));
 	}
 
 WEdit *

@@ -410,6 +410,15 @@ CStr::InitFromStringCopiedUntilPch(PSZUC pszBegin, PCHUC pchCopyUntil)
 	}
 
 PSZUC
+CStr::InitFromBinaryToHexPsz(const CBin & bin)
+	{
+	if (m_paData != NULL)
+		m_paData->cbData = 0;
+	BinAppendStringBase16FromBinaryData(bin);
+	return BinAppendNullTerminatorSz();
+	}
+
+PSZUC
 CStr::FindSubStringPsz(PSZAC pszSubStringSearch) const
 	{
 	Assert(pszSubStringSearch != NULL);

@@ -66,6 +66,7 @@ public:
 	void AppendServerNameToJidIfMissing(PSZUC pszServerName);
 	PSZUC InitFromStringCopiedUntilCharacterSz(PSZUC pszBegin, UINT chCopyUntil);
 	PSZUC InitFromStringCopiedUntilPch(PSZUC pszBegin, PCHUC pchCopyUntil);
+	PSZUC InitFromBinaryToHexPsz(const CBin & bin);
 
 	PSZUC FindSubStringPsz(PSZAC pszSubStringSearch) const;
 	PSZUC InitFromTextBetweenPrefixAndPostfixPsz(PSZUC pszTextSource, PSZAC pszPrefix, PSZAC pszPostfix);
