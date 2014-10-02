@@ -463,19 +463,31 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Statistics about a poll
+struct SEventPollStatistics
+	{
+	int cSent;		// Number of recipients the poll was sent (this is typically the number of group members)
+	int cResponded;	// Number of people who responded/voted to the poll
+	int cPending;	// Those who did not responded/voted (cPending = cSent - cResponded)
+	int cInvalid;	// Always zero (at the moment
+	};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiPollResultsStats : public OJapi
 {
     Q_OBJECT
 public:
     CEventBallotPoll * m_pBallot;
+	SEventPollStatistics m_statistics;
 
 public:
     OJapiPollResultsStats(CEventBallotPoll * pBallot);
 
-    int pending() const { return 0 ; }
-    int invalid() const { return 0; }
-    int responded() const { return 0; }
-    int sent() const { return 0; }
+	int sent() const { return m_statistics.cSent; }
+	int responded() const { return m_statistics.cResponded; }
+	int pending() const { return m_statistics.cPending; }
+	int invalid() const { return m_statistics.cInvalid; }
 
     Q_PROPERTY(int pending READ pending)
     Q_PROPERTY(int invalid READ invalid)
@@ -525,7 +537,6 @@ public:
 class OJapiPollResults : public OJapiPollCore
 {
 	Q_OBJECT
-	//OJapiEventPollResults * m_poJapiEventPollResults_YZ;		// Points to the object where the actual votes are tallied (counted) as well as the comments
     OJapiPollResultsStats m_oStats;
 
 public:
@@ -533,7 +544,7 @@ public:
 
     QVariant comments() const;
     QVariant counts() const;
-    POJapiPollResultsStats stats() { return &m_oStats; }
+	POJapiPollResultsStats stats();
 
     Q_PROPERTY(QVariant comments READ comments)
     Q_PROPERTY(QVariant counts READ counts)

@@ -4,6 +4,10 @@
 #include "TApplicationBallotmaster.h"
 #include "WLayoutBrowser.h"
 
+//	Callback to stop a running poll.
+//	When a poll is started and if the poll has a time length, thena timer is set to automatically stop the poll.
+//
+//	INTERFACE NOTES
 //	Must have the same interface as PFn_TimerQueueEventCallback()
 void
 TimerQueueEventCallback_PollStop(PVPARAM pvEventBallotPoll)
@@ -398,7 +402,9 @@ OJapiPollCore::dateStopped() const
 
 OJapiPollResultsStats::OJapiPollResultsStats(CEventBallotPoll * pBallot)
     {
+	Assert(pBallot != NULL);
     m_pBallot = pBallot;
+	InitToZeroes(OUT &m_statistics, sizeof(m_statistics));
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -493,9 +499,12 @@ OJapiPollResults::comments() const
     return lvComments;
     }
 
+//	Return an array of integers representing the number of votes per choice.
+//	This method is likely to be unused because the object OJapiPollOption has a method count().
 QVariant
 OJapiPollResults::counts() const
     {
+	Assert(m_pBallot != NULL);
     MessageLog_AppendTextFormatCo(d_coBlue, "OJapiPollResults::counts()\n");
     QVariantList list;
 	CEventBallotSent * pEventBallotSent = m_pBallot->PGetEventBallotSend_YZ();
@@ -511,6 +520,33 @@ OJapiPollResults::counts() const
 		}
     return list;
     }
+
+void
+CEventBallotSent::CalculateStatistics(OUT SEventPollStatistics * pStatistics)
+	{
+	Assert(pStatistics != NULL);
+	ZeroMemory(OUT pStatistics, sizeof(*pStatistics));
+	pStatistics->cSent = 1;	// The ballot was sent to an indivdiual
+	// To determine how many recipients received the ballot, we need to look at the vault.
+	TGroup * pGroup = (TGroup *)m_pVaultParent_NZ->m_pParent;
+	if (pGroup->EGetRuntimeClass() == RTI(TGroup))
+		{
+		pStatistics->cSent = pGroup->m_arraypaMembers.GetSize();	// TODO: If a new group member was added or removed, this must be included
+		}
+	pStatistics->cResponded = m_arraypaVotes.GetSize();
+	pStatistics->cPending = pStatistics->cSent - pStatistics->cResponded;
+	}
+
+//	Return basic statistics about the poll
+POJapiPollResultsStats
+OJapiPollResults::stats()
+	{
+	Assert(m_pBallot != NULL);
+	CEventBallotSent * pEventBallotSent = m_pBallot->PGetEventBallotSend_YZ();
+	if (pEventBallotSent != NULL)
+		pEventBallotSent->CalculateStatistics(OUT &m_oStats.m_statistics);
+	return &m_oStats;
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 OJapiPoll::OJapiPoll(CEventBallotPoll * pBallot) : OJapiPollCore(pBallot)
@@ -645,8 +681,7 @@ CEventBallotPoll::StopPoll()
 		{
 		// Stop the poll if it was started and not already stopped
 		m_tsStopped = Timestamp_GetCurrentDateTime();
-		// Notify each Ballotmaster about the event
-		MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "emit onPollStopped($t)\n", m_tsEventID);
+		// Notify each Ballotmaster about the poll stopped
 		OJapiAppBallotmaster * pBallotmaster = OJapiAppBallotmaster::s_plistBallotmasters;
 		while (pBallotmaster != NULL)
 			{

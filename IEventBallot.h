@@ -6,6 +6,7 @@
 #endif
 
 typedef UINT UINT_BALLOT_CHOICES;	// (ukm) Use a 32-bit integer to store multiple ballot choices.  Each bit represent a choice, which means a ballot is limited to 32 choices.  In the future, this data type may be extended to 64 bits
+#define d_uzBallotChoiceInvalid		0	// Use the value of zero to indicate an invalid ballot choice (to dismiss/spoil a ballot)
 #define d_cBallotChoicesMax			(sizeof(UINT_BALLOT_CHOICES) * 8) // Number of bits in UINT_BALLOT_CHOICES (which at the moment is 32)
 
 class _CEventBallotChoice
@@ -124,7 +125,6 @@ public:
 	friend class DDialogBallotSend;
 };
 
-
 //	This is the class sending/broadcasting a ballot to multiple recipients.
 class CEventBallotSent : public IEventBallot
 {
@@ -135,6 +135,8 @@ public:
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const { return eEventClass_eBallotReceived_class; }
 	virtual EGui XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply);
+
+	void CalculateStatistics(OUT SEventPollStatistics * pStatistics);
 };
 
 class CEventBallotReceived : public IEventBallot

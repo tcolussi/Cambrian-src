@@ -535,7 +535,7 @@ CEventBallotReceived::UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditT
 BOOL
 CEventBallotReceived::SubmitVoteViaXospF(UINT_BALLOT_CHOICES ukmChoices, const CStr & strFeedbackComments)
 	{
-	if (strFeedbackComments.FCompareBinary(m_strComment) && ukmChoices == m_ukmChoices)
+	if (strFeedbackComments.FCompareBinary(m_strComment) && (ukmChoices != d_uzBallotChoiceInvalid) && (ukmChoices == m_ukmChoices))
 		return FALSE;	// Nothing changed
 	m_ukmChoices = ukmChoices;
 	m_strComment = strFeedbackComments;
