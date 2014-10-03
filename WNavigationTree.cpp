@@ -333,7 +333,7 @@ WNavigationTree::SL_TreeCustomContextMenuRequested(const QPoint & ptPos)
 	} // SL_TreeCustomContextMenuRequested()
 
 void
-WNavigationTree::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn)
+WNavigationTree::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int UNUSED_PARAMETER(iColumn))
 	{
 	Assert(pItemClicked != NULL);
 	UNUSED_PARAMETER(iColumn);
@@ -510,11 +510,14 @@ ITreeItem::TreeItemW_SelectWithinNavigationTreeExpanded()
 void
 ITreeItem::TreeItemW_RemoveFromNavigationTree()
 	{
+	//MessageLog_AppendTextFormatCo(d_coRed, "TreeItemW_RemoveFromNavigationTree($s)\n", TreeItem_PszGetNameDisplay());
 	//TreeItemW_Hide();	// At the moment, hide the CTreeItemW.  Deleting the CTreeItemW also deletes any child object of the Tree Item which causes a crash.  To prevent this crash, a routine to recursively delete all child objects would be necessary.
-
-	delete m_paTreeItemW_YZ;	// Delete the CTreeItemW (if any).  The destructor will automatically remove the CTreeItemW from the GUI.
-	m_paTreeItemW_YZ = NULL;
-
+	if (m_paTreeItemW_YZ != NULL)
+		{
+		m_paTreeItemW_YZ->RemoveAllChildItemsR();
+		delete m_paTreeItemW_YZ;	// Delete the CTreeItemW (if any).  The destructor will automatically remove the CTreeItemW from the GUI.
+		m_paTreeItemW_YZ = NULL;
+		}
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

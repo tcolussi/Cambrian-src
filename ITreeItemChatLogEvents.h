@@ -78,6 +78,7 @@ public:
 	void ChatLog_EventEditMessageSent(CEventMessageTextSent * pEventMessageSent);
 	void ChatLog_ScrollToLastMessage();
 	void ChatLog_FindText();
+	void ChatLog_ChatStateIconUpdateComposingStopped(INOUT TContact * pContact);
 	void ChatLog_ChatStateIconUpdate(EChatState eChatState, TContact * pContact);
 	WChatLog * ChatLog_PwGet_YZ() const;
 

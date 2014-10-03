@@ -92,11 +92,18 @@ ITreeItemChatLogEvents::ChatLog_PwGet_YZ() const
 	}
 
 void
+ITreeItemChatLogEvents::ChatLog_ChatStateIconUpdateComposingStopped(INOUT TContact * pContact)
+	{
+	if (m_pawLayoutChatLog != NULL)
+		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_ChatStateTextUpdate(INOUT pContact, eChatState_Paused);
+	}
+
+void
 ITreeItemChatLogEvents::ChatLog_ChatStateIconUpdate(EChatState eChatState, INOUT TContact * pContact)
 	{
 	Assert(pContact != NULL);
 	if (m_pawLayoutChatLog != NULL)
-		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_ChatStateIconUpdate(INOUT pContact, eChatState);
+		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_ChatStateTextUpdate(INOUT pContact, eChatState);
 	else
 		{
 		// Make sure even though there is no Layout, the icons are displayed nevertheless in the Navigation Tree
@@ -115,10 +122,13 @@ TContact::TreeItemContact_UpdateIconComposingStarted(ITreeItemChatLogEvents * pC
 
 	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
 		{
+		((TGroup *)pContactOrGroup)->Member_PFindOrAddContact_NZ(this)->TreeItemGroupMember_SetIconComposingStarted();
+		/*
 		pContactOrGroup->TreeItemW_SetIcon(eMenuIconPencil_16x16);
 		// Find the member to set its icon
 		TGroupMember * pMember = ((TGroup *)pContactOrGroup)->Member_PFindOrAddContact_NZ(this);
 		pMember->TreeItemW_SetIcon(eMenuIconPencil_10x10);
+		*/
 		}
 	else
 		{
@@ -142,13 +152,14 @@ void
 TContact::TreeItemContact_UpdateIconComposingStopped(ITreeItemChatLogEvents * pContactOrGroup)
 	{
 	// Do not remove the contact from m_pAccount->m_arraypContactsComposing
-	pContactOrGroup->TreeItem_IconUpdate();
 	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
 		{
 		// Find the member
 		TGroupMember * pMember = ((TGroup *)pContactOrGroup)->Member_PFindOrAddContact_NZ(this);
-		pMember->TreeItem_IconUpdate();
+		//pMember->TreeItem_IconUpdate();
+		pMember->TreeItemGroupMember_SetIconComposingStopped();
 		}
+	pContactOrGroup->TreeItem_IconUpdate();
 	}
 
 void
@@ -171,7 +182,7 @@ TContact::ChatLogContact_RemoveInvitationMessage()
 	Assert(m_uFlagsContact & FC_kfContactNeedsInvitation);
 	m_uFlagsContact &= ~FC_kfContactNeedsInvitation;
 	if (m_pawLayoutChatLog != NULL)
-		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_ChatStateTextUpdate();	// The invitation message is appended with the 'Chat State'
+		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_ChatStateTextRefresh();	// The invitation message is appended with the 'Chat State'
 	}
 
 
@@ -637,7 +648,7 @@ WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStan
 	PSZUC pszuMessageBody = pXmlNodeMessageStanza->PszuFindElementValue_ZZ(c_sza_body);
 	if (pszuMessageBody != NULL)
 		{
-		m_pwChatLog_NZ->ChatLog_ChatStateComposerRemove(m_pContactParent_YZ);	// When receiving a message, assume the remote user (contact) stopped typing (composing)
+		m_pwChatLog_NZ->ChatLog_ChatStateComposerRemovePointerOnly(m_pContactParent_YZ);	// When receiving a message, assume the remote user (contact) stopped typing (composing)
 		//m_pwChatLog->ChatLog_EventDisplay(m_pContactParent_YZ->Event_PAllocateEventMessageReceived_YZ(pXmlNodeMessageStanza, pszuMessageBody));
 		m_pContactParent_YZ->Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(pXmlNodeMessageStanza, pszuMessageBody, m_pwChatLog_NZ);
 		const CXmlNode  * pXmlNodeRequest = pXmlNodeMessageStanza->PFindElement("request");
@@ -681,7 +692,7 @@ WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStan
 			{
 			const CXmlNode * pXmlNodeChatState = pXmlNodeMessageStanza->PFindElementMatchingAttributeValueXmlns("http://jabber.org/protocol/chatstates");
 			if (pXmlNodeChatState != NULL)
-				m_pwChatLog_NZ->ChatLog_ChatStateIconUpdate(INOUT m_pContactParent_YZ, FCompareStrings(pXmlNodeChatState->m_pszuTagName, "composing") ? eChatState_zComposing : eChatState_Paused);
+				m_pwChatLog_NZ->ChatLog_ChatStateTextUpdate(INOUT m_pContactParent_YZ, FCompareStrings(pXmlNodeChatState->m_pszuTagName, "composing") ? eChatState_zComposing : eChatState_Paused);
 			}
 		} // if...else
 	return pszuMessageBody;

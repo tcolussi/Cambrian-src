@@ -86,8 +86,9 @@ void Dashboard_UpdateGroup(TGroup * pGroup);
 void Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 void Dashboard_NewEventRelatedToBallot(IEventBallot * pEventBallot);
 
-void TimerQueue_CallbackAdd(int cSeconds, PFn_TimerQueueEventCallback pfnCallback, PVPARAM pvParam);
-void TimerQueue_CallbackAddOrPostpone(int cSeconds, PFn_TimerQueueEventCallback pfnCallback, PVPARAM pvParam);
+void TimerQueue_CallbackAdd(int cSeconds, PFn_TimerQueueCallback pfnCallback, PVPARAM pvParam);
+void TimerQueue_CallbackPostponeOrAdd(int cSeconds, PFn_TimerQueueCallback pfnCallback, PVPARAM pvParam);
+void TimerQueue_CallbackRemove(PVPARAM pvParam);
 void TimerQueue_ExecuteExpiredCallbacks();
 void TimerQueue_DisplayToMessageLog();
 

@@ -66,6 +66,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Add Peer to Group" _ "i=ContactAdd" _ "s=Add the selected peer to a group" _,	// eMenuAction_ContactAddToGroup
 	"Rename Peer..." _ "i=ContactEdit" _ "s=Change the display name of the selected peer" _,	// eMenuAction_ContactRename
 	"Remove Peer..." _ "i=ContactRemove" _ "s=Remove the selected peer from my list of approved peers" _,	// eMenuAction_ContactRemove
+	"Undelete Peer..." _ "i=ContactAdd" _ "s=Re-include the peer into your list of approved peers" _,	// eMenuAction_ContactUndelete
 	"Send File to Peer..." _ "i=FileUpload" _ "s=Upload a file to the selected peer" _, // eMenuAction_ContactSendFile	("a=Ctrl+Shift+F" does not work because it is not connected to the main menu)
 	"Create Invitation..." _ "i=Forward" _ "s=Create a one-click invitation to send to my peer" _, // eMenuAction_ContactInvite
 	"Approve Peer" _ "i=Accept" _ "s=Add the unsolicited peer to my list of approved peers" _, // eMenuAction_ContactApprove
@@ -85,6 +86,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"<New Group...>" _ "i=GroupAdd" _, // eMenuAction_GroupNew
 	"Create Group..." _ "s=Create a new group" _ "i=GroupAdd" _, // eMenuAction_GroupCreate (this is essentially the same as new group, except the text is different)
 	"Delete Group" _ "i=GroupDelete" _, // eMenuAction_GroupDelete
+	"Undelete Group" _ "i=GroupAdd" _ "s=Re-join a group you previously deleted" _, // eMenuAction_GroupUndelete
 	"Rename Group" _ "i=GroupEdit" _, // eMenuAction_GroupRename
 	"Add Peers to Group..." _ "i=ContactAdd" _ "s=Add people to the group" _, // eMenuAction_GroupAddContacts
 	"Remove Peer from Group" _ "i=ContactRemove" _, // eMenuAction_GroupRemoveContact

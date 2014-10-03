@@ -117,13 +117,16 @@ TProfile::DeleteGroup(PA_DELETING TGroup * paGroupDelete)
 	{
 	Assert(paGroupDelete != NULL);
 	Assert(paGroupDelete->EGetRuntimeClass() == RTI(TGroup));
+	BOOL fDeletePermanently = paGroupDelete->Group_FCanBePermenentlyDeleted();
 	paGroupDelete->Group_MarkForDeletion();
 	RemoveAllReferencesToObjectsAboutBeingDeleted();
-	paGroupDelete->TreeItemFlags_SerializeToDisk_Yes();
+	paGroupDelete->TreeItemFlags_SetFlagSerializeToDisk_Yes();
 	/*
 	paGroupDelete->Group_UpdateFlagCannotBeDeleted();
 	paGroupDelete->m_pAccount->m_arraypaGroups.DeleteTreeItem(PA_DELETING paGroupDelete);
 	*/
+	if (fDeletePermanently)
+		paGroupDelete->m_pAccount->m_arraypaGroups.DeleteTreeItem(PA_DELETING paGroupDelete);	// Delete the group object and remove it from the Navigation Tree
 	}
 
 //	Method to safely delete a contact from a profile
@@ -135,7 +138,7 @@ TProfile::DeleteContact(PA_DELETING TContact * paContactDelete)
 	BOOL fDeletePermanently = paContactDelete->Contact_FCanBePermenentlyDeleted();
 	paContactDelete->Contact_MarkForDeletion();
 	RemoveAllReferencesToObjectsAboutBeingDeleted();
-	paContactDelete->TreeItemFlags_SerializeToDisk_Yes();	// Serialize the deleted contact so it does not reappear
+	paContactDelete->TreeItemFlags_SetFlagSerializeToDisk_Yes();	// Serialize the deleted contact so it does not reappear
 	Assert(paContactDelete->TreeItemFlags_FuIsInvisible());
 	/*
 	paContactDelete->Contact_UpdateFlagCannotBeDeleted();

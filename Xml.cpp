@@ -3539,7 +3539,7 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 			// An object is always serialized as an element
 			ITreeItem * pObject = *ppObject++;
 			Assert(PGetRuntimeInterfaceOf_ITreeItem(pObject) == pObject);
-			if (!pObject->TreeItemFlags_FuDeletedOrTemporary())
+			if (!pObject->TreeItemFlags_FuIsDeletedOrTemporary())
 				{
 				CXmlNode * pXmlNodeObject = _PAllocateElement(pXmlNodeObjects, pszuTagNameObject);
 				*ppXmlNodeObjectStack = pXmlNodeObject;

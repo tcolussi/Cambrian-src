@@ -149,7 +149,7 @@ typedef UINT TIMESTAMP_MINUTES;	// tsm - Number of minutes since the application
 	#define d_tsm_cMinutesMax	0x7FFFFFFF
 //typedef UINT TIMESTAMP32;		// uts	- Timestamp in seconds since Jan 1st, 2000.  (This counter wraps every 136 years.  Perhaps in 100 years, it shoudl be extended to 64 bits).  This datatype is not used at the moment.
 
-typedef void (* PFn_TimerQueueEventCallback)(PVPARAM pvParam);
+typedef void (* PFn_TimerQueueCallback)(PVPARAM pvParam);
 
 typedef L64 AMOUNT;				// amt - An amount is a value to display in the context of a currency such as BTC, USD or some commodity.  An amount is typically divided by its smallest unit (such as 100,000,000 Satoshis for BTC, and 100 cents for USD)
 

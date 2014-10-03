@@ -27,7 +27,7 @@ CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXc
 
 //	Invoke a function by sending an API request to the contact.  This is essentially invoking a remote procedure call.
 void
-ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters)
+ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * UNUSED_PARAMETER(pXmlNodeApiParameters), PSZUC UNUSED_PARAMETER(pszXmlApiParameters))
 	{
 	UNUSED_PARAMETER(pXmlNodeApiParameters);
 	UNUSED_PARAMETER(pszXmlApiParameters);

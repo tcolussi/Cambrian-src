@@ -928,9 +928,8 @@ ITreeItem::TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay)
 CString
 ITreeItem::TreeItem_SGetNameDisplay() CONST_MCC
 	{
-	return TreeItem_PszGetNameDisplay();
+	return TreeItem_PszGetNameDisplay();	// Cast a psz to a CString
 	}
-
 
 void
 TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * pbinXcpApiExtraRequest)

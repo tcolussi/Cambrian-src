@@ -415,7 +415,6 @@ void
 TAccountXmpp::OnTimerNetworkIdle()
 	{
 	m_arraypContactsComposing.RemoveAllContactsComposingWhoAreIdle();
-//	m_listaDataXmlLargeEvents.DeleteIdleNodes();
 	if (Socket_FIsConnected())
 		m_paSocket->Socket_WriteXmlPingToServerIfIdle();
 	}

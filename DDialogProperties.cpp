@@ -46,9 +46,9 @@ DDialogProperties::exec()
 	}
 
 void
-DDialogProperties::SL_PageChanged(QListWidgetItem * pPageCurrent, QListWidgetItem * pPagePrevious)
+DDialogProperties::SL_PageChanged(QListWidgetItem * pPageCurrent, QListWidgetItem * UNUSED_PARAMETER(pPagePrevious))
 	{
-	Endorse(pPagePrevious == NULL);
+	EndorseFast(pPagePrevious == NULL);
 	DDialogPropertyPage * pwPage = (DDialogPropertyPage *)pPageCurrent;
 	m_pwPagesStacked->setCurrentWidget(pwPage);
 	}

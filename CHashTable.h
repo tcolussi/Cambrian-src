@@ -44,7 +44,7 @@ public:
 
 	#ifdef DEBUG
 	private:
-	void operator = (const CHashElement & oHashElement) { UNUSED_PARAMETER(oHashElement); Assert(FALSE && "This operation has no meaning!!!!"); }
+	void operator = (const CHashElement & UNUSED_PARAMETER(oHashElement)) { Assert(FALSE && "This operation has no meaning!!!!"); }
 	#endif
 
 protected:

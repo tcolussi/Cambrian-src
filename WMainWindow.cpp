@@ -36,8 +36,9 @@ QIcon * g_pIconNewMessage;
 
 #define d_ttiReconnectFirst		200		// The first timer interval is very short so the application may establish a socket connection quickly
 #define d_ttiReconnectMinute	60000	// Attempt to reconnect every minute
-TIMESTAMP_MINUTES g_tsmMinutesSinceApplicationStarted;	// Total number of minutes since the application started (this counter keeps increasing until overflow... every 11650 years)
-TIMESTAMP_MINUTES g_tsmTimerQueueNextEventToTrigger = d_tsm_cMinutesMax;	// Which minute it is time to trigger the next event in the queue
+// Seconds: 136 years
+TIMESTAMP_MINUTES g_tsmMinutesSinceApplicationStarted;	// Total number of minutes since the application started (this counter keeps increasing until overflow... every 8171 years)
+TIMESTAMP_MINUTES g_tsmTimerQueueNextCallbackToTrigger = d_tsm_cMinutesMax;	// Which minute it is time to trigger the next callback in the queue
 TIMESTAMP_MINUTES g_cMinutesIdleKeyboardOrMouse;		// Total number of minutes the user has been idle, from the keyboard or mouse.  This variable is used to send a <presence> to indicate the user is either 'away' or 'extended away'
 TIMESTAMP_MINUTES g_cMinutesIdleNetworkDataReceived;	// Total number of minutes the network has been idle (this is the number of minutes since the last network packet was received)
 enum EIdleState
@@ -333,7 +334,7 @@ WMainWindow::SL_Quitting()
 //	The user selected a new Tree Item.
 //	This is time to load and display the chat layout corresponding to the selected Tree Item.
 void
-WNavigationTree::SL_TreeItemSelectionChanged(QTreeWidgetItem * pItemCurrent, QTreeWidgetItem * pItemPrevious)
+WNavigationTree::SL_TreeItemSelectionChanged(QTreeWidgetItem * pItemCurrent, QTreeWidgetItem * UNUSED_PARAMETER(pItemPrevious))
 	{
 //	MessageLog_AppendTextFormatSev(eSeverityNoise, "SL_TreeItemSelectionChanged() - pwItemCurrent=0x$p, pwItemPrevious=0x$p\n", pwItemCurrent, pwItemPrevious);
 //	Assert(pwItemCurrent != NULL);	// This may be NULL if there are no more
@@ -461,10 +462,15 @@ WMainWindow::SettingsRestore()
 	//MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "$Q\n", &g_sPathHtmlApplications);
 
 	#if 0
-	TimerQueue_CallbackAdd(119, TimerEventCallback, 0);
-	TimerQueue_CallbackAdd(129, TimerEventCallback, 0);
-	TimerQueue_CallbackAdd(109, TimerEventCallback, 0);
-	TimerQueue_CallbackAdd(99, TimerEventCallback, 0);
+	TimerQueue_CallbackPostponeOrAdd(5*60, TimerEventCallback, (PVPARAM)1);
+	TimerQueue_CallbackPostponeOrAdd(7*60, TimerEventCallback, (PVPARAM)2);
+	TimerQueue_CallbackPostponeOrAdd(6*60, TimerEventCallback, 0);
+	TimerQueue_CallbackPostponeOrAdd(2*60, TimerEventCallback, 0);
+	TimerQueue_CallbackPostponeOrAdd(8*60, TimerEventCallback, 0);
+	/*
+	TimerQueue_CallbackPostponeOrAdd(2*60, TimerEventCallback, 0);
+	TimerQueue_CallbackPostponeOrAdd(1*60, TimerEventCallback, 0);
+	*/
 	TimerQueue_DisplayToMessageLog();
 	#endif
 
@@ -619,8 +625,8 @@ WMainWindow::timerEvent(QTimerEvent * pTimerCallback)
 				#endif
 				}
 
-			//MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "g_tsmMinutesSinceApplicationStarted = $I, g_tsmTimerQueueNextEventToTrigger = $I\n", g_tsmMinutesSinceApplicationStarted + 1, g_tsmTimerQueueNextEventToTrigger);
-			if (++g_tsmMinutesSinceApplicationStarted >= g_tsmTimerQueueNextEventToTrigger)
+			//MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "g_tsmMinutesSinceApplicationStarted = $I, g_tsmTimerQueueNextCallbackToTrigger = $I\n", g_tsmMinutesSinceApplicationStarted + 1, g_tsmTimerQueueNextCallbackToTrigger);
+			if (++g_tsmMinutesSinceApplicationStarted >= g_tsmTimerQueueNextCallbackToTrigger)
 				{
 				// We have at least one event in the queue
 				TimerQueue_ExecuteExpiredCallbacks();
@@ -848,31 +854,31 @@ struct STimerQueueCallback
 {
 	STimerQueueCallback * pNext;				// Next callback in the timer queue
 	TIMESTAMP_MINUTES tsmTrigger;				// Timestamp to trigger the callback
-	PFn_TimerQueueEventCallback pfnCallback;	// Callback function then the event is triggered
+	PFn_TimerQueueCallback pfnCallback;			// Callback function then the event is triggered
 	PVPARAM pvParam;							// Parameter for the callback function
+	// pfnFAbort								// Function to determine if the callback should be aborted and therefore removed from the queue
 };
 
 STimerQueueCallback * g_pTimerCallbackNext;
 STimerQueueCallback * g_pTimerCallbackDeleted;
-CMemoryAccumulator g_accumulatorTimer;
 
 STimerQueueCallback *
-_PAllocateTimerEvent(TIMESTAMP_MINUTES tsmTrigger)
+_PAllocateTimerCallback(TIMESTAMP_MINUTES tsmTrigger)
 	{
-	STimerQueueCallback * pTimerCallbackNew = g_pTimerCallbackDeleted;	// Try to recycle previously allocated timer events
+	STimerQueueCallback * pTimerCallbackNew = g_pTimerCallbackDeleted;	// Try to recycle previously allocated callback structure
 	if (pTimerCallbackNew != NULL)
 		g_pTimerCallbackDeleted = g_pTimerCallbackDeleted->pNext;
 	else
-		pTimerCallbackNew = (STimerQueueCallback *)g_accumulatorTimer.PvAllocateData(sizeof(STimerQueueCallback));	// We have to allocate a new structure
+		pTimerCallbackNew = new STimerQueueCallback;
 	pTimerCallbackNew->tsmTrigger = tsmTrigger;
 	if (g_pTimerCallbackNext == NULL || tsmTrigger < g_pTimerCallbackNext->tsmTrigger)
 		{
 		pTimerCallbackNew->pNext = g_pTimerCallbackNext;
 		g_pTimerCallbackNext = pTimerCallbackNew;
-		g_tsmTimerQueueNextEventToTrigger = pTimerCallbackNew->tsmTrigger;
+		g_tsmTimerQueueNextCallbackToTrigger = pTimerCallbackNew->tsmTrigger;
 		return pTimerCallbackNew;
 		}
-	// Insert the STimerQueueCallback to make sure all events are sorted
+	// Insert the STimerQueueCallback to make sure all callbacks are sorted from the earliest to the latest
 	STimerQueueCallback * pTimerCallbackQueued = g_pTimerCallbackNext;
 	while (TRUE)
 		{
@@ -887,14 +893,88 @@ _PAllocateTimerEvent(TIMESTAMP_MINUTES tsmTrigger)
 	}
 
 void
-TimerQueue_CallbackAdd(int cSeconds, PFn_TimerQueueEventCallback pfnCallback, PVPARAM pvParam)
+TimerQueue_CallbackAdd(int cSeconds, PFn_TimerQueueCallback pfnCallback, PVPARAM pvParam)
 	{
 	Assert(cSeconds > 0);
 	Assert(pfnCallback != NULL);
 	//MessageLog_AppendTextFormatCo(d_coRed, "TimerQueue_CallbackAdd($I, 0x$p, 0x$p)\n", cSeconds, pfnCallback, pvParam);
-	STimerQueueCallback * pTimerCallback = _PAllocateTimerEvent(g_tsmMinutesSinceApplicationStarted + (cSeconds / 60));
+	STimerQueueCallback * pTimerCallback = _PAllocateTimerCallback(g_tsmMinutesSinceApplicationStarted + (cSeconds / 60));
 	pTimerCallback->pfnCallback = pfnCallback;
 	pTimerCallback->pvParam = pvParam;
+	}
+
+//	Postpone an existing callback, or add it to the queue.
+//	INTERFACE NOTES
+//	The postponed value cSeconds must be equal or greater than the previous postponed value.
+//	In other words, it is not allowed to 'postpone' an existing callback earlier than its previous callback.
+//	If such a scenario happens, then the function will add a new callback for cSeconds which will result in two (2) callbacks.
+void
+TimerQueue_CallbackPostponeOrAdd(int cSeconds, PFn_TimerQueueCallback pfnCallback, PVPARAM pvParam)
+	{
+	Assert(cSeconds > 0);
+	Assert(pfnCallback != NULL);
+	TIMESTAMP_MINUTES tsmTrigger = g_tsmMinutesSinceApplicationStarted + (cSeconds / 60);
+	// Find the existing callback (if any)
+	STimerQueueCallback ** ppTimerCallbackRemove = &g_pTimerCallbackNext;
+	STimerQueueCallback * pTimerCallback = g_pTimerCallbackNext;
+	while (pTimerCallback != NULL && pTimerCallback->tsmTrigger <= tsmTrigger)
+		{
+		if (pTimerCallback->pvParam == pvParam && pTimerCallback->pfnCallback == pfnCallback)
+			{
+			MessageLog_AppendTextFormatCo(d_coRed, "TimerQueue_CallbackPostponeOrAdd($I, 0x$p, 0x$p) - Found existing callback at 0x$p\n", cSeconds, pfnCallback, pvParam, pTimerCallback);
+			STimerQueueCallback * pTimerCallbackNext = pTimerCallback->pNext;
+			if (pTimerCallbackNext == NULL || pTimerCallbackNext->tsmTrigger > tsmTrigger)
+				{
+				MessageLog_AppendTextFormatCo(d_coRed, "\t Updating trigger from $I to $I\n", pTimerCallback->tsmTrigger, tsmTrigger);
+				pTimerCallback->tsmTrigger = tsmTrigger;
+				return;
+				}
+			*ppTimerCallbackRemove = pTimerCallbackNext;	// Remove pTimerCallback from the linked list
+			// Keep searching until the appropriate position
+			while (TRUE)
+				{
+				STimerQueueCallback * pTimerCallbackInsert = pTimerCallbackNext;
+				pTimerCallbackNext = pTimerCallbackNext->pNext;
+				if (pTimerCallbackNext == NULL || pTimerCallbackNext->tsmTrigger > tsmTrigger)
+					{
+					if (pTimerCallbackNext == NULL)
+						MessageLog_AppendTextFormatCo(d_coRed, "\t Appending trigger $I at end of list (just after $I)\n", tsmTrigger, pTimerCallbackInsert->tsmTrigger);
+					else
+						MessageLog_AppendTextFormatCo(d_coRed, "\t Appending trigger $I between $I and $I\n", tsmTrigger, pTimerCallbackInsert->tsmTrigger, pTimerCallbackNext->tsmTrigger);
+					pTimerCallbackInsert->pNext = pTimerCallback;
+					pTimerCallback->pNext = pTimerCallbackNext;
+					pTimerCallback->tsmTrigger = tsmTrigger;
+					return;
+					}
+				}
+			} // if (found existing)
+		ppTimerCallbackRemove = &pTimerCallback->pNext;
+		pTimerCallback = pTimerCallback->pNext;
+		}
+	pTimerCallback = _PAllocateTimerCallback(tsmTrigger);
+	pTimerCallback->pfnCallback = pfnCallback;
+	pTimerCallback->pvParam = pvParam;
+	} // TimerQueue_CallbackPostponeOrAdd()
+
+//	Remove all callbacks matching pvParam.
+//	This method assumes all pvParam are pointers to objects in memory, and therefore each pvParam is unique,
+//	and if the object is deleted, then all its references must be removed.
+void
+TimerQueue_CallbackRemove(PVPARAM pvParam)
+	{
+	STimerQueueCallback ** ppTimerCallbackRemove = &g_pTimerCallbackNext;
+	STimerQueueCallback * pTimerCallback = g_pTimerCallbackNext;
+	while (pTimerCallback != NULL)
+		{
+		if (pTimerCallback->pvParam == pvParam)
+			{
+			MessageLog_AppendTextFormatSev(eSeverityNoise, "[$@] TimerQueue_CallbackRemove() - @$I Removing callback matching pvParam 0x$p.\n", pTimerCallback->tsmTrigger, pvParam);
+			*ppTimerCallbackRemove = pTimerCallback->pNext;
+			}
+		else
+			ppTimerCallbackRemove = &pTimerCallback->pNext;
+		pTimerCallback = pTimerCallback->pNext;
+		}
 	}
 
 void
@@ -906,21 +986,21 @@ TimerQueue_ExecuteExpiredCallbacks()
 		{
 		if (pTimerCallback->tsmTrigger > g_tsmMinutesSinceApplicationStarted)
 			{
-			g_tsmTimerQueueNextEventToTrigger = pTimerCallback->tsmTrigger;
-			MessageLog_AppendTextFormatSev(eSeverityNoise, "[$@] TimerQueue_ExecutePendingEvents() - Next event in $I minutes.\n", g_tsmTimerQueueNextEventToTrigger - g_tsmMinutesSinceApplicationStarted);
+			g_tsmTimerQueueNextCallbackToTrigger = pTimerCallback->tsmTrigger;
+			MessageLog_AppendTextFormatSev(eSeverityNoise, "[$@] TimerQueue_ExecuteExpiredCallbacks() - Next callback in $I minutes.\n", g_tsmTimerQueueNextCallbackToTrigger - g_tsmMinutesSinceApplicationStarted);
 			break;
 			}
-		//MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "TimerQueue_ExecutePendingEvents() Executing 0x$p pfnCallback(0x$p)\n", pTimerCallback->pfnCallback, pTimerCallback->pvParam);
+		//MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "TimerQueue_ExecuteExpiredCallbacks() Executing 0x$p pfnCallback(0x$p)\n", pTimerCallback->pfnCallback, pTimerCallback->pvParam);
 		pTimerCallback->pfnCallback(pTimerCallback->pvParam);	// Invoke the callback
-		// Remove the event from the main queue and put it into the recycled queue
+		// Remove the callback from the main queue and put it into the recycled queue
 		STimerQueueCallback * pTimerCallbackNext = pTimerCallback->pNext;
 		pTimerCallback->pNext = g_pTimerCallbackDeleted;
 		g_pTimerCallbackDeleted = pTimerCallback;
 		pTimerCallback = pTimerCallbackNext;
 		if (pTimerCallback == NULL)
 			{
-			g_tsmTimerQueueNextEventToTrigger = d_tsm_cMinutesMax;
-			MessageLog_AppendTextFormatSev(eSeverityNoise, "[$@] TimerQueue_ExecutePendingEvents() - Queue is now empty.\n");
+			g_tsmTimerQueueNextCallbackToTrigger = d_tsm_cMinutesMax;
+			MessageLog_AppendTextFormatSev(eSeverityNoise, "[$@] TimerQueue_ExecuteExpiredCallbacks() - Queue is now empty.\n");
 			break;
 			}
 		} // while
@@ -933,7 +1013,7 @@ TimerQueue_DisplayToMessageLog()
 	STimerQueueCallback * pTimerCallback = g_pTimerCallbackNext;
 	while (pTimerCallback != NULL)
 		{
-		MessageLog_AppendTextFormatCo(d_coRed, "\t [+$I min] $I: pfnCallback = 0x$p, pvParam = 0x$p\n",
+		MessageLog_AppendTextFormatCo(d_coRed, "\t [+$I min] @$I: pfnCallback = 0x$p, pvParam = 0x$p\n",
 			pTimerCallback->tsmTrigger - g_tsmMinutesSinceApplicationStarted, pTimerCallback->tsmTrigger, pTimerCallback->pfnCallback, pTimerCallback->pvParam);
 		pTimerCallback = pTimerCallback->pNext;
 		}

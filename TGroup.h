@@ -23,6 +23,8 @@ public:
 public:
 	TGroupMember(TGroup * pGroup, TContact * pContact);
 	void TreeItemGroupMember_DisplayWithinNavigationTree();
+	void TreeItemGroupMember_SetIconComposingStarted();
+	void TreeItemGroupMember_SetIconComposingStopped();
 
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);					// From IXmlExchange
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);					// From ITreeItem
@@ -67,6 +69,7 @@ public:
 	TGroup(TAccountXmpp * pAccount);
 	~TGroup();
 	inline void Group_MarkForDeletion() { TreeItem_MarkForDeletion(); }
+	BOOL Group_FCanBePermenentlyDeleted() const;
 	void Group_UpdateFlagCannotBeDeleted();
 	void Group_RemoveAllReferencesToContactsAboutBeingDeleted();
 	void GroupInitNewIdentifier();

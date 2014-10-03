@@ -270,7 +270,7 @@ void
 OJapiGroup::save()
 	{
 	Assert(m_pGroup != NULL);
-	m_pGroup->TreeItemFlags_SerializeToDisk_Yes();
+	m_pGroup->TreeItemFlags_SetFlagSerializeToDisk_Yes();
 	m_pGroup->m_pAccount->m_arraypaGroups.ElementTransferFrom(m_pGroup, INOUT &m_poCambrian->m_arraypaTemp);	// Transfer the group from 'temp' to the account
 
 	// for normal groups
@@ -959,7 +959,7 @@ OJapiNotification::clear()
 	}
 
 QVariantList
-OJapiNotificationsList::recent(int nMax)
+OJapiNotificationsList::recent(int /*nMax*/)
 	{
 	QVariantList list;
 	list.append(QVariant::fromValue(new OJapiNotification()));/*??? memory leak */
@@ -988,7 +988,7 @@ OJapiPeerRequestsList::~OJapiPeerRequestsList()
 	}
 
 QVariantList
-OJapiPeerRequestsList::list(int nMax)
+OJapiPeerRequestsList::list(int /*nMax*/)
 	{
 	QVariantList list;
 	list.append(QVariant::fromValue(new OJapiPeerRequest()));

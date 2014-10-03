@@ -23,10 +23,10 @@ public:
 	void ChatLog_EventDisplay(IEvent * pEvent);
 	void ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEventStart = 0);
 	void ChatLog_EventsRepopulate();
-	void ChatLog_ChatStateTextUpdate(INOUT OCursor & oTextCursor);
-	void ChatLog_ChatStateTextUpdate();
-	void ChatLog_ChatStateIconUpdate(INOUT TContact * pContact, EChatState eChatState);
-	inline void ChatLog_ChatStateComposerRemove(TContact * pContact) { m_arraypContactsComposing.RemoveElementI(pContact); }
+	void ChatLog_ChatStateTextAppend(INOUT OCursor & oTextCursor);
+	void ChatLog_ChatStateTextRefresh();
+	void ChatLog_ChatStateTextUpdate(INOUT TContact * pContact, EChatState eChatState);
+	inline void ChatLog_ChatStateComposerRemovePointerOnly(TContact * pContact) { m_arraypContactsComposing.RemoveElementI(pContact); }
 
 	virtual bool event(QEvent * pEvent);	// From QObject	
 	virtual void contextMenuEvent(QContextMenuEvent * pEventContextMenu); // From QTextEdit

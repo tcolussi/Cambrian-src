@@ -100,7 +100,6 @@ public:
 	void ChatLogContact_AppendExtraTextToChatState(INOUT OCursor & oCursor);
 	void ChatLogContact_DisplayStanzaToUI(const CXmlNode * pXmlNodeMessageStanza);
 	void ChatLogContact_ChatStateIconUpdate(EChatState eChatState);
-	void ChatLogContact_ChatStateIconUpdateComposingStarted();
 	void ChatLogContact_ChatStateIconUpdateComposingStopped();
 
 	virtual const QBrush & ChatLog_OGetBrushForNewMessageReceived();

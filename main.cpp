@@ -127,6 +127,7 @@ HUNGARIAN PREFIX
 	ke		Enumeration packed within a range of bits
 	kez		Enumeration containing the zero value
 	kef		Enumeration containing a single bit
+	kem		Enumeration value containing the value of the mask
 	ki		Index to shift the bits to transform one value to another
 	h		Handle
 	ha		Handle allocated

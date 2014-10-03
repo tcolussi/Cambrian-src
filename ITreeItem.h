@@ -32,6 +32,7 @@ public:
 	ITreeItem * m_piTreeItem;	// Interface of the object containing the data of the Tree Item.  The data is stored and allocated by the CChatConfiguration object.
 
 public:
+	void RemoveAllChildItemsR();
 	ITreeItem * PFindChildItemMatchingRuntimeClass(RTI_ENUM rti) const;
 };
 
@@ -80,8 +81,8 @@ public:
 		FTI_keIcon_zNone							= 0x00000000,
 		FTI_keIcon_Warning							= 0x00100000,
 		FTI_keIcon_Error							= 0x00200000,
-		FTI_keIcon_Composing						= 0x00300000,	// The user is typing something, and therefore display the pencil icon next to the Tree Item.  Originally, this flag was related to a contact, however was used later when a user was typing something in a group chat, and now used for almost any object where the user is typing something.  Also, this flag is propagated to its parent if the Tree Item is not visible in the Navigation Tree.
-		FTI_kmIconMask								= 0x00F00000,
+		FTI_keIcon_mComposingText					= 0x00300000,	// The user is typing something, and therefore display the pencil icon next to the Tree Item.  Originally, this flag was related to a contact, however was used later when a user was typing something in a group chat, and now used for almost any object where the user is typing something.  Also, this flag is propagated to its parent if the Tree Item is not visible in the Navigation Tree.
+		FTI_kmIconMask								= 0x00300000,
 		FTI_kfTreeItem_fBit							= 0x01000000,	// Generic bit to store a boolean value (this bit is used to efficiently merge or delete arrays)
 
 		// The following flags FTI_kfChatLog* are used by ITreeItemChatLog and ITreeItemChatLogEvents.  The motivation for storing those flags in m_uFlagsTreeItem is avoiding another member variable.
@@ -99,8 +100,8 @@ public:
 	inline UINT TreeItemFlags_FuIsInvisible() const { return (m_uFlagsTreeItem & FTI_kfObjectInvisible); }
 	inline BOOL TreeItemFlags_FCanDisplayWithinNavigationTree() const { return (m_uFlagsTreeItem & (FTI_kfObjectInvisible | FTI_kfTreeItem_DoNotSerializeToDisk)) == 0; }	// Any invisible or deleted item should not be displayed within the Navigation Tree
 	inline UINT TreeItemFlags_FuIsDeleted() const { return (m_uFlagsTreeItem & FTI_kfTreeItem_DoNotSerializeToDisk); }
-	inline UINT TreeItemFlags_FuDeletedOrTemporary() const { return (m_uFlagsTreeItem & (FTI_kfTreeItem_DoNotSerializeToDisk | FTI_kfTreeItem_Temporary)); }
-	inline void TreeItemFlags_SerializeToDisk_Yes() { m_uFlagsTreeItem &= ~FTI_kfTreeItem_DoNotSerializeToDisk; }
+	inline UINT TreeItemFlags_FuIsDeletedOrTemporary() const { return (m_uFlagsTreeItem & (FTI_kfTreeItem_DoNotSerializeToDisk | FTI_kfTreeItem_Temporary)); }
+	inline void TreeItemFlags_SetFlagSerializeToDisk_Yes() { m_uFlagsTreeItem &= ~FTI_kfTreeItem_DoNotSerializeToDisk; }
 	void TreeItem_MarkForDeletion();
 
 	void TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay);
@@ -138,6 +139,7 @@ public:
 	void TreeItemW_UpdateText();
 	void TreeItemW_SetTextToDisplayNameIfGenerated();
 	void TreeItemW_SetTextToDisplayMessagesUnread(int cMessagesUnread);
+	void TreeItemW_SetIconComposingText();
 	void TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon = eMenuIconFailure);
 	ITreeItem * TreeItemW_PGetParent() const;
 

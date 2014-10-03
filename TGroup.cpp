@@ -22,6 +22,53 @@ TGroupMember::TreeItemGroupMember_DisplayWithinNavigationTree()
 	TreeItemW_DisplayWithinNavigationTree(m_pGroup, eMenuAction_Contact);
 	}
 
+//	Callback to remove the pencil icon.
+//
+//	INTERFACE NOTES
+//	This function must have an interface compatible with PFn_TimerQueueCallback()
+void
+TimerQueueCallback_ComposingTimedOut(TGroupMember * pMember)
+	{
+	Assert(pMember != NULL);
+	Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
+	MessageLog_AppendTextFormatCo(d_coRed, "TimerQueueCallback_ComposingTimedOut($s)\n", pMember->TreeItem_PszGetNameDisplay());
+	pMember->TreeItemGroupMember_SetIconComposingStopped();
+	pMember->m_pGroup->ChatLog_ChatStateIconUpdateComposingStopped(pMember->m_pContact);
+	}
+
+void
+TGroupMember::TreeItemGroupMember_SetIconComposingStarted()
+	{
+	TreeItemW_SetIconComposingText();
+	m_pGroup->TreeItemW_SetIconComposingText();
+	TimerQueue_CallbackPostponeOrAdd(3*60, (PFn_TimerQueueCallback)TimerQueueCallback_ComposingTimedOut, this);
+	TimerQueue_DisplayToMessageLog();
+	}
+
+void
+TGroupMember::TreeItemGroupMember_SetIconComposingStopped()
+	{
+	Assert(EGetRuntimeClass() == RTI(TGroupMember));
+	if ((m_uFlagsTreeItem & FTI_kmIconMask) != FTI_keIcon_mComposingText)
+		return;	// The group member no longer has the composing text, therefore there is nothing to do
+	m_uFlagsTreeItem &= ~FTI_keIcon_mComposingText;
+	TreeItem_IconUpdate();
+	if ((m_pGroup->m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_mComposingText)
+		{
+		// The group is displaying the composing icon, therefore check if it is necessary to keep it
+		TGroupMember **ppMemberStop;
+		TGroupMember **ppMember = m_pGroup->m_arraypaMembers.PrgpGetMembersStop(&ppMemberStop);
+		while( ppMember != ppMemberStop)
+			{
+			TGroupMember * pMember = *ppMember++;
+			if ((pMember->m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_mComposingText)
+				return;	// One of the group member is still composing, therefore keep the icon
+			}
+		m_pGroup->m_uFlagsTreeItem &= ~FTI_keIcon_mComposingText;
+		m_pGroup->TreeItem_IconUpdate();
+		}
+	}
+
 //	TGroupMember::IXmlExchange::XmlExchange()
 void
 TGroupMember::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
@@ -81,10 +128,21 @@ TGroupMember::TreeItem_GotFocus()
 void
 TGroupMember::TreeItem_IconUpdate()
 	{
+	EMenuAction eMenuIcon;
+	QRGB coTextColor;
 	if (m_cMessagesUnread <= 0)
-		TreeItemW_SetTextColorAndIcon(d_coTreeItem_Default, m_pContact->Contact_EGetMenuActionPresence());
+		{
+		coTextColor = d_coTreeItem_Default;
+		eMenuIcon = m_pContact->Contact_EGetMenuActionPresence();
+		}
 	else
-		TreeItemW_SetTextColorAndIcon(d_coTreeItem_UnreadMessages, eMenuAction_MessageNew);
+		{
+		coTextColor = d_coTreeItem_UnreadMessages;
+		eMenuIcon = eMenuAction_MessageNew;
+		}
+	if ((m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_mComposingText)
+		eMenuIcon = eMenuIconPencil_10x10;
+	TreeItemW_SetTextColorAndIcon(coTextColor, eMenuIcon);
 	}
 
 //	TGroupMember::IContactAlias::ContactAlias_IconChanged()
@@ -138,6 +196,14 @@ TGroup::TGroup(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 TGroup::~TGroup()
 	{
 	m_arraypaMembers.DeleteAllTreeItems();
+	}
+
+BOOL
+TGroup::Group_FCanBePermenentlyDeleted() const
+	{
+	if (m_paoJapiGroup != NULL)
+		return FALSE;
+	return TreeItemFlags_FuIsInvisible();
 	}
 
 void
@@ -200,6 +266,7 @@ TGroup::Member_Add_UI(TContact * pContact)
 void
 TGroup::Member_Remove_UI(PA_DELETING TGroupMember * paMember)
 	{
+	TimerQueue_CallbackRemove(paMember);
 	m_arraypaMembers.DeleteTreeItem(PA_DELETING paMember);
 	TreeItemW_SetTextToDisplayNameIfGenerated();
 	}
@@ -300,12 +367,24 @@ const EMenuActionByte c_rgzeActionsMenuContactGroup[] =
 	ezMenuActionNone
 	};
 
+const EMenuActionByte c_rgzeActionsMenuContactGroupDeleted[] =
+	{
+	eMenuAction_GroupUndelete,
+	eMenuAction_GroupDelete,
+	ezMenuActionNone
+	};
+
 //	TGroup::ITreeItem::TreeItem_MenuAppendActions()
 void
 TGroup::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	{
-	pMenu->ActionsAdd(c_rgzeActionsMenuContactGroup);
-	pMenu->ActionSetCheck(eMenuAction_TreeItemRecommended, m_uFlagsTreeItem & FTI_kfRecommended);
+	if (TreeItemFlags_FCanDisplayWithinNavigationTree())
+		{
+		pMenu->ActionsAdd(c_rgzeActionsMenuContactGroup);
+		pMenu->ActionSetCheck(eMenuAction_TreeItemRecommended, m_uFlagsTreeItem & FTI_kfRecommended);
+		}
+	else
+		pMenu->ActionsAdd(c_rgzeActionsMenuContactGroupDeleted);
 	}
 
 
@@ -320,6 +399,12 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		return ezMenuActionNone;
 	case eMenuAction_GroupDelete:
 		m_pAccount->m_pProfileParent->DeleteGroup(PA_DELETING this);
+		return ezMenuActionNone;
+	case eMenuAction_GroupUndelete:
+		TreeItemW_RemoveFromNavigationTree();	// Remove the group from the 'deleted items'
+		m_uFlagsTreeItem &= ~FTI_kfObjectInvisible;	// Remove the hidden flag
+		TreeItemGroup_DisplayWithinNavigationTree();	// Display the group under its parent
+		TreeItemW_SelectWithinNavigationTreeExpanded();
 		return ezMenuActionNone;
 	case eMenuAction_GroupProperties:
 		DisplayDialogProperties();
@@ -347,7 +432,7 @@ void TGroup::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenu
 		TGroupMember **ppMember = m_arraypaMembers.PrgpGetMembersStop(&ppMemberStop);
 		while( ppMember != ppMemberStop)
 			{
-			TGroupMember *pMember = *ppMember++;
+			TGroupMember * pMember = *ppMember++;
 			pMember->TreeItemGroupMember_DisplayWithinNavigationTree();	// Display the group member to the Navigation Tree only if its group is visible
 			TreeItemW_SetTextToDisplayNameIfGenerated();
 			}
@@ -473,10 +558,27 @@ TGroup::TreeItem_PszGetNameDisplay() CONST_MCC
 void
 TGroup::TreeItem_IconUpdate()
 	{
+	/*
 	if (m_cMessagesUnread <= 0)
 		TreeItemW_SetTextColorAndIcon(d_coTreeItem_Default, eMenuAction_Group);
 	else
 		TreeItemW_SetTextColorAndIcon(d_coTreeItem_UnreadMessages, eMenuAction_MessageNew);
+	*/
+	EMenuAction eMenuIcon;
+	QRGB coTextColor;
+	if (m_cMessagesUnread <= 0)
+		{
+		coTextColor = d_coTreeItem_Default;
+		eMenuIcon = eMenuAction_Group;
+		}
+	else
+		{
+		coTextColor = d_coTreeItem_UnreadMessages;
+		eMenuIcon = eMenuAction_MessageNew;
+		}
+	if ((m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_mComposingText)
+		eMenuIcon = eMenuIconPencil_16x16;
+	TreeItemW_SetTextColorAndIcon(coTextColor, eMenuIcon);
 	}
 
 //	TGroup::ITreeItemChatLogEvents::Vault_GetHashFileName()

@@ -291,7 +291,7 @@ WLayoutProfile::SL_SearchTextChanged(const QString & sSearch)
 	} // SL_SearchTextChanged()
 
 void
-WLayoutProfile::SL_ActionDoubleClicked(QTreeWidgetItem * pItemClicked, int iColumn)
+WLayoutProfile::SL_ActionDoubleClicked(QTreeWidgetItem * pItemClicked, int UNUSED_PARAMETER(iColumn))
 	{
 	UNUSED_PARAMETER(iColumn);
 	IApplication * pApplication = NULL;

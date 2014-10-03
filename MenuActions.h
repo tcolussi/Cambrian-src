@@ -48,6 +48,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_ContactAddToGroup,		// Add the selected contact to an existing group
 	eMenuAction_ContactRename,
 	eMenuAction_ContactRemove,			// Delete/remove the selected contact
+	eMenuAction_ContactUndelete,		// Undelete a removed/deleted contact
 	eMenuAction_ContactSendFile,		// Send a file to a contact
 	eMenuAction_ContactInvite,			// Create an invitation for a new contact
 	eMenuAction_ContactApprove,			// Add the selected contact to your list of approved contacts
@@ -67,6 +68,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_GroupNew,
 	eMenuAction_GroupCreate,
 	eMenuAction_GroupDelete,
+	eMenuAction_GroupUndelete,
 	eMenuAction_GroupRename,
 	eMenuAction_GroupAddContacts,
 	eMenuAction_GroupRemoveContact,

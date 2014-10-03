@@ -75,7 +75,7 @@ WChatLog::ChatLog_EventUpdate(IEvent * pEvent)
 	// Find the text block of the event
 	OCursorSelectBlock oCursorEvent(pEvent, this);
 	pEvent->ChatLogUpdateTextBlock(INOUT &oCursorEvent);
-	ChatLog_ChatStateTextUpdate();
+	ChatLog_ChatStateTextRefresh();
 	}
 
 void
@@ -224,7 +224,7 @@ WChatLog::ChatLog_EventsDisplay(const CArrayPtrEvents & arraypEvents, int iEvent
 			oTextBlockEvent.setUserData(NULL);	// Since we are reusing the same block, delete its userdata so we may assing another OTextBlockUserDataEvent
 		} // while
 	m_oTextBlockComposing = oCursor.block();
-	ChatLog_ChatStateTextUpdate(INOUT oCursor);
+	ChatLog_ChatStateTextAppend(INOUT oCursor);
 	Widget_ScrollToEnd(INOUT this);
 	} // ChatLog_EventsDisplay()
 
@@ -263,8 +263,9 @@ TContact::ChatLogContact_AppendExtraTextToChatState(INOUT OCursor & oTextCursor)
 	}
 QImage * g_poImageComposing;
 
+//	Append the 'chat state' to the cursor
 void
-WChatLog::ChatLog_ChatStateTextUpdate(INOUT OCursor & oTextCursor)
+WChatLog::ChatLog_ChatStateTextAppend(INOUT OCursor & oTextCursor)
 	{
 	TContact ** ppContactStop;
 	TContact ** ppContact = m_arraypContactsComposing.PrgpGetContactsStop(OUT &ppContactStop);
@@ -291,17 +292,17 @@ WChatLog::ChatLog_ChatStateTextUpdate(INOUT OCursor & oTextCursor)
 	if (m_pContactOrGroup->EGetRuntimeClass() == RTI(TContact))
 		((TContact *)m_pContactOrGroup)->ChatLogContact_AppendExtraTextToChatState(INOUT oTextCursor);
 	Widget_ScrollToEnd(INOUT this);
-	} // ChatLog_ChatStateTextUpdate()
+	} // ChatLog_ChatStateTextAppend()
 
 void
-WChatLog::ChatLog_ChatStateTextUpdate()
+WChatLog::ChatLog_ChatStateTextRefresh()
 	{
 	OCursorSelectBlock oTextCursor(m_oTextBlockComposing);
-	ChatLog_ChatStateTextUpdate(INOUT oTextCursor);
+	ChatLog_ChatStateTextAppend(INOUT oTextCursor);
 	}
 
 void
-WChatLog::ChatLog_ChatStateIconUpdate(INOUT TContact * pContact, EChatState eChatState)
+WChatLog::ChatLog_ChatStateTextUpdate(INOUT TContact * pContact, EChatState eChatState)
 	{
 	Assert(pContact != NULL);
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
@@ -318,7 +319,7 @@ WChatLog::ChatLog_ChatStateIconUpdate(INOUT TContact * pContact, EChatState eCha
 		pContact->TreeItemContact_UpdateIconComposingStopped(m_pContactOrGroup);
 		}
 	if (eChatState != eChatState_PausedNoUpdateChatLog)
-		ChatLog_ChatStateTextUpdate();
+		ChatLog_ChatStateTextRefresh();
 	}
 
 //	WChatLog::QObject::event()

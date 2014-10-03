@@ -1187,7 +1187,7 @@ CHashTable::S_PFn_EnumHashElementGetAll(CHashElement * pHashElement, INOUT CArra
 //	class provide its own delete routine.
 //
 void
-CHashTable::S_PFn_EnumHashElementDelete(CHashElement * pHashElement, LPARAM lParam)
+CHashTable::S_PFn_EnumHashElementDelete(CHashElement * pHashElement, LPARAM UNUSED_PARAMETER(lParam))
 	{
 	Assert(pHashElement != NULL);
 	UNUSED_PARAMETER(lParam);		// The delete function does not need a context lParam, however since the interface PFn_EnumHashElement() requires a lParam, this parameter must be in the prototype of the method.

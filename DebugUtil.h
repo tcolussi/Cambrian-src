@@ -21,15 +21,15 @@
 	#define d_dwGarbageValue				0xE1E1E1E1
 	#define d_pszuGarbageValue				(PSZUC)d_dwGarbageValue
 
+#define UNUSED_PARAMETER(x)		// The parameter of the function/method is unused
+
 /////////////////////////////////////////////////////////////////////
 //
 // Handy macros
 //
 #ifndef DEBUG
 	// Macros used in release build
-
 	#define ENDORSE(f)				// Dummy macro to indicate a statement can be true (this is somewhat the opposite of the Assert() macro)
-	#define UNUSED_PARAMETER(x)		// The parameter of the function/method is unused
 	#define UNUSED_VARIABLE(x)		// The variable is unused (typically this is when a variable declared to cache information for debugging)
 	#define DEBUG_CODE(x)
 	#define NON_DEBUG_CODE(x)		x
@@ -53,8 +53,7 @@
 #else
 
 	#define ENDORSE(f)					((void)(f))			// Dummy macro to indicate a statement can be true
-	#define UNUSED_PARAMETER(x)			((void)(x))			// Macro to suppress the compiler warning
-	#define UNUSED_VARIABLE(x)			((void)(x))
+	#define UNUSED_VARIABLE(x)			((void)(x))			// Macro to suppress the compiler warning
 	#define DEBUG_CODE(x)				x
 	#define NON_DEBUG_CODE(x)
 

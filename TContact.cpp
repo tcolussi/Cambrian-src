@@ -213,6 +213,13 @@ const EMenuActionByte c_rgzeActionsMenuContact[] =
 	ezMenuActionNone
 	};
 
+const EMenuActionByte c_rgzeActionsMenuContactDeleted[] =
+	{
+	eMenuAction_ContactUndelete,
+	eMenuAction_ContactRemove,
+	ezMenuActionNone
+	};
+
 const EMenuActionByte c_rgzeActionsMenuContactView[] =
 	{
 	eMenuAction_Contact_SubMenuView_Recommendations,
@@ -224,6 +231,11 @@ const EMenuActionByte c_rgzeActionsMenuContactView[] =
 void
 TContact::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	{
+	if (!TreeItemFlags_FCanDisplayWithinNavigationTree())
+		{
+		pMenu->ActionsAdd(c_rgzeActionsMenuContactDeleted);
+		return;
+		}
 	if (m_uFlagsContact & FC_kfContactUnsolicited)
 		pMenu->ActionAdd(eMenuAction_ContactApprove);
 	//pMenu->ActionAdd((m_uFlagsContact & mskfRosterSubscribed) ? eMenuAction_ContactUnsubscribe : eMenuAction_ContactSubscribe);
@@ -276,6 +288,11 @@ TContact::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		return ezMenuActionNone;
 	case eMenuAction_ContactRemove:
 		TreeItemContact_DeleteFromNavigationTree_MB();
+		return ezMenuActionNone;
+	case eMenuAction_ContactUndelete:
+		TreeItemW_RemoveFromNavigationTree();			// Remove the contact from the 'deleted items'
+		TreeItemContact_DisplayWithinNavigationTreeAndClearInvisibleFlag();	// Display the contact with the other contacts
+		TreeItemW_SelectWithinNavigationTreeExpanded();
 		return ezMenuActionNone;
 	case eMenuAction_ContactApprove:
 		m_uFlagsContact &= ~FC_kfContactUnsolicited;

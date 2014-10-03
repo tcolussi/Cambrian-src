@@ -8,9 +8,9 @@
 //	When a poll is started and if the poll has a time length, thena timer is set to automatically stop the poll.
 //
 //	INTERFACE NOTES
-//	Must have the same interface as PFn_TimerQueueEventCallback()
+//	Must have the same interface as PFn_TimerQueueCallback()
 void
-TimerQueueEventCallback_PollStop(PVPARAM pvEventBallotPoll)
+TimerQueueCallback_PollStop(PVPARAM pvEventBallotPoll)
 	{
 	Assert(pvEventBallotPoll != NULL);
 	((CEventBallotPoll *)pvEventBallotPoll)->StopPoll();
@@ -59,17 +59,11 @@ CServiceBallotmaster::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		if (pEventBallotPoll->m_tsStarted != d_ts_zNA && pEventBallotPoll->m_tsStopped == d_ts_zNA && pEventBallotPoll->m_cSecondsPollLength > 0)
 			{
 			TIMESTAMP tsStop = pEventBallotPoll->m_tsStarted + pEventBallotPoll->m_cSecondsPollLength * (TIMESTAMP_DELTA)d_ts_cSeconds;
-			TIMESTAMP_DELTA dtsStopping = tsStop - tsNow;
-			if (dtsStopping > 0)
-				{
-				MessageLog_AppendTextFormatSev(eSeverityNoise, "Poll ID $t which started on {tL} lasting $I seconds will automatically stop at {tL} in $I seconds ($T).\n", pEventBallotPoll->m_tsEventID, pEventBallotPoll->m_tsStarted, pEventBallotPoll->m_cSecondsPollLength, tsStop, (int)(dtsStopping / d_ts_cSeconds), dtsStopping);
-				TimerQueue_CallbackAdd(dtsStopping / d_ts_cSeconds, TimerQueueEventCallback_PollStop, pEventBallotPoll);
-				}
-			else
-				{
-				// What about a poll which started, however expired when SocietyPro was not running?  What about the ballots sent in the meantime? Should those vote be counted?
-
-				}
+			TIMESTAMP_DELTA dtsStopping = tsStop - tsNow;	// If this value is negative, it means the poll 'stopped' while SocietyPro was not running.
+			if (dtsStopping < 10 * d_ts_cMinutes)
+				dtsStopping = 10 * d_ts_cMinutes;	// Make the poll has a minimum of 10 minutes to run so it may collect all pending votes before closing
+			MessageLog_AppendTextFormatSev(eSeverityNoise, "Poll ID $t which started on {tL} lasting $I seconds will automatically stop at {tL} in $I seconds ($T).\n", pEventBallotPoll->m_tsEventID, pEventBallotPoll->m_tsStarted, pEventBallotPoll->m_cSecondsPollLength, tsStop, (int)(dtsStopping / d_ts_cSeconds), dtsStopping);
+			TimerQueue_CallbackAdd(dtsStopping / d_ts_cSeconds, TimerQueueCallback_PollStop, pEventBallotPoll);
 			}
 		} // while
 	TimerQueue_DisplayToMessageLog();
@@ -531,7 +525,7 @@ CEventBallotSent::CalculateStatistics(OUT SEventPollStatistics * pStatistics)
 	TGroup * pGroup = (TGroup *)m_pVaultParent_NZ->m_pParent;
 	if (pGroup->EGetRuntimeClass() == RTI(TGroup))
 		{
-		pStatistics->cSent = pGroup->m_arraypaMembers.GetSize();	// TODO: If a new group member was added or removed, this must be included
+		pStatistics->cSent = pGroup->m_arraypaMembers.GetSize();	// TODO: If a new group member was added or removed, the code should look at the timestamps the poll started to include only those at the time of the poll
 		}
 	pStatistics->cResponded = m_arraypaVotes.GetSize();
 	pStatistics->cPending = pStatistics->cSent - pStatistics->cResponded;
@@ -662,7 +656,7 @@ CEventBallotPoll::FStartPoll()
 		pGroup->Vault_AddEventToChatLogAndSendToContacts(PA_CHILD m_pEventBallotSent);
 		if (m_cSecondsPollLength > 0)
 			{
-			TimerQueue_CallbackAdd(m_cSecondsPollLength, TimerQueueEventCallback_PollStop, this);
+			TimerQueue_CallbackAdd(m_cSecondsPollLength, TimerQueueCallback_PollStop, this);
 			//TimerQueue_DisplayToMessageLog();
 			}
 		}

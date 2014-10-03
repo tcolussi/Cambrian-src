@@ -8,6 +8,25 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+//	Recursively remove all child items from the Navigation Tree.
+//	This does not delete any ITreeItem.
+void
+CTreeItemW::RemoveAllChildItemsR()
+	{
+	int cChildren = childCount();
+	while (--cChildren >= 0)
+		{
+		CTreeItemW * pChild = (CTreeItemW *)child(cChildren);
+		Assert(pChild->m_piTreeItem != NULL);
+		Assert(pChild->m_piTreeItem->m_paTreeItemW_YZ == pChild);
+		pChild->RemoveAllChildItemsR();
+		Assert(pChild->m_piTreeItem != NULL);
+		Assert(pChild->m_piTreeItem->m_paTreeItemW_YZ == pChild);
+		pChild->m_piTreeItem->m_paTreeItemW_YZ = NULL;
+		delete pChild;
+		}
+	}
+
 ITreeItem *
 CTreeItemW::PFindChildItemMatchingRuntimeClass(RTI_ENUM rti) const
 	{
@@ -35,6 +54,7 @@ ITreeItem::~ITreeItem()
 	{
 	NoticeListAuxiliary_DeleteAllNoticesRelatedToTreeItem(IN this);
 	NoticeListRoaming_TreeItemDeleting(IN this);
+//	Assert(m_paTreeItemW_YZ == NULL);	// Use TreeItemW_RemoveFromNavigationTree() instead.
 	delete m_paTreeItemW_YZ;	// This will remove the widget from the Navigation Tree.  Of course, this is not the most elegant mechanism, but it is the safest to avoid bugs
 	}
 
@@ -283,11 +303,18 @@ ITreeItem::TreeItemW_SetTextToDisplayMessagesUnread(int cMessagesUnread)
 	}
 
 void
+ITreeItem::TreeItemW_SetIconComposingText()
+	{
+	m_uFlagsTreeItem |= FTI_keIcon_mComposingText;
+	TreeItem_IconUpdate();
+	}
+
+void
 ITreeItem::TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
 	{
 	Assert(pszuErrorMessage != NULL);
 	CString sError(pszuErrorMessage);
-	if (m_uFlagsTreeItem & FTI_keIcon_Error)
+	if ((m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_Error)
 		{
 		// There is already an error, so concatenate both, unless this is the same error.
 		// Sometimes a server may send two stanzas with the same identical error.  I have no idea what is the motivation (or if it is a bug), however the same error should be displayed only once
