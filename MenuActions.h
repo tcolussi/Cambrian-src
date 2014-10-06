@@ -74,6 +74,8 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_GroupRemoveContact,
 	eMenuAction_GroupProperties,		// Display the properties of the group
 
+	eMenuAction_GroupChannel,
+
 	eMenuAction_TreeItemRecommended,	// Generic menu action to recommend an item in the Navigation Tree
 	eMenuAction_TreeItemRename,			// Generic menu action to rename an item in the Navigation Tree
 	eMenuAction_MessageEdit,

@@ -80,7 +80,6 @@ private:
 public:
 	void Contact_MarkForDeletion();
 	BOOL Contact_FCanBePermenentlyDeleted() const;
-	void Contact_UpdateFlagCannotBeDeleted();
 	inline void _ClearFlags() { m_uFlagsContact = 0; }
 	inline void SetFlagContactAsUnsolicited() { m_uFlagsContact |= FC_kfContactUnsolicited; }
 	inline void SetFlagContactAsInvited() { m_uFlagsContact &= ~FC_kfContactNeedsInvitation; }

@@ -211,7 +211,7 @@ CListTasksSendReceive::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		{
 		if (m_plistTasks == NULL)
 			return;	// Nothing to serialize
-		CBin * pbinTemp = pXmlExchanger->PGetBinTemporaryDuringSerializationInitAlreadyEncoded();	// Use the temporary buffer to serializa all the tasks
+		CBin * pbinTemp = pXmlExchanger->PGetBinTemporaryDuringSerializationInitAlreadyEncoded();	// Use the temporary buffer to serialize all the tasks
 		SerializeToXml(IOUT pbinTemp);
 		(void)pXmlExchanger->XmlExchange_PAllocateElementFromCBinString('T', IN_MOD_TMP *pbinTemp);
 		}

@@ -94,7 +94,7 @@ CHashTableCore::_BackupRestore(const CHashTableBackup * pHashTableBackup)
 	if (pHashTableBackup->m_cHashElements <= 0)
 		{
 		// The previous hash table was empty, so remove empty it again
-		RemoveAll();
+		Empty();
 		return;
 		}
 
@@ -655,14 +655,12 @@ CHashTable::GetAllElements(OUT CArrayPtrHashElement * parraypHashElements) const
 //	Flush all the elements in the hash table.
 //
 //	IMPLEMENTATION NOTES
-//	For better performance, the memory remains allocated and the pointers
-//	are set to NULL.
+//	For better performance, the memory remains allocated and the pointers are set to NULL.
 //	In the case of the pre-allocated buffers, they are consolidated into a single buffer
 //	so next time, there is no need to re-allocate any memory.
 //
-//	TODO: Rename to Empty().
 void
-CHashTableCore::RemoveAll()
+CHashTableCore::Empty()
 	{
 	//AssertValid();
 	if (m_cHashElements > 0)
@@ -696,8 +694,8 @@ CHashTableCore::RemoveAll()
 				m_paTableList = paTableNext;
 				}
 			#ifdef TRACE_HASH_PERFORMANCE
-			TRACE2("CHashTable::~RemoveAll() - Consolidating %d blocks into a single block of %d bytes\n", cMemoryBlocks, cbAllocated);
-			//Report(FALSE && "Testing RemoveAll()");
+			TRACE2("CHashTable::~Empty() - Consolidating %d blocks into a single block of %d bytes\n", cMemoryBlocks, cbAllocated);
+			//Report(FALSE && "Testing Empty()");
 			#endif
 			_AllocateTableList(cbAllocated);
 			Assert(m_paTableList != NULL);
@@ -706,7 +704,7 @@ CHashTableCore::RemoveAll()
 		Assert(m_paTableList != NULL);
 		m_paTableList->cbData = 0;
 		} // if
-	} // RemoveAll()
+	} // Empty()
 
 //	Delete all the elements in the hash table.
 //
@@ -719,7 +717,7 @@ CHashTable::DeleteAllElements()
 	{
 	AssertValid();
 	ForEachHashElement(S_PFn_EnumHashElementDelete);
-	RemoveAll();
+	Empty();
 	AssertValid();
 	}
 

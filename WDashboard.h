@@ -23,6 +23,7 @@ public:
 	int DrawNumberWithinCircle(int nNumber);
 	void DrawIconLeft(const QIcon & oIcon);
 	void DrawIconLeft(EMenuAction eMenuIcon);
+	void FillRect0(QRGB coBackgroundFill);
 };
 
 //	Extra information regarding the hit-testing
@@ -76,21 +77,30 @@ public:
 	void AllocateTreeItems(const CArrayPtrTreeItems & arraypTreeItems, int cDataItemsMax);
 };
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class WDashboardSection : public WWidget
 {
-public:
+protected:
 	WDashboard * m_pParent;	// This pointer is necessary when an item is clicked, the other item(s) selected from other section(s) are unselected.
 	CString m_sName;		// Name of the section
 	CArrayPtrDashboardSectionItems m_arraypaItems;	// Items to draw
-	CDashboardSectionItem * m_pItemMouseHovering;	// Which item in the section has the mouse hovering
+
+	//	Structure holding information about hit testing for a WDashboardSection
+	struct SHitTestInfo
+		{
+		EHitTestSection eHitTest;
+		CDashboardSectionItem * pItem;	// Which item was selected (if any)
+		};
+	SHitTestInfo m_oHitTestInfo;						// Information about the last known hit testing, such as which item is under the mouse.  This structure is necessary to draw the section.
 public:
 	WDashboardSection(PSZAC pszSectionName);
 	~WDashboardSection();
-	virtual void InitItems(TProfile * pProfile);
+	void SetParent(WDashboard * pParent);
+	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvDataItem);
 	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsItem);
-	virtual void OnItemSelected(CDashboardSectionItem * pItem);
+	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 
 protected:
 	virtual QSize sizeHint() const;					// From QWidget
@@ -100,10 +110,11 @@ protected:
 	virtual void mouseReleaseEvent(QMouseEvent * pEventMouse);
 	virtual void leaveEvent(QEvent *);
 
-	CDashboardSectionItem * _PGetItemAtPosY(int yPos, OUT EHitTestSection * peHitTestSection) const;
-	void _SetItemMouseHovering(CDashboardSectionItem * pItemMouseHovering);
+	SHitTestInfo OGetHitTestInfo(QMouseEvent * pEventMouse) const;
+	SHitTestInfo OGetHitTestInfo(int xPos, int yPos) const;
+	BOOL FSetHitTestInfo(SHitTestInfo oHitTestInfo);
 	void WidgetRedraw() { update(); }
-};
+}; // WDashboardSection
 
 class CArrayPtrDashboardSections : public CArray
 {
@@ -114,18 +125,21 @@ public:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class WDashboardSectionChannels : public WDashboardSection
 {
+protected:
+	int m_cChannelsTotal;
 public:
 	WDashboardSectionChannels(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
-	virtual void InitItems(TProfile * pProfile);
+	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroupChannel);
 	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsItem);
+	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 };
 
 class WDashboardSectionGroups : public WDashboardSection
 {
 public:
 	WDashboardSectionGroups(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
-	virtual void InitItems(TProfile * pProfile);
+	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroup);
 };
 
@@ -133,7 +147,7 @@ class WDashboardSectionContacts : public WDashboardSection
 {
 public:
 	WDashboardSectionContacts(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
-	virtual void InitItems(TProfile * pProfile);
+	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvContact);
 	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsItem);
 };
@@ -142,7 +156,7 @@ class WDashboardSectionBallots : public WDashboardSection
 {
 public:
 	WDashboardSectionBallots(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
-	virtual void InitItems(TProfile * pProfile);
+	virtual void Init(TProfile * pProfile_YZ);
 };
 
 
@@ -167,11 +181,13 @@ protected:
 
 public:
 	WDashboard();
+	inline TProfile * PGetProfile() const { return m_pProfile; }
 	void ProfileSelectedChanged(TProfile * pProfile);
 	void NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 	void NewEventRelatedToBallot(IEventBallot * pEventBallot);
 	void RefreshContact(TContact * pContact);
 	void RefreshGroup(TGroup * pGroup);
+	void RefreshChannels();
 	BOOL FSelectItem(CDashboardSectionItem * pItem);
 }; // WDashboard
 

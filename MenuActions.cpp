@@ -92,6 +92,8 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Remove Peer from Group" _ "i=ContactRemove" _, // eMenuAction_GroupRemoveContact
 	"Group Properties..." _ "i=Properties" _, // eMenuAction_GroupProperties
 
+	"Channel" _ "i=Hashtag" _, // eMenuAction_GroupChannel
+
 	"Recommend" _ "s=Recommend the selected item to my peers" _ "i=Reputation" _,	// eMenuAction_TreeItemRecommended
 	"Rename..." _, // eMenuAction_TreeItemRename
 	"Edit Message..." _ "i=Pencil" _, // eMenuAction_MessageEdit

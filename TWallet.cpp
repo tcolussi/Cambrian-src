@@ -545,7 +545,7 @@ TWallet::~TWallet()
 		CVaultEventsForContact * paVault = *ppVault++;
 		delete paVault;
 		}
-	m_arraypaVaults.RemoveAllElements();
+	m_arraypaVaults.Empty();
 
 	// Remove the wallet from the global linked list
 	Assert(s_palistWallet != NULL);

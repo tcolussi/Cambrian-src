@@ -39,25 +39,37 @@ enum
 
 #define d_chAPIa_Recommendation_TGroup_strDescription	'd'	// NYI
 
+#define d_chAPIe_Recommendations_TGroupChannels			'H'
+#define d_szAPIe_Recommendation_TGroupChannel_str		"H n='^S'"
+#define d_chAPIe_Recommendation_TGroupChannel_strName	'n'
+
 void
 TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const
 	{
 	Assert(pbinXcpStanzaReply != NULL);
-	pbinXcpStanzaReply->BinAppendText("<" d_szAPIe_Recommendations_ "><" d_szAPIe_Recommendations_TContacts ">");
-	CArrayPtrContacts arraypaContactsRecommended;
-	GetRecommendations_Contacts(OUT &arraypaContactsRecommended);
+	SOffsets oOffsetsRecommendations;
+	pbinXcpStanzaReply->BinAppendTextOffsetsInitXmlElement(OUT &oOffsetsRecommendations, d_chAPIe_Recommendations_);
+	SOffsets oOffsetsTemp;
+
+	// Serialize the recommended contacts
+	pbinXcpStanzaReply->BinAppendTextOffsetsInitXmlElement(OUT &oOffsetsTemp, d_chAPIe_Recommendations_TContacts);
+	CArrayPtrContacts arraypContactsRecommended;
+	GetRecommendations_Contacts(IOUT &arraypContactsRecommended);
 	TContact ** ppContactStop;
-	TContact ** ppContact = arraypaContactsRecommended.PrgpGetContactsStop(OUT &ppContactStop);
+	TContact ** ppContact = arraypContactsRecommended.PrgpGetContactsStop(OUT &ppContactStop);
 	while (ppContact != ppContactStop)
 		{
 		TContact * pContact = *ppContact++;
 		pbinXcpStanzaReply->BinAppendText_VE("<" d_szAPIe_Recommendation_TContact_p_str "/>", pContact, &pContact->m_strNameDisplayTyped);	// Need to fix this for a real name of the contact (not what was typed for the Navigation Tree)
 		}
-	pbinXcpStanzaReply->BinAppendText("</" d_szAPIe_Recommendations_TContacts "><" d_szAPIe_Recommendations_TGroups ">");
-	CArrayPtrGroups arraypaGroupsRecommended;
-	GetRecommendations_Groups(OUT &arraypaGroupsRecommended);
+	pbinXcpStanzaReply->BinAppendXmlClosingElement_TruncateIfEmpty(IN &oOffsetsTemp, d_chAPIe_Recommendations_TContacts);
+
+	CArrayPtrGroups arraypGroupsRecommended;	// Groups and channels are on the same object, however serialized differently
+	// Serialize the recommended groups
+	pbinXcpStanzaReply->BinAppendTextOffsetsInitXmlElement(OUT &oOffsetsTemp, d_chAPIe_Recommendations_TGroups);
+	GetRecommendations_Groups(IOUT &arraypGroupsRecommended);
 	TGroup ** ppGroupStop;
-	TGroup ** ppGroup = arraypaGroupsRecommended.PrgpGetGroupsStop(OUT &ppGroupStop);
+	TGroup ** ppGroup = arraypGroupsRecommended.PrgpGetGroupsStop(OUT &ppGroupStop);
 	while (ppGroup != ppGroupStop)
 		{
 		TGroup * pGroup = *ppGroup++;
@@ -65,7 +77,24 @@ TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpSt
 		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 		pbinXcpStanzaReply->BinAppendText_VE("<" d_szAPIe_Recommendation_TGroup_h_str_i "/>", &pGroup->m_hashGroupIdentifier, &pGroup->m_strNameDisplayTyped, pGroup->m_arraypaMembers.GetSize());
 		}
-	pbinXcpStanzaReply->BinAppendText( "</" d_szAPIe_Recommendations_TGroups "></" d_szAPIe_Recommendations_ ">");
+	pbinXcpStanzaReply->BinAppendXmlClosingElement_TruncateIfEmpty(IN &oOffsetsTemp, d_chAPIe_Recommendations_TGroups);
+
+	// Serialize the recommended channels
+	pbinXcpStanzaReply->BinAppendTextOffsetsInitXmlElement(OUT &oOffsetsTemp, d_chAPIe_Recommendations_TGroupChannels);
+	arraypGroupsRecommended.Empty();
+	GetRecommendations_Channels(IOUT &arraypGroupsRecommended);
+	ppGroup = arraypGroupsRecommended.PrgpGetGroupsStop(OUT &ppGroupStop);
+	while (ppGroup != ppGroupStop)
+		{
+		TGroup * pGroup = *ppGroup++;
+		Assert(pGroup != NULL);
+		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+		Assert(!pGroup->m_strNameChannel_YZ.FIsEmptyString());
+		pbinXcpStanzaReply->BinAppendText_VE("<" d_szAPIe_Recommendation_TGroupChannel_str "/>", &pGroup->m_strNameChannel_YZ);
+		}
+	pbinXcpStanzaReply->BinAppendXmlClosingElement_TruncateIfEmpty(IN &oOffsetsTemp, d_chAPIe_Recommendations_TGroupChannels);
+
+	pbinXcpStanzaReply->BinAppendXmlClosingElement_TruncateIfEmpty(IN &oOffsetsRecommendations, d_chAPIe_Recommendations_);
 	} // XcpApiProfile_RecommendationsSerialize()
 
 
@@ -119,7 +148,25 @@ TContact::Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParam
 	m_uFlagsContact &= ~FC_kfContactRecommendationsNeverReceived;
 	m_binXmlRecommendations.Empty();
 	if (pXmlNodeApiParameters != NULL && !pXmlNodeApiParameters->FIsEmptyElement())
+		{
 		m_binXmlRecommendations.BinAppendXmlNodeNoWhiteSpaces(pXmlNodeApiParameters);
+		CXmlNode * pXmlNodeChannels = pXmlNodeApiParameters->PFindElement(d_chAPIe_Recommendations_TGroupChannels);
+		if (pXmlNodeChannels != NULL)
+			{
+			BOOL fUpdateDashboard = FALSE;
+			TProfile * pProfile = PGetProfile();
+			CXmlNode * pXmlNodeChannel = pXmlNodeChannels->m_pElementsList;
+			while (pXmlNodeChannel != NULL)
+				{
+				fUpdateDashboard |= pProfile->m_arraypaChannelNames.FNewChannelAdded(pXmlNodeChannel->PszuFindAttributeValue(d_chAPIe_Recommendation_TGroupChannel_strName));
+				pXmlNodeChannel = pXmlNodeChannel->m_pNextSibling;
+				}
+			if (fUpdateDashboard)
+				{
+				Dashboard_UpdateChannels();
+				}
+			}
+		}
 	//MessageLog_AppendTextFormatCo(d_coRed, "Contact_RecommendationsUpdateFromXml(): $B\n", &m_binXmlRecommendations);
 	Contact_RecommendationsDisplayWithinNavigationTree();
 	TreeItemW_Expand();
@@ -433,39 +480,33 @@ TAccountXmpp::TreeItemAccount_RecommendationRemove(ITreeItem * pTreeItemRecommen
 	pTreeItemRecommendationRemove->TreeItemW_RemoveFromNavigationTree();
 	}
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-TRecommendations::TRecommendations(TContact * pContact)
-	{
-	m_pContact = pContact;
-	}
-
-TRecommendations::~TRecommendations()
-	{
-	MessageLog_AppendTextFormatCo(eSeverityNoise, "TRecommendations::~TRecommendations(0x$p) - ^j\n", this, m_pContact);
-	}
-
-//	TRecommendations::IRuntimeObject::PGetRuntimeInterface()
+//	ITreeItemOfContact::IRuntimeObject::PGetRuntimeInterface()
 //
-//	Enable the TRecommendations object to respond to the interfaces of its parent contact.
+//	Enable the Tree Item object to respond to the interfaces of its parent contact.
 POBJECT
-TRecommendations::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
+ITreeItemOfContact::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
 	{
 	Report(piParent == NULL);
-	return ITreeItem::PGetRuntimeInterface(rti, m_pContact);
+	return ITreeItem::PGetRuntimeInterface(rti, m_pContactParent_NZ);
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+TRecommendations::~TRecommendations()
+	{
+	MessageLog_AppendTextFormatCo(eSeverityNoise, "TRecommendations::~TRecommendations(0x$p) - ^j\n", this, m_pContactParent_NZ);
 	}
 
 void
 TRecommendations::TreeItem_RemoveAllReferencesToObjectsAboutBeingDeleted()
 	{
-
 	}
 
 //	TRecommendations::ITreeItem::TreeItem_GotFocus()
 void
 TRecommendations::TreeItem_GotFocus()
 	{
-	MainWindow_SetCurrentLayoutAutoDelete(new WLayoutRecommendations(m_pContact->m_pAccount->m_pProfileParent, m_pContact));
+	MainWindow_SetCurrentLayoutAutoDelete(new WLayoutRecommendations(m_pContactParent_NZ->m_pAccount->m_pProfileParent, m_pContactParent_NZ));
 	}
 
 TMyRecommendations::TMyRecommendations(TProfile * pProfile)

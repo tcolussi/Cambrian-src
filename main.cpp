@@ -15,7 +15,7 @@ DATA TYPE PREFIX
 	C		Class (a class may be a structure, however may include a constructor, destructor and virtual methods)
 	O		Class inheriting from QObject (this prefix is typically used to define QObject wrappers)
 	W		Class inheriting from QWidget (this prefix is used when defining a new types of widget)
-	D		Class inheriting from QDialog
+	D		Class inheriting from QDialog, which of course is inheriting from QWidget.
 	I		Interface (an interface is a class with virtual methods where there will be never an instance of it, but objects inheriting it)
 	T		Any class inheriting the interface ITreeItem must have the prefix T.  This prefix indicates the object has the ability to appear in the Navigation Tree, interact with the user as well as serialize itself in the configuration.  The interface ITreeItem is a special interface at the core of the project and used everywhere.
 

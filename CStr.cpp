@@ -242,6 +242,14 @@ CStr::Format_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 	return (PSZUC)m_paData->rgbData;
 	}
 
+//	Channel names are compare by ignoring anything not alphanumeric.
+BOOL
+CStr::FCompareStringsChannelNames(PSZUC pszuChannelName) const
+	{
+	Assert(pszuChannelName != NULL);
+	return FCompareStringsNoCase(pszuChannelName);	// TODO: TBD
+	}
+
 BOOL
 CStr::FCompareStringsJIDs(PSZUC pszuJID) const
 	{

@@ -607,53 +607,6 @@ TAccountXmpp::Contact_PresenceUpdate(const CXmlNode * pXmlNodeStanzaPresence)
 		pContact->XmppPresenceUpdateIcon(pXmlNodeStanzaPresence);
 	}
 
-/*
-void
-TAccountXmpp::Contacts_SetFlagAboutBeingDeleted()
-	{
-	m_arraypaContacts.ForEach_SetFlagTreeItemDoNotSerializeToDisk();
-	}
-
-//	This method is a bit slow, as it makes sure any reference to the contact is removed.
-void
-TAccountXmpp::Contacts_BroadcastAboutBeingDeleted()
-	{
-	TContact ** ppContactStop;
-	TContact ** ppContact = m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
-	while (ppContact != ppContactStop)
-		{
-		TContact * pContact = *ppContact++;
-		Assert(pContact != NULL);
-		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-		Assert(pContact->m_pAccount == this);
-		//pContact->DetachFromContactsAboutBeingDeleted();
-		}
-	}
-*/
-
-/*
-//	The two methods Contact_UpdateFlagCannotBeDeleted() could be merged into ITreeItemChatLogEvents
-void
-TContact::Contact_UpdateFlagCannotBeDeleted()
-	{
-	if (m_paoJapiContact != NULL)
-		{
-		m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeletedFromMemory;
-		m_pAccount->m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeletedFromMemory;	// Also prevent its parent account to be deleted
-		}
-	}
-
-void
-TGroup::Group_UpdateFlagCannotBeDeleted()
-	{
-	if (m_paoJapiGroup != NULL)
-		{
-		m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeletedFromMemory;
-		m_pAccount->m_uFlagsTreeItem |= FTI_kfTreeItem_CannotBeDeletedFromMemory;	// Also prevent its parent account to be deleted
-		}
-	}
-*/
-
 void
 TAccountXmpp::TreeItemAccount_DisplayWithinNavigationTreeInit(PSZUC pszServerName, UINT uServerPort)
 	{

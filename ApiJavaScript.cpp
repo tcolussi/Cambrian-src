@@ -25,8 +25,6 @@ OJapiCambrian::apps()
 	}
 
 
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 OJapiMe::OJapiMe(OJapiCambrian * poCambrian)
 	{
@@ -42,8 +40,8 @@ OJapiMe::groups()
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
-		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Open);
-		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_Audience);
+		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_kzOpen);
+		oList.AddGroupsMatchingType(IN pAccount->m_arraypaGroups, eGroupType_keAudience);
 		/*
 		TGroup ** ppGroupStop;
 		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
@@ -123,11 +121,11 @@ OJapiMe::newGroup(const QString &type)
 	if ( pAccount == NULL)
 		return NULL;
 
-	EGroupType eGroupType = eGroupType_Open;
+	EGroupType eGroupType = eGroupType_kzOpen;
 	if ( type.compare("Open", Qt::CaseInsensitive) == 0)
-		eGroupType = eGroupType_Open;
+		eGroupType = eGroupType_kzOpen;
 	else if ( type.compare("Broadcast", Qt::CaseInsensitive) == 0 )
-		eGroupType = eGroupType_Audience;
+		eGroupType = eGroupType_keAudience;
 	else
 		return NULL;
 
@@ -232,13 +230,18 @@ OJapiGroup::members()
 	return oList;
 	}
 
-QString OJapiGroup::type()
+QString
+OJapiGroup::type()
 	{
-	if ( m_pGroup->m_eGroupType == eGroupType_Audience)
-		return "broadcast";
-	else if (m_pGroup->m_eGroupType == eGroupType_Open)
+	switch (m_pGroup->EGetGroupType())
+		{
+	case eGroupType_kzOpen:
 		return "open";
-	return c_sEmpty;
+	case eGroupType_keAudience:
+		return "broadcast";
+	default:
+		return c_sEmpty;
+		}
 	}
 
 void
@@ -274,8 +277,8 @@ OJapiGroup::save()
 	m_pGroup->m_pAccount->m_arraypaGroups.ElementTransferFrom(m_pGroup, INOUT &m_poCambrian->m_arraypaTemp);	// Transfer the group from 'temp' to the account
 
 	// for normal groups
-	if ( m_pGroup->m_eGroupType == eGroupType_Open && m_pGroup->m_paTreeItemW_YZ == NULL )
-		m_pGroup->TreeItemW_DisplayWithinNavigationTree(m_pGroup->m_pAccount, eMenuAction_Group );
+	if ( m_pGroup->EGetGroupType() == eGroupType_kzOpen && m_pGroup->m_paTreeItemW_YZ == NULL )
+		m_pGroup->TreeItemGroup_DisplayWithinNavigationTree();
 
 	/*
 	if (m_poCambrian->m_arraypaTemp.RemoveElementFastF(m_pGroup))
@@ -290,7 +293,9 @@ OJapiGroup::destroy()
 	//if (m_pGroup->m_eGroupType != eGroupType_Audience)
 	//	return;	// Don't allow a JavaScript to delete a regular group; only a 'peerlist'
 
+	#if 0 // The method Group_MarkForDeletion() includes the equivalent of TreeItemGroup_RemoveFromNavigationTree()
 	m_pGroup->TreeItemGroup_RemoveFromNavigationTree();
+	#endif
 	m_pGroup->Group_MarkForDeletion();
 	m_poCambrian->m_arraypaTemp.ElementTransferFrom(m_pGroup, INOUT &m_pGroup->m_pAccount->m_arraypaGroups);	// Transfer the group back to the 'temp' array
 
@@ -364,37 +369,37 @@ CListVariants::AddContacts(const CArrayPtrContacts &arraypaContacts)
 	}
 
 void
-CListVariants::AddGroupMatchingType(TGroup *pGroup, EGroupType eGroupType)
+CListVariants::AddGroupMatchingType(TGroup * pGroup, EGroupType eGroupType)
 	{
 	Assert(pGroup != NULL);
-	if ( pGroup->m_eGroupType == eGroupType && !pGroup->TreeItemFlags_FuIsInvisible() )
-	{
+	if (pGroup->EGetGroupType() == eGroupType && !pGroup->TreeItemFlags_FuIsInvisible())
+		{
 		append(QVariant::fromValue(pGroup->POJapiGet(m_poCambrian)));
+		}
 	}
-}
 
 void
-CListVariants::AddGroupsMatchingType(const CArrayPtrGroups &arraypGroups, EGroupType eGroupType)
+CListVariants::AddGroupsMatchingType(const CArrayPtrGroups & arraypGroups, EGroupType eGroupType)
 	{
 	TGroup **ppGroupsStop;
-	TGroup **ppGroup = arraypGroups.PrgpGetGroupsStop(&ppGroupsStop);
-	while( ppGroup != ppGroupsStop)
+	TGroup **ppGroup = arraypGroups.PrgpGetGroupsStop(OUT &ppGroupsStop);
+	while(ppGroup != ppGroupsStop)
 		{
-		TGroup *pGroup = *ppGroup++;
+		TGroup * pGroup = *ppGroup++;
 		AddGroupMatchingType(pGroup, eGroupType);
 		}
 	}
 
 void
-CListVariants::AddGroup(TGroup *pGroup)
+CListVariants::AddGroup(TGroup * pGroup)
 	{
-	AddGroupMatchingType(pGroup, eGroupType_Open);
+	AddGroupMatchingType(pGroup, eGroupType_kzOpen);
 	}
 
 void
-CListVariants::AddAudience(TGroup *pGroup)
+CListVariants::AddAudience(TGroup * pGroup)
 	{
-	AddGroupMatchingType(pGroup, eGroupType_Audience);
+	AddGroupMatchingType(pGroup, eGroupType_keAudience);
 	}
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -406,7 +411,7 @@ OJapiBrowserTab::title()
 	return m_pTab->m_strNameDisplayTyped.ToQString();
 	}
 
-OJapiBrowserTab::OJapiBrowserTab(TBrowserTab *pTab, OJapiBrowsersList *pBrowsersListParent)
+OJapiBrowserTab::OJapiBrowserTab(TBrowserTab * pTab, OJapiBrowsersList * pBrowsersListParent)
 	{
 	Assert(pTab != NULL);
 	Assert(pBrowsersListParent != NULL);
@@ -463,9 +468,6 @@ TBrowserTab::POJapiGet(OJapiBrowsersList *pBrowsersList)
 
 	return m_paoJapiBrowser;
 	}
-
-
-
 
 
 OJapiBrowsersList::OJapiBrowsersList(OJapiProfile *poProfile)

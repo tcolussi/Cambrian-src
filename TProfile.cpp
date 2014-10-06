@@ -72,6 +72,7 @@ TProfile::~TProfile()
 	m_arraypaBrowsers.DeleteAllTreeItems();
 	m_arraypaServices.DeleteAllRuntimeObjects();
 	m_arraypaBrowsersTabbed.DeleteAllRuntimeObjects();
+	m_arraypaChannelNames.DeleteAllChannels();
 	//delete m_paoJapiProfile;
 	}
 
@@ -164,12 +165,46 @@ TProfile::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) co
 #define d_chElementName_Accounts			'A'
 #define d_chElementName_Applications		'X'	// User-defined applications
 #define d_chElementName_Services			'S'
+#define d_chElementName_Channels			'H'
 
 void
 TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
-	if (pXmlExchanger->m_fSerializing )
+	if (pXmlExchanger->m_fSerializing)
+		{
 		m_arraypaAccountsXmpp.ForEach_UAssignObjectIds();
+
+		// Serialize the channels
+		CBin * pbinTemp = pXmlExchanger->PGetBinTemporaryDuringSerializationInitAlreadyEncoded();	// Use the temporary buffer to serialize all the channels
+		CChannelName * pChannel = NULL;
+		CChannelName ** ppChannelStop;
+		CChannelName ** ppChannel = m_arraypaChannelNames.PrgpGetChannelsStop(OUT &ppChannelStop);
+		while (ppChannel != ppChannelStop)
+			{
+			pChannel = *ppChannel++;
+			pbinTemp->BinAppendText_VE("<h n='^S' t='$t'/>", &pChannel->m_strName, pChannel->m_tsFirstRecommended);
+			}
+		if (pChannel != NULL)
+			(void)pXmlExchanger->XmlExchange_PAllocateElementFromCBinString(d_chElementName_Channels, IN_MOD_TMP *pbinTemp);
+		}
+	else
+		{
+		// Unserialize the channels
+		Assert(m_arraypaChannelNames.FIsEmpty());
+		const CXmlNode * pXmlNodeChannels = pXmlExchanger->XmlExchange_PFindElement(d_chElementName_Channels);
+		if (pXmlNodeChannels != NULL)
+			{
+			const CXmlNode * pXmlNodeChannel = pXmlNodeChannels->m_pElementsList;
+			while (pXmlNodeChannel != NULL)
+				{
+				CChannelName * paChannel = new CChannelName;
+				m_arraypaChannelNames.Add(PA_CHILD paChannel);
+				pXmlNodeChannel->UpdateAttributeValueCStr('n', OUT_F_UNCH &paChannel->m_strName);
+				pXmlNodeChannel->UpdateAttributeValueTimestamp('t', OUT_F_UNCH &paChannel->m_tsFirstRecommended);
+				pXmlNodeChannel = pXmlNodeChannel->m_pNextSibling;
+				}
+			}
+		} // if...else
 
 	ITreeItem::XmlExchange(INOUT pXmlExchanger);
 	pXmlExchanger->XmlExchangeStr("Name", INOUT_F_UNCH_S &m_strNameProfile);
@@ -291,9 +326,9 @@ TProfile::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	} // TreeItem_EDoMenuAction()
 
 void
-TProfile::GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypaContactsRecommended) const
+TProfile::GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypContactsRecommended) const
 	{
-	Assert(parraypaContactsRecommended != NULL);
+	Assert(parraypContactsRecommended != NULL);
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
@@ -307,15 +342,18 @@ TProfile::GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypaContactsR
 			Assert(pContact != NULL);
 			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 			if (pContact->TreeItemFlags_FuIsRecommended())
-				parraypaContactsRecommended->Add(pContact);
+				{
+				Assert(pContact->TreeItemFlags_FCanDisplayWithinNavigationTree());	// A recommended contact should not have been deleted
+				parraypContactsRecommended->Add(pContact);
+				}
 			} // while
 		} // while
 	}
 
 void
-TProfile::GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecommended) const
+TProfile::GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypGroupsRecommended) const
 	{
-	Assert(parraypaGroupsRecommended != NULL);
+	Assert(parraypGroupsRecommended != NULL);
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
@@ -329,8 +367,34 @@ TProfile::GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecomme
 			Assert(pGroup != NULL);
 			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 			Assert(pGroup->m_pAccount == pAccount);
-			if (pGroup->TreeItemFlags_FuIsRecommended())
-				parraypaGroupsRecommended->Add(pGroup);
+			if (pGroup->TreeItemFlags_FuIsRecommended() && !pGroup->Group_FuIsChannel())
+				{
+				Assert(pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree());	// A recommended group should not have been deleted
+				parraypGroupsRecommended->Add(pGroup);
+				}
+			} // while
+		} // while
+	}
+
+void
+TProfile::GetRecommendations_Channels(IOUT CArrayPtrGroups * parraypChannelsRecommended) const
+	{
+	Assert(parraypChannelsRecommended != NULL);
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		TGroup ** ppGroupStop;
+		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+		while (ppGroup != ppGroupStop)
+			{
+			TGroup * pGroup = *ppGroup++;
+			Assert(pGroup != NULL);
+			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+			Assert(pGroup->m_pAccount == pAccount);
+			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && pGroup->Group_FuIsChannel())
+				parraypChannelsRecommended->Add(pGroup);
 			} // while
 		} // while
 	}
@@ -350,14 +414,14 @@ TProfile::GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC
 			TGroup * pGroup = *ppGroup++;
 			Assert(pGroup != NULL);
 			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && pGroup->m_strNameChannel_YZ.FIsEmptyString())
+			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && !pGroup->Group_FuIsChannel())
 				parraypGroups->Add(pGroup);
 			}
 		}
 	parraypGroups->SortByEventLastReceived();
 	}
 
-void
+UINT
 TProfile::GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC
 	{
 	TAccountXmpp ** ppAccountStop;
@@ -372,11 +436,12 @@ TProfile::GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC
 			TGroup * pGroup = *ppGroup++;
 			Assert(pGroup != NULL);
 			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && !pGroup->m_strNameChannel_YZ.FIsEmptyString())
+			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && pGroup->Group_FuIsChannel())
 				parraypChannels->Add(pGroup);
 			}
 		}
 	parraypChannels->SortByEventLastReceived();
+	return m_arraypaChannelNames.GetSize();
 	}
 
 void

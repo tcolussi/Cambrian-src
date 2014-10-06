@@ -150,8 +150,6 @@ public:
 	inline int Contacts_UGetCount() const { return m_arraypaContacts.GetSize(); }
 	inline TContact ** PrgpGetContactsStop(OUT TContact *** pppContactStop) const { return (TContact **)m_arraypaContacts.PrgpvGetElementsStop(OUT (void ***)pppContactStop); }
 	void Contacts_Append(IOUT CArrayPtrContacts * parraypContacts) const { parraypContacts->Append(IN &m_arraypaContacts); }
-	void Contacts_SetFlagAboutBeingDeleted();
-	void Contacts_BroadcastAboutBeingDeleted();
 	void Contact_RosterSubscribe(INOUT TContact * pContact);
 	void Contact_RosterUnsubscribe(INOUT TContact * pContact);
 	PSZUC Contact_RosterUpdateItem(const CXmlNode * pXmlNodeItemRoster);
@@ -177,6 +175,7 @@ public:
 		};
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanza * pbinXcpApiExtraRequest, EFindGroup eFindGroup);
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier);
+	TGroup * GroupChannel_PFindByName_YZ(PSZUC pszChannelName) const;
 	TGroup * GroupChannel_PFindByNameOrCreate_YZ(PSZUC pszChannelName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest);
 
 	void Group_AddToNavigationTree(PA_CHILD TGroup * paGroup);

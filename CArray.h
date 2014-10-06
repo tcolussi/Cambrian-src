@@ -70,7 +70,7 @@ public:
 	void ** PrgpvAllocateElementsEmpty(int cElementsAlloc);
 	void ** PrgpvAllocateElementsEmpty(const CArray * parray);
 	void ** PrgpvAllocateElementsAppend(int cElementsAllocGrowBy);
-	void RemoveAllElements();
+	void Empty();
 	void FreeExtra();
 
 	int Add(const void * pvElement);

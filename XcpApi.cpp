@@ -45,7 +45,9 @@ TContact::PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttrib
 	{
 	if (pXmlAttributeGroupIdentifier == NULL)
 		return this;
-	return m_pAccount->Group_PFindByIdentifier_YZ(IN pXmlAttributeGroupIdentifier->m_pszuTagValue);
+	return (pXmlAttributeGroupIdentifier->m_pszuTagName[0] == d_chXa_GroupChannel_strName) ?
+		m_pAccount->GroupChannel_PFindByName_YZ(IN pXmlAttributeGroupIdentifier->m_pszuTagValue) :
+		m_pAccount->Group_PFindByIdentifier_YZ(IN pXmlAttributeGroupIdentifier->m_pszuTagValue);
 	}
 
 //	Core method to execute multiple XCP APIs
@@ -103,16 +105,24 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 				pXmlAttribute = pXmlAttribute->m_pNextSibling;
 				} // while
 			Report(pszApiName != NULL);
-			//Report(pszXmlResponseName != NULL);
-			if (pszApiName != NULL && pszXmlResponseName != NULL)
+			if (pszApiName != NULL)
 				{
-				struct SXospApiExecute
+				Report(pszApiName[0] != '\0');
+				struct SXospApiExecute	// To be done later
 					{
 					SOffsets oOffsets;
 					const CXmlNode * pXmlNodeApi;
 					};
-
-				BinAppendTextOffsetsInit_VE(OUT &m_oOffsets, "<$s $s='^s'^A>", pszXmlResponseName, pszXmlResponseName, (pszXmlResponseValue[0] != '\0') ? pszXmlResponseValue : pszApiName, pXmlAttributeGroupIdentifier);
+				if (pszXmlResponseName == NULL)
+					{
+					// We have a standard API call, so the value is the API name
+					Assert(pszXmlResponseValue == NULL);
+					pszXmlResponseName = (PSZUC)d_szXop_ApiResponse;
+					pszXmlResponseValue = pszApiName;
+					}
+				Assert(pszXmlResponseValue != NULL);
+				Report(pszXmlResponseValue[0] != '\0');
+				BinAppendTextOffsetsInit_VE(OUT &m_oOffsets, "<$s $s='^s'^A>", pszXmlResponseName, pszXmlResponseName, pszXmlResponseValue, pXmlAttributeGroupIdentifier);
 				XcpApi_ExecuteApiName(pszApiName, IN pXmlNodeApiList);	// Execute the API
 				BinAppendTextOffsetsTruncateIfEmpty_VE(IN &m_oOffsets, "</$s>", pszXmlResponseName);	// Close the XML request
 				}
@@ -316,12 +326,14 @@ CBinXcpStanza::XcpApi_ExecuteApiName(PSZUC pszApiName, const CXmlNode * pXmlNode
 	if (FCompareStringsNoCase(pszApiName, c_szaApi_Contact_Recommendations_Get))
 		{
 		m_pContact->m_pAccount->m_pProfileParent->XcpApiProfile_RecommendationsSerialize(INOUT this); // Return all the recommendations related to the profile
-		return;
+		goto AlwaysReturnWhateverIsInTheBlob;
 		}
 	// Report the error to the user
 	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Unknown XOSP API '$s'\n", pszApiName);
 	m_paData->cbData = m_oOffsets.ibReset;	// Flush whatever was there for the API
 	BinAppendText_VE("<" d_szXop_ApiResponseError_Name_s "/>", pszApiName);
+
+	AlwaysReturnWhateverIsInTheBlob:
 	m_oOffsets.ibReset = m_oOffsets.ibDataBegins = m_paData->cbData;
 	}
 
@@ -446,7 +458,7 @@ CBinXcpStanzaTypeSynchronize::CBinXcpStanzaTypeSynchronize(ITreeItemChatLogEvent
 			Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
 			Assert(pMember->m_pGroup == pContactOrGroup);
 			Assert(pMember->m_pContact->EGetRuntimeClass() == RTI(TContact));
-			BinAppendText_VE("<" d_szXop_MessagesSynchronizeGroup_h ">", IN &((TGroup *)pContactOrGroup)->m_hashGroupIdentifier);
+			BinAppendText_VE("<" d_szXop_MessagesSynchronizeGroup_p ">", IN pContactOrGroup);
 			BinAppendXospSynchronizeTimestampsAndClose(pContactOrGroup, IN &pMember->m_tsOtherLastSynchronized);
 			XospSendStanzaToContactAndEmpty(IN pMember->m_pContact);
 			} // while
@@ -505,7 +517,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		PSZUC pszGroupIdentifier = pXmlAttributeGroupIdentifier->m_pszuTagValue;
 		Assert(pszGroupIdentifier != NULL);
 		pContactOrGroup_NZ = pGroup = (pXmlAttributeGroupIdentifier->m_pszuTagName[0] == d_chXa_GroupChannel_strName) ?
-			pAccount->GroupChannel_PFindByNameOrCreate_YZ(IN IN pszGroupIdentifier, INOUT this) :
+			pAccount->GroupChannel_PFindByNameOrCreate_YZ(IN pszGroupIdentifier, INOUT this) :
 			pAccount->Group_PFindByIdentifier_YZ(IN pszGroupIdentifier, INOUT this, TAccountXmpp::eFindGroupCreate);	// Find the group matching the identifier, and if the group is not there, then create it
 		if (pGroup == NULL)
 			{
@@ -593,7 +605,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				}
 			if (pContactThirdParty != NULL)
 				BinAppendXmlForSelfClosingElementQuote();
-			arraypaEvents.RemoveAllElements();	// Flush the array so the array object may be reused by other sync operations
+			arraypaEvents.Empty();	// Flush the array so the array object may be reused by other sync operations
 			}
 			break;
 
@@ -932,9 +944,8 @@ ITreeItem::TreeItem_SGetNameDisplay() CONST_MCC
 	}
 
 void
-TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * pbinXcpApiExtraRequest)
+TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * UNUSED_PARAMETER(pbinXcpApiExtraRequest))
 	{
-	UNUSED_PARAMETER(pbinXcpApiExtraRequest);
 	// Fill in any missing group info from the data in pXmlNodeApiParameters
 	if (m_uFlagsTreeItem & FTI_kfTreeItem_NameDisplayedGenerated)
 		{

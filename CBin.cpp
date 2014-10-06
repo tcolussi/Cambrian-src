@@ -1947,11 +1947,41 @@ void
 CBin::BinAppendTextOffsetsInit_VE(OUT SOffsets * pOffsets, PSZAC pszFmtTemplate, ...)
 	{
 	Assert(pOffsets != NULL);
+	Assert(pszFmtTemplate != NULL);
 	pOffsets->ibReset = (m_paData != NULL) ? m_paData->cbData : 0;
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszFmtTemplate);
 	BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
 	pOffsets->ibDataBegins = m_paData->cbData;
+	}
+
+void
+CBin::BinAppendTextOffsetsInitXmlElement(OUT SOffsets * pOffsets, CHS chXmlElementName)
+	{
+	Assert(pOffsets != NULL);
+	Assert(chXmlElementName != '\0');
+	BYTE * pbXml = PbeAllocateExtraMemoryAndSetSize(3);
+	pbXml[0] = '<';
+	pbXml[1] = chXmlElementName;
+	pbXml[2] = '>';
+	pOffsets->ibDataBegins = m_paData->cbData;
+	pOffsets->ibReset = m_paData->cbData - 3;
+	}
+
+//	Method complement to BinAppendTextOffsetsInitXmlElement()
+void
+CBin::BinAppendXmlClosingElement_TruncateIfEmpty(const SOffsets * pOffsets, CHS chXmlElementName)
+	{
+	Assert(pOffsets != NULL);
+	Assert(chXmlElementName != '\0');
+	Assert(m_paData != NULL);
+	if (m_paData->cbData <= pOffsets->ibDataBegins)
+		{
+		Assert(m_paData->cbData == pOffsets->ibDataBegins);
+		m_paData->cbData = pOffsets->ibReset;	// Truncate the blob
+		return;
+		}
+	BinAppendText_VE("</$b>", chXmlElementName);
 	}
 
 void
@@ -2301,7 +2331,7 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				AppendGroupIdentifier:
 				if (u.pGroup->EGetRuntimeClass() == RTI(TGroup))
 					{
-					if (!u.pGroup->m_strNameChannel_YZ.FIsEmptyString())
+					if (u.pGroup->Group_FuIsChannel())
 						BinAppendText_VE(d_szXa_GroupChannel_strName, &u.pGroup->m_strNameChannel_YZ);
 					else
 						BinAppendText_VE(d_szXa_GroupIdentifier_shaBase85, &u.pGroup->m_hashGroupIdentifier);

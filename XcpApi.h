@@ -48,13 +48,13 @@ Xv_		Xml value for an attribute
 //	The following #define must match the #define d_chXop above
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define d_szXop_MessageTyping_xmlStarted				"<t/>"
-#define d_szXop_MessageTyping_xmlStartedGroup_h			"<t g='{h|}'/>"
+#define d_szXop_MessageTyping_xmlStartedGroup_p			"<t^G/>"
 #define d_szXop_MessageTyping_xmPaused					"<t>p</t>"
-#define d_szXop_MessageTyping_xmPausedGroup_h			"<t g='{h|}'>p</t>"
+#define d_szXop_MessageTyping_xmPausedGroup_p			"<t^G>p</t>"
 
 /////////////////////////////////////////////////
 #define d_szXop_MessagesSynchronize						"s"
-#define d_szXop_MessagesSynchronizeGroup_h				"s g='{h|}'"
+#define d_szXop_MessagesSynchronizeGroup_p				"s^G"
 #define d_szXop_MessagesSynchronizeGroup_A				"s^A"
 
 /////////////////////////////////////////////////
@@ -103,9 +103,10 @@ Xv_		Xml value for an attribute
 #define d_szXop_MessageNew_xmlClose						"</" d_szXSop_EventsData "></m>"
 
 /////////////////////////////////////////////////
-#define d_szXop_ApiCall_s							"a n='$s' _r=''"
+#define d_szXop_ApiCall_s							"a n='$s'"	// The attribute _r is implicitly assumed if there is no response prefix '_'
 #define d_szXop_ApiCall_RespondToEventID_s_ts_pE	"a n='$s' _i='$t'^E"
 #define d_szXop_ApiCall_RespondToEventOther_s_ts_pE	"a n='$s' _o='$t'^E"
+#define d_szXop_ApiResponse							"r"
 #define d_szXop_ApiDataToEventID					"i"
 #define d_szXop_ApiDataToEventID_ts_pE				"i i='$t'^E"
 #define d_szXop_ApiDataToEventOther					"o"

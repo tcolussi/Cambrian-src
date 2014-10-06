@@ -61,7 +61,7 @@ ITreeItem::~ITreeItem()
 void
 ITreeItem::TreeItem_MarkForDeletion()
 	{
-	m_uFlagsTreeItem |= (FTI_kfTreeItem_DoNotSerializeToDisk | FTI_kfObjectInvisible);	// If an object is not serialized to disk, then it should not be visible in the Navigation Tree
+	m_uFlagsTreeItem = (m_uFlagsTreeItem & ~FTI_kfRecommended) | (FTI_kfTreeItem_DoNotSerializeToDisk | FTI_kfObjectInvisible);	// If an object is to be deleted, then it should not serialized to disk nor be visible in the Navigation Tree.  Also, the object should no longer be recommended.
 	TreeItemW_RemoveFromNavigationTree();
 	}
 
@@ -75,6 +75,8 @@ ITreeItem::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) c
 	}
 
 //	ITreeItem::IXmlExchange::XmlExchange()
+//
+//	Variables used: ("N" + "F")
 void
 ITreeItem::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
@@ -451,7 +453,7 @@ CArrayPtrTreeItems::DeleteAllTreeItems()
 		{
 		delete *ppaTreeItem++;
 		}
-	RemoveAllElements();
+	Empty();
 	}
 
 void

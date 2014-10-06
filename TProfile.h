@@ -7,10 +7,6 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-class OJapiProfile;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class TProfile : public ITreeItem	// (profile)
 {
@@ -28,6 +24,7 @@ public:
 	CArrayPtrBrowsersTabbed m_arraypaBrowsersTabbed;
 	CArrayPtrEventsRecent m_arraypEventsRecentMessagesReceived;	// Recent text message received
 	CArrayPtrEventsRecent m_arraypEventsRecentBallots;			// Recent ballots sent and received
+	CArrayPtrChannelNames m_arraypaChannelNames;				// This array is necessary to know how many channels are available in the dashboard (communication panel)
 	CStr m_strData;									// Data of the profile (this variable is used for the JAPI)
 	CStr m_strJurisdiction;							// the current jurisdiction name, TODO: create an object TJurisdictoin
 	OJapiProfile * m_paoJapiProfile;
@@ -62,13 +59,14 @@ public:
 	virtual void TreeItem_GotFocus();										// From ITreeItem
 
 	void XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
-	void GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypaContactsRecommended) const;
-	void GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypaGroupsRecommended) const;
+	void GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypContactsRecommended) const;
+	void GetRecommendations_Groups(IOUT CArrayPtrGroups * parraypGroupsRecommended) const;
+	void GetRecommendations_Channels(IOUT CArrayPtrGroups * parraypChannelsRecommended) const;
 	void GetRecommendations_Links() const;	// NYI
 	void InitHashTablesOfIdentifiers(IOUT CHashTableIdentifiersOfContacts * pHashTableContacts, IOUT CHashTableIdentifiersOfGroups * pHashTableGroups) const;
 
 	void GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC;
-	void GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC;
+	UINT GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC;
 	void GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC;
 
 	IService * PAllocateService_YZ(RTI_ENUM rtiService);

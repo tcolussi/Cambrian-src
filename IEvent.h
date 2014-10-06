@@ -305,7 +305,6 @@ CHS ChGetCambrianActionFromUrl(PSZUC pszUrl);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Special values for IEvent::m_tsOther
 #define	d_tsOther_ezEventNeverSent		0			// The event has never been sent. As soon as there is a valid socket connection with the server, the method BinXmlSerializeEventForXcp() will attempt to send the event.
-#define	d_tsOther_eEventSentOnce		1			// The event was sent to the server, however was not delivered.  The proof of delivery is the timestamp of the confirmation which must be larger than d_tsOther_kmReserved.
 #define d_tsOther_kmReserved			0xFFFFFFFF	// Reserving the first 32 bits for the timestamp.  This leaves plenty of room to have various flags while making little difference in the 64-bit value. (btw: 0xFFFFFFFF milliseconds is 1970-02-19@11:02:47, and serialized as "3TSmc9t")
 #define d_tsOther_tsEventDeliveryMin   0x100000000	// Minimum value of a timestamp to be considered delivered.  This value is not used in the code, as it is there to document a successful delivery is larger than d_tsOther_kmReserved.
 
@@ -788,7 +787,7 @@ public:
 	void AddEvent(IEvent *pEvent);
 	inline IEvent ** PrgpGetEventsStopLast(OUT IEvent *** pppEventStop) CONST_MCC { EventsUnserialize(); return (IEvent **)PrgpvGetElementsStopLast(OUT (void ***)pppEventStop, m_cEventsMax); }
 	int GetSize();
-	inline void Flush() { RemoveAllElements(); }
+	inline void Flush() { Empty(); }
 	inline void RemoveEvent(IEvent * pEvent) { RemoveElementAssertI(pEvent); }
 
 

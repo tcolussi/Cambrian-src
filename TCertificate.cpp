@@ -336,7 +336,7 @@ void
 TCertificates::FlushDataAndCauseMemoryLeak()
 	{
 	m_paTreeItemW_YZ = NULL;
-	m_arraypaCertificates.RemoveAllElements();
+	m_arraypaCertificates.Empty();
 	}
 
 void

@@ -560,7 +560,7 @@ ITreeItemChatLogEvents::Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC
 		TContact * pContact = pMember->m_pContact;
 		if (pContact->Contact_FuCommunicateViaXosp())
 			{
-			binXcpStanza.BinAppendText_VE((eChatState == eChatState_zComposing) ? d_szXop_MessageTyping_xmlStartedGroup_h : d_szXop_MessageTyping_xmPausedGroup_h, &pGroup->m_hashGroupIdentifier);
+			binXcpStanza.BinAppendText_VE((eChatState == eChatState_zComposing) ? d_szXop_MessageTyping_xmlStartedGroup_p : d_szXop_MessageTyping_xmPausedGroup_p, pGroup);
 			binXcpStanza.XospSendStanzaToContactAndEmpty(IN pContact);
 			}
 		}

@@ -53,6 +53,7 @@ public:
 	void FormatErrorCode(EError err);
 	void FormatErrorAtLineNumber(int nLineNumberError);
 
+	BOOL FCompareStringsChannelNames(PSZUC pszuChannelName) const;
 	BOOL FCompareStringsJIDs(PSZUC pszuJID) const;
 	BOOL FCompareStringsNoCaseUntilCharacter(PSZUC pszuStringCompare, UINT chCompareUntil) const;
 	BOOL FCompareStringsNoCaseCch(PSZUC pszuStringCompare, int cchStringCompare) const;

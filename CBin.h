@@ -143,11 +143,13 @@ public:
 	void BinAppendXmlForSelfClosingElement();
 	void BinAppendXmlForSelfClosingElementQuote();
 	void BinAppendXmlForSelfClosingElementQuoteTruncateAtOffset(const SOffsets * pOffsets);
+	void BinAppendXmlClosingElement_TruncateIfEmpty(const SOffsets * pOffsets, CHS chXmlElementName);
 
 	void BinAppendXmlNode(const CXmlNode * pXmlNode);
 	void BinAppendXmlNodeNoWhiteSpaces(const CXmlNode * pXmlNode);
 	void BinAppendDataEncoded(const void * pvData, int cbData, UINT chEncoding);
 	void BinAppendTextOffsetsInit_VE(OUT SOffsets * pOffsets, PSZAC pszFmtTemplate, ...);
+	void BinAppendTextOffsetsInitXmlElement(OUT SOffsets * pOffsets, CHS chXmlElementName);
 	void BinAppendTextOffsetsTruncateIfEmpty_VE(IN const SOffsets * pOffsets, PSZAC pszFmtTemplate, ...);
 	void BinAppendText_VE(PSZAC pszFmtTemplate, ...);
 	PSZU BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs);

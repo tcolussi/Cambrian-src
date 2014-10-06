@@ -106,6 +106,7 @@
         <file alias="Role">Icons/hat.png</file>
         <file alias="Deleted">Icons/Recycle_Bin.png</file>
         <file alias="Delete">Icons/DeleteRedX.png</file>
+        <file alias="Hashtag">Icons/Hashtag.png</file>
     </qresource>
     <qresource prefix="/snd">
         <file alias="NewMessage">Sounds/msg.wav</file>

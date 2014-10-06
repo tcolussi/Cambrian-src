@@ -170,7 +170,7 @@ public:
 	PSZUC PszuAllocateStringU(PSZUC pszuSrcCopy);
 	void AlignToUInt32();
 
-	void RemoveAll();
+	void Empty();
 	int GetElementsCount() const { return m_cHashElements; }
 
 	#ifdef DEBUG

@@ -127,6 +127,8 @@ ITreeItemChatLogEvents::ChatLog_PszGetPathFolderDownload() const
 	}
 
 //	ITreeItemChatLogEvents::IXmlExchange::XmlExchange()
+//
+//	Variables Used: ("N" + "F") + ("T" + "D" + "U")
 void
 ITreeItemChatLogEvents::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
@@ -145,8 +147,8 @@ ITreeItemChatLogEvents::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		}
 	pXmlExchanger->XmlExchangeTimestamp("tsCreated", INOUT_F_UNCH_S &m_tsCreated);
 	pXmlExchanger->XmlExchangeTimestamp("tsOtherLastReceived", INOUT_F_UNCH_S &m_tsOtherLastReceived);
-	pXmlExchanger->XmlExchangeStr("DownloadFolder", INOUT_F_UNCH_S &m_strPathFolderDownload);
-	pXmlExchanger->XmlExchangeInt("MessagesUnread", INOUT_F_UNCH_S &m_cMessagesUnread);
+	pXmlExchanger->XmlExchangeStr("D", INOUT_F_UNCH_S &m_strPathFolderDownload);
+	pXmlExchanger->XmlExchangeInt("U", INOUT_F_UNCH_S &m_cMessagesUnread);
 	}
 
 //	ITreeItemChatLogEvents::ITreeItem::TreeItem_EDoMenuAction()

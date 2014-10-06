@@ -90,7 +90,9 @@ SOURCES += \
     WLayoutTabbedBrowser.cpp \
     TBrowserTabs.cpp \
     TBrowserTab.cpp \
-    WDashboard.cpp
+    WDashboard.cpp \
+    DDialogChannels.cpp \
+    TChannel.cpp
 
 
 HEADERS += \
@@ -166,7 +168,9 @@ HEADERS += \
     WLayoutTabbedBrowser.h \
     TBrowserTabs.h \
     TBrowserTab.h \
-    WDashboard.h
+    WDashboard.h \
+    DDialogChannels.h \
+    TChannel.h
 
 
 FORMS +=

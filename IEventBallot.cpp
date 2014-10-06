@@ -68,7 +68,7 @@ CArrayPtrBallotChoices::DeleteAllChoices()
 	_CEventBallotChoice ** ppChoice = PrgpGetChoicesStop(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
 		delete *ppChoice++;
-	RemoveAllElements();
+	Empty();
 	}
 
 void
@@ -78,7 +78,7 @@ CArrayPtrBallotVotes::DeleteAllVotes()
 	_CEventBallotVote ** ppVote = PrgpGetVotesStop(OUT &ppVoteStop);
 	while (ppVote != ppVoteStop)
 		delete *ppVote++;
-	RemoveAllElements();
+	Empty();
 	}
 
 //	IEventBallot::IEvent::XmlUnserializeCoreE()
@@ -93,7 +93,7 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 
 	const BOOL fSerializeVotes = pbinXmlAttributes->FuSerializingEventToDisk();	// Serialize the votes only when saving to disk.  Transmitting via XOSP or cloning does not serialize the votes.
 	PSZAC pszFmtTemplateBallotChoice_S_ux_i = fSerializeVotes ? "<"d_szXMLe_BallotChoice_S_ux_i"/>" : "<"d_szXMLe_BallotChoice_S_ux"/>";
-	pbinXmlAttributes->BinAppendText("><"d_szXMLe_BallotChoices">");
+	pbinXmlAttributes->BinAppendText("><"d_szXMLe_BallotChoices">");	// This will close the XML attribute and open an XML element
 	_CEventBallotChoice ** ppChoiceStop;
 	_CEventBallotChoice ** ppChoice = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
@@ -106,7 +106,7 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	if (fSerializeVotes)
 		{
 		// Do not transmit the votes to the contacts; only serialize the vote to disk.
-		pbinXmlAttributes->BinAppendText("><" d_szXMLe_BallotVotes ">");
+		pbinXmlAttributes->BinAppendText("<" d_szXMLe_BallotVotes ">");
 		_CEventBallotVote ** ppVoteStop;
 		_CEventBallotVote ** ppVote = m_arraypaVotes.PrgpGetVotesStop(OUT &ppVoteStop);
 		while (ppVote != ppVoteStop)

@@ -40,7 +40,7 @@ CChatConfiguration::~CChatConfiguration()
 void
 CChatConfiguration::Destroy()
 	{
-	g_arraypAccounts.RemoveAllElements();
+	g_arraypAccounts.Empty();
 	m_arraypaProfiles.DeleteAllTreeItems();
 	m_oTreeItemCertificates.FlushDataAndCauseMemoryLeak();
 	}

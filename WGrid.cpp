@@ -28,7 +28,7 @@ CArrayPtrGridColumns::DeleteAllColumns()
 	CGridColumn ** ppColumn = PrgpGetColumnsStop(OUT &ppColumnStop);
 	while (ppColumn != ppColumnStop)
 		delete *ppColumn++;
-	RemoveAllElements();
+	Empty();
 	}
 
 void
@@ -38,7 +38,7 @@ CArrayPtrGridRows::DeleteAllRows()
 	CGridRow ** ppRow = PrgpGetRowsStop(OUT &ppRowStop);
 	while (ppRow != ppRowStop)
 		delete *ppRow++;
-	RemoveAllElements();
+	Empty();
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

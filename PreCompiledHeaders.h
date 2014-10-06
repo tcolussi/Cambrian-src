@@ -8,8 +8,8 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.3.1"
-#define d_szwApplicationVersion		   L"0.1.3.1"
+#define d_szApplicationVersion			"0.1.3.4"
+#define d_szwApplicationVersion		   L"0.1.3.4"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -49,6 +49,8 @@ enum RTI_ENUM	// rti
 	{
 	eRTI_Nil = -1,		// Invalid object
 	eRTI_Null = 0,		// Null/empty object
+
+	eRTI_IOrphanOf,		// The object is an orphan of another object.  There is no class or interface for this value, however any class responding to this virtual interface shall return the pointer of the parent object.  This interface is used to automatically delete orphan objects when a parent node is remove from the Navigation Tree.
 
 	eRTI_IRuntimeObject,
 	eRTI_IXmlExchangeObjectID,
@@ -248,6 +250,7 @@ class CArrayPtrEventsRecent;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiCambrian;
+class OJapiProfile;
 class OJapiContact;
 class OJapiGroup;
 class OJapiAppInfo;
@@ -314,6 +317,7 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "GroupChat.h"
 #include "TContact.h"
 #include "TGroup.h"
+#include "TChannel.h"
 #include "TAccount.h"
 #include "IApplication.h"
 #include "TProfile.h"

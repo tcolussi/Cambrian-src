@@ -1678,7 +1678,7 @@ CArrayPtrEvents::DeleteAllEvents()
 	IEvent ** ppEvent = PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
 		delete *ppEvent++;
-	RemoveAllElements();
+	Empty();
 	}
 
 void

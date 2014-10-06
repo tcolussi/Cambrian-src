@@ -45,9 +45,9 @@ public:
 
 enum EGroupType
 	{
-	eGroupType_Open,		// Default group type which shows in the Navigation Tree
-	eGroupType_Audience,	// Private distribution list to send polls (at the moment)
-	eGroupType_Channel
+	eGroupType_kzOpen		= 0,	// Default group type which shows in the Navigation Tree
+	eGroupType_keAudience	= 1,	// Private distribution list to send polls (at the moment)
+	eGroupType_kmMask		= 0x000F
 	};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,10 +58,16 @@ class TGroup : public ITreeItemChatLogEvents	// (group)
 	RTI_IMPLEMENTATION(TGroup)
 public:
 	SHashSha1 m_hashGroupIdentifier;		// Unique identifier for the group
-	CStr m_strNameChannel_YZ;				// Channel name without the # hashtag (Example: "Bitcoin").  A channel is a topic for group conversation.  If this field is empty, then the group is not a channel.
 	TContact * m_pContactWhoRecommended_YZ;	// Contact who recommended the group
+	enum
+		{
+		FG_kmGroupTypeMask	= eGroupType_kmMask,	// Bits to store the EGroupType
+		FG_kfIsChannel		= 0x0010				// The group is a channel, and therefore m_strNameChannel_YZ is not empty
+		};
+	UINT m_uFlagsGroup;
+	CStr m_strNameChannel_YZ;				// Channel name without the # hashtag (Example: "Bitcoin").  A channel is a topic for group conversation.  If this field is empty, then the group is not a channel.
+	CStr m_strPurpose;						// Purpose/description of the channel/group describing what it will be used for.
 	CArrayPtrGroupMembers m_arraypaMembers;
-	EGroupType m_eGroupType;
 protected:
 	POJapiGroup m_paoJapiGroup;
 
@@ -70,9 +76,11 @@ public:
 	~TGroup();
 	inline void Group_MarkForDeletion() { TreeItem_MarkForDeletion(); }
 	BOOL Group_FCanBePermenentlyDeleted() const;
-	void Group_UpdateFlagCannotBeDeleted();
 	void Group_RemoveAllReferencesToContactsAboutBeingDeleted();
-	void GroupInitNewIdentifier();
+	void Group_InitNewIdentifier();
+	inline EGroupType EGetGroupType() const { return (EGroupType)(m_uFlagsGroup & FG_kmGroupTypeMask); }
+	inline BOOL Group_FuIsChannel() const { return (m_uFlagsGroup & FG_kfIsChannel); }
+	void GroupChannel_SetName(PSZUC pszChannelName);
 
 	void XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
 	void XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, INOUT CBinXcpStanza * pbinXcpApiExtraRequest);
@@ -93,8 +101,6 @@ public:
 	virtual void TreeItem_IconUpdateOnMessagesRead();								// From ITreeItem
 	virtual void TreeItem_MenuAppendActions(IOUT WMenu * pMenu);					// From ITreeItem
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);			// From ITreeItem
-	void TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon);	// From ITreeItem
-	void TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ);									//
 	virtual void Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const;	// From ITreeItemChatLogEvents
 
 	bool TreeItemGroup_FCanDisplayWithinNavigationTree() const;

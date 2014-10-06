@@ -8,10 +8,10 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-class DDialogPropertyPage : public QListWidgetItem, public WWidget
+class WDialogPropertyPage : public QListWidgetItem, public WWidget
 {
 public:
-	DDialogPropertyPage(PSZAC pszName);
+	WDialogPropertyPage(PSZAC pszName);
 };
 
 //	Base class to display properties of an object
@@ -26,7 +26,7 @@ protected:
 
 public:
 	DDialogProperties();
-	void PageAdd(DDialogPropertyPage * pawPage);
+	void PageAdd(WDialogPropertyPage * pawPage);
 	virtual int exec();
 
 public slots:
@@ -36,19 +36,19 @@ public slots:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class DDialogPropertyPageAccountGeneral : public DDialogPropertyPage
+class WDialogPropertyPageAccountGeneral : public WDialogPropertyPage
 {
 protected:
 	TAccountXmpp * m_pAccount;
 	WEditPassword * m_pwEditPassword;
 public:
-	DDialogPropertyPageAccountGeneral(TAccountXmpp * pAccount);
+	WDialogPropertyPageAccountGeneral(TAccountXmpp * pAccount);
 };
 
-class DDialogPropertyPageAccountTest : public DDialogPropertyPage
+class WDialogPropertyPageAccountTest : public WDialogPropertyPage
 {
 public:
-	DDialogPropertyPageAccountTest(PSZAC pszName);
+	WDialogPropertyPageAccountTest(PSZAC pszName);
 };
 
 class DDialogPropertiesAccount : public DDialogProperties
@@ -61,12 +61,12 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class DDialogPropertyPageContactGeneral : public DDialogPropertyPage
+class WDialogPropertyPageContactGeneral : public WDialogPropertyPage
 {
 protected:
 	TContact * m_pContact;
 public:
-	DDialogPropertyPageContactGeneral(TContact * pContact);
+	WDialogPropertyPageContactGeneral(TContact * pContact);
 };
 
 class DDialogPropertiesContact : public DDialogProperties
@@ -79,12 +79,12 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-class DDialogPropertyPageGroupGeneral : public DDialogPropertyPage
+class WDialogPropertyPageGroupGeneral : public WDialogPropertyPage
 {
 protected:
 	TGroup * m_pGroup;
 public:
-	DDialogPropertyPageGroupGeneral(TGroup * pGroup);
+	WDialogPropertyPageGroupGeneral(TGroup * pGroup);
 };
 
 class DDialogPropertiesGroup : public DDialogProperties
@@ -96,12 +96,12 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class DDialogPropertyPageProfileGeneral : public DDialogPropertyPage
+class WDialogPropertyPageProfileGeneral : public WDialogPropertyPage
 {
 protected:
 	TProfile * m_pProfile;
 public:
-	DDialogPropertyPageProfileGeneral(TProfile * pProfile);
+	WDialogPropertyPageProfileGeneral(TProfile * pProfile);
 };
 
 class DDialogPropertiesProfile : public DDialogProperties

@@ -69,16 +69,31 @@ public:
 	static const EMenuAction c_eMenuIcon = eMenuAction_Group;
 };
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-class TRecommendations : public ITreeItem
+//	Tree Item having a contact as its parent
+class ITreeItemOfContact : public ITreeItem
 {
 public:
-	TContact * m_pContact;
+	TContact * m_pContactParent_NZ;
+
 public:
-	TRecommendations(TContact * pContact);
-	~TRecommendations();
+	inline ITreeItemOfContact(TContact * pContactParent_NZ) { m_pContactParent_NZ = pContactParent_NZ; }
 	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;			// From IRuntimeObject
+};
+
+class ITreeItemOfContactOrphaned : public ITreeItemOfContact
+{
+public:
+	inline ITreeItemOfContactOrphaned(TContact * pContactParent_NZ) : ITreeItemOfContact(pContactParent_NZ) { }
+
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+class TRecommendations : public ITreeItemOfContactOrphaned
+{
+public:
+	TRecommendations(TContact * pContact) : ITreeItemOfContactOrphaned(pContact) { }
+	~TRecommendations();
 	virtual void TreeItem_RemoveAllReferencesToObjectsAboutBeingDeleted();
 	virtual void TreeItem_GotFocus();		// From ITreeItem
 

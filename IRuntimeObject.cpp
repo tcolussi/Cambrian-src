@@ -106,5 +106,5 @@ CArrayPtrRuntimeObjects::DeleteAllRuntimeObjects()
 		{
 		delete *ppaRuntimeObject++;
 		}
-	RemoveAllElements();
+	Empty();
 	}

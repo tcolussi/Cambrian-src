@@ -1377,7 +1377,7 @@ CXmlNode::UpdateAttributeValueL64(CHS chAttributeName, OUT_F_UNCH L64 * plValue)
 	*plValue = LStringToNumber_ZZR_ML(pNodeAttribute->m_pszuTagValue);
 	}
 void
-CXmlNode::UpdateAttributeValueTimestamp(CHS chAttributeName, OUT_F_UNCH TIMESTAMP * ptsValue) const
+CXmlNode::UpdateAttributeValueTimestamp(CHS chAttributeName, OUT_F_UNCH TIMESTAMP * ptsValue) const // TODO: Rename all methods Update*() to Get*()
 	{
 	Assert(ptsValue != NULL);
 	CXmlNode * pNodeAttribute = PFindAttribute(chAttributeName);
@@ -1392,6 +1392,7 @@ CXmlNode::UpdateAttributeValueCStr(CHS chAttributeName, OUT_F_UNCH CStr * pstrVa
 	CXmlNode * pNodeAttribute = PFindAttribute(chAttributeName);
 	if (pNodeAttribute == NULL)
 		return;
+	Assert(pNodeAttribute->m_pszuTagValue != NULL);
 	pstrValue->BinInitFromStringWithNullTerminator((PSZAC)pNodeAttribute->m_pszuTagValue);
 	}
 
@@ -1649,7 +1650,7 @@ CXmlNode::SortSiblingsByLineNumber(INOUT CArrayEx * parrayDummy, INOUT CAllocato
 	{
 	Assert(parrayDummy != NULL);
 	Assert(pAllocatorDummy != NULL);
-	parrayDummy->RemoveAll();
+	parrayDummy->Empty();
 	pAllocatorDummy->RecycleBuffer();
 
 	CXmlNode * pXmlNode = this;
@@ -2810,7 +2811,7 @@ CHashTableXmlNodes::BuildHashTableOfElementNamesOrAttributeIDs(const CXmlNode * 
 	Assert(pXmlNodeFirstElement != NULL);
 	Assert(pszaAttributeID != NULL && pszaAttributeID[0] != '\0');
 
-	RemoveAll();	// Empty the previous hash table
+	Empty();	// Empty the previous hash table
 
 
 	// Determine if we must build the hash table from the attribute ID, or from the element names
@@ -3020,7 +3021,7 @@ void
 IXmlExchangeObjectID::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	Assert(pXmlExchanger != NULL);
-	pXmlExchanger->XmlExchangeUInt("_ID", INOUT_F_UNCH_S &mu_Cookie.uSerializeObjectId);
+	pXmlExchanger->XmlExchangeUInt("_", INOUT_F_UNCH_S &mu_Cookie.uSerializeObjectId);
 	}
 
 
@@ -3506,8 +3507,9 @@ CXmlExchanger::XmlExchangeDateTime(PSZAC pszuTagNameDateTime, INOUT_F_UNCH_S QDa
 void
 CXmlExchanger::XmlExchangeObjects(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrTreeItems * parraypaObjects, PFn_PaAllocateXmlObject pfnPaAllocatorObject, PVOID pvContextAllocate)
 	{
+	Assert((chTagNameObjects >= 'A' && chTagNameObjects <= 'Z') && "Tag name must be uppercase because it uses a lowercase for individual objects");
 	PSZAC pszuTagNameObjects = (PSZAC)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNameObjects);
-	PSZAC pszuTagNameObject = (PSZAC)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNameObjects + 32);	// Use a lowercase version for each object
+	PSZAC pszuTagNameObject = (PSZAC)m_accumulatorText.PszuAllocateStringFromSingleCharacter(Ch_ToLowercase(chTagNameObjects));	// Use a lowercase version for each object
 	XmlExchangeObjects(pszuTagNameObjects, pszuTagNameObject, parraypaObjects, pfnPaAllocatorObject, pvContextAllocate);
 	}
 
@@ -3581,7 +3583,7 @@ CXmlExchanger::XmlExchangeObjects(PSZAC pszuTagNameObjects, PSZAC pszuTagNameObj
 void
 CXmlExchanger::XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPtrXmlSerializable * parraypaObjects, PFn_PaAllocateXmlObject2_YZ pfnPaAllocatorObject2_YZ, PVOID pvContextAllocate)
 	{
-	Assert(chTagNameObjects >= 'A' && chTagNameObjects <= 'Z');
+	Assert((chTagNameObjects >= 'A' && chTagNameObjects <= 'Z') && "Tag name must be uppercase because it uses a lowercase for individual objects");
 	Assert(parraypaObjects != NULL);
 	Assert(m_pXmlNodeSerialize != NULL);
 	if (m_fSerializing)
@@ -3591,7 +3593,7 @@ CXmlExchanger::XmlExchangeObjects2(CHS chTagNameObjects, INOUT_F_UNCH_S CArrayPt
 		ppObject = parraypaObjects->PrgpGetObjectsStop(OUT &ppObjectStop);
 		if (ppObject == ppObjectStop)
 			return;	// The array is empty, therefore there is nothing to serialize
-		PSZU pszTagNameObject = m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNameObjects + 32);	// Use a lowercase version for each object
+		PSZU pszTagNameObject = m_accumulatorText.PszuAllocateStringFromSingleCharacter(Ch_ToLowercase(chTagNameObjects));	// Use a lowercase version for each object
 		CXmlNode * pXmlNodeObjects = _PAllocateElement(m_pXmlNodeSerialize, (PSZA)m_accumulatorText.PszuAllocateStringFromSingleCharacter(chTagNameObjects));	// Allocate the element for the objects
 		CXmlNode ** ppXmlNodeObjectStack = PpStackPushNodes(pXmlNodeObjects);
 		while (TRUE)
@@ -3758,7 +3760,7 @@ void CXmlExchanger::XmlExchangeEventPointers(CHS /*chTagNameEvents*/, CArrayPtrE
 		if (ppEvent == ppEventStop)
 			return;	// The array is empty, therefore there is nothing to serialize
 
-		CBin * pbinTemp = PGetBinTemporaryDuringSerialization();	// Use the temporary buffer to serializa all the events
+		CBin * pbinTemp = PGetBinTemporaryDuringSerialization();	// Use the temporary buffer to serialize all the events
 		while (TRUE)
 			{
 		IEvent * pEvent = *ppEvent++;

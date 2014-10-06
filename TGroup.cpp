@@ -4,6 +4,9 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
+
+#define d_chGroupChannelPrefix		'#'
+
 #define d_chAttributeGroupMember_Contact		'c'
 
 TGroupMember::TGroupMember(TGroup * pGroup, TContact * pContact) : IContactAlias(pContact)
@@ -75,7 +78,7 @@ TGroupMember::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	Assert(pXmlExchanger != NULL);
 	XmlExchangeContactAlias(pXmlExchanger, d_chAttributeGroupMember_Contact);
-	pXmlExchanger->XmlExchangeInt("MessagesUnread", INOUT_F_UNCH_S &m_cMessagesUnread);
+	pXmlExchanger->XmlExchangeInt("U", INOUT_F_UNCH_S &m_cMessagesUnread);
 	pXmlExchanger->XmlExchangeTimestamp("tsSync", INOUT_F_UNCH_S &m_tsOtherLastSynchronized);
 	}
 
@@ -188,9 +191,9 @@ TGroup::S_PaAllocateGroup(POBJECT pAccountParent)
 TGroup::TGroup(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	{
 	HashSha1_InitEmpty(OUT &m_hashGroupIdentifier);
+	m_uFlagsGroup = 0;
 	m_pContactWhoRecommended_YZ = NULL;
 	m_paoJapiGroup = NULL;
-	m_eGroupType = eGroupType_Open;
 	}
 
 TGroup::~TGroup()
@@ -216,7 +219,7 @@ TGroup::Group_RemoveAllReferencesToContactsAboutBeingDeleted()
 	}
 
 void
-TGroup::GroupInitNewIdentifier()
+TGroup::Group_InitNewIdentifier()
 	{
 	HashSha1_InitRandom(OUT &m_hashGroupIdentifier);
 	}
@@ -337,18 +340,20 @@ TGroup::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) cons
 	return ITreeItemChatLogEvents::PGetRuntimeInterface(rti, m_pAccount);
 	} // PGetRuntimeInterface()
 
-#define d_chElementName_Members		'M'
+#define d_chElementName_Members		'M'	// Must be uppercase because the lowercase is for each member
 //	TGroup::IXmlExchange::XmlExchange()
+//
+//	Variables Used: ("N" + "F") + ("T" + "D" + "U") + ("i" + "y" + "f" + "h" + "M")
 void
 TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
 	Assert(pXmlExchanger != NULL);
 	ITreeItemChatLogEvents::XmlExchange(pXmlExchanger);
-	pXmlExchanger->XmlExchangeSha1("ID", INOUT_F_UNCH_S &m_hashGroupIdentifier);
+	pXmlExchanger->XmlExchangeSha1("i", INOUT_F_UNCH_S &m_hashGroupIdentifier);
+	pXmlExchanger->XmlExchangePointer('y', PPX &m_pContactWhoRecommended_YZ, IN &m_pAccount->m_arraypaContacts);
+	pXmlExchanger->XmlExchangeUIntHex("f", INOUT &m_uFlagsGroup);
 	pXmlExchanger->XmlExchangeStr("h", INOUT &m_strNameChannel_YZ);
-	pXmlExchanger->XmlExchangePointer('Y', PPX &m_pContactWhoRecommended_YZ, IN &m_pAccount->m_arraypaContacts);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Members, INOUT_F_UNCH_S &m_arraypaMembers, TGroupMember::S_PaAllocateGroupMember, this);
-	pXmlExchanger->XmlExchangeInt("Type", INOUT (int *)&m_eGroupType);
 	} // XmlExchange()
 
 
@@ -387,11 +392,11 @@ TGroup::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 		pMenu->ActionsAdd(c_rgzeActionsMenuContactGroupDeleted);
 	}
 
-
 //	TGroup::ITreeItem::TreeItem_EDoMenuAction()
 EMenuAction
 TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	{
+	PSZUC pszName;
 	switch (eMenuAction)
 		{
 	case eMenuAction_GroupAddContacts:
@@ -412,10 +417,14 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	case eMenuSpecialAction_ITreeItemRenamed:
 		// If the name of the group begins with the hashtag (#) then the group is upgraded to a channel
 		m_strNameChannel_YZ.Empty();
-		if (m_strNameDisplayTyped.FStringBeginsWith("#"))
-			{
-			m_strNameChannel_YZ = m_strNameDisplayTyped;
-			}
+		pszName = m_strNameDisplayTyped;
+		Assert(pszName != NULL);
+		if (*pszName == '?')
+			m_uFlagsGroup &= ~FG_kfIsChannel;
+		if (*pszName == d_chGroupChannelPrefix)
+			GroupChannel_SetName(pszName + 1);
+		TreeItem_IconUpdate();	// Redraw the icon
+		Dashboard_UpdateChannels();
 		goto Default;
 	default:
 		Default:
@@ -423,6 +432,7 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		} // switch
 	} // TreeItem_EDoMenuAction()
 
+/*
 void TGroup::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon)
 	{
 	ITreeItem::TreeItemW_DisplayWithinNavigationTree(pParent_YZ, eMenuActionIcon);
@@ -443,6 +453,7 @@ void TGroup::TreeItemW_DisplayWithinNavigationTree(ITreeItem *pParent_YZ)
 	{
 	ITreeItem::TreeItemW_DisplayWithinNavigationTree(pParent_YZ);
 	}
+*/
 
 /*
 class WLayoutGroup : public WLayout
@@ -464,11 +475,11 @@ WLayoutGroup::WLayoutGroup(TGroup * pGroup)
 	}
 */
 
-//	Return TRUE if the group may be displayed within the Navigation Tree
+//	Return TRUE if the group may be displayed within the Navigation Tree, including channels.
 bool
 TGroup::TreeItemGroup_FCanDisplayWithinNavigationTree() const
 	{
-	return (m_eGroupType == eGroupType_Open) && TreeItemFlags_FCanDisplayWithinNavigationTree();
+	return (TreeItemFlags_FCanDisplayWithinNavigationTree() && (EGetGroupType() == eGroupType_kzOpen));
 	}
 
 void
@@ -569,7 +580,7 @@ TGroup::TreeItem_IconUpdate()
 	if (m_cMessagesUnread <= 0)
 		{
 		coTextColor = d_coTreeItem_Default;
-		eMenuIcon = eMenuAction_Group;
+		eMenuIcon = Group_FuIsChannel() ? eMenuAction_GroupChannel : eMenuAction_Group;
 		}
 	else
 		{
@@ -600,7 +611,7 @@ TAccountXmpp::Group_PAllocate()
 	TGroup * pGroup = new TGroup(this);
 	int iGroup = m_arraypaGroups.Add(PA_CHILD pGroup);
 	pGroup->m_strNameDisplayTyped.Format("Group #$i", iGroup + 1);
-	pGroup->GroupInitNewIdentifier();
+	pGroup->Group_InitNewIdentifier();
 	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
 	return pGroup;
 	}
@@ -608,8 +619,8 @@ TAccountXmpp::Group_PAllocate()
 TGroup *TAccountXmpp::Group_PaAllocateTemp(EGroupType eGroupType)
 	{
 	TGroup * pGroup = new TGroup(this);
-	pGroup->m_eGroupType = eGroupType;
-	pGroup->GroupInitNewIdentifier();
+	pGroup->m_uFlagsGroup |= eGroupType;
+	pGroup->Group_InitNewIdentifier();
 	return pGroup;
 	}
 
@@ -638,6 +649,29 @@ TAccountXmpp::Group_AddNewMember_UI(TContact * pContact, int iGroup)
 	*/
 	} // Group_AddNewMember_UI()
 
+TGroup *
+TAccountXmpp::GroupChannel_PFindByName_YZ(PSZUC pszChannelName) const
+	{
+	Assert(pszChannelName != NULL);
+	Report(pszChannelName[0] != '\0');	// Creating a channel without a name is not recommended!
+	if (pszChannelName[0] == d_chGroupChannelPrefix)
+		pszChannelName++;	// Skip the prefix
+
+	(void)m_pProfileParent->m_arraypaChannelNames.FNewChannelAdded(pszChannelName);	// At the moment, always add the channel name.  This is not efficient, but guarantees coherency.
+
+	TGroup ** ppGroupStop;
+	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+	while (ppGroup != ppGroupStop)
+		{
+		TGroup * pGroup = *ppGroup++;
+		Assert(pGroup != NULL);
+		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+		Assert(pGroup->m_pAccount == this);
+		if (pGroup->m_strNameChannel_YZ.FCompareStringsChannelNames(pszChannelName))
+			return pGroup;
+		}
+	return NULL;
+	}
 
 TGroup *
 TAccountXmpp::GroupChannel_PFindByNameOrCreate_YZ(PSZUC pszChannelName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest)
@@ -645,6 +679,11 @@ TAccountXmpp::GroupChannel_PFindByNameOrCreate_YZ(PSZUC pszChannelName, INOUT CB
 	Assert(pszChannelName != NULL);
 	Report(pszChannelName[0] != '\0');	// Creating a channel without a name is not recommended!
 	Assert(pbinXcpApiExtraRequest != NULL);
+	if (pszChannelName[0] == d_chGroupChannelPrefix)
+		pszChannelName++;	// Skip the prefix
+
+	(void)m_pProfileParent->m_arraypaChannelNames.FNewChannelAdded(pszChannelName);	// At the moment, always add the channel name.  This is not efficient, but guarantees coherency.
+
 	TGroup * pGroup;
 	TGroup ** ppGroupStop;
 	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
@@ -654,16 +693,26 @@ TAccountXmpp::GroupChannel_PFindByNameOrCreate_YZ(PSZUC pszChannelName, INOUT CB
 		Assert(pGroup != NULL);
 		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 		Assert(pGroup->m_pAccount == this);
-		if (pGroup->m_strNameChannel_YZ.FCompareStringsNoCase(pszChannelName))
+		if (pGroup->m_strNameChannel_YZ.FCompareStringsChannelNames(pszChannelName))
 			return pGroup;
 		}
 	pGroup = new TGroup(this);
 	m_arraypaGroups.Add(PA_CHILD pGroup);
-	pGroup->GroupInitNewIdentifier();
-	pGroup->m_strNameDisplayTyped = pGroup->m_strNameChannel_YZ = pszChannelName;
-	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
+	pGroup->Group_InitNewIdentifier();
+	pGroup->GroupChannel_SetName(pszChannelName);
+
+	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_GroupChannel);
 	pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_Group_Profile_Get(pszChannelName);	// If the channel does not exist, then query the contact who sent the stanza to get more information about the group
 	return pGroup;
+	} // GroupChannel_PFindByNameOrCreate_YZ()
+
+void
+TGroup::GroupChannel_SetName(PSZUC pszChannelName)
+	{
+	Assert(pszChannelName != NULL);
+	Report(pszChannelName[0] != '\0');	// Creating a channel without a name is not recommended
+	m_strNameDisplayTyped = m_strNameChannel_YZ = pszChannelName;
+	m_uFlagsGroup |= FG_kfIsChannel;
 	}
 
 //	Find the group matching the identifier, and if not found and eFindGroupCreate then allocate a new group.

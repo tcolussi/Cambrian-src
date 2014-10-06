@@ -399,7 +399,7 @@ CArray::PrgpvAllocateElementsAppend(int cElementsAllocGrowBy)
 
 
 /////////////////////////////////////////////////////////////////////
-//	RemoveAll()
+//	Empty()
 //
 //	Empty the array.
 //
@@ -407,7 +407,7 @@ CArray::PrgpvAllocateElementsAppend(int cElementsAllocGrowBy)
 //	For performance the memory is not freed.  To free the memory use FreeExtra().
 //
 void
-CArray::RemoveAllElements()
+CArray::Empty()
 	{
 	if (m_paArrayHdr != NULL)
 		m_paArrayHdr->cElements = 0;
@@ -579,7 +579,7 @@ CArray::AddUniqueF(const void * pvElement)
 
 //	Empty the array and add a single element.  After calling this method, the size of the array is always 1 element.
 //
-//	This method is the combination of RemoveAll() and Add().
+//	This method is the combination of Empty() and Add().
 VOID
 CArray::RemoveAllAndAdd(const void * pvElement)
 	{
@@ -1836,6 +1836,6 @@ CArrayPasz::DeleteAllStrings()
 		{
 		delete *ppaszString++;
 		}
-	RemoveAllElements();
+	Empty();
 	}
 

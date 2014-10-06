@@ -4,7 +4,7 @@
 
 #include "DDialogProperties.h"
 
-DDialogPropertyPage::DDialogPropertyPage(PSZAC pszName) : QListWidgetItem(pszName), WWidget(NULL)
+WDialogPropertyPage::WDialogPropertyPage(PSZAC pszName) : QListWidgetItem(pszName), WWidget(NULL)
 	{
 	//new QLabel(pszName, this);
 	}
@@ -30,7 +30,7 @@ DDialogProperties::DDialogProperties()
 	}
 
 void
-DDialogProperties::PageAdd(DDialogPropertyPage * pawPage)
+DDialogProperties::PageAdd(WDialogPropertyPage * pawPage)
 	{
 	m_pwPagesList->addItem(pawPage); // pawPage->windowTitle());
 	m_pwPagesStacked->addWidget(pawPage);
@@ -49,7 +49,7 @@ void
 DDialogProperties::SL_PageChanged(QListWidgetItem * pPageCurrent, QListWidgetItem * UNUSED_PARAMETER(pPagePrevious))
 	{
 	EndorseFast(pPagePrevious == NULL);
-	DDialogPropertyPage * pwPage = (DDialogPropertyPage *)pPageCurrent;
+	WDialogPropertyPage * pwPage = (WDialogPropertyPage *)pPageCurrent;
 	m_pwPagesStacked->setCurrentWidget(pwPage);
 	}
 
@@ -67,7 +67,7 @@ DDialogProperties::SL_ButtonCancel_clicked()
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogPropertyPageAccountGeneral::DDialogPropertyPageAccountGeneral(TAccountXmpp * pAccount) : DDialogPropertyPage("General")
+WDialogPropertyPageAccountGeneral::WDialogPropertyPageAccountGeneral(TAccountXmpp * pAccount) : WDialogPropertyPage("General")
 	{
 	m_pAccount = pAccount;
 	/*
@@ -88,7 +88,7 @@ DDialogPropertyPageAccountGeneral::DDialogPropertyPageAccountGeneral(TAccountXmp
 	setMinimumWidth(500);
 	}
 
-DDialogPropertyPageAccountTest::DDialogPropertyPageAccountTest(PSZAC pszName) : DDialogPropertyPage(pszName)
+WDialogPropertyPageAccountTest::WDialogPropertyPageAccountTest(PSZAC pszName) : WDialogPropertyPage(pszName)
 	{
 	new QLabel(pszName, this);
 	}
@@ -97,11 +97,11 @@ DDialogPropertiesAccount::DDialogPropertiesAccount(TAccountXmpp * pAccount)
 	{
 	m_pAccount = pAccount;
 	Dialog_SetCaptionFormat_VE("Account - ^j", pAccount);
-	PageAdd(new DDialogPropertyPageAccountGeneral(pAccount));
-	PageAdd(new DDialogPropertyPageAccountTest("RootID"));
-	PageAdd(new DDialogPropertyPageAccountTest("PGP"));
-	PageAdd(new DDialogPropertyPageAccountTest("Bitcoin"));
-	PageAdd(new DDialogPropertyPageAccountTest("Notes"));
+	PageAdd(new WDialogPropertyPageAccountGeneral(pAccount));
+	PageAdd(new WDialogPropertyPageAccountTest("RootID"));
+	PageAdd(new WDialogPropertyPageAccountTest("PGP"));
+	PageAdd(new WDialogPropertyPageAccountTest("Bitcoin"));
+	PageAdd(new WDialogPropertyPageAccountTest("Notes"));
 	m_pwPagesList->setFixedWidth(100);
 	}
 
@@ -114,7 +114,7 @@ TAccountXmpp::DisplayDialogProperties()
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogPropertyPageContactGeneral::DDialogPropertyPageContactGeneral(TContact * pContact) : DDialogPropertyPage("General")
+WDialogPropertyPageContactGeneral::WDialogPropertyPageContactGeneral(TContact * pContact) : WDialogPropertyPage("General")
 	{
 	m_pContact = pContact;
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(this);
@@ -127,11 +127,11 @@ DDialogPropertiesContact::DDialogPropertiesContact(TContact * pContact)
 	{
 	m_pContact = pContact;
 	Dialog_SetCaptionFormat_VE("Peer - ^j", pContact);
-	PageAdd(new DDialogPropertyPageContactGeneral(pContact));
-	PageAdd(new DDialogPropertyPageAccountTest("RootID"));
-	PageAdd(new DDialogPropertyPageAccountTest("PGP"));
-	PageAdd(new DDialogPropertyPageAccountTest("Bitcoin"));
-	PageAdd(new DDialogPropertyPageAccountTest("Notes"));
+	PageAdd(new WDialogPropertyPageContactGeneral(pContact));
+	PageAdd(new WDialogPropertyPageAccountTest("RootID"));
+	PageAdd(new WDialogPropertyPageAccountTest("PGP"));
+	PageAdd(new WDialogPropertyPageAccountTest("Bitcoin"));
+	PageAdd(new WDialogPropertyPageAccountTest("Notes"));
 	m_pwPagesList->setFixedWidth(100);
 	}
 
@@ -150,7 +150,7 @@ TGroup::DisplayDialogProperties()
 	dialog.FuExec();
 	}
 
-DDialogPropertyPageGroupGeneral::DDialogPropertyPageGroupGeneral(TGroup * pGroup) : DDialogPropertyPage("General")
+WDialogPropertyPageGroupGeneral::WDialogPropertyPageGroupGeneral(TGroup * pGroup) : WDialogPropertyPage("General")
 	{
 	m_pGroup = pGroup;
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(this);
@@ -170,7 +170,7 @@ DDialogPropertiesGroup::DDialogPropertiesGroup(TGroup * pGroup)
 	{
 	m_pGroup = pGroup;
 	Dialog_SetCaptionFormat_VE("Group - $s", pGroup->TreeItem_PszGetNameDisplay());
-	PageAdd(new DDialogPropertyPageGroupGeneral(pGroup));
+	PageAdd(new WDialogPropertyPageGroupGeneral(pGroup));
 	m_pwPagesList->setFixedWidth(100);
 	setMinimumWidth(600);
 	}
@@ -183,7 +183,7 @@ TProfile::DisplayDialogProperties()
 	dialog.FuExec();
 	}
 
-DDialogPropertyPageProfileGeneral::DDialogPropertyPageProfileGeneral(TProfile * pProfile) : DDialogPropertyPage("General")
+WDialogPropertyPageProfileGeneral::WDialogPropertyPageProfileGeneral(TProfile * pProfile) : WDialogPropertyPage("General")
 	{
 	m_pProfile = pProfile;
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(this);
@@ -197,7 +197,7 @@ DDialogPropertiesProfile::DDialogPropertiesProfile(TProfile * pProfile)
 	{
 	m_pProfile = pProfile;
 	Dialog_SetCaptionFormat_VE("Role - $s", pProfile->TreeItem_PszGetNameDisplay());
-	PageAdd(new DDialogPropertyPageProfileGeneral(pProfile));
+	PageAdd(new WDialogPropertyPageProfileGeneral(pProfile));
 	m_pwPagesList->setFixedWidth(100);
 	setMinimumWidth(600);
 	}
@@ -338,7 +338,7 @@ DDialogGroupAddContacts::SL_ButtonOK()
 		// We are creating a new group, therefore display it to the Navigation Tree before adding/removing members
 		m_pGroup = new TGroup(m_pContactOrGroup->m_pAccount);
 		m_pGroup->m_pAccount->m_arraypaGroups.Add(PA_CHILD m_pGroup);
-		m_pGroup->GroupInitNewIdentifier();
+		m_pGroup->Group_InitNewIdentifier();
 		m_pGroup->TreeItemGroup_DisplayWithinNavigationTree();
 		}
 	else
