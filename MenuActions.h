@@ -141,6 +141,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuIconRemove,
 	eMenuIconPencil_10x10,
 	eMenuIconPencil_16x16,
+	eMenuIconOverflow,
 	eMenuIconBitcoin,
 	eMenuIconMarketplace,
 	eMenuIconMarketplaceArbitration,

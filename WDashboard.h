@@ -26,14 +26,6 @@ public:
 	void FillRect0(QRGB coBackgroundFill);
 };
 
-//	Extra information regarding the hit-testing
-enum EHitTestSection
-	{
-	eHitTestSection_zNone		= 0x0000,
-	eHitTestSection_kfHeader	= 0x0001,
-	eHitTestSection_kfFooter	= 0x0002
-	};
-
 //	Interface to draw one item on the dashboard
 class CDashboardSectionItem	// (item)
 {
@@ -86,10 +78,17 @@ protected:
 	CString m_sName;		// Name of the section
 	CArrayPtrDashboardSectionItems m_arraypaItems;	// Items to draw
 
-	//	Structure holding information about hit testing for a WDashboardSection
-	struct SHitTestInfo
+	//	Extra information regarding the hit-testing
+	enum
 		{
-		EHitTestSection eHitTest;
+		FHT_zNone			= 0x0000,
+		FHT_kfHeader		= 0x0001,
+		FHT_kfFooter		= 0x0002,
+		FHT_kfMenuOverflow	= 0x0004
+		};
+	struct SHitTestInfo		//	Structure holding information about hit testing for a WDashboardSection
+		{
+		UINT uFlagsHitTest;
 		CDashboardSectionItem * pItem;	// Which item was selected (if any)
 		};
 	SHitTestInfo m_oHitTestInfo;						// Information about the last known hit testing, such as which item is under the mouse.  This structure is necessary to draw the section.
@@ -101,6 +100,7 @@ public:
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvDataItem);
 	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsItem);
 	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
+	//virtual void OnMenuClicked(SHitTestInfo oHitTestInfo);
 
 protected:
 	virtual QSize sizeHint() const;					// From QWidget
@@ -114,6 +114,8 @@ protected:
 	SHitTestInfo OGetHitTestInfo(int xPos, int yPos) const;
 	BOOL FSetHitTestInfo(SHitTestInfo oHitTestInfo);
 	void WidgetRedraw() { update(); }
+
+	static SHitTestInfo c_oHitTestInfoEmpty;
 }; // WDashboardSection
 
 class CArrayPtrDashboardSections : public CArray
