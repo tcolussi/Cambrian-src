@@ -41,17 +41,17 @@ DDialogChannels::DDialogChannels(TProfile * pProfile) : DDialogOkCancelWithLayou
 	m_pwTreeRecommendations->setFocus(Qt::TabFocusReason);
 	m_pwTreeRecommendations->setRootIsDecorated(false);
 	m_pwTreeRecommendations->setColumnCount(2);
-	m_pwTreeRecommendations->setHeaderLabels((QStringList) "Name" << "Purpose" << "Popularity" << "Also Joined By");
+	m_pwTreeRecommendations->setHeaderLabels((QStringList) "Channel Name" << "Channel Purpose" << "Popularity" << "Also Joined By");
 	QHeaderView * pwHeader = m_pwTreeRecommendations->header();
 	pwHeader->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 	pwHeader->setSectionResizeMode(1, QHeaderView::ResizeToContents);
 
 	OLayoutHorizontal * poLayoutHorizontal = new OLayoutHorizontal(m_poLayoutBody);
 	WButtonText * pwButtonChannelNew = new WButtonTextWithIcon("New Channel...", eMenuIconAdd);
-	poLayoutHorizontal->addWidget(pwButtonChannelNew);
-	WButtonText * pwButtonOK = new WButtonTextWithIcon("Join Channel ", eMenuAction_GroupChannel);
-	poLayoutHorizontal->addWidget(pwButtonOK, d_zNA, Qt::AlignRight);
+	WButtonText * pwButtonOK = new WButtonTextWithIcon("Join Channels ", eMenuAction_GroupChannel);
 	connect(pwButtonOK, SIGNAL(clicked()), this, SLOT(SL_ButtonOK()));
+	poLayoutHorizontal->addWidget(pwButtonOK);
+	poLayoutHorizontal->addWidget(pwButtonChannelNew, d_zNA, Qt::AlignRight);
 
 	QIcon oIconChannel = PGetMenuAction(eMenuAction_GroupChannel)->icon();
 	CChannelName ** ppChannelStop;

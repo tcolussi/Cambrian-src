@@ -377,7 +377,7 @@ CStr ResolveAppPath(const CStr &strAppName)
 		#if 0
 		strUrl = "file:///" + MainWindow_SGetPathOfApplication(pInfo->pszLocation);
 		#else
-		strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+		strUrl = MainWindow_SGetUrlPathOfApplication(pInfo->pszLocation);
 		#endif
 		QUrl qurlAbsolute(strUrl);
 
@@ -395,7 +395,7 @@ CStr ResolveAppPath(const CStr &strAppName)
 					#if 0
 					strUrl = "file:///" + MainWindow_SGetPathOfApplication(pInfo->pszLocation);
 					#else
-					strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+					strUrl = MainWindow_SGetUrlPathOfApplication(pInfo->pszLocation);
 					#endif
 					}
 				}

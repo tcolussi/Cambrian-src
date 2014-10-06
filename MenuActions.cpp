@@ -166,6 +166,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Remove" _ "i=Remove" _, // eMenuIconRemove
 	"Pencil" _ "i=Pencil" _, // eMenuIconPencil_10x10
 	"Pencil" _ "i=Pencil_16x16" _, // eMenuIconPencil_16x16
+	"MenuOverflow" _ "i=MenuOverflow" _, // eMenuIconOverflow
 	"Bitcoin" _ "i=Bitcoin" _, // eMenuIconBitcoin
 	"Marketplace" _ "i=Marketplace" _, // eMenuIconMarketplace
 	"Arbitration" _ "i=Judge" _, // eMenuIconMarketplaceArbitration

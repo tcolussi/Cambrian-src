@@ -73,17 +73,16 @@ CPainterCell::DrawNumberWithinCircle(int nNumber)
 	//nNumber = qrand() % 100;
 	if (nNumber > 0)
 		{
-		QRect rc = m_rcCell;
-		rc.setLeft(m_rcCell.right() - 18);
-		QPoint ptCenter = rc.center();
+		int xLeft = m_rcCell.right() - 19;
 		setPen(g_oPenDot);
-		ptCenter.setY(ptCenter.y() + 2);
-		drawPoint(ptCenter);
+		drawPoint(xLeft + 8, m_rcCell.top() + 9);
 		//DrawLineHorizontal(rc.left(), rc.right(), ptCenter.y());	// Draw a longer line for large numbers
 		setPen(g_oPenTextNotEmpty);
-		//setFont(g_oFontBold);
+		setFont(g_oFontBold);
+		QRect rc = m_rcCell;
+		rc.setLeft(xLeft - 2);
 		drawText(rc, Qt::AlignVCenter | Qt::AlignCenter, QString::number(nNumber));
-		m_rcCell.setRight(m_rcCell.right() - 18);
+		m_rcCell.setRight(xLeft);
 		return 16;
 		}
 	return 0;
@@ -194,11 +193,12 @@ void
 WDashboardSectionChannels::DrawFooter(CPainterCell * pPainter, UINT uFlagsItem)
 	{
 	int cChannelsRemaining = m_cChannelsTotal - m_arraypaItems.GetSize();
+	//cChannelsRemaining = 0;
 	if (cChannelsRemaining > 0)
-		{
 		g_strScratchBufferStatusBar.Format("+$I more...", cChannelsRemaining);
-		pPainter->DrawTextUnderlineDotted(g_strScratchBufferStatusBar);
-		}
+	else
+		g_strScratchBufferStatusBar.Format("New Channel...");
+	pPainter->DrawTextUnderlineDotted(g_strScratchBufferStatusBar);
 	}
 
 void
@@ -228,10 +228,18 @@ WDashboardSectionContacts::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsItem
 void
 WDashboardSectionChannels::OnItemClicked(SHitTestInfo oHitTestInfo)
 	{
-	if (oHitTestInfo.eHitTest & eHitTestSection_kfFooter)
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "WDashboardSectionChannels::OnItemClicked(0x$p, 0x$x)\n", oHitTestInfo.pItem, oHitTestInfo.uFlagsHitTest);
+	if (oHitTestInfo.uFlagsHitTest & FHT_kfFooter)
 		{
 		void DisplayDialogChannelsBrowse(TProfile * pProfile);
 		DisplayDialogChannelsBrowse(m_pParent->PGetProfile());
+		return;
+		}
+	if (oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow)
+		{
+		WMenu oMenu;
+		oMenu.ActionAdd(eMenuAction_GroupDelete);
+		EMenuAction eMenuAction = oMenu.EDisplayContextMenu();
 		return;
 		}
 	WDashboardSection::OnItemClicked(oHitTestInfo);
@@ -399,14 +407,15 @@ WDashboardSection::~WDashboardSection()
 	//m_arraypaItems.DeleteAllItems();
 	}
 
+WDashboardSection::SHitTestInfo WDashboardSection::c_oHitTestInfoEmpty;
+
 void
 WDashboardSection::SetParent(WDashboard * pParent)
 	{
 	Assert(pParent != NULL);
 	m_pParent = pParent;
 	m_arraypaItems.DeleteAllItems();
-	m_oHitTestInfo.eHitTest = eHitTestSection_zNone;
-	m_oHitTestInfo.pItem = NULL;
+	m_oHitTestInfo = c_oHitTestInfoEmpty;
 	}
 
 void
@@ -438,10 +447,17 @@ WDashboardSection::OnItemClicked(SHitTestInfo oHitTestInfo)
 			}
 		}
 	}
+/*
+void
+WDashboardSection::OnMenuClicked(SHitTestInfo oHitTestInfo)
+	{
+	}
+*/
 
 #define d_cxMarginSection		5
 #define d_cxWidthNumber			20
 #define d_cyHeightSectionItem	18
+#define d_cxWidthMenuOverflow	16
 #define d_yPosFirstItem			3 + d_cyHeightSectionItem
 
 QSize
@@ -508,7 +524,18 @@ WDashboardSection::paintEvent(QPaintEvent *)
 			oPainter.FillRect0(d_coBackgroundItemSelected);
 			}
 		if (uFlagsItem & CDashboardSectionItem::FI_kfMouseHover)
+			{
 			oPainter.FillRect0(d_coBackgroundItemMouseHover);
+			QRect rcMenuOverflow = oPainter.m_rcCell;
+			int xLeft = rcMenuOverflow.right() - d_cxWidthMenuOverflow;
+			if (m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow)
+				{
+				rcMenuOverflow.setLeft(xLeft);
+				oPainter.fillRect(rcMenuOverflow, (m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) ? d_coPurpleLight : d_coPurple);
+				}
+			QIcon oIcon = PGetMenuAction(eMenuIconOverflow)->icon();
+			oIcon.paint(&oPainter, xLeft, yTop - 3, 16, 16);
+			}
 		oPainter.setFont((uFlagsItem & CDashboardSectionItem::FI_kfDrawBold) ? g_oFontBold : g_oFontNormal);
 		DrawItem(&oPainter, uFlagsItem, pItem->m_data.pvDataItem);
 		yTop += d_cyHeightSectionItem;
@@ -522,8 +549,8 @@ WDashboardSection::paintEvent(QPaintEvent *)
 		oPainter.setPen(d_coBlue);
 		}
 	*/
-	//oPainter.setFont(g_oFontBold);
-	oPainter.setPen((m_oHitTestInfo.eHitTest & eHitTestSection_kfFooter) ? g_oPenTextNotEmpty : g_oPenTextEmpty);
+	oPainter.setFont(g_oFontNormal);
+	oPainter.setPen((m_oHitTestInfo.uFlagsHitTest & FHT_kfFooter) ? g_oPenTextNotEmpty : g_oPenTextEmpty);
 	DrawFooter(&oPainter, 0);
 
 	/*
@@ -559,12 +586,15 @@ WDashboardSection::OGetHitTestInfo(QMouseEvent * pEventMouse) const
 	}
 
 WDashboardSection::SHitTestInfo
-WDashboardSection::OGetHitTestInfo(int /*xPos*/, int yPos) const
+WDashboardSection::OGetHitTestInfo(int xPos, int yPos) const
 	{
-	SHitTestInfo oHitTestInfo = { eHitTestSection_zNone, NULL };
+	SHitTestInfo oHitTestInfo = c_oHitTestInfoEmpty;
+	const int cxWidth = width();
+	if (xPos > cxWidth - d_cxWidthMenuOverflow)
+		oHitTestInfo.uFlagsHitTest |= FHT_kfMenuOverflow;
 	if (yPos <= d_yPosFirstItem)
 		{
-		oHitTestInfo.eHitTest = eHitTestSection_kfHeader;
+		oHitTestInfo.uFlagsHitTest |= FHT_kfHeader;
 		goto Done;
 		}
 	else
@@ -585,7 +615,7 @@ WDashboardSection::OGetHitTestInfo(int /*xPos*/, int yPos) const
 			}
 		}
 	// Anything below is the footer
-	oHitTestInfo.eHitTest = eHitTestSection_kfFooter;
+	oHitTestInfo.uFlagsHitTest |= FHT_kfFooter;
 	Done:
 	return oHitTestInfo;
 	}
@@ -594,7 +624,7 @@ BOOL
 WDashboardSection::FSetHitTestInfo(SHitTestInfo oHitTestInfo)
 	{
 	//MessageLog_AppendTextFormatSev(eSeverityNoise, "WDashboardSection::FSetHitTestInfo(0x$p, 0x$x)\n", oHitTestInfo.pItem, oHitTestInfo.eHitTest);
-	if ((oHitTestInfo.eHitTest == m_oHitTestInfo.eHitTest) &&
+	if ((oHitTestInfo.uFlagsHitTest == m_oHitTestInfo.uFlagsHitTest) &&
 		(oHitTestInfo.pItem == m_oHitTestInfo.pItem))
 		return FALSE;	// Nothing to do
 	if (m_oHitTestInfo.pItem != NULL)
@@ -630,8 +660,7 @@ WDashboardSection::mouseReleaseEvent(QMouseEvent * pEventMouse)
 void
 WDashboardSection::leaveEvent(QEvent *)
 	{
-	SHitTestInfo oHitTestInfo = { eHitTestSection_zNone, NULL };
-	(void)FSetHitTestInfo(oHitTestInfo);
+	(void)FSetHitTestInfo(c_oHitTestInfoEmpty);
 	}
 
 void

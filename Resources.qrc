@@ -107,6 +107,7 @@
         <file alias="Deleted">Icons/Recycle_Bin.png</file>
         <file alias="Delete">Icons/DeleteRedX.png</file>
         <file alias="Hashtag">Icons/Hashtag.png</file>
+        <file alias="MenuOverflow">Icons/MenuOverflow.png</file>
     </qresource>
     <qresource prefix="/snd">
         <file alias="NewMessage">Sounds/msg.wav</file>

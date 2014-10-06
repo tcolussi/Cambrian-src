@@ -422,13 +422,24 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 				}
 			goto Done;
 			}
-		if (PszrCompareStringBeginCommand(pszCommand, "sync"))
+		PSZUC pszParameters = PszrCompareStringBeginCommand(pszCommand, "sync");
+		if (pszParameters != NULL)
 			{
+			int cDays = NStringToNumber_ZZR_ML(pszParameters);
+			if (cDays > 0)
+				{
+				TIMESTAMP tsLastSynchornized = Timestamp_GetCurrentDateTime() - cDays * d_ts_cDays;
+				m_tsEventIdLastSentCached = d_ts_zNA;
+				if (fIsContact)
+					{
+					((TContact *)this)->m_tsOtherLastSynchronized = d_ts_zNA;
+					}
+				}
 			XcpApi_Invoke_Synchronize();
 			goto Done;
 			}
 
-		PSZUC pszParameters =  PszrCompareStringBeginCommand(pszCommand, "api");
+		pszParameters =  PszrCompareStringBeginCommand(pszCommand, "api");
 		if (pszParameters != NULL && *pszParameters != '\0')
 			{
 			//XcpApi_Invoke(IN pszParameters, d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
@@ -478,6 +489,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			"Valid commands are:<br/>"
 			"^_^_^_ <b>/ping</b> to ping a peer<br/>"
 			"^_^_^_ <b>/version</b> to query the version of the peer<br/>"
+			"^_^_^_ <b>/sync</b> synchronize with a peer.  /sync 14 will synchronize with the past 2 weeks<br/>"
 			"^_^_^_ <b>/recommendations</b> to query the recommendations of the peer(s)<br/>"
 			"^_^_^_ <b>/sendfile</b> to send a file to the peer or group<br/>"
 			"^_^_^_ <b>/sendballot</b> to send a ballot to vote<br/>"
