@@ -52,7 +52,7 @@ extern WMainWindow * g_pwMainWindow;
 extern CInvitationFromUrlQueryString * g_paInvitation;
 CInvitationFromUrlQueryString * Invitation_PazAllocateFromUrlQueryString(PSZUC pszUrl);
 void Invitation_EraseFile();
-QString MainWindow_SGetPathOfApplication(const QString & sPathRelativeApplication);
+QString MainWindow_SGetUrlPathOfApplication(const QString & sPathRelativeApplication);
 void MainWindow_MenuActionExecute(QAction * pAction);
 void MainWindow_SetCurrentLayout(IN WLayout * pwLayout);
 void MainWindow_SetCurrentLayoutAutoDelete(PA_CHILD WLayout * pawLayoutAutoDelete);

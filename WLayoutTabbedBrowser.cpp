@@ -56,7 +56,7 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 		Assert(pInfo != NULL && "Application 'Default NewTab' doesn't exist");
 		if ( pInfo )
 			{
-			CStr strUrl = MainWindow_SGetPathOfApplication(pInfo->pszLocation);
+			CStr strUrl = MainWindow_SGetUrlPathOfApplication(pInfo->pszLocation);
 			MessageLog_AppendTextFormatCo(d_coRed, "WLayoutTabbedBrowser::AddTab $S\n", &strUrl);
 			pTBrowserTab->SetUrl(strUrl);// this in turn calls to NavigateToAddress
 			}
