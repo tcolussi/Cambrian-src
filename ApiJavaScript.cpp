@@ -18,6 +18,12 @@ OJapiApps::ballotmaster()
 	return m_poCambrian->polls();
 	}
 
+POJapiAppChat
+OJapiApps::chat()
+	{
+	return m_poCambrian->chatApp();
+	}
+
 POJapiApps
 OJapiCambrian::apps()
 	{
@@ -336,6 +342,11 @@ QString
 OJapiContact::name()
 	{
 	return m_pContact->m_strNameDisplayTyped;
+	}
+
+void OJapiContact::openChat()
+	{
+	NavigationTree_SelectTreeItem(m_pContact);
 	}
 
 
@@ -1142,4 +1153,35 @@ QString OJapiJurisdiction::current()
 	return PGetProfile_NZ()->m_strJurisdiction.ToQString();
 	}
 
+
+OJapiAppChat::OJapiAppChat(OJapiCambrian * poCambrian)
+	{
+	m_poCambrian = poCambrian;
+	}
+
+bool OJapiAppChat::open(const QString &strJabberId)
+	{
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		TContact ** ppContactStop;
+		TContact ** ppContact = pAccount->m_arraypaContacts.PrgpGetContactsStop(OUT &ppContactStop);
+
+		while (ppContact != ppContactStop)
+			{
+			TContact * pContact = *ppContact++;
+			Assert(pContact != NULL);
+			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+
+			if ( strJabberId.compare(pContact->m_strJidBare.ToQString()) == 0)
+				{
+				NavigationTree_SelectTreeItem(pContact);
+				return true;
+				}
+			} // while
+		}// while
+	return false;
+	}
 

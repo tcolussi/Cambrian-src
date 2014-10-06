@@ -233,6 +233,24 @@ public:
 };
 
 
+class OJapiAppChat : public OJapi
+{
+private:
+	Q_OBJECT
+	OJapiCambrian * m_poCambrian;
+
+public:
+	OJapiAppChat(OJapiCambrian * poCambrian);
+
+public slots:
+	bool open(const QString & strJabberId);
+
+}; // OJapiAppChat
+#define POJapiAppChat		POJapi
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 class OJapiNotification : public OJapi
 {
@@ -672,12 +690,16 @@ public:
 class OJapiApps : public OJapi
 {
     OJapiCambrian * m_poCambrian;
+
 public:
     OJapiApps(OJapiCambrian * poCambrian);
 	POJapiAppBallotmaster ballotmaster();
+	POJapiAppChat chat();
+
 
 	Q_OBJECT
 	Q_PROPERTY(POJapiAppBallotmaster ballotmaster READ ballotmaster)
+	Q_PROPERTY(POJapiAppChat chat READ chat)
 };
 #define POJapiApps		POJapi
 
@@ -729,6 +751,9 @@ public:
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name)
 	Q_OBJECT
+
+public slots:
+	void openChat();
 };
 #define POJapiContact		POJapi
 
@@ -797,6 +822,7 @@ protected:
 	OCapiRootGUI m_capi;
 	OJapiGroupList m_oGroupList;
 	OJapiUtil m_oUtil;
+	OJapiAppChat m_oAppChat;
 
 public:
 	OJapiMe m_oMe;
@@ -807,6 +833,7 @@ public:
 
 	POJapiApps apps();
 	POJapiAppBallotmaster polls();
+	POJapiAppChat chatApp();
 	POJapiMe me();
 	POJapiGroupList groups();
 	POCapiRootGUI capi();
