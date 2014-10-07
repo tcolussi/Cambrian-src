@@ -70,7 +70,7 @@ protected:
 	IContactAlias * m_plistAliases;
 	TIMESTAMP m_tsLastSeenOnline;					// Date & time when the contact was last seen online
 	TIMESTAMP_MINUTES m_tsmLastStanzaReceived;		// Timestamp where the last network packet was received by the contact. This is useful to determine if the contact became idle.
-	CBin m_binKeyPublic;							// Public key of the contact
+	CStr m_strKeyPublic;							// Public key of the contact
 
 	POJapiContact m_paoJapiContact;					//
 
