@@ -32,8 +32,6 @@ ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * UNUSED_
 	UNUSED_PARAMETER(pXmlNodeApiParameters);
 	UNUSED_PARAMETER(pszXmlApiParameters);
 	CBinXcpStanza binXcpStanza;
-	//binXcpStanza.BinXmlAppendXcpApiRequest((PSZAC)pszApiName, pszXmlApiParameters);
-	//binXcpStanza.XcpSendStanzaToContactOrGroup(IN this);
 	binXcpStanza.BinAppendText_VE("<"d_szXop_ApiCall_s"/>", pszApiName);
 	if (EGetRuntimeClass() == RTI(TContact))
 		binXcpStanza.XospSendStanzaToContactAndEmpty((TContact *)this);
@@ -293,31 +291,6 @@ CBinXcpStanza::XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_V
 		}
 	}
 
-/*
-void
-CBinXcpStanza::XcpSendStanzaToContactOrGroup(const ITreeItemChatLogEvents * pContactOrGroup) CONST_MCC
-	{
-	Assert(pContactOrGroup != NULL);
-	if (pContactOrGroup->EGetRuntimeClass() == RTI(TGroup))
-		{
-		TGroupMember ** ppMemberStop;
-		TGroupMember ** ppMember = ((TGroup *)pContactOrGroup)->m_arraypaMembers.PrgpGetMembersStop(OUT &ppMemberStop);
-		while (ppMember != ppMemberStop)
-			{
-			TGroupMember * pMember = *ppMember++;
-			Assert(pMember != NULL);
-			Assert(pMember->EGetRuntimeClass() == RTI(TGroupMember));
-			Assert(pMember->m_pGroup == pContactOrGroup);
-			Assert(pMember->m_pContact->EGetRuntimeClass() == RTI(TContact));
-			XospSendStanzaToContactAndEmpty(IN pMember->m_pContact);	// This will not work if there is a task to be done
-			}
-		return;
-		}
-	Assert(pContactOrGroup->EGetRuntimeClass() == RTI(TContact));
-	XospSendStanzaToContactAndEmpty((TContact *)pContactOrGroup);
-	}
-*/
-
 #include "XcpApi.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -484,39 +457,6 @@ CBinXcpStanzaEventCloner::PaEventClone(IEvent * pEventToClone)
 	}
 #endif
 
-/*
-void
-CBinXcpStanza::BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact)
-	{
-	Assert(pContact != NULL);
-	if (pContact->m_cVersionXCP == 1)
-		BinAppendText_VE("<" d_szXCPe_EventPrevious_tsO_tsI "/>", pContact->m_tsEventIdLastSentCached, pContact->m_tsOtherLastSynchronized);
-	}
-
-void
-CBinXcpStanza::BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember)
-	{
-	Assert(pMember != NULL);
-	Assert(pMember->m_pContact == m_pContact || m_pContact == NULL);
-
-	// When sending the timestamps for a group, also include the number of messages received since the last timestamp
-	TGroup * pGroup = pMember->m_pGroup;
-	BinAppendText_VE("<" d_szXCPe_EventPrevious_tsO_tsI, pGroup->m_tsEventIdLastSentCached, pMember->m_tsOtherLastSynchronized);
-	// Since we are sending the timestamps to synchronize with a group, include the number of received messages since the last synchronization.
-	// This way, the contact will be able to know if it is missing group messages
-	CVaultEvents * pVault = pGroup->Vault_PGet_NZ();
-	IEvent * pEventLast = pVault->PGetEventLast_YZ();
-	if (pEventLast != NULL && pEventLast->Event_FIsEventTypeSent())
-		{
-		// Send the counter only if the last event was sent. This will avoid every group member to send the count of missing messages and having redundant synchronization
-		int cEventsReceived = pVault->UCountEventsReceivedByOtherGroupMembersSinceTimestampEventID(pGroup->m_tsEventIdLastSentCached, pMember->m_pContact);
-		if (cEventsReceived > 0)
-			BinAppendText_VE(d_szXCPa_EventPrevious_cEventsMissing, cEventsReceived);
-		}
-	BinAppendXmlForSelfClosingElement();
-	}
-*/
-
 void
 ITreeItemChatLogEvents::Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC
 	{
@@ -527,13 +467,6 @@ ITreeItemChatLogEvents::Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC
 		TContact * pContact = (TContact *)this;
 		if (pContact->Contact_FuCommunicateViaXosp())
 			{
-			/*
-			if (pContact->m_uFlagsContact & FC_kfXcpComposingSendTimestampsOfLastKnownEvents)
-				{
-				pContact->m_uFlagsContact &= ~FC_kfXcpComposingSendTimestampsOfLastKnownEvents;
-				//binXcpStanza.BinXmlAppendTimestampsToSynchronizeWithContact(this); // TBD
-				}
-			*/
 			binXcpStanza.BinAppendText((eChatState == eChatState_zComposing) ? d_szXop_MessageTyping_xmlStarted : d_szXop_MessageTyping_xmPaused);
 			binXcpStanza.XospSendStanzaToContactAndEmpty(IN pContact);
 			}
@@ -566,16 +499,6 @@ ITreeItemChatLogEvents::Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC
 		}
 	}
 
-/*
-void
-TGroup::Members_BroadcastChatState(EChatState eChatState) const
-	{
-	CBinXcpStanza binXcpStanza;
-	binXcpStanza.BinInitFromTextSzv_VE("<" d_szXCPe_GroupSelector ">{h|}</" d_szXCPe_GroupSelector ">", &m_hashGroupIdentifier);
-	binXcpStanza.BinAppendText((eChatState == eChatState_zComposing) ? d_szXOSPe_Typing_xmlStarted : d_szXOSPe_Typing_xmPaused);
-	binXcpStanza.XcpSendStanzaToContactOrGroup(this);
-	}
-*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 PSZUC

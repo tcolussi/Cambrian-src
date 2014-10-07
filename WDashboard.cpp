@@ -70,18 +70,19 @@ CPainterCell::FillRect0(QRGB coBackgroundFill)
 int
 CPainterCell::DrawNumberWithinCircle(int nNumber)
 	{
-	//nNumber = qrand() % 100;
+	//nNumber = qrand() % 99;
 	if (nNumber > 0)
 		{
+		int yTop = m_rcCell.top();
 		int xLeft = m_rcCell.right() - 19;
 		setPen(g_oPenDot);
-		drawPoint(xLeft + 8, m_rcCell.top() + 9);
+		DrawLineHorizontal(xLeft + 6, xLeft + 8, yTop + 9);
+		//drawPoint(xLeft + 8, m_rcCell.top() + 9);
 		//DrawLineHorizontal(rc.left(), rc.right(), ptCenter.y());	// Draw a longer line for large numbers
 		setPen(g_oPenTextNotEmpty);
 		setFont(g_oFontBold);
-		QRect rc = m_rcCell;
-		rc.setLeft(xLeft - 2);
-		drawText(rc, Qt::AlignVCenter | Qt::AlignCenter, QString::number(nNumber));
+		QRect rcText(xLeft - 3, yTop - 1, 20, m_rcCell.height());
+		drawText(rcText, Qt::AlignVCenter | Qt::AlignCenter, QString::number(nNumber));
 		m_rcCell.setRight(xLeft);
 		return 16;
 		}
@@ -166,7 +167,7 @@ WDashboardSectionContacts::Init(TProfile * pProfile_YZ)
 	}
 
 void
-WDashboardSectionBallots::Init(TProfile * pProfile_YZ)
+WDashboardSectionBallots::Init(TProfile * /*pProfile_YZ*/)
 	{
 	/*
 	IEvent ** ppEventStop;
@@ -240,6 +241,12 @@ WDashboardSectionChannels::OnItemClicked(SHitTestInfo oHitTestInfo)
 		WMenu oMenu;
 		oMenu.ActionAdd(eMenuAction_GroupDelete);
 		EMenuAction eMenuAction = oMenu.EDisplayContextMenu();
+		switch (eMenuAction)
+			{
+		default:
+			break;
+			}
+
 		return;
 		}
 	WDashboardSection::OnItemClicked(oHitTestInfo);
@@ -364,7 +371,7 @@ WDashboard::NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup
 	}
 
 void
-WDashboard::NewEventRelatedToBallot(IEventBallot * pEventBallot)
+WDashboard::NewEventRelatedToBallot(IEventBallot * /*pEventBallot*/)
 	{
 	// Search if the ballot is already there, and if not, add it
 	//m_sections.pwSectionBalots->m_arraypaItems
@@ -421,17 +428,19 @@ WDashboardSection::SetParent(WDashboard * pParent)
 void
 WDashboardSection::Init(TProfile * pProfile_YZ)
 	{
-	Assert(pProfile_YZ != NULL);
+	Endorse(pProfile_YZ == NULL);
 	}
 
 void
-WDashboardSection::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvDataItem)
+WDashboardSection::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * /*pvDataItem*/)
 	{
+	Assert(pPainter != NULL);
 	}
 
 void
 WDashboardSection::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsItem*/)
 	{
+	Assert(pPainter != NULL);
 	}
 
 void

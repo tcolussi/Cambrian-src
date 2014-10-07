@@ -338,12 +338,11 @@ public:
 		FE_kfReplacing				= 0x0001,	// The event is replacing another [previous] event (for instance, the event contains the text replacing an older event).  To find the old event, use CEventUpdater.
 		FE_kfReplaced				= 0x0002,	// The event has been replaced by another event (for instance, the text was edited, and therefore another event contains the updated text).  The flags FE_kfReplacing and FE_kfReplaced are not mutually exclusive, as an event may replacing another event, which in turn was replaced by a more recent event.
 		FE_kfArchived				= 0x0004,	// The event is archieved
-
+		FE_kfEventOutOfSync			= 0x0008,	// The event arrived out of sync, and therefore display a little icon to show to the user
 		FE_kmSerializeMask			= 0x000F,
 
 		FE_kfEventHidden			= 0x0010,	// The event should not be displayed in the Chat Log, typically when an event replaces another event.
 		FE_kfEventDeleted			= 0x0020,	// The event was marked as deleted and therefore should not be saved
-		FE_kfEventOutOfSync			= 0x0040,	// The event is out of sync, and therefore display a little icon to show to the user
 		FE_kfEventDeliveryConfirmed	= 0x0080,	// The event was delivered and its checkmark was displayed.  This flag should be eventually removed, however it is a workaround a Qt bug in the QTextEdit
 		FE_kfEventProtocolWarning	= 0x0100,	// Therew was a minor error while transmitting the event.  This bit is set to give a second chance to retry, however to prevent an infinite loop to retry over and over
 		FE_kfEventProtocolError		= 0x0200,	// There was a protocol error while sending the event (this means one of the client is out-of-date and is unable to allocate the event because it is unknown)

@@ -97,6 +97,7 @@ CVaultEvents::EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD 
 	Assert(paEvent != NULL);
 	Assert(paEvent->m_tsOther == d_ts_zNA);
 	Assert(paEvent->m_pVaultParent_NZ == NULL);
+	Assert(paEvent->Event_FIsEventTypeSent());
 	//MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "EventAddAndDispatchToContacts() - tsEventID $t\n", paEvent->m_tsEventID);
 	if (paEventUpdater != NULL)
 		{
@@ -134,7 +135,8 @@ CVaultEvents::EventAddAndDispatchToContacts(PA_CHILD IEvent * paEvent, PA_CHILD 
 			binXcpStanza.BinXmlAppendXcpApiCall_SendEventToContact(pMember->m_pContact, paEvent, paEventUpdater);
 			} // while
 		} // if...else
-	}
+	m_pParent->m_tsEventIdLastSentCached = paEvent->m_tsEventID;
+	} // EventAddAndDispatchToContacts()
 
 void
 CVaultEvents::EventsUnserialize(const CXmlNode * pXmlNodeEvents)
@@ -174,16 +176,20 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 	if (m_pParent->EGetRuntimeClass() == RTI(TContact))
 		{
 		TContact * pContact = (TContact *)m_pParent;
-		TIMESTAMP tsOtherLastReceived = m_arraypaEvents.TsEventOtherLastEventReceived();
+		TIMESTAMP tsOtherLastReceived = m_arraypaEvents.TsEventOtherLastEventReceived();		
 		if (tsOtherLastReceived > 0)
 			pContact->SetFlagContactAsInvited();	// If there is one event received, then the contact does not need an invitation
+		if (tsOtherLastReceived < pContact->m_tsOtherLastReceived)
+			{
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastReceived by -$T from $t to $t for '$s'\n", pContact->m_tsOtherLastReceived - tsOtherLastReceived, pContact->m_tsOtherLastReceived, tsOtherLastReceived, m_pParent->TreeItem_PszGetNameDisplay());
+			pContact->m_tsOtherLastReceived = tsOtherLastReceived;
+			}
 		if (tsOtherLastReceived < pContact->m_tsOtherLastSynchronized || pContact->m_tsOtherLastSynchronized == d_ts_zNA)
 			{
 			if (pContact->m_tsOtherLastSynchronized != tsOtherLastReceived)
-				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastSynchronized by -$T from $t ({tL}) to $t for '$s'\n", pContact->m_tsOtherLastSynchronized - tsOtherLastReceived, pContact->m_tsOtherLastSynchronized, pContact->m_tsOtherLastSynchronized, tsOtherLastReceived, m_pParent->TreeItem_PszGetNameDisplay());
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastSynchronized by -$T from $t ({tL}) to $t ({tL}) for '$s'\n", pContact->m_tsOtherLastSynchronized - tsOtherLastReceived, pContact->m_tsOtherLastSynchronized, pContact->m_tsOtherLastSynchronized, tsOtherLastReceived, tsOtherLastReceived, m_pParent->TreeItem_PszGetNameDisplay());
 			pContact->m_tsOtherLastSynchronized = tsOtherLastReceived;
 			}
-
 		}
 	else
 		{

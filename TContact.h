@@ -32,7 +32,6 @@ public:
 	*/
 	TIMESTAMP m_tsOtherLastSynchronized;			// Timestamp of last synchronization
 	TIMESTAMP m_tsTaskIdDownloadedLast;				// Timestamp of the last task downloaded.  This Task ID is essential to avoid repeating/executing the same task when there is a retry to resend the task data.
-	//CListTasks m_listTasksSocket;					// Socket tasks to be dispatched when the contact becomes online
 	CListTasksSendReceive m_listaTasksSendReceive;	// Pending tasks to be completed (sent or received) when the contact becomes online
 
 protected:
@@ -87,8 +86,9 @@ public:
 	inline BOOL Contact_FQueueXospTasksUntilOnline() const { return ((m_uFlagsContact & FC_kfNativeXmppOnly) == 0); }
 	inline BOOL Contact_FuCommunicateViaXmppOnly() const { return (m_uFlagsContact & FC_kfNativeXmppOnly); }
 	inline BOOL Contact_FuCommunicateViaXosp() const { return (m_uFlagsContact & FC_kfPresenceXosp); }
-	inline BOOL Contact_FuNeedSynchronizeWhenPresenceOnline() const { return (m_uFlagsContact & FC_kfXospSynchronizeWhenPresenceOnline); }
-	inline void Contact_SetFlagSynchronizeWhenPresenceOnline() { m_uFlagsContact |= FC_kfXospSynchronizeWhenPresenceOnline; }
+	inline BOOL ContactFlag_FuNeedSynchronizeWhenPresenceOnline() const { return (m_uFlagsContact & FC_kfXospSynchronizeWhenPresenceOnline); }
+	inline void ContactFlag_SynchronizeWhenPresenceOnline_Set() { m_uFlagsContact |= FC_kfXospSynchronizeWhenPresenceOnline; }
+	inline void ContactFlag_SynchronizeWhenPresenceOnline_Clear() { m_uFlagsContact &= ~FC_kfXospSynchronizeWhenPresenceOnline; }
 	inline BOOL Contact_FuIsOnline() const { return (m_uFlagsContact & FC_kmPresenceMaskOnline); }
 
 	void Invitation_InitFromXml(const CStr & strInvitationXml);

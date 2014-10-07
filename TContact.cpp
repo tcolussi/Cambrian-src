@@ -20,7 +20,6 @@ TContact::S_PaAllocateContact(POBJECT pAccountParent)
 TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	{
 	m_uFlagsContact = FC_kfContactNeedsInvitation | FC_kfContactRecommendationsNeverReceived | FC_kfNativeXmppOnly; // Until proven otherwise, any new contact needs an invitation and is assumed to not understand the Cambrian Protocol <xcp>
-//	m_uFlagsContactSerialized = 0;
 	m_plistAliases = NULL;
 	m_tsOtherLastSynchronized = d_ts_zNA;
 	m_tsTaskIdDownloadedLast = d_ts_zNA;
@@ -575,7 +574,10 @@ TContact::XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence)
 		// The contact is supporting XOSP
 		m_uFlagsContact = (m_uFlagsContact & ~FC_kfNativeXmppOnly) | FC_kfPresenceXosp;	// Remember the XOSP is present, and remove the XMPP only flag
 		if (m_uFlagsContact & FC_kfXospSynchronizeWhenPresenceOnline)
+			{
+			MessageLog_AppendTextFormatSev(eSeverityComment, "XmppPresenceUpdateIcon($S) - FC_kfXospSynchronizeWhenPresenceOnline\n", &m_strJidBare);
 			XcpApi_Invoke_Synchronize();
+			}
 		if (m_uFlagsContact & FC_kfContactRecommendationsNeverReceived)
 			XcpApi_Invoke_RecommendationsGet();
 		//m_listaTasksSendReceive.SentTasksToContact(this);	// Send any pending task

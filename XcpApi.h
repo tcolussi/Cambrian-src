@@ -60,12 +60,13 @@ Xv_		Xml value for an attribute
 /////////////////////////////////////////////////
 //	Opcodes for XOSP Synchronization (XS)
 #define d_chXSop_RequestIDsLargerThanTimestamp			'r'		// Return all event IDs which are larger than a timestamp
-#define d_chXSop_EventIDs								'e'
-#define d_chXSop_EventIDsMine							'm'
-#define d_chXSop_EventIDsOthers							'o'
-#define d_chXSop_FetchEvents							'E'
-#define d_chXSop_FetchEventsMine						'M'
-#define d_chXSop_FetchEventsOthers						'O'
+#define d_chXSop_ConfirmationEventLastReceived			'c'		// We are receiving a confirmation of the timestamp of the last event received by the contact
+#define d_chXSop_EventIDs								'e'		// List of timestamps of events written by the contact
+#define d_chXSop_EventIDsMine							'm'		// The user is missing its own events
+#define d_chXSop_EventIDsOthers							'o'		// List of timestamps of events written by others (third-party group chat)
+#define d_chXSop_FetchEvents							'E'		// Request to return the data of my events (this is the typical case where a contact is missing events)
+#define d_chXSop_FetchEventsMine						'M'		// Return the data of events of the contact (this is somewhat a backup recovery when the contact lost its own Chat Log)
+#define d_chXSop_FetchEventsOthers						'O'		// Return the data of events of a third party contact (this happens only in group chat where a contact is relaying/forwarding the events of another contact)
 #define d_chXSop_EventsData								'D'		// We are receiving event data from the contact
 #define d_chXSop_EventsDataMine							'B'		// We are receiving back our own event (this happens when the Chat Log is lost due to a disk crash or when installing on a new computer)
 #define d_chXSop_EventsDataOther						'T'		// We are receiving events written by a third party (this is happens only in group chat when the third party is offline)
@@ -84,6 +85,7 @@ Xv_		Xml value for an attribute
 	#define d_chXSa_strJidContact							'j'
 
 #define d_szXSop_RequestIDsLargerThanTimestamp_tsI_tsO	"r"	_tsI _tsO
+#define d_szXSop_ConfirmationEventLastReceived_tsI		"c" _tsI
 #define d_szXSop_EventIDs_tsO_							"e"	_tsO	d_szXSa_tsm_
 #define d_szXSop_EventIDsMine_							"m"			d_szXSa_tsm_
 #define d_szXSop_EventIDsOthers_p_						"o c='^i'"	d_szXSa_tsm_

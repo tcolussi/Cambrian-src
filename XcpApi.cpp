@@ -407,7 +407,7 @@ CBinXcpStanza::BinXmlAppendXcpApiCall_SendEventToContact(TContact * pContact, IE
 		{
 		// The contact is offline, however capable to communicate via XOSP, therefore set a flag to synchronize next time it is online.  There is no need to add a task for this, as the synchronization will dispatch the events.
 		MessageLog_AppendTextFormatSev(eSeverityComment, "Contact ^j is offline, therefore Event ID $t will be dispatched via a synchronize operation next time it is online.\n", pContact, tsEventID);
-		pContact->Contact_SetFlagSynchronizeWhenPresenceOnline();
+		pContact->ContactFlag_SynchronizeWhenPresenceOnline_Set();
 		return;
 		}
 	// At this point we have a contact which is unable to communicate via XOSP.  Therefore send the message via native XMPP if the socket is ready.  If not, then the message will be synchronized next time the contact is online (TBD)
@@ -555,7 +555,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			IEvent ** ppEventStop;
 			IEvent ** ppEventFirst = arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 			// Scan the array for sent events
-			BinAppendText_VE("<"d_szXSop_EventIDs_tsO_, tsEventID);
+			BinAppendText_VE("<"d_szXSop_ConfirmationEventLastReceived_tsI"/><"d_szXSop_EventIDs_tsO_, pContactOrGroup_NZ->m_tsOtherLastReceived, tsEventID);
 			IEvent ** ppEvent = ppEventFirst;
 			while (ppEvent != ppEventStop)
 				{
@@ -607,6 +607,13 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				BinAppendXmlForSelfClosingElementQuote();
 			arraypaEvents.Empty();	// Flush the array so the array object may be reused by other sync operations
 			}
+			break;
+		case d_chXSop_ConfirmationEventLastReceived:	// We are receiving a confirmation of the timestamp of the last event received by the contact
+			if (pXmlNodeSync->TsGetAttributeValueTimestamp_ML(d_chXCPa_tsEventID) == pContactOrGroup_NZ->m_tsEventIdLastSentCached)
+				{
+				//MessageLog_AppendTextFormatSev(eSeverityNoise, "\t '$s' confirmed having received Event ID $t\n", pContactOrGroup_NZ->TreeItem_PszGetNameDisplay(), pContactOrGroup_NZ->m_tsEventIdLastSentCached);
+				m_pContact->ContactFlag_SynchronizeWhenPresenceOnline_Clear();
+				}
 			break;
 
 		case d_chXSop_EventIDsMine:	// The user is missing its own events
@@ -834,7 +841,8 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		return;	// No new events were added, therefore there is nothing to do
 
 	// So far, we have allocated the events, however they have not been displayed into the Chat Log, nor added to the vault
-	MessageLog_AppendTextFormatCo(d_coBlue, "Sorting $I events by chronology...\n", arraypaEvents.GetSize());
+	if (!arraypaEvents.FIsEmpty())
+		MessageLog_AppendTextFormatCo(d_coBlue, "Sorting $I events by chronology...\n", arraypaEvents.GetSize());
 	arraypaEvents.SortEventsByChronology();	// First, sort by chronology, to display the events according to their timestamp
 
 	IEvent * pEvent = NULL;
@@ -863,11 +871,19 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			break;
 			} /// switch
 		if (eEventClass & eEventClass_kfReceivedByRemoteClient)
-			pContactOrGroup_NZ->m_tsOtherLastReceived = pEvent->m_tsOther;
+			{
+			if (pContactOrGroup_NZ->m_tsOtherLastReceived < pEvent->m_tsOther)
+				pContactOrGroup_NZ->m_tsOtherLastReceived = pEvent->m_tsOther;
+			else if (pGroup == NULL)
+				{
+				MessageLog_AppendTextFormatCo(d_coOrange, "\t pContactOrGroup_NZ->m_tsOtherLastReceived $t >= pEvent->m_tsOther $t\n", pContactOrGroup_NZ->m_tsOtherLastReceived, pEvent->m_tsOther);
+				pEvent->Event_SetFlagOutOfSync();
+				}
+			}
 		MessageLog_AppendTextFormatCo(d_coBlue, "\t tsEventID $t ({tL}), tsOther $t ({tL}): {sm}\n", pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther, pEvent->m_tsOther, pszExtra);
 		} // while
 
-	pVault->m_arraypaEvents.AppendEventsSortedByIDs(PA_CHILD &arraypaEvents);	// Add the events to the vault
+	pVault->m_arraypaEvents.AppendEventsSortedByIDs(PA_CHILD IN_MOD_SORT &arraypaEvents);	// Add the events to the vault
 	Assert(pVault->m_arraypaEvents.FEventsSortedByIDs());
 	pVault->SetModified();	// Make sure the vault gets saved
 //	pVault->WriteEventsToDiskIfModified();	// This line is for debugging
@@ -886,10 +902,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		PSZUC pszMessage = pEvent->PszGetTextOfEventForSystemTray(OUT_IGNORED &str);
 		pContactOrGroup_NZ->TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact(IN pszMessage, m_pContact, pMember);
 		}
-
-	void Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 	Dashboard_NewEventsFromContactOrGroup(pContactOrGroup_NZ);
-
 	} // BinXmlAppendXcpApiMessageSynchronization()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

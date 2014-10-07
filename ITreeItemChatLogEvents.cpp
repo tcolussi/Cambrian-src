@@ -428,7 +428,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			int cDays = NStringToNumber_ZZR_ML(pszParameters);
 			if (cDays > 0)
 				{
-				TIMESTAMP tsLastSynchornized = Timestamp_GetCurrentDateTime() - cDays * d_ts_cDays;
+				//TIMESTAMP tsLastSynchornized = Timestamp_GetCurrentDateTime() - cDays * d_ts_cDays;
 				m_tsEventIdLastSentCached = d_ts_zNA;
 				if (fIsContact)
 					{

@@ -601,7 +601,7 @@ IEvent::_BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const
 	pbinTextHtml->BinAppendText_VE(c_szHtmlTemplateNickname, pTreeItemNickname->ChatLog_PszGetNickname());
 
 	if (m_uFlagsEvent & (FE_kfReplaced | FE_kfReplacing))
-		pbinTextHtml->BinAppendText(" <img src=':/ico/Pencil' title='Edited' /> ");	// Any event replaced or replacing anotehr one displays the 'edited' icon
+		pbinTextHtml->BinAppendText(" <img src=':/ico/Pencil' title='Edited' /> ");	// Any event replaced or replacing another one displays the 'edited' icon
 	} // _BinHtmlInitWithTime()
 
 
