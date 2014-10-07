@@ -24,6 +24,7 @@ TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	m_tsOtherLastSynchronized = d_ts_zNA;
 	m_tsTaskIdDownloadedLast = d_ts_zNA;
 	m_paoJapiContact = NULL;
+	m_binKeyPublic.BinAppendText("PubKeyTest");
 	}
 
 TContact::~TContact()
@@ -76,6 +77,7 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeTimestamp("tsSync", INOUT_F_UNCH_S &m_tsOtherLastSynchronized);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT &m_strComment);
 	pXmlExchanger->XmlExchangeBin("Rec", INOUT &m_binXmlRecommendations);
+	pXmlExchanger->XmlExchangeBin("KeyPublic", INOUT_F_UNCH_S &m_binKeyPublic);
 
 	m_listaTasksSendReceive.XmlExchange(INOUT pXmlExchanger);
 

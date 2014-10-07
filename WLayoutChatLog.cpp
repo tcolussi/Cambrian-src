@@ -331,7 +331,6 @@ TGroup::TreeItem_IconUpdateOnMessagesRead()
 			}
 		}
 	TreeItemChatLog_UpdateTextAndIcon();
-	void Dashboard_UpdateGroup(TGroup * pGroup);
 	Dashboard_UpdateGroup(this);
 	}
 

@@ -76,7 +76,7 @@ CPainterCell::DrawNumberWithinCircle(int nNumber)
 		int yTop = m_rcCell.top();
 		int xLeft = m_rcCell.right() - 19;
 		setPen(g_oPenDot);
-		DrawLineHorizontal(xLeft + 6, xLeft + 8, yTop + 9);
+		DrawLineHorizontal(xLeft + 5, xLeft + 8, yTop + 9);
 		//drawPoint(xLeft + 8, m_rcCell.top() + 9);
 		//DrawLineHorizontal(rc.left(), rc.right(), ptCenter.y());	// Draw a longer line for large numbers
 		setPen(g_oPenTextNotEmpty);
@@ -191,7 +191,7 @@ WDashboardSectionChannels::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/
 	}
 
 void
-WDashboardSectionChannels::DrawFooter(CPainterCell * pPainter, UINT uFlagsItem)
+WDashboardSectionChannels::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsItem*/)
 	{
 	int cChannelsRemaining = m_cChannelsTotal - m_arraypaItems.GetSize();
 	//cChannelsRemaining = 0;
@@ -339,6 +339,7 @@ WDashboard::ProfileSelectedChanged(TProfile * pProfile)
 		}
 	//m_poLayoutVertial->invalidate();
 	//updateGeometry();
+	update();
 	}
 
 BOOL
@@ -388,8 +389,14 @@ WDashboard::RefreshContact(TContact * pContact)
 void
 WDashboard::RefreshGroup(TGroup * pGroup)
 	{
+	Assert(pGroup != NULL);
 	if (pGroup->PGetProfile() == m_pProfile)
-		m_sections.pwSectionGroups->update();
+		{
+		if (pGroup->Group_FuIsChannel())
+			m_sections.pwSectionChannels->update();
+		else
+			m_sections.pwSectionGroups->update();
+		}
 	}
 
 void
@@ -690,8 +697,8 @@ Dashboard_UpdateContact(TContact * pContact)
 void
 Dashboard_UpdateGroup(TGroup * pGroup)
 	{
-	if (g_pwDashboard != NULL)
-		g_pwDashboard->RefreshGroup(pGroup);
+	Assert(g_pwDashboard != NULL);
+	g_pwDashboard->RefreshGroup(pGroup);
 	}
 
 void
@@ -703,8 +710,10 @@ Dashboard_UpdateChannels()
 void
 Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ)
 	{
-	if (g_pwDashboard != NULL)
-		g_pwDashboard->NewEventsFromContactOrGroup(pContactOrGroup_NZ);
+	Assert(pContactOrGroup_NZ != NULL);
+	Assert(g_pwDashboard != NULL);
+	MessageLog_AppendTextFormatSev(eSeverityComment, "Dashboard_NewEventsFromContactOrGroup($s)\n", pContactOrGroup_NZ->TreeItem_PszGetNameDisplay());
+	g_pwDashboard->NewEventsFromContactOrGroup(pContactOrGroup_NZ);
 	}
 
 void
