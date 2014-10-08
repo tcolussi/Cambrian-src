@@ -712,7 +712,7 @@ Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_N
 	{
 	Assert(pContactOrGroup_NZ != NULL);
 	Assert(g_pwDashboard != NULL);
-	MessageLog_AppendTextFormatSev(eSeverityComment, "Dashboard_NewEventsFromContactOrGroup($s)\n", pContactOrGroup_NZ->TreeItem_PszGetNameDisplay());
+	//MessageLog_AppendTextFormatSev(eSeverityComment, "Dashboard_NewEventsFromContactOrGroup($s)\n", pContactOrGroup_NZ->TreeItem_PszGetNameDisplay());
 	g_pwDashboard->NewEventsFromContactOrGroup(pContactOrGroup_NZ);
 	}
 

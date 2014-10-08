@@ -62,8 +62,7 @@ protected:
 		FC_kfSubscribeAsk									= 0x00010000,
 		FC_kfSubscribe										= 0x00020000,
 		FC_kfSubscribed										= 0x00040000,
-		FC_kfXcpComposingSendTimestampsOfLastKnownEvents	= 0x00200000,
-		FC_kfXcpRequestingDataForSynchronization			= 0x00400000
+		FC_kfXospSynchronizeOnNextXmppStanza				= 0x00100000,	// Trigger a synchronization on the next XMPP stanza
 		};
 	UINT m_uFlagsContact;		// Various flags for the contact (some of those bits are serialized)
 
@@ -84,13 +83,14 @@ public:
 	inline void _ClearFlags() { m_uFlagsContact = 0; }
 	inline void SetFlagContactAsUnsolicited() { m_uFlagsContact |= FC_kfContactUnsolicited; }
 	inline void SetFlagContactAsInvited() { m_uFlagsContact &= ~FC_kfContactNeedsInvitation; }
-	inline void SetFlagXcpComposingSendTimestampsOfLastKnownEvents() { m_uFlagsContact |= FC_kfXcpComposingSendTimestampsOfLastKnownEvents; }
+	//inline void SetFlagXcpComposingSendTimestampsOfLastKnownEvents() { m_uFlagsContact |= FC_kfXcpComposingSendTimestampsOfLastKnownEvents; }
 	inline BOOL Contact_FQueueXospTasksUntilOnline() const { return ((m_uFlagsContact & FC_kfNativeXmppOnly) == 0); }
 	inline BOOL Contact_FuCommunicateViaXmppOnly() const { return (m_uFlagsContact & FC_kfNativeXmppOnly); }
 	inline BOOL Contact_FuCommunicateViaXosp() const { return (m_uFlagsContact & FC_kfPresenceXosp); }
-	inline BOOL ContactFlag_FuNeedSynchronizeWhenPresenceOnline() const { return (m_uFlagsContact & FC_kfXospSynchronizeWhenPresenceOnline); }
-	inline void ContactFlag_SynchronizeWhenPresenceOnline_Set() { m_uFlagsContact |= FC_kfXospSynchronizeWhenPresenceOnline; }
+	inline void ContactFlag_SynchronizeOnNextXmppStanza_Set() { m_uFlagsContact |= FC_kfXospSynchronizeOnNextXmppStanza; }
+	inline void ContactFlag_SynchronizeWhenPresenceOnline_Set() { m_uFlagsContact |= FC_kfXospSynchronizeWhenPresenceOnline | FC_kfXospSynchronizeOnNextXmppStanza; }	// If we need to synchronize as soon as the contact becomes online, then it follows we need to synchronize on the next stanza
 	inline void ContactFlag_SynchronizeWhenPresenceOnline_Clear() { m_uFlagsContact &= ~FC_kfXospSynchronizeWhenPresenceOnline; }
+	inline BOOL ContactFlag_FuNeedSynchronizeWhenPresenceOnline() const { return (m_uFlagsContact & FC_kfXospSynchronizeWhenPresenceOnline); }
 	inline BOOL Contact_FuIsOnline() const { return (m_uFlagsContact & FC_kmPresenceMaskOnline); }
 
 	void Invitation_InitFromXml(const CStr & strInvitationXml);
@@ -161,6 +161,7 @@ public:
 	static IXmlExchange * S_PaAllocateContact(POBJECT pAccountParent);	// This static method must be compatible with interface PFn_PaAllocateXmlObject()
 	static NCompareResult S_NCompareSortContactsByNameDisplay(TContact * pContactA, TContact * pContactB, LPARAM lParamCompareSort = d_zNA);
 	friend class WLayoutChatLog;	// Access m_uFlagsContact
+	friend class CBinXcpStanza;		// Access m_uFlagsContact
 	friend class IContactAlias;
 	friend class CArrayPtrContacts;
 	friend class IEvent;

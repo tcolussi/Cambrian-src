@@ -301,10 +301,16 @@ void
 CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 	{
 	Assert(m_cbStanzaThresholdBeforeSplittingIntoTasks > 50 && m_cbStanzaThresholdBeforeSplittingIntoTasks <= c_cbStanzaThresholdBeforeSplittingIntoTasks);
-
+	Assert(pContact != NULL);	// I think this condition is still valid
 	if (pContact == NULL)
 		return;	// This is not a bug, but a feature allowing an event to directly write to the socket when a contact is unable to understand XCP.
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+
+	if (pContact->m_uFlagsContact & TContact::FC_kfXospSynchronizeOnNextXmppStanza)
+		{
+		pContact->m_uFlagsContact &= ~TContact::FC_kfXospSynchronizeOnNextXmppStanza;
+		BinAppendText_VE("<"d_szXop_MessagesSynchronize"><"d_szXSop_RequestIDsLargerThanTimestamp_tsI_tsO"/></"d_szXop_MessagesSynchronize">", pContact->m_tsOtherLastSynchronized, pContact->m_tsEventIdLastSentCached);
+		}
 
 	if ((m_uFlags & F_kfTaskAlreadyIncluded) == 0)
 		{
@@ -406,12 +412,6 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		pSocket->Socket_WriteBin(g_strScratchBufferSocket);
 	m_paData->cbData = 0;
 	} // XospSendStanzaToContactAndEmpty()
-
-void
-CBinXcpStanza::XcpSendStanza() CONST_MCC
-	{
-	XospSendStanzaToContactAndEmpty(m_pContact);
-	}
 
 CBinXcpStanzaEventCopier::CBinXcpStanzaEventCopier(ITreeItemChatLogEvents * pContactOrGroup)
 	{

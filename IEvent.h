@@ -186,12 +186,8 @@ public:
 	int CbGetAvailablePayloadToSendBinaryData() const;
 	inline BOOL FuSerializingEventToDisk() const { return (m_uFlags & F_kfSerializeToDisk); }
 	inline BOOL FuSerializingEventToDiskOrCloning() const { return (m_uFlags & (F_kfSerializeToDisk | F_kfSerializeForCloning)); }
-	void BinXmlInitStanzaWithGroupSelector(TGroup * pGroup);
 	void BinXmlInitStanzaWithXmlRaw(PSZUC pszMessageXml);
-	void BinXmlAppendTimestampsToSynchronizeWithContact(TContact * pContact);
-	void BinXmlAppendTimestampsToSynchronizeWithGroupMember(TGroupMember * pMember);
 	void BinXmlAppendAttributeOfContactIdentifierOfGroupSenderForEvent(const IEvent * pEvent);
-	void BinXmlAppendAttributeUIntHexadecimalExcludeForXcp(CHS chAttributeName, UINT uAttributeValueHexadecimal, UINT kmFlagsExcludeForXcp);
 
 	void BinAppendXmlEventSerializeOpen(const IEvent * pEvent, TIMESTAMP tsOther);
 	void BinAppendXmlEventSerializeDataAndClose(const IEvent * pEvent);
@@ -215,9 +211,7 @@ public:
 
 	void XcpSendTaskDataToContact(TContact * pContact, const CTaskSendReceive * pTaskUpload, int ibData = 0);
 
-	void XcpSendStanzaToContactOrGroup(const ITreeItemChatLogEvents * pContactOrGroup) CONST_MCC;
 	void XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC;
-	void XcpSendStanza() CONST_MCC;
 
 	void XmppWriteStanzaToSocket();
 	void XmppWriteStanzaToSocketOnlyIfContactIsUnableToCommunicateViaXcp_VE(PSZAC pszFmtTemplate, ...);

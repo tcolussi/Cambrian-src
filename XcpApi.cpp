@@ -35,7 +35,7 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 			CBinXcpStanza binXcpStanzaReply;
 			binXcpStanzaReply.m_pContact = this;
 			binXcpStanzaReply.XcpApi_ExecuteApiList(IN &oXmlTree);
-			binXcpStanzaReply.XcpSendStanza();
+			binXcpStanzaReply.XospSendStanzaToContactAndEmpty(this);
 			}
 		}
 	} // XmppXcp_ProcessStanza()
@@ -121,7 +121,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 					pszXmlResponseValue = pszApiName;
 					}
 				Assert(pszXmlResponseValue != NULL);
-				Report(pszXmlResponseValue[0] != '\0');
+				//Report(pszXmlResponseValue[0] != '\0');  // Temporary commented to not display an error to the user
 				BinAppendTextOffsetsInit_VE(OUT &m_oOffsets, "<$s $s='^s'^A>", pszXmlResponseName, pszXmlResponseName, pszXmlResponseValue, pXmlAttributeGroupIdentifier);
 				XcpApi_ExecuteApiName(pszApiName, IN pXmlNodeApiList);	// Execute the API
 				BinAppendTextOffsetsTruncateIfEmpty_VE(IN &m_oOffsets, "</$s>", pszXmlResponseName);	// Close the XML request
@@ -569,8 +569,13 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				ppEvent++;
 				}
 			BinAppendXmlForSelfClosingElementQuote();
-			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<"d_szXSop_EventIDsMine_);
 			tsOther = pXmlNodeSync->TsGetAttributeValueTimestamp_ML(d_chXSa_tsOther);
+			if (tsOther > pContactOrGroup_NZ->m_tsOtherLastReceived)
+				{
+				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Missing events since $t\n", tsOther);
+				m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeOnNextXmppStanza;	// It would be better to 'inject' the XML here.  Also, there is a need to handle the group/channels
+				}
+			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<"d_szXSop_EventIDsMine_);
 			ppEvent = ppEventFirst;
 			while (ppEvent != ppEventStop)
 				{
@@ -609,11 +614,16 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			}
 			break;
 		case d_chXSop_ConfirmationEventLastReceived:	// We are receiving a confirmation of the timestamp of the last event received by the contact
-			if (pXmlNodeSync->TsGetAttributeValueTimestamp_ML(d_chXCPa_tsEventID) == pContactOrGroup_NZ->m_tsEventIdLastSentCached)
+			{
+			TIMESTAMP tsEventID = pXmlNodeSync->TsGetAttributeValueTimestamp_ML(d_chXCPa_tsEventID);
+			if (tsEventID == pContactOrGroup_NZ->m_tsEventIdLastSentCached)
 				{
 				//MessageLog_AppendTextFormatSev(eSeverityNoise, "\t '$s' confirmed having received Event ID $t\n", pContactOrGroup_NZ->TreeItem_PszGetNameDisplay(), pContactOrGroup_NZ->m_tsEventIdLastSentCached);
 				m_pContact->ContactFlag_SynchronizeWhenPresenceOnline_Clear();
 				}
+			else
+				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Expecting Event ID $t as confirmation from '$s' instead of $t\n", pContactOrGroup_NZ->m_tsEventIdLastSentCached, pContactOrGroup_NZ->TreeItem_PszGetNameDisplay(), tsEventID);
+			}
 			break;
 
 		case d_chXSop_EventIDsMine:	// The user is missing its own events
@@ -878,6 +888,11 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				{
 				MessageLog_AppendTextFormatCo(d_coOrange, "\t pContactOrGroup_NZ->m_tsOtherLastReceived $t >= pEvent->m_tsOther $t\n", pContactOrGroup_NZ->m_tsOtherLastReceived, pEvent->m_tsOther);
 				pEvent->Event_SetFlagOutOfSync();
+				}
+			if (pGroup == NULL)
+				{
+				if (pEvent->m_tsEventID < pContactOrGroup_NZ->m_tsEventIdLastSentCached)
+					pEvent->Event_SetFlagOutOfSync();	// For one-to-one chat, all Event IDs are expected to be consecutive
 				}
 			}
 		MessageLog_AppendTextFormatCo(d_coBlue, "\t tsEventID $t ({tL}), tsOther $t ({tL}): {sm}\n", pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther, pEvent->m_tsOther, pszExtra);

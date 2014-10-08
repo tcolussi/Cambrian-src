@@ -183,12 +183,14 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 			{
 			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastReceived by -$T from $t to $t for '$s'\n", pContact->m_tsOtherLastReceived - tsOtherLastReceived, pContact->m_tsOtherLastReceived, tsOtherLastReceived, m_pParent->TreeItem_PszGetNameDisplay());
 			pContact->m_tsOtherLastReceived = tsOtherLastReceived;
+			pContact->ContactFlag_SynchronizeWhenPresenceOnline_Set();	// If the timestamp is adjusted, then trigger a synchronization
 			}
 		if (tsOtherLastReceived < pContact->m_tsOtherLastSynchronized || pContact->m_tsOtherLastSynchronized == d_ts_zNA)
 			{
 			if (pContact->m_tsOtherLastSynchronized != tsOtherLastReceived)
 				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "\t Adjusting m_tsOtherLastSynchronized by -$T from $t ({tL}) to $t ({tL}) for '$s'\n", pContact->m_tsOtherLastSynchronized - tsOtherLastReceived, pContact->m_tsOtherLastSynchronized, pContact->m_tsOtherLastSynchronized, tsOtherLastReceived, tsOtherLastReceived, m_pParent->TreeItem_PszGetNameDisplay());
 			pContact->m_tsOtherLastSynchronized = tsOtherLastReceived;
+			pContact->ContactFlag_SynchronizeWhenPresenceOnline_Set();	// If the timestamp is adjusted, then trigger a synchronization
 			}
 		}
 	else
