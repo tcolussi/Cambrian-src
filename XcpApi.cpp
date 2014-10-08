@@ -572,8 +572,10 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			tsOther = pXmlNodeSync->TsGetAttributeValueTimestamp_ML(d_chXSa_tsOther);
 			if (tsOther > pContactOrGroup_NZ->m_tsOtherLastReceived)
 				{
-				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Missing events since $t\n", tsOther);
-				m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeOnNextXmppStanza;	// It would be better to 'inject' the XML here.  Also, there is a need to handle the group/channels
+				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Missing events since $t  ($T)\n", tsOther, tsOther - pContactOrGroup_NZ->m_tsOtherLastReceived);
+				if ((m_pContact->m_uFlagsContact & TContact::FC_kfXospSynchronizeWhenPresenceOnline) == 0)
+					m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeWhenPresenceOnline | TContact::FC_kfXospSynchronizeOnNextXmppStanza;
+				//m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeOnNextXmppStanza;	// It would be better to 'inject' the XML here.  Also, there is a need to handle the group/channels
 				}
 			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<"d_szXSop_EventIDsMine_);
 			ppEvent = ppEventFirst;

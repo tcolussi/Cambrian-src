@@ -93,6 +93,9 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Group Properties..." _ "i=Properties" _, // eMenuAction_GroupProperties
 
 	"Channel" _ "i=Hashtag" _, // eMenuAction_GroupChannel
+	"Invite peers..." _ "s=Invite others to join the channel" _ "i=GroupAdd" _,	// eMenuAction_GroupChannelInvite
+	"Leave channel" _ "i=GroupDelete" _, // eMenuAction_GroupChannelLeave
+
 
 	"Recommend" _ "s=Recommend the selected item to my peers" _ "i=Reputation" _,	// eMenuAction_TreeItemRecommended
 	"Rename..." _, // eMenuAction_TreeItemRename

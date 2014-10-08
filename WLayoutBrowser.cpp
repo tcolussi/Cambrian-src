@@ -54,7 +54,7 @@ OSettings::AudioEnabled(bool fEnable)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oApps(this), m_oAppChat(this), m_oGroupList(this), m_oMe(this)
+OJapiCambrian::OJapiCambrian(TProfile * pProfile, QObject * pParent) : OJapi(pParent), m_oSettings(this), m_oApps(this), m_oGroupList(this), m_oAppChat(this), m_oMe(this)
 	{
 	m_pProfile = pProfile;
 	m_paAppBallotmaster = NULL;

@@ -239,7 +239,8 @@ WDashboardSectionChannels::OnItemClicked(SHitTestInfo oHitTestInfo)
 	if (oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow)
 		{
 		WMenu oMenu;
-		oMenu.ActionAdd(eMenuAction_GroupDelete);
+		oMenu.ActionAdd(eMenuAction_GroupChannelInvite);
+		oMenu.ActionAdd(eMenuAction_GroupChannelLeave);
 		EMenuAction eMenuAction = oMenu.EDisplayContextMenu();
 		switch (eMenuAction)
 			{
