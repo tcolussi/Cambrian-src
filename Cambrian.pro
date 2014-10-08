@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network multimedia
+QT       += core gui network multimedia quick
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
@@ -92,7 +92,8 @@ SOURCES += \
     TBrowserTab.cpp \
     WDashboard.cpp \
     DDialogChannels.cpp \
-    TChannel.cpp
+    TChannel.cpp \
+    WQmlToolbar.cpp
 
 
 HEADERS += \
@@ -170,7 +171,8 @@ HEADERS += \
     TBrowserTab.h \
     WDashboard.h \
     DDialogChannels.h \
-    TChannel.h
+    TChannel.h \
+    WQmlToolbar.h
 
 
 FORMS +=

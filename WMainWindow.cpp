@@ -14,6 +14,7 @@
 #include "WNavigationTree.h"
 #include "WDashboard.h"
 #include "WLayoutContainer.h"
+#include "WQmlToolbar.h"
 #include <QSound>
 
 #ifdef DEBUG
@@ -260,6 +261,8 @@ WMainWindow::WMainWindow() : QMainWindow()
 	#if 1
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
 	#endif
+	addDockWidget(Qt::TopDockWidgetArea, PA_CHILD new WQmlToolbar);
+
 
 	g_pwChatLayoutContainer = new WLayoutContainer;
 	setCentralWidget(PA_CHILD g_pwChatLayoutContainer);
