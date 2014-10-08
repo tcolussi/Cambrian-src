@@ -28,8 +28,8 @@ WChatLog::WChatLog(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup)
 	setCursorWidth(0);
 	//document()->setDefaultStyleSheet("p {text-indent:-10px; margin-left:10px; margin-top:5; margin-bottom:0; white-space:pre-wrap;}");
 	document()->setDefaultStyleSheet(
-		"a."d_szClassForChatLog_ButtonHtml " { color: black; background-color: silver; text-decoration: none; font-weight: bold } "
-		"a."d_szClassForChatLog_HyperlinkDisabled " { color: gray; text-decoration: none; } "
+		"a." d_szClassForChatLog_ButtonHtml " { color: black; background-color: silver; text-decoration: none; font-weight: bold } "
+		"a." d_szClassForChatLog_HyperlinkDisabled " { color: gray; text-decoration: none; } "
 
 		"a.ha { color: navy; text-decoration: none; } "	// Active Hyperlink (displayed in the normal blue color)
 		".d { color: green } "

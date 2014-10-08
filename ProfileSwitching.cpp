@@ -350,7 +350,7 @@ NavigationTree_UpdateNameOfSelectedProfile()
 	if (pProfileSelected != NULL && g_pTreeItemProfiles == NULL)
 		g_strScratchBufferStatusBar.Format(d_sza_Profile": $S", &pProfileSelected->m_strNameProfile);
 	else
-		g_strScratchBufferStatusBar.Format("Switch "d_sza_Profile);
+		g_strScratchBufferStatusBar.Format("Switch " d_sza_Profile);
 	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
 	Dashboard_UpdateAccordingToSelectedProfile(pProfileSelected);
 	}

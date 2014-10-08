@@ -67,11 +67,11 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 		if (chXop == d_chXop_MessageNew || chXop == d_chXop_MessagesSynchronize)
 			{
 			SOffsets oOffsets;
-			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<"d_szXop_MessagesSynchronizeGroup_A">", pXmlAttributeGroupIdentifier);
+			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<" d_szXop_MessagesSynchronizeGroup_A ">", pXmlAttributeGroupIdentifier);
 			BinXmlAppendXcpApiMessageSynchronization(pXmlNodeApiList, chXop == d_chXop_MessageNew, pXmlAttributeGroupIdentifier);
 			if (m_paData->cbData > oOffsets.ibDataBegins)
 				m_uFlags |= F_kfContainsSyncData;			// This is important to prevent synchronization tasks to accumulate
-			BinAppendTextOffsetsTruncateIfEmpty_VE(IN &oOffsets, "</"d_szXop_MessagesSynchronize">");
+			BinAppendTextOffsetsTruncateIfEmpty_VE(IN &oOffsets, "</" d_szXop_MessagesSynchronize ">");
 			}
 		else if (chXop == d_chXop_MessageTyping)
 			{
@@ -173,7 +173,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 			{
 			MessageLog_AppendTextFormatSev(eSeverityErrorWarning,
 				"\t The contact ^j is unable to process the API named '$s'\n"
-				"\t Please recommend to ^j to upgrade to " d_szApplicationName " version " d_szApplicationVersion ".\n", m_pContact, pXmlNodeApiList->PszuFindAttributeValue(d_chXa_ApiName), m_pContact);
+				"\t Please contact ^j and recommend upgrading to " d_szApplicationName " version " d_szApplicationVersion ".\n", m_pContact, pXmlNodeApiList->PszuFindAttributeValue(d_chXa_ApiName), m_pContact);
 			}
 		else
 			{
@@ -203,7 +203,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 							oXmlTree.EParseFileDataToXmlNodesModify_ML(INOUT &pTaskDownload->m_binXmlData);
 							m_pContact->m_listaTasksSendReceive.DeleteTask(PA_DELETING pTaskDownload);
 							m_pContact->m_tsTaskIdDownloadedLast = tsTaskID;
-							BinAppendText_VE("<"d_szXop_TaskExecuted_ts"/>", tsTaskID);	// Notify the other client the task has been executed
+							BinAppendText_VE("<" d_szXop_TaskExecuted_ts "/>", tsTaskID);	// Notify the other client the task has been executed
 							XcpApi_ExecuteApiList(IN &oXmlTree);
 							goto NextApi;
 							}
@@ -215,7 +215,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 				else
 					{
 					MessageLog_AppendTextFormatSev(eSeverityNoise, "Ignoring TaskID $t from ^j because it already executed\n", tsTaskID, m_pContact);
-					BinAppendText_VE("<"d_szXop_TaskExecuted_ts"/>", tsTaskID);	// Notify the other client the task has been executed to make sure it is removed from its list
+					BinAppendText_VE("<" d_szXop_TaskExecuted_ts "/>", tsTaskID);	// Notify the other client the task has been executed to make sure it is removed from its list
 					}
 				}
 			else if (chXop == d_chXop_TaskUploading)
@@ -234,7 +234,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 						{
 						// The request is not the first task in the list, therefore notify the client there is a task which should be downloaded
 						MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "The TaskID $t requested by ^j is out of order, therefore notify ^j about Task ID $t\n", tsTaskID, m_pContact, m_pContact, pTaskFirst->m_tsTaskID);
-						BinAppendText_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i"/>", pTaskFirst->m_tsTaskID, pTaskFirst->m_binXmlData.CbGetData());
+						BinAppendText_VE("<" d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i "/>", pTaskFirst->m_tsTaskID, pTaskFirst->m_binXmlData.CbGetData());
 						}
 					if (ibData >= 0 && ibData < pTaskUpload->m_binXmlData.CbGetData())
 						{
@@ -242,7 +242,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 						#ifdef DEBUG_XCP_TASKS
 						m_cbStanzaThresholdBeforeSplittingIntoTasks = c_cbStanzaThresholdBeforeSplittingIntoTasks;	// Increase the threshold to its maximum value so the task data may be transmitted as fast as possible
 						#endif
-						BinAppendText_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataOffset_i d_szXa_TaskDataBinary_Bii"/>", pTaskUpload->m_tsTaskID, ibData, &pTaskUpload->m_binXmlData, ibData, CbGetAvailablePayloadToSendBinaryData());
+						BinAppendText_VE("<" d_szXop_TaskDownloading_ts d_szXa_TaskDataOffset_i d_szXa_TaskDataBinary_Bii "/>", pTaskUpload->m_tsTaskID, ibData, &pTaskUpload->m_binXmlData, ibData, CbGetAvailablePayloadToSendBinaryData());
 						Assert(m_paData->cbData < c_cbStanzaThresholdBeforeSplittingIntoTasks + 50);
 						m_uFlags |= F_kfTaskAlreadyIncluded;
 						XospSendStanzaToContactAndEmpty(m_pContact);	// Send the data immediately, as the binary data from the task will fill the entire XMPP stanza
@@ -253,7 +253,7 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 				else
 					{
 					MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Unable to find TaskID $t to send to ^j\n", tsTaskID, m_pContact);
-					BinAppendText_VE("<"d_szXop_TaskNotFound_ts"/>", tsTaskID);	// Notify the remote client the task cannot be found, and therefore should not attempt to download this task again
+					BinAppendText_VE("<" d_szXop_TaskNotFound_ts "/>", tsTaskID);	// Notify the remote client the task cannot be found, and therefore should not attempt to download this task again
 					}
 				goto NextApi;
 				}
@@ -316,10 +316,10 @@ CBinXcpStanza::XcpApi_ExecuteApiName(PSZUC pszApiName, const CXmlNode * pXmlNode
 		switch (chApiName)
 			{
 		case d_chXv_ApiName_Version:
-			BinAppendText("<"d_szXv_ApiName_Version d_szXCPa_eVersion_Version d_szXCPa_eVersion_Platform d_szXCPa_eVersion_Client "/>");
+			BinAppendText("<" d_szXv_ApiName_Version d_szXCPa_eVersion_Version d_szXCPa_eVersion_Platform d_szXCPa_eVersion_Client "/>");
 			return;
 		case d_chXv_ApiName_Ping:
-			BinAppendText_VE("<"d_szXv_ApiName_Ping " " d_szXv_ApiName_Ping"='$t'/>", Timestamp_GetCurrentDateTime());
+			BinAppendText_VE("<" d_szXv_ApiName_Ping " " d_szXv_ApiName_Ping "='$t'/>", Timestamp_GetCurrentDateTime());
 			return;
 			} // switch
 		}
@@ -468,7 +468,7 @@ CBinXcpStanzaTypeSynchronize::CBinXcpStanzaTypeSynchronize(ITreeItemChatLogEvent
 void
 CBinXcpStanzaTypeSynchronize::BinAppendXospSynchronizeTimestampsAndClose(ITreeItemChatLogEvents * pContactOrGroup, const TIMESTAMP * ptsOtherLastSynchronized)
 	{
-	BinAppendText_VE("<"d_szXSop_RequestIDsLargerThanTimestamp_tsI_tsO"/></" d_szXop_MessagesSynchronize ">", *ptsOtherLastSynchronized, pContactOrGroup->m_tsEventIdLastSentCached);
+	BinAppendText_VE("<" d_szXSop_RequestIDsLargerThanTimestamp_tsI_tsO "/></" d_szXop_MessagesSynchronize ">", *ptsOtherLastSynchronized, pContactOrGroup->m_tsEventIdLastSentCached);
 	}
 
 //	Allocate an event and add it to the array.  The array is responsible of deleting the event.
@@ -555,7 +555,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			IEvent ** ppEventStop;
 			IEvent ** ppEventFirst = arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 			// Scan the array for sent events
-			BinAppendText_VE("<"d_szXSop_ConfirmationEventLastReceived_tsI"/><"d_szXSop_EventIDs_tsO_, pContactOrGroup_NZ->m_tsOtherLastReceived, tsEventID);
+			BinAppendText_VE("<" d_szXSop_ConfirmationEventLastReceived_tsI "/><" d_szXSop_EventIDs_tsO_, pContactOrGroup_NZ->m_tsOtherLastReceived, tsEventID);
 			IEvent ** ppEvent = ppEventFirst;
 			while (ppEvent != ppEventStop)
 				{
@@ -577,7 +577,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 					m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeWhenPresenceOnline | TContact::FC_kfXospSynchronizeOnNextXmppStanza;
 				//m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeOnNextXmppStanza;	// It would be better to 'inject' the XML here.  Also, there is a need to handle the group/channels
 				}
-			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<"d_szXSop_EventIDsMine_);
+			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<" d_szXSop_EventIDsMine_);
 			ppEvent = ppEventFirst;
 			while (ppEvent != ppEventStop)
 				{
@@ -605,7 +605,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 					if (pContactThirdParty != NULL)
 						BinAppendXmlForSelfClosingElementQuote();
 					pContactThirdParty = pEvent->m_pContactGroupSender_YZ;
-					BinAppendText_VE("<"d_szXSop_EventIDsOthers_p_, pContactThirdParty);
+					BinAppendText_VE("<" d_szXSop_EventIDsOthers_p_, pContactThirdParty);
 					}
 				BinAppendTimestampSpace(pEvent->m_tsOther);
 				//MessageLog_AppendTextFormatCo(d_coRed, "Need to include event tsOther $t from ^j\n", pEvent->m_tsOther, pEvent->m_pContactGroupSender_YZ);
@@ -629,7 +629,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			break;
 
 		case d_chXSop_EventIDsMine:	// The user is missing its own events
-			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<"d_szXSop_FetchEventsMine_);
+			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<" d_szXSop_FetchEventsMine_);
 			while (TRUE)
 				{
 				TIMESTAMP tsEventID;
@@ -651,18 +651,18 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			break;
 		case d_chXSop_EventIDsOthers:	// This XML node contains a list of timestamps of events written by others (third-party group chat)
 			pszContactIdentifier = pXmlNodeSync->PszuFindAttributeValue_NZ(d_chXSa_pContact);
-			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<"d_szXSop_FetchEventsOthers_s_, pszContactIdentifier);
+			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<" d_szXSop_FetchEventsOthers_s_, pszContactIdentifier);
 			pContactOther = pAccount->Contact_PFindByJID(pszContactIdentifier, eFindContact_zDefault);
 			if (pContactOther != NULL)
 				goto BeginLoop;
 			// The contact is unknown, therefore make a request to get its name and JID
 			MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "Contact $s is unknown, therefore requesting its name and JID\n", pszContactIdentifier);
-			BinAppendText_VE("$s'"d_szXSa_strNameContact"/>", pszmTimestamps);	// Include all the timestamps in the request
+			BinAppendText_VE("$s'" d_szXSa_strNameContact"/>", pszmTimestamps);	// Include all the timestamps in the request
 			break;
 		case d_chXSop_EventIDs:	// This XML node contains a list of timestamps of events written by the contact
 			pContactOther = pContactGroupMember;
 			Endorse(pContactOther == NULL);	// For 1:1 chat
-			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<"d_szXSop_FetchEvents_tsI_, *ptsOtherLastSynchronized);	// Build a request to fetch the missing events
+			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<" d_szXSop_FetchEvents_tsI_, *ptsOtherLastSynchronized);	// Build a request to fetch the missing events
 			BeginLoop:
 			// Loop through all the timestamps to see if we are missing any event.  If an event is missing, then append its timestamp to the request to fetch the event data.
 			tsOther = d_ts_zNA;
@@ -713,7 +713,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				else
 					MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Unable to find Event tsOther $t\n", tsOther);
 				} // while
-			BinAppendText_VE("</"d_szXSop_EventsDataMine">");
+			BinAppendText_VE("</" d_szXSop_EventsDataMine ">");
 			break;
 		case d_chXSop_FetchEventsOthers:	// Return the data of events of a third party contact (this happens only in group chat where a contact is relaying/forwarding the events of another contact)
 			pszContactIdentifier = pXmlNodeSync->PszuFindAttributeValue_NZ(d_chXSa_pContact);
@@ -739,7 +739,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				else
 					MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Unable to find Event tsOther $t\n", tsOther);
 				} // while
-			BinAppendText_VE("</"d_szXSop_EventsDataOther">");
+			BinAppendText_VE("</" d_szXSop_EventsDataOther ">");
 			break;
 
 		case d_chXSop_EventsDataOther:	// The XML element contains events written by another third-party contact
@@ -757,7 +757,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			Endorse(pContactOther == NULL);	// For 1:1 chat
 			AllocateEvents:
 			// Include a confirmation
-			BinAppendText("<"d_szXSop_EventsConfirmation_);
+			BinAppendText("<" d_szXSop_EventsConfirmation_);
 			tsOther = d_ts_zNA;
 			pXmlNodeEvent = pXmlNodeSync->m_pElementsList;
 			Report(pXmlNodeEvent != NULL);

@@ -27,22 +27,22 @@ WLayoutMyProfiles::WLayoutMyProfiles()
 		" - A personal role contains information about your personal life.  With a personal role, you will likely share information with your friends and family, such as pictures and the things you like and/or personally recommend to them.<br/>"
 		" - A professional role contains information about the role you play within an organization.  "
 		"With a professional role, you will likely share information with your business peers to promote your organization.<br/><br/>"
-		"Creating a "d_sza_profile" is easy; you pick a name you wish other people will recognize you." :
-		"You already have a "d_sza_profile", however you are welcome to 'play' multiple "d_sza_profile"s.");
+		"Creating a " d_sza_profile " is easy; you pick a name you wish other people will recognize you." :
+		"You already have a " d_sza_profile ", however you are welcome to 'play' multiple " d_sza_profile "s.");
 	poLayoutVertical->addWidget(pwLabel);
 	m_pwEditProfile = new WEdit;
-	m_pwEditProfile->Edit_SetWatermark("Enter name, nickname or business name of your new "d_sza_profile);
+	m_pwEditProfile->Edit_SetWatermark("Enter name, nickname or business name of your new " d_sza_profile);
 	m_pwEditProfile->Edit_SetToolTip((PSZUC)"Examples:\n\tJoe Smith\n\tSuperman\n\tACME Widgets, Inc.");
 //	m_pwEditProfile->setFocus();
 
 	OLayoutHorizontalAlignLeft * poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
 	//poLayout->Layout_AddLabelAndWidgetH_PA("ID:", m_pwEditProfile);
 	poLayout->addWidget(m_pwEditProfile);
-	WButtonTextWithIcon * pwButtonCreateNewID = new WButtonTextWithIcon("Create "d_sza_Profile" ", eMenuIconIdentities);
+	WButtonTextWithIcon * pwButtonCreateNewID = new WButtonTextWithIcon("Create " d_sza_Profile" ", eMenuIconIdentities);
 	poLayout->addWidget(pwButtonCreateNewID);
 
 	m_pwCheckboxAutomatic = new QCheckBox("Automatically create an XMPP account for my new " d_sza_profile);
-	m_pwCheckboxAutomatic->setToolTip("Uncheck this option if you wish to manually assign an XMPP account to your new "d_sza_profile);
+	m_pwCheckboxAutomatic->setToolTip("Uncheck this option if you wish to manually assign an XMPP account to your new " d_sza_profile);
 	m_pwCheckboxAutomatic->setChecked(true);
 	poLayoutVertical->addWidget(m_pwCheckboxAutomatic);
 
@@ -67,7 +67,7 @@ WLayoutMyProfiles::SL_ButtonCreateNewProfile()
 	CStr strProfileName = *m_pwEditProfile;
 	if (strProfileName.FIsEmptyString())
 		{
-		EMessageBoxWarning("Please enter a valid name for your "d_sza_profile".");
+		EMessageBoxWarning("Please enter a valid name for your " d_sza_profile ".");
 		m_pwEditProfile->setFocus();
 		return;
 		}
@@ -80,7 +80,7 @@ WLayoutMyProfiles::SL_ButtonCreateNewProfile()
 		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
 		if (pProfile->m_strNameProfile.FCompareStringsNoCase(strProfileName))
 			{
-			EMessageBoxWarning("There is already a "d_sza_profile" named '$S'.  Please pick another "d_sza_profile" name.", &strProfileName);
+			EMessageBoxWarning("There is already a " d_sza_profile " named '$S'.  Please pick another " d_sza_profile " name.", &strProfileName);
 			m_pwEditProfile->setFocus();
 			return;
 			}
@@ -139,7 +139,7 @@ WLayoutProfile::WLayoutProfile(TProfile * pProfile)
 	m_pwEditSearchApplications = NULL;
 	if (pProfile->m_arraypaAccountsXmpp.FIsEmpty())
 		{
-		m_pwGroupBoxAccountNew = Splitter_PwAddGroupBox_VE("Please assign an XMPP account for your "d_sza_profile" '$S'", &pProfile->m_strNameProfile);
+		m_pwGroupBoxAccountNew = Splitter_PwAddGroupBox_VE("Please assign an XMPP account for your " d_sza_profile " '$S'", &pProfile->m_strNameProfile);
 		OLayoutVerticalAlignTop * poLayout = new OLayoutVerticalAlignTop(m_pwGroupBoxAccountNew);
 		poLayout->Layout_PwAddRowLabelWrap("SocietyPro needs an XMPP account to send and receive messages with others:");
 		WButtonTextWithIcon * pwButtonAccountNewAutomatic = poLayout->Layout_PwAddRowButtonAndLabel("Automatic!", eMenuIconXmpp, "Automatically and instantly create an XMPP account");
@@ -314,7 +314,7 @@ WLayoutProfile::DisplayApplications()
 	m_pwGroupBoxAccountNew = NULL;
 	if (m_poLayoutApplications != NULL)
 		return;	// We are already displaying the actions
-	m_poLayoutApplications = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Double-click on the aplication you would like to use with your "d_sza_profile" '$S'", &m_pProfile->m_strNameProfile);
+	m_poLayoutApplications = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Double-click on the aplication you would like to use with your " d_sza_profile " '$S'", &m_pProfile->m_strNameProfile);
 
 	m_pwEditSearchApplications = new WEdit;
 	//pwEdit->setMaximumHeight(20);

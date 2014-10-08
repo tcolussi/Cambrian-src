@@ -18,7 +18,7 @@ CVaultEventsCore::~CVaultEventsCore()
 void
 CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 	{
-	pbinXmlEvents->BinAppendText("<"d_szVault_Event">");
+	pbinXmlEvents->BinAppendText("<" d_szVault_Event ">");
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = m_arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	while (ppEvent != ppEventStop)
@@ -36,7 +36,7 @@ CVaultEvents::EventsSerializeForMemory(IOUT CBinXcpStanza * pbinXmlEvents) const
 		pbinXmlEvents->BinAppendXmlEventSerializeDataAndClose(pEvent);
 		*/
 		} // while
-	pbinXmlEvents->BinAppendText("</"d_szVault_Event">");
+	pbinXmlEvents->BinAppendText("</" d_szVault_Event ">");
 	}
 
 void
