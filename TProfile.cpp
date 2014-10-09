@@ -342,6 +342,8 @@ TProfile::GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypContactsRe
 			TContact * pContact = *ppContact++;
 			Assert(pContact != NULL);
 			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+			if (pContact->TreeItemFlags_FuIsDeletedOrTemporary())
+				continue;
 			if (pContact->TreeItemFlags_FuIsRecommended())
 				{
 				Assert(pContact->TreeItemFlags_FCanDisplayWithinNavigationTree());	// A recommended contact should not have been deleted
