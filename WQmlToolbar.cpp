@@ -9,6 +9,9 @@ WQmlToolbar::WQmlToolbar(QWidget *parent) :
 	// self flags
 	setFeatures(QDockWidget::NoDockWidgetFeatures);
 	setObjectName("Toolbar");
+	setTitleBarWidget(new QWidget());
+	setMinimumHeight(64);
+	setMaximumHeight(64);
 
 	QWidget* pwWidgetLayout = new QWidget();	// Since the QDockWidget can handle only one widget, we create a widget with a layout inside
 
@@ -20,6 +23,7 @@ WQmlToolbar::WQmlToolbar(QWidget *parent) :
 
 	QQuickView *pQmlView = new QQuickView();
 	//QQmlEngine *pQmlEngine = pQmlView->engine();
+	pQmlView->setResizeMode(QQuickView::SizeRootObjectToView);
 	pQmlView->setSource(QUrl(QStringLiteral("qrc:/ui/main.qml")));
 
 	QWidget *pContainerWidget = QWidget::createWindowContainer(pQmlView);
