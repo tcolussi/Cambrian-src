@@ -19,6 +19,7 @@ public:
 	mutable CStr m_strRessource;				// Resource of the JID.  This field is either empty or begins with "/".  This value is not serialized as it is specific to an XMPP session.  This value may be updated each time the method PFindChatContactByJID() is called.
 	CStr m_strComment;							// Comment regarding the contact.  This comment is also used to store the original invitation for the handshake
 	CBin m_binXmlRecommendations;				// Store the raw XML of the recommendations from the contact
+	CStr m_strKeyPublic;						// Public key of the contact (this key is used to encrypt messages)
 	/*
 	enum
 		{
@@ -69,7 +70,6 @@ protected:
 	IContactAlias * m_plistAliases;
 	TIMESTAMP m_tsLastSeenOnline;					// Date & time when the contact was last seen online
 	TIMESTAMP_MINUTES m_tsmLastStanzaReceived;		// Timestamp where the last network packet was received by the contact. This is useful to determine if the contact became idle.
-	CStr m_strKeyPublic;							// Public key of the contact
 
 	POJapiContact m_paoJapiContact;					//
 

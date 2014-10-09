@@ -118,9 +118,15 @@ WDialogPropertyPageContactGeneral::WDialogPropertyPageContactGeneral(TContact * 
 	{
 	m_pContact = pContact;
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(this);
+	OLayoutForm * poLayout = new OLayoutForm(poLayoutVertical);
+	poLayout->Layout_PwAddRowLabelEdit("Name", c_sEmpty);
+	poLayout->Layout_PwAddRowLabelEditTextAreaReadOnly("Public Key", pContact->m_strKeyPublic, 6);
+	/*
 	OLayoutHorizontal * poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
 	poLayout->Layout_AddLabelAndWidgetH_PA("Name", new WEditUsername);
+	poLayout->Layout_AddLabelAndWidgetH_PA("Name", new WEditUsername);
 	poLayout->addWidget(PA_CHILD new QWidget, 1);
+	*/
 	}
 
 DDialogPropertiesContact::DDialogPropertiesContact(TContact * pContact)
