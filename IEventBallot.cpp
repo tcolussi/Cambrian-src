@@ -92,8 +92,8 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 	pbinXmlAttributes->BinAppendXmlAttributeCStr(d_chXMLa_IEventBallot_strButtonDismiss, m_strButtonDismiss);
 
 	const BOOL fSerializeVotes = pbinXmlAttributes->FuSerializingEventToDisk();	// Serialize the votes only when saving to disk.  Transmitting via XOSP or cloning does not serialize the votes.
-	PSZAC pszFmtTemplateBallotChoice_S_ux_i = fSerializeVotes ? "<"d_szXMLe_BallotChoice_S_ux_i"/>" : "<"d_szXMLe_BallotChoice_S_ux"/>";
-	pbinXmlAttributes->BinAppendText("><"d_szXMLe_BallotChoices">");	// This will close the XML attribute and open an XML element
+	PSZAC pszFmtTemplateBallotChoice_S_ux_i = fSerializeVotes ? "<" d_szXMLe_BallotChoice_S_ux_i "/>" : "<" d_szXMLe_BallotChoice_S_ux "/>";
+	pbinXmlAttributes->BinAppendText("><" d_szXMLe_BallotChoices ">");	// This will close the XML attribute and open an XML element
 	_CEventBallotChoice ** ppChoiceStop;
 	_CEventBallotChoice ** ppChoice = m_arraypaChoices.PrgpGetChoicesStop(OUT &ppChoiceStop);
 	while (ppChoice != ppChoiceStop)
@@ -101,7 +101,7 @@ IEventBallot::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const
 		_CEventBallotChoice * pChoice = *ppChoice++;
 		pbinXmlAttributes->BinAppendText_VE(pszFmtTemplateBallotChoice_S_ux_i, &pChoice->m_strQuestion, pChoice->m_uFlags, pChoice->m_cVotes);
 		}
-	pbinXmlAttributes->BinAppendText("</"d_szXMLe_BallotChoices">");
+	pbinXmlAttributes->BinAppendText("</" d_szXMLe_BallotChoices ">");
 
 	if (fSerializeVotes)
 		{

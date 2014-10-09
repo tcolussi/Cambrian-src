@@ -431,7 +431,7 @@ CVaultEventsForContact::XmlSerializeVault(IOUT CBin * pbinXml)
 		if (EventsEncryptCb() == 0)
 			return;	// Nothing to serialize
 		}
-	pbinXml->BinAppendText_VE("<"d_szXmlElementVault" "d_szXmlAttributeContact"='{h|}'>{B|}</"d_szXmlElementVault">\n", &m_hashContact, &m_binEventsEncrypted);
+	pbinXml->BinAppendText_VE("<" d_szXmlElementVault " " d_szXmlAttributeContact "='{h|}'>{B|}</" d_szXmlElementVault ">\n", &m_hashContact, &m_binEventsEncrypted);
 	}
 
 EError
@@ -495,7 +495,7 @@ void
 TWallet::SerializeXmlToDisk()
 	{
 	CBin binXml;
-	binXml.BinAppendText_VE("<$s "d_szXmlAttributeSalt"='{h|}'>\n", c_szaWallet, &m_hashSalt); // Name of the wallet
+	binXml.BinAppendText_VE("<$s " d_szXmlAttributeSalt "='{h|}'>\n", c_szaWallet, &m_hashSalt); // Name of the wallet
 	// Serialize each vault
 	CVaultEventsForContact ** ppVaultStop;
 	CVaultEventsForContact ** ppVault = m_arraypaVaults.PrgpGetVaultsStop(OUT &ppVaultStop);

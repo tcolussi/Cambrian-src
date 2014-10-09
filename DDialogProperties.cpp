@@ -189,8 +189,8 @@ WDialogPropertyPageProfileGeneral::WDialogPropertyPageProfileGeneral(TProfile * 
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(this);
 	OLayoutForm * poLayout = new OLayoutForm(poLayoutVertical);
 	poLayout->Layout_PwAddRowLabelEditReadOnly("Nym ID", pProfile->m_strNymID);
-	poLayout->Layout_PwAddRowLabelEditReadOnlyToHex("Public Key", pProfile->m_binKeyPublic);
-	poLayout->Layout_PwAddRowLabelEditReadOnlyToHex("Private Key", pProfile->m_binKeyPrivate);
+	poLayout->Layout_PwAddRowLabelEditTextAreaReadOnlyToHex("Public Key", pProfile->m_binKeyPublic, 6);
+	poLayout->Layout_PwAddRowLabelEditTextAreaReadOnlyToHex("Private Key", pProfile->m_binKeyPrivate, 6);
 	}
 
 DDialogPropertiesProfile::DDialogPropertiesProfile(TProfile * pProfile)

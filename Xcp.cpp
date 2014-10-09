@@ -32,7 +32,7 @@ ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * UNUSED_
 	UNUSED_PARAMETER(pXmlNodeApiParameters);
 	UNUSED_PARAMETER(pszXmlApiParameters);
 	CBinXcpStanza binXcpStanza;
-	binXcpStanza.BinAppendText_VE("<"d_szXop_ApiCall_s"/>", pszApiName);
+	binXcpStanza.BinAppendText_VE("<" d_szXop_ApiCall_s "/>", pszApiName);
 	if (EGetRuntimeClass() == RTI(TContact))
 		binXcpStanza.XospSendStanzaToContactAndEmpty((TContact *)this);
 	}
@@ -44,7 +44,7 @@ CBinXcpStanza::XcpApi_CallApiWithResponseToEvent(const IEvent * pEvent, PSZUC ps
 	if (m_pContact == NULL)
 		return;	// This happens when serializing to disk
 	CTaskSendReceive * pTask = m_pContact->m_listaTasksSendReceive.PAllocateTaskSend();
-	pTask->m_binXmlData.BinAppendText_VE("<"d_szXop_ApiCall_RespondToEventID_s_ts_pE"/>", pszApiName, pEvent->m_tsEventID, pEvent);
+	pTask->m_binXmlData.BinAppendText_VE("<" d_szXop_ApiCall_RespondToEventID_s_ts_pE "/>", pszApiName, pEvent->m_tsEventID, pEvent);
 	MessageLog_AppendTextFormatCo(d_coGreen, "XcpApi_CallApiWithResponseToEvent($t) - $B\n", pEvent->m_tsEventID, &pTask->m_binXmlData);
 	}
 
@@ -57,11 +57,11 @@ CBinXcpStanza::XcpApi_SendDataToEvent_VE(const IEvent * pEvent, PSZAC pszFmtTemp
 	if (pContact == NULL)
 		return;
 	CTaskSendReceive * pTask = pContact->m_listaTasksSendReceive.PAllocateTaskSend();
-	pTask->m_binXmlData.BinAppendText_VE("<"d_szXop_ApiDataToEventID_ts_pE">", pEvent->m_tsOther, pEvent);
+	pTask->m_binXmlData.BinAppendText_VE("<" d_szXop_ApiDataToEventID_ts_pE ">", pEvent->m_tsOther, pEvent);
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszFmtTemplate);
 	pTask->m_binXmlData.BinAppendTextSzv_VL(pszFmtTemplate, vlArgs);
-	pTask->m_binXmlData.BinAppendText_VE("</"d_szXop_ApiDataToEventID">");
+	pTask->m_binXmlData.BinAppendText_VE("</" d_szXop_ApiDataToEventID ">");
 	XospSendStanzaToContactAndEmpty(pContact);
 	}
 
@@ -301,10 +301,16 @@ void
 CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 	{
 	Assert(m_cbStanzaThresholdBeforeSplittingIntoTasks > 50 && m_cbStanzaThresholdBeforeSplittingIntoTasks <= c_cbStanzaThresholdBeforeSplittingIntoTasks);
-
+	Assert(pContact != NULL);	// I think this condition is still valid
 	if (pContact == NULL)
 		return;	// This is not a bug, but a feature allowing an event to directly write to the socket when a contact is unable to understand XCP.
 	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+
+	if (pContact->m_uFlagsContact & TContact::FC_kfXospSynchronizeOnNextXmppStanza)
+		{
+		pContact->m_uFlagsContact &= ~TContact::FC_kfXospSynchronizeOnNextXmppStanza;
+		BinAppendText_VE("<" d_szXop_MessagesSynchronize "><" d_szXSop_RequestIDsLargerThanTimestamp_tsI_tsO "/></" d_szXop_MessagesSynchronize ">", pContact->m_tsOtherLastSynchronized, pContact->m_tsEventIdLastSentCached);
+		}
 
 	if ((m_uFlags & F_kfTaskAlreadyIncluded) == 0)
 		{
@@ -329,7 +335,7 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 					if (cbAvailable > 0)
 						{
 						pTaskPending->m_cbTotal = CTaskSendReceive::c_cbTotal_TaskSentOnce;
-						BinAppendText_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i d_szXa_TaskDataOffset_i d_szXa_TaskDataBinary_Bii"/>", tsTaskID, cbData, 0, &pTaskPending->m_binXmlData, 0, cbAvailable);
+						BinAppendText_VE("<" d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i d_szXa_TaskDataOffset_i d_szXa_TaskDataBinary_Bii "/>", tsTaskID, cbData, 0, &pTaskPending->m_binXmlData, 0, cbAvailable);
 						if (m_paData->cbData > c_cbStanzaThresholdBeforeSplittingIntoTasks)
 							MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Task ID $t contains $I bytes of data, $I bytes larger than its maximum allowed size of $I bytes\n", tsTaskID, m_paData->cbData, m_paData->cbData - c_cbStanzaThresholdBeforeSplittingIntoTasks, c_cbStanzaThresholdBeforeSplittingIntoTasks);
 						goto SendStanza;
@@ -337,7 +343,7 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 					}
 				if (cbTotal == CTaskSendReceive::c_cbTotal_TaskSendTryOnlyOnce)
 					pContact->m_listaTasksSendReceive.DeleteTask(PA_DELETING pTaskPending);
-				BinAppendText_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i"/>", tsTaskID, cbData);	// We already sent the task once, therefore send only the header to notify the client there is a task to send
+				BinAppendText_VE("<" d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i "/>", tsTaskID, cbData);	// We already sent the task once, therefore send only the header to notify the client there is a task to send
 				// The tasks to send are prioritized first, now check if there is any task to download
 				while (TRUE)
 					{
@@ -356,7 +362,7 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 					} // while
 				} // if (task to upload)
 			Assert(!pTaskPending->FIsTaskSend());
-			BinAppendText_VE("<"d_szXop_TaskUploading_ts d_szXa_TaskDataOffset_i"/>", tsTaskID, cbData);	// Request an upload of the next outstanding/pending task to download
+			BinAppendText_VE("<" d_szXop_TaskUploading_ts d_szXa_TaskDataOffset_i "/>", tsTaskID, cbData);	// Request an upload of the next outstanding/pending task to download
 			} // if
 		}
 	if (m_paData == NULL)
@@ -372,7 +378,7 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 			return;
 			}
 		pTaskSend->m_binXmlData.BinAppendCBin(*this);
-		BinInitFromTextSzv_VE("<"d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i d_szXa_TaskDataBinary_Bii"/>",
+		BinInitFromTextSzv_VE("<" d_szXop_TaskDownloading_ts d_szXa_TaskDataSizeTotal_i d_szXa_TaskDataBinary_Bii "/>",
 			pTaskSend->m_tsTaskID, pTaskSend->m_binXmlData.CbGetData(), &pTaskSend->m_binXmlData, 0, c_cbStanzaMaxBinary / 100);
 		MessageLog_AppendTextFormatCo(d_coPurple, "XospSendStanzaToContactAndEmpty($s) - Creating Task ID $t of $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), pTaskSend->m_tsTaskID, pTaskSend->m_binXmlData.CbGetData(), &pTaskSend->m_binXmlData);
 		}
@@ -406,12 +412,6 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		pSocket->Socket_WriteBin(g_strScratchBufferSocket);
 	m_paData->cbData = 0;
 	} // XospSendStanzaToContactAndEmpty()
-
-void
-CBinXcpStanza::XcpSendStanza() CONST_MCC
-	{
-	XospSendStanzaToContactAndEmpty(m_pContact);
-	}
 
 CBinXcpStanzaEventCopier::CBinXcpStanzaEventCopier(ITreeItemChatLogEvents * pContactOrGroup)
 	{
@@ -600,7 +600,7 @@ CEventFileSent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * p
 	int cbDataRead = _PFileOpenReadOnly_NZ()->CbDataReadAtOffset(iblDataSource, sizeof(rgbBuffer), OUT rgbBuffer);
 	m_cblDataTransferred = iblDataSource + cbDataRead;
 	MessageLog_AppendTextFormatSev(eSeverityComment, "$t: CEventFileSent::XospDataE() offset: $L + cbDataRead: $i = $L bytes completed\n", m_tsEventID, iblDataSource, cbDataRead, m_cblDataTransferred);
-	pbinXospReply->BinAppendText_VE("<"d_szXop_ApiDataToEventOther_ts_pE"><x o='$l' d='{p|}'/></"d_szXop_ApiDataToEventOther">", m_tsEventID, this, iblDataSource, IN rgbBuffer, cbDataRead);
+	pbinXospReply->BinAppendText_VE("<" d_szXop_ApiDataToEventOther_ts_pE "><x o='$l' d='{p|}'/></" d_szXop_ApiDataToEventOther ">", m_tsEventID, this, iblDataSource, IN rgbBuffer, cbDataRead);
 	if (cbDataRead <= 0)
 		{
 		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventFileSent::XospDataE() - Closing file $S\n", &m_strFileName);
@@ -622,7 +622,7 @@ CEventFileReceived::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza
 		{
 		// Request the next piece of data
 		m_cblDataTransferred = pFile->size();
-		pbinXospReply->BinAppendText_VE("<"d_szXop_ApiDataToEventID_ts_pE"><x o='$l'/></"d_szXop_ApiDataToEventID">", m_tsOther, this, m_cblDataTransferred);
+		pbinXospReply->BinAppendText_VE("<" d_szXop_ApiDataToEventID_ts_pE "><x o='$l'/></" d_szXop_ApiDataToEventID ">", m_tsOther, this, m_cblDataTransferred);
 		}
 	else
 		{

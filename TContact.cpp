@@ -81,7 +81,13 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 
 	m_listaTasksSendReceive.XmlExchange(INOUT pXmlExchanger);
 
-	m_strJidBare.StringTruncateAtCharacter('/');	// Remove the resource from the JID. In earlier version of the chat, the serialized JID could contain the resource.  Eventually this line should go away.
+	if (!pXmlExchanger->m_fSerializing)
+		{
+		// We are reading the data, therefore do some adjustments
+		if (m_uFlagsContact & FC_kfXospSynchronizeWhenPresenceOnline)
+			m_uFlagsContact |= FC_kfXospSynchronizeOnNextXmppStanza;
+		m_strJidBare.StringTruncateAtCharacter('/');	// Remove the resource from the JID. In earlier version of the chat, the serialized JID could contain the resource.  Eventually this line should go away.
+		}
 
 	#if 0
 	if (m_uFlagsTreeItem != 0)

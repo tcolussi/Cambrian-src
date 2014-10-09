@@ -1400,6 +1400,13 @@ OLayoutForm::Layout_PwAddRowLabelEditTextAreaReadOnly(PSZAC pszLabel, const CStr
 	}
 */
 
+WEditTextArea *
+OLayoutForm::Layout_PwAddRowLabelEditTextAreaReadOnlyToHex(PSZAC pszLabel, const CBin & bin, int cLines)
+	{
+	g_strScratchBufferStatusBar.InitFromBinaryToHexPsz(bin);
+	return Layout_PwAddRowLabelEditTextAreaH(pszLabel, IN g_strScratchBufferStatusBar, cLines);
+	}
+
 WEdit *
 OLayoutForm::Layout_PwAddRowLabelEditAndPushButton(PSZAC pszLabel, const QString & sEditText, PSZAC pszButtonText, OUT QPushButton ** ppwButton)
 	{

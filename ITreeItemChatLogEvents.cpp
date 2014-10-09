@@ -319,6 +319,7 @@ ITreeItemChatLogEvents::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...) cons
 //	/sendfile
 //	/sendbtc
 //	/version				Query the version of the software on the contact
+//	/c						Get the container
 //	/api		[fn] [params}	Query an API on the contact
 //	/info					Query the information of the contact or group.  This is essentially a PAPI call.
 //	/add [user]
@@ -344,7 +345,7 @@ PszrCompareStringBeginCommand(PSZUC pszStringCompare, PSZAC pszCommand)
 	}
 
 //	Return the next parameter of the command line.
-//	If there is no more parameters, return a pointer to the null-terminator of pszCommandLine.
+//	If there is no more parameters, return a pointer to the null-terminator of pszParameter.
 //
 //	This method will insert null-terminator(s) between the parameters
 //
@@ -353,13 +354,15 @@ PszrCompareStringBeginCommand(PSZUC pszStringCompare, PSZAC pszCommand)
 PSZRO
 PszroGetParameterNext(INOUT PSZU pszParameter)
 	{
-	Assert(pszParameter != NULL);
-	// Skip the content of the first parameter
-	while (!Ch_FIsWhiteSpaceOrNullTerminator(*pszParameter))
-		pszParameter++;
-	// Insert null-terminator(s) between the parameters
-	while (Ch_FIsWhiteSpace(*pszParameter))
-		*pszParameter++ = '\0';	// Insert null-terminators
+	if (pszParameter != NULL)
+		{
+		// Skip the content of the first parameter
+		while (!Ch_FIsWhiteSpaceOrNullTerminator(*pszParameter))
+			pszParameter++;
+		// Insert null-terminator(s) between the parameters
+		while (Ch_FIsWhiteSpace(*pszParameter))
+			*pszParameter++ = '\0';	// Insert null-terminators
+		}
 	return pszParameter;
 	}
 
@@ -439,10 +442,10 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			goto Done;
 			}
 
-		pszParameters =  PszrCompareStringBeginCommand(pszCommand, "api");
-		if (pszParameters != NULL && *pszParameters != '\0')
+		pszParameters =  PszrCompareStringBeginCommand(pszCommand, "c");
+		if (pszParameters != NULL)
 			{
-			//XcpApi_Invoke(IN pszParameters, d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
+			XcpApi_Invoke(IN (PSZUC)"ContainerFetch", d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
 			goto Done;
 			}
 		pszParameters = PszrCompareStringBeginCommand(pszCommand, "sendxml");
@@ -495,7 +498,8 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			"^_^_^_ <b>/sendballot</b> to send a ballot to vote<br/>"
 			//"^_^_^_ <b>/sendbtc</b> to send Bitcoin to the peer<br/>"
 			"^_^_^_ <b>/sendxml</b> to send XML data directly through the socket (this is used for debugging)<br/>"
-			"^_^_^_ <b>/api</b> to invoke a remote API call on the peer (this is used for debugging)<br/>"
+			//"^_^_^_ <b>/api</b> to invoke a remote API call on the peer (this is used for debugging)<br/>"
+			"^_^_^_ <b>/c</b> fetch the data of a container.  /c 2 will fetch the date of container[2]<br/>"
 			"^_^_^_ <b>//</b> to send a text message starting with a <b>/</b><br/>"
 			, pszMessage)));
 		return eUserCommand_Error;

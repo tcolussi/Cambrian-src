@@ -626,8 +626,8 @@ IEvent::_BinHtmlAppendHyperlinkToLocalFile(INOUT CBin * pbinTextHtml, PSZUC pszF
 	if (pszFileNameOnly != pszFileName)
 		{
 		// We have a full path, so it is appropriate to create an hyperlink
-		PSZAC pszClass = fDisabled ? "class="d_szClassForChatLog_HyperlinkDisabled : NULL;
-		pbinTextHtml->BinAppendText_VE("<a $s href='"d_szSchemeCambrian":{t_},"d_szActionForEvent_HyperlinkFile"'>^s</a>", pszClass, m_tsEventID, pszFileNameOnly);
+		PSZAC pszClass = fDisabled ? "class=" d_szClassForChatLog_HyperlinkDisabled : NULL;
+		pbinTextHtml->BinAppendText_VE("<a $s href='" d_szSchemeCambrian ":{t_}," d_szActionForEvent_HyperlinkFile "'>^s</a>", pszClass, m_tsEventID, pszFileNameOnly);
 		}
 	else
 		{
@@ -668,7 +668,7 @@ IEvent::_BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfH
 void
 IEvent::_BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfHyperlink, PSZAC pszButtonName) const
 	{
-	pbinTextHtml->BinAppendText_VE(" " _nbsp " <a class="d_szClassForChatLog_ButtonHtml" href='"d_szSchemeCambrian":{t_},$b'>[" _nbsp2 "$s" _nbsp2 "]</a>", m_tsEventID, chActionOfHyperlink, pszButtonName);
+	pbinTextHtml->BinAppendText_VE(" " _nbsp " <a class=" d_szClassForChatLog_ButtonHtml " href='" d_szSchemeCambrian ":{t_},$b'>[" _nbsp2 "$s" _nbsp2 "]</a>", m_tsEventID, chActionOfHyperlink, pszButtonName);
 	}
 
 void

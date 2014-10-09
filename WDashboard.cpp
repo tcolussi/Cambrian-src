@@ -239,7 +239,8 @@ WDashboardSectionChannels::OnItemClicked(SHitTestInfo oHitTestInfo)
 	if (oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow)
 		{
 		WMenu oMenu;
-		oMenu.ActionAdd(eMenuAction_GroupDelete);
+		oMenu.ActionAdd(eMenuAction_GroupChannelInvite);
+		oMenu.ActionAdd(eMenuAction_GroupChannelLeave);
 		EMenuAction eMenuAction = oMenu.EDisplayContextMenu();
 		switch (eMenuAction)
 			{
@@ -712,7 +713,7 @@ Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_N
 	{
 	Assert(pContactOrGroup_NZ != NULL);
 	Assert(g_pwDashboard != NULL);
-	MessageLog_AppendTextFormatSev(eSeverityComment, "Dashboard_NewEventsFromContactOrGroup($s)\n", pContactOrGroup_NZ->TreeItem_PszGetNameDisplay());
+	//MessageLog_AppendTextFormatSev(eSeverityComment, "Dashboard_NewEventsFromContactOrGroup($s)\n", pContactOrGroup_NZ->TreeItem_PszGetNameDisplay());
 	g_pwDashboard->NewEventsFromContactOrGroup(pContactOrGroup_NZ);
 	}
 

@@ -310,7 +310,7 @@ TProfile::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	case eMenuAction_ProfileDelete:
 		if (m_arraypaAccountsXmpp.GetSize() | m_arraypaApplications.GetSize())
 			{
-			EMessageBoxInformation("Before deleting your "d_sza_profile" '$S', you must manually delete all its accounts.", &m_strNameProfile);
+			EMessageBoxInformation("Before deleting your " d_sza_profile " '$S', you must manually delete all its accounts.", &m_strNameProfile);
 			}
 		else
 			{
@@ -342,6 +342,8 @@ TProfile::GetRecommendations_Contacts(IOUT CArrayPtrContacts * parraypContactsRe
 			TContact * pContact = *ppContact++;
 			Assert(pContact != NULL);
 			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+			if (pContact->TreeItemFlags_FuIsDeletedOrTemporary())
+				continue;
 			if (pContact->TreeItemFlags_FuIsRecommended())
 				{
 				Assert(pContact->TreeItemFlags_FCanDisplayWithinNavigationTree());	// A recommended contact should not have been deleted

@@ -254,7 +254,7 @@ CSocketXmpp::Socket_WriteXmlPresence()
 	*/
 	#if 1
 	//#pragma GCC warning			"[Warning] Compiling SocietyPro with XOSP!"
-	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><"d_szCambrianProtocol_xcp"/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
+	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show><" d_szCambrianProtocol_xcp "/></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());
 	#else
 	Socket_WriteXmlFormatted("<presence id='$S'><show>$s</show></presence>", &m_pAccount->m_strJID, m_pAccount->PszGetPresenceStatus());	// Temporary disable the XOSP protocol
 	#endif

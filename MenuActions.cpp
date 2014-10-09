@@ -42,8 +42,8 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 
 	"New Message" _ "i=ChatMessage3" _,	// eMenuAction_MessageNew
 
-	"Delete "d_sza_Profile _ "i=Remove" _, // eMenuAction_ProfileDelete
-	d_sza_Profile" Properties..." _ "s=Display the properties of my "d_sza_profile _ "i=Properties" _, // eMenuAction_ProfileProperties
+	"Delete " d_sza_Profile _ "i=Remove" _, // eMenuAction_ProfileDelete
+	d_sza_Profile" Properties..." _ "s=Display the properties of my " d_sza_profile _ "i=Properties" _, // eMenuAction_ProfileProperties
 	"My Recommendations" _ "s=Display all the recommendations I made" _ "i=Reputation",  // eMenuAction_ProfileMyRecommendations
 	"Show Deleted Objects" _ "s=Display all hidden objects such as peers and groups" _ "i=Deleted" _, // eMenuAction_ProfileShowDeletedObjects
 	"Permanently Delete" _ "s=Permanently delete a hidden object" _ "i=Delete" _, // eMenuAction_ProfilePermanentlyDeleteObject
@@ -93,6 +93,9 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Group Properties..." _ "i=Properties" _, // eMenuAction_GroupProperties
 
 	"Channel" _ "i=Hashtag" _, // eMenuAction_GroupChannel
+	"Invite peers..." _ "s=Invite others to join the channel" _ "i=GroupAdd" _,	// eMenuAction_GroupChannelInvite
+	"Leave channel" _ "i=GroupDelete" _, // eMenuAction_GroupChannelLeave
+
 
 	"Recommend" _ "s=Recommend the selected item to my peers" _ "i=Reputation" _,	// eMenuAction_TreeItemRecommended
 	"Rename..." _, // eMenuAction_TreeItemRename
@@ -101,7 +104,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Copy Link Location..." _ "i=Copy" _, // eMenuAction_CopyHyperlink
 	"Select All" _ "i=EditSelectAll" _, // eMenuAction_SelectAll
 
-	"Display "d_sza_Profile " Details" _ "s=Display details about a role" _ d_sza_IconProfile _, // eMenuAction_DisplayProfileInfo
+	"Display " d_sza_Profile " Details" _ "s=Display details about a role" _ d_sza_IconProfile _, // eMenuAction_DisplayProfileInfo
 	"Display Certificates" _ "s=Display the certificates securing (encrypting) the communication" _ "i=Certificate" _, // eMenuAction_DisplayCertificates
 	"Ballot" _ "s=Manage ballots to create polls" _ "i=Vote" _,	// eMenuAction_DisplayBallotMaster
 	"Groups" _ "s=Manage groups" _,								// eMenuAction_DisplayGroupManager

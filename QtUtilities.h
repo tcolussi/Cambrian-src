@@ -443,6 +443,7 @@ public:
 	WEditTextArea * Layout_PwAddRowLabelEditTextAreaH(PSZAC pszLabel, const CStr & strEditText, int cLines);
 	WEditTextArea * Layout_PwAddRowLabelEditTextArea(PSZAC pszLabel, const CString & sEditText, int cLines);
 	WEditTextArea * Layout_PwAddRowLabelEditTextAreaReadOnly(PSZAC pszLabel, const CString & sEditText, int cLines);
+	WEditTextArea * Layout_PwAddRowLabelEditTextAreaReadOnlyToHex(PSZAC pszLabel, const CBin & bin, int cLines);
 	WEditPassword * Layout_PwAddRowLabelEditPassword(PSZAC pszLabel);
 	WEdit * Layout_PwAddRowLabelEditAndPushButton(PSZAC pszLabel, const QString & sEditText, PSZAC pszButtonText, OUT QPushButton ** ppwButton);
 	WButtonTextWithIcon * Layout_PwAddRowLabelAndPushButton(PSZAC pszmLabelTextAndToolTip, PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIconButton);

@@ -177,10 +177,12 @@ TAccountXmpp::Contact_PFindByJID(PSZUC pszContactJID, EFindContact eFindContact)
 							if (pContact->m_strRessource.FIsEmptyString())
 								MessageLog_AppendTextFormatCo(d_coBlack, "Contact $S: Assigning resource '$s' (m_uFlagsTreeItem = 0x$x)\n", &pContact->m_strJidBare, pszResource, m_uFlagsTreeItem);
 							else
+								{
 								MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "Contact $S: Updating resource from '$S' to '$s'\n", &pContact->m_strJidBare, &pContact->m_strRessource, pszResource);
+								pContact->ContactFlag_SynchronizeOnNextXmppStanza_Set();	// Each time the resource changes, re-synchronie to make sure the new client has all the events
+								}
 							//pContact->Xcp_ServiceDiscovery();	// The resource changed, therefore query the remote client for its capabilities
-							pContact->SetFlagXcpComposingSendTimestampsOfLastKnownEvents();	// Each time the resource change, re-send the timestamps of the last known events so we give an opportunity to synchronize
-							//pContact->m_cVersionXCP = 0;	// Also, reset the XCP version, to make sure the device connects properly
+							//pContact->SetFlagXcpComposingSendTimestampsOfLastKnownEvents();	// Each time the resource change, re-send the timestamps of the last known events so we give an opportunity to synchronize
 							}
 						pContact->m_strRessource.InitFromStringU(pszResource);
 						}
