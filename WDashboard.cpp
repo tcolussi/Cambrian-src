@@ -178,7 +178,7 @@ WDashboardSectionChannels::Init(TProfile * pProfile_YZ)
 		m_cChannelsTotal = pProfile_YZ->GetRecentChannels(OUT &arraypChannels);
 	else
 		m_cChannelsTotal = 0;
-	m_arraypaItems.AllocateTreeItems(arraypChannels, 10);
+	m_arraypaItems.AllocateTreeItems(arraypChannels, 8);
 	}
 
 void
@@ -187,7 +187,7 @@ WDashboardSectionGroups::Init(TProfile * pProfile_YZ)
 	CArrayPtrGroups arraypGroups;
 	if (pProfile_YZ != NULL)
 		pProfile_YZ->GetRecentGroups(OUT &arraypGroups);
-	m_arraypaItems.AllocateTreeItems(arraypGroups, 10);
+	m_arraypaItems.AllocateTreeItems(arraypGroups, 8);
 	}
 
 void
@@ -196,7 +196,7 @@ WDashboardSectionContacts::Init(TProfile * pProfile_YZ)
 	CArrayPtrContacts arraypContacts;
 	if (pProfile_YZ != NULL)
 		pProfile_YZ->GetRecentContacts(OUT &arraypContacts);
-	m_arraypaItems.AllocateTreeItems(arraypContacts, 10);
+	m_arraypaItems.AllocateTreeItems(arraypContacts, 8);
 	}
 
 void

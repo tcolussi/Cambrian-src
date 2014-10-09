@@ -498,9 +498,10 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			"^_^_^_ <b>/sendfile</b> to send a file to the peer or group<br/>"
 			"^_^_^_ <b>/sendballot</b> to send a ballot to vote<br/>"
 			//"^_^_^_ <b>/sendbtc</b> to send Bitcoin to the peer<br/>"
-			"^_^_^_ <b>/sendxml</b> to send XML data directly through the socket (this is used for debugging)<br/>"
+			//"^_^_^_ <b>/sendxml</b> to send XML data directly through the socket (this is used for debugging)<br/>"
 			//"^_^_^_ <b>/api</b> to invoke a remote API call on the peer (this is used for debugging)<br/>"
-			"^_^_^_ <b>/f</b> to fetch the data of a container.  /f 2 will fetch the date of container[2]<br/>"
+			//"^_^_^_ <b>/f</b> to fetch the data of a container.  /f 2 will fetch the data of container[2]<br/>"
+			"^_^_^_ <b>/f</b> to fetch public key of your peer<br/>"
 			"^_^_^_ <b>//</b> to send a text message starting with a <b>/</b><br/>"
 			, pszMessage)));
 		return eUserCommand_Error;

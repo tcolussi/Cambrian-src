@@ -2071,6 +2071,7 @@ union _UnionForBinAppendTextSzv_VL	// Private union.  This union is defined outs
 //		^  - Encode to XML
 //		^s - Append/encode to XML the content of a UTF-8 string
 //		^S - Append/encode to XML the content of CStr*
+//		^B - Append/encode to XML the content of CBin* encoded in Base85
 //		^w - Append/encode to XML the content of Unicode string (wide char)
 //		^Q - Append/encode to XML the content of QString*
 //		^Y - Append/encode to XML the content of QByteArray* (the QByteArray is always null-terminated)
@@ -2294,6 +2295,11 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				u.pstr = va_arg(vlArgs, CStr *);
 				if (u.pstr != NULL)
 					BinAppendXmlTextStr(*u.pstr);
+				break;
+			case d_chSourcePCBin:	// ^B
+				u.pbin = va_arg(vlArgs, CBin *);
+				if (u.pstr != NULL)
+					BinAppendStringBase85FromBinaryData(u.pbin);
 				break;
 			case d_chSourcePCSZW:	// ^w - Append/encode to XML the content of Unicode string (wide char)
 				BinAppendXmlTextW(va_arg(vlArgs, PSZWC));

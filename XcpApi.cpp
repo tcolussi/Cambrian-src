@@ -301,6 +301,16 @@ const CHU c_szaApi_Group_Profile_Get[] = "Group.Profile.Get";
 
 const CHU c_szaApi_Contact_Recommendations_Get[] = "Contact.Recommendations.Get";
 
+void
+TContact::XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza * pbinXcpStanzaReply) const
+	{
+	int iContainer = (pszContainerID == NULL) ? 0 : NStringToNumber_ZZR_ML(pszContainerID);
+	MessageLog_AppendTextFormatCo(d_coGrayDark, "\t Fetching container $i\n", iContainer);
+
+	TProfile * pProfile = PGetProfile();
+	pbinXcpStanzaReply->BinAppendText_VE("<f n='^S' k='^B'/>", &pProfile->m_strNameProfile, &pProfile->m_binKeyPublic);
+	}
+
 
 void
 CBinXcpStanza::XcpApi_ExecuteApiName(PSZUC pszApiName, const CXmlNode * pXmlNodeApiData)
@@ -323,7 +333,7 @@ CBinXcpStanza::XcpApi_ExecuteApiName(PSZUC pszApiName, const CXmlNode * pXmlNode
 			BinAppendText_VE("<" d_szXv_ApiName_Ping " " d_szXv_ApiName_Ping "='$t'/>", Timestamp_GetCurrentDateTime());
 			return;
 		case d_chXv_ApiName_ContainerFetch:
-			//m_pContact->XospApiContact_ContainerFetch(pXmlNodeApiData->m_pszuTagValue, INOUT this);
+			m_pContact->XospApiContact_ContainerFetch(pXmlNodeApiData->m_pszuTagValue, INOUT this);
 			goto AlwaysReturnWhateverIsInTheBlob;
 			} // switch
 		}
@@ -347,7 +357,29 @@ CBinXcpStanza::XcpApi_ExecuteApiResponse(PSZUC pszApiName, const CXmlNode * pXml
 	{
 	Assert(pszApiName != NULL);
 	Endorse(pXmlNodeApiResponse == NULL);	// An emtpy response value is not an error, as some APIs return no value if there is nothing (example, a contact may have no recommendations)
+	Assert(m_pContact != NULL);
+	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
 	MessageLog_AppendTextFormatCo(d_coGrayDark, "\t XcpApi_ExecuteApiResponse($s): ^N\n", pszApiName, pXmlNodeApiResponse);
+
+	const CHS chApiName = pszApiName[0];
+	if (chApiName != '\0' && pszApiName[1] == '\0')
+		{
+		if (chApiName == d_chXv_ApiName_ContainerFetch && pXmlNodeApiResponse != NULL)
+			{
+			PSZUC pszKeyPublic = pXmlNodeApiResponse->PszuFindAttributeValue('k');
+			if (m_pContact->m_strKeyPublic.FIsEmptyString())
+				{
+				MessageLog_AppendTextFormatSev(eSeverityComment, "Assigning public key to peer '$s': $s\n", m_pContact->TreeItem_PszGetNameDisplay(), pszKeyPublic);
+				m_pContact->m_strKeyPublic = pszKeyPublic;	// Set the public key
+				}
+			else
+				{
+				MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "You already have a public key for '$s', therefore ignoring received public key: $s\n", m_pContact->TreeItem_PszGetNameDisplay(), pszKeyPublic);
+				}
+			return;
+			}
+		}
+
 
 	if (FCompareStringsNoCase(pszApiName, c_szaApi_Contact_Recommendations_Get))
 		{
