@@ -219,4 +219,6 @@ struct SOffsets
 	int ibDataBegins;	// Where the actual data begins (this value is larger than ibReset)
 	};
 
+#define d_ibDataBegins_DoNotReset	(-1)	// Special value to assign to ibDataBegins so the blob do not reset
+
 #endif // STRINGUTILITIES_H

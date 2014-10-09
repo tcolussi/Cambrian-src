@@ -90,6 +90,13 @@ TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpSt
 		Assert(pGroup != NULL);
 		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 		Assert(!pGroup->m_strNameChannel_YZ.FIsEmptyString());
+		#ifdef DEBUG
+		if (pGroup->m_strNameChannel_YZ.FIsEmptyString())
+			{
+			MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Group '$S' {h|} is not a channel because it has an empty channel name\n", &pGroup->m_strNameDisplayTyped, &pGroup->m_hashGroupIdentifier);
+			continue;
+			}
+		#endif
 		pbinXcpStanzaReply->BinAppendText_VE("<" d_szAPIe_Recommendation_TGroupChannel_str "/>", &pGroup->m_strNameChannel_YZ);
 		}
 	pbinXcpStanzaReply->BinAppendXmlClosingElement_TruncateIfEmpty(IN &oOffsetsTemp, d_chAPIe_Recommendations_TGroupChannels);

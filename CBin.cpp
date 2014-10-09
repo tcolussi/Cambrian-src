@@ -1988,16 +1988,16 @@ void
 CBin::BinAppendTextOffsetsTruncateIfEmpty_VE(IN const SOffsets * pOffsets, PSZAC pszFmtTemplate, ...)
 	{
 	Assert(pOffsets != NULL);
-	Assert(pOffsets->ibReset >= -1);
-	Assert(pOffsets->ibReset <= pOffsets->ibDataBegins);
-	Assert(pOffsets->ibDataBegins >= 0);
+	Assert(pOffsets->ibReset >= 0);
+	Assert(pOffsets->ibDataBegins >= d_ibDataBegins_DoNotReset);
 	Assert(m_paData != NULL);
 	Assert(m_paData->cbAlloc >= pOffsets->ibDataBegins);
 	Assert(pszFmtTemplate != NULL);
 	if (m_paData->cbData <= pOffsets->ibDataBegins)
 		{
 		Assert(m_paData->cbData == pOffsets->ibDataBegins);
-		m_paData->cbData = (pOffsets->ibReset >= 0) ? pOffsets->ibReset : 0;	// Truncate the blob
+		//m_paData->cbData = (pOffsets->ibReset >= 0) ? pOffsets->ibReset : 0;	// Truncate the blob
+		m_paData->cbData = pOffsets->ibReset;
 		Assert(m_paData->cbData >= 0);
 		return;
 		}

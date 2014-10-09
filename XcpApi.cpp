@@ -349,7 +349,7 @@ CBinXcpStanza::XcpApi_ExecuteApiName(PSZUC pszApiName, const CXmlNode * pXmlNode
 
 	AlwaysReturnWhateverIsInTheBlob:
 	//m_oOffsets.ibReset = m_oOffsets.ibDataBegins = m_paData->cbData;
-	m_oOffsets.ibReset = -1;
+	m_oOffsets.ibDataBegins = d_ibDataBegins_DoNotReset;
 	}
 
 void
