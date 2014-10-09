@@ -27,12 +27,13 @@ CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXc
 
 //	Invoke a function by sending an API request to the contact.  This is essentially invoking a remote procedure call.
 void
-ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * UNUSED_PARAMETER(pXmlNodeApiParameters), PSZUC UNUSED_PARAMETER(pszXmlApiParameters))
+ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, PSZUC pszXmlApiParameters)
 	{
-	UNUSED_PARAMETER(pXmlNodeApiParameters);
-	UNUSED_PARAMETER(pszXmlApiParameters);
+	Assert(pszApiName != NULL);
+	Assert(pszApiName[0] != '\0');
+	//MessageLog_AppendTextFormatSev(eSeverityComment, "XcpApi_Invoke($s, $s)\n", pszApiName, pszXmlApiParameters);
 	CBinXcpStanza binXcpStanza;
-	binXcpStanza.BinAppendText_VE("<" d_szXop_ApiCall_s "/>", pszApiName);
+	binXcpStanza.BinAppendText_VE((pszXmlApiParameters == NULL) ? "<" d_szXop_ApiCall_s "/>" : "<" d_szXop_ApiCall_s ">$s</" d_szXop_ApiCall ">", pszApiName, pszXmlApiParameters);
 	if (EGetRuntimeClass() == RTI(TContact))
 		binXcpStanza.XospSendStanzaToContactAndEmpty((TContact *)this);
 	}

@@ -308,6 +308,7 @@ CBinXcpStanza::XcpApi_ExecuteApiName(PSZUC pszApiName, const CXmlNode * pXmlNode
 	Assert(pszApiName != NULL);
 	Assert(pXmlNodeApiData != NULL);
 	Assert(m_pContact != NULL);
+	Assert(m_pContact->EGetRuntimeClass() == RTI(TContact));
 	MessageLog_AppendTextFormatCo(d_coGrayDark, "\t XcpApi_ExecuteApiName($s) - ^N", pszApiName, pXmlNodeApiData);
 	const CHS chApiName = pszApiName[0];
 	if (chApiName != '\0' && pszApiName[1] == '\0')
@@ -321,6 +322,9 @@ CBinXcpStanza::XcpApi_ExecuteApiName(PSZUC pszApiName, const CXmlNode * pXmlNode
 		case d_chXv_ApiName_Ping:
 			BinAppendText_VE("<" d_szXv_ApiName_Ping " " d_szXv_ApiName_Ping "='$t'/>", Timestamp_GetCurrentDateTime());
 			return;
+		case d_chXv_ApiName_ContainerFetch:
+			//m_pContact->XospApiContact_ContainerFetch(pXmlNodeApiData->m_pszuTagValue, INOUT this);
+			goto AlwaysReturnWhateverIsInTheBlob;
 			} // switch
 		}
 	if (FCompareStringsNoCase(pszApiName, c_szaApi_Contact_Recommendations_Get))
@@ -329,12 +333,13 @@ CBinXcpStanza::XcpApi_ExecuteApiName(PSZUC pszApiName, const CXmlNode * pXmlNode
 		goto AlwaysReturnWhateverIsInTheBlob;
 		}
 	// Report the error to the user
-	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Unknown XOSP API '$s'\n", pszApiName);
+	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Unknown XOSP API '$s' ^N\n", pszApiName, pXmlNodeApiData);
 	m_paData->cbData = m_oOffsets.ibReset;	// Flush whatever was there for the API
 	BinAppendText_VE("<" d_szXop_ApiResponseError_Name_s "/>", pszApiName);
 
 	AlwaysReturnWhateverIsInTheBlob:
-	m_oOffsets.ibReset = m_oOffsets.ibDataBegins = m_paData->cbData;
+	//m_oOffsets.ibReset = m_oOffsets.ibDataBegins = m_paData->cbData;
+	m_oOffsets.ibReset = -1;
 	}
 
 void
@@ -349,7 +354,7 @@ CBinXcpStanza::XcpApi_ExecuteApiResponse(PSZUC pszApiName, const CXmlNode * pXml
 		m_pContact->Contact_RecommendationsUpdateFromXml(pXmlNodeApiResponse);
 		return;
 		}
-	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Unknown SOXP API response '$s'\n", pszApiName);
+	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "Unknown SOXP API response '$s' ^N\n", pszApiName, pXmlNodeApiResponse);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -572,7 +577,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			tsOther = pXmlNodeSync->TsGetAttributeValueTimestamp_ML(d_chXSa_tsOther);
 			if (tsOther > pContactOrGroup_NZ->m_tsOtherLastReceived)
 				{
-				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Missing events since $t  ($T)\n", tsOther, tsOther - pContactOrGroup_NZ->m_tsOtherLastReceived);
+				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Missing events since $t until $t ($T)\n", pContactOrGroup_NZ->m_tsOtherLastReceived, tsOther, tsOther - pContactOrGroup_NZ->m_tsOtherLastReceived);
 				if ((m_pContact->m_uFlagsContact & TContact::FC_kfXospSynchronizeWhenPresenceOnline) == 0)
 					m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeWhenPresenceOnline | TContact::FC_kfXospSynchronizeOnNextXmppStanza;
 				//m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeOnNextXmppStanza;	// It would be better to 'inject' the XML here.  Also, there is a need to handle the group/channels
@@ -927,7 +932,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 void
 ITreeItemChatLogEvents::XcpApi_Invoke_RecommendationsGet()
 	{
-	XcpApi_Invoke(c_szaApi_Contact_Recommendations_Get, d_zNA, d_zNA);
+	XcpApi_Invoke(c_szaApi_Contact_Recommendations_Get);
 	}
 
 void

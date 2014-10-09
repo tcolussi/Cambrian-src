@@ -3,9 +3,22 @@
 #endif
 #include "WDashboard.h"
 
+#define d_cxMarginSectionLeft	16	// Number of pixels for the left margin
+#define d_cxWidthNumber			20
+#define d_cxWidthMenuOverflow	18
+#define d_cyMarginTopHeader		6
+#define d_cyHeightSectionItem	24
+#define d_yPosFirstItem			(d_cyMarginTopHeader + d_cyHeightSectionItem + d_cyMarginTopHeader + 1)
+#define d_cyHeightFooter		26
+
+#define d_cyFontHeightItem		16	// 16 pixels
+#define d_cyFontHeightFooter	13	// 13 pixels
+
 QFont g_oFontNormal;
 QFont g_oFontBold;
-QPen g_oPenDot;		// Pen to draw a dot to display a number within
+QFont g_oFontBoldThick;		// Super bold font (weight of 900)
+QFont g_oFontBoldSmaller;	// Smaller bold font for the footer and the number
+QPen g_oPenDot;				// Pen to draw a dot to display a number within
 QPen g_oPenTextEmpty;
 QPen g_oPenTextNotEmpty;
 
@@ -25,17 +38,32 @@ CPainterCell::DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...)
 	}
 
 void
-CPainterCell::DrawTextUnderlineDotted(const QString & sText)
+CPainterCell::DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle)
 	{
 	drawText(m_rcCell, Qt::AlignVCenter, sText);
+	QRect rcBounds = boundingRect(m_rcCell, Qt::AlignVCenter, sText);
+	//rcBounds.setTop(rcBounds.bottom());
+	//drawRect(rcBounds);
+	QPen oPenOld = pen();
+	QPen oPen = oPenOld;
+	oPen.setStyle(eStyle);
+	//oPen.setWidth(0);
+	//oPen.setColor(d_coWhite);
+	setPen(oPen);
+	setRenderHint(Antialiasing, false);	// Remove the antialiasing to draw a sharp horizontal line
+	DrawLineHorizontal(m_rcCell.left(), rcBounds.right() + 1, rcBounds.bottom() + 1);
+	setPen(oPenOld);
+
+	/*
 	QFontMetrics oFontMetrics = fontMetrics();
 	int cxWidth = oFontMetrics.width(sText);
 	QPen oPenOld = pen();
 	QPen oPen = oPenOld;
 	oPen.setStyle(Qt::DotLine);
 	setPen(oPen);
-	DrawLineHorizontal(m_rcCell.left() + 2, cxWidth + 4, m_rcCell.top() + oFontMetrics.height() + 4);
+	DrawLineHorizontal(m_rcCell.left() + 2, cxWidth + 8, m_rcCell.top() + oFontMetrics.height() + 2);
 	setPen(oPenOld);
+	*/
 	/*
 	QFont oFontFooter = g_oFontNormal;
 	oFontFooter.setUnderline(true);
@@ -62,8 +90,12 @@ void
 CPainterCell::FillRect0(QRGB coBackgroundFill)
 	{
 	QRect rcItemBackground = m_rcCell;
-	rcItemBackground.setLeft(0);
-	fillRect(rcItemBackground, coBackgroundFill);
+	rcItemBackground.setLeft(-5);
+	rcItemBackground.setRight(m_rcCell.right() - 4);
+	setPen(Qt::NoPen);
+	setBrush(QBrush(coBackgroundFill));
+	drawRoundedRect(rcItemBackground, 6, 6);
+	//fillRect(rcItemBackground, coBackgroundFill);
 	}
 
 //	Return the number of pixels of the drawing.  This is useful to chain drawing.
@@ -73,15 +105,16 @@ CPainterCell::DrawNumberWithinCircle(int nNumber)
 	//nNumber = qrand() % 99;
 	if (nNumber > 0)
 		{
+		int cyHeight = m_rcCell.height();
 		int yTop = m_rcCell.top();
-		int xLeft = m_rcCell.right() - 19;
+		int xLeft = m_rcCell.right() - 20;
 		setPen(g_oPenDot);
-		DrawLineHorizontal(xLeft + 5, xLeft + 8, yTop + 9);
+		DrawLineHorizontal(xLeft + 5, xLeft + 8, yTop + cyHeight / 2);
 		//drawPoint(xLeft + 8, m_rcCell.top() + 9);
 		//DrawLineHorizontal(rc.left(), rc.right(), ptCenter.y());	// Draw a longer line for large numbers
 		setPen(g_oPenTextNotEmpty);
-		setFont(g_oFontBold);
-		QRect rcText(xLeft - 3, yTop - 1, 20, m_rcCell.height());
+		setFont(g_oFontBoldSmaller);
+		QRect rcText(xLeft - 3, yTop, 20, cyHeight);
 		drawText(rcText, Qt::AlignVCenter | Qt::AlignCenter, QString::number(nNumber));
 		m_rcCell.setRight(xLeft);
 		return 16;
@@ -169,6 +202,7 @@ WDashboardSectionContacts::Init(TProfile * pProfile_YZ)
 void
 WDashboardSectionBallots::Init(TProfile * /*pProfile_YZ*/)
 	{
+	hide();
 	/*
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = pProfile->m_arraypEventsRecentBallots.PrgpGetEventsStopLast(OUT &ppEventStop);
@@ -186,20 +220,19 @@ WDashboardSectionChannels::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/
 	TGroup * pGroup = (TGroup *)pvGroupChannel;
 	//pPainter->DrawIconLeft(eMenuAction_GroupChannel);
 	pPainter->DrawNumberWithinCircle(pGroup->m_cMessagesUnread);
-	pPainter->setFont((pGroup->m_cMessagesUnread > 0) ? g_oFontBold : g_oFontNormal);
+	pPainter->setFont((pGroup->m_cMessagesUnread > 0) ? g_oFontBoldThick : g_oFontNormal);
 	pPainter->DrawTextWithinCell("# " + pGroup->TreeItem_SGetNameDisplay().toLower());
 	}
 
 void
-WDashboardSectionChannels::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsItem*/)
+WDashboardSectionChannels::DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest)
 	{
 	int cChannelsRemaining = m_cChannelsTotal - m_arraypaItems.GetSize();
-	//cChannelsRemaining = 0;
 	if (cChannelsRemaining > 0)
 		g_strScratchBufferStatusBar.Format("+$I more...", cChannelsRemaining);
 	else
 		g_strScratchBufferStatusBar.Format("New Channel...");
-	pPainter->DrawTextUnderlineDotted(g_strScratchBufferStatusBar);
+	pPainter->DrawTextUnderlinedStyle(g_strScratchBufferStatusBar, (uFlagsHitTest & FHT_kfFooter) ? Qt::SolidLine : Qt::DotLine);
 	}
 
 void
@@ -221,9 +254,10 @@ WDashboardSectionContacts::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/
 	}
 
 void
-WDashboardSectionContacts::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsItem*/)
+WDashboardSectionContacts::DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest)
 	{
-	pPainter->DrawTextWithinCell_VE("+ $I more peers", 10);
+	g_strScratchBufferStatusBar.Format("+ $I more peers...", 123);
+	pPainter->DrawTextUnderlinedStyle(g_strScratchBufferStatusBar, (uFlagsHitTest & FHT_kfFooter) ? Qt::SolidLine : Qt::DotLine);
 	}
 
 void
@@ -288,14 +322,22 @@ WDashboard::WDashboard()
 	m_pProfile = NULL;
 	m_pItemSelected = NULL;
 	setObjectName("Dashboard");
-	g_oFontBold = g_oFontNormal = font();
+
+	//g_oFontNormal = font();
+	g_oFontNormal.setFamily("Lato, sans-serif");
+	//g_oFontNormal.setFamily("Times New Roman");
+	g_oFontNormal.setPixelSize(d_cyFontHeightItem);
+	g_oFontBoldThick = g_oFontBold = g_oFontNormal;
 	g_oFontBold.setWeight(QFont::Bold);
+	g_oFontBoldThick.setWeight(99);
+	g_oFontBoldSmaller = g_oFontBold;
+	g_oFontBoldSmaller.setPixelSize(d_cyFontHeightFooter);
 
 	m_pwLabelCaption = new WLabel;
 	//m_pwLabelCaption->setStyleSheet("background-color:#8080FF");
-	m_pwLabelCaption->setStyleSheet("background-color:#3e313c; color:white; font-size:16px; border-bottom:2px solid #372c36; padding:2px");
-	m_pwLabelCaption->setMargin(3);
-	m_pwLabelCaption->setFont(g_oFontBold);
+	m_pwLabelCaption->setStyleSheet("background-color:#3e313c; color:white; font-size:16px; font-weight:900; border-bottom:2px solid #372c36; padding:16px; padding-left:11px");
+	m_pwLabelCaption->setMargin(0);
+	//m_pwLabelCaption->setFont(g_oFontBold);
 	#if 1
 	setTitleBarWidget(m_pwLabelCaption);
 	#else
@@ -314,10 +356,10 @@ WDashboard::WDashboard()
 	m_poLayoutVertial->setSpacing(0);
 
 	InitToGarbage(OUT &m_sections, sizeof(m_sections));
-	m_sections.pwSectionBalots = new WDashboardSectionBallots("Ballots");
-	m_sections.pwSectionChannels = new WDashboardSectionChannels("Channels");
-	m_sections.pwSectionContacts = new WDashboardSectionContacts("Peers");
-	m_sections.pwSectionGroups = new WDashboardSectionGroups("Private Groups");
+	m_sections.pwSectionBalots = new WDashboardSectionBallots("BALLOTS");
+	m_sections.pwSectionChannels = new WDashboardSectionChannels("CHANNELS");
+	m_sections.pwSectionContacts = new WDashboardSectionContacts("PEERS");
+	m_sections.pwSectionGroups = new WDashboardSectionGroups("PRIVATE GROUPS");
 
 	// Add each section to the vertical layout
 	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
@@ -459,6 +501,7 @@ WDashboardSection::OnItemClicked(SHitTestInfo oHitTestInfo)
 		UINT ukmDataType = (oHitTestInfo.pItem->m_uFlagsItem & CDashboardSectionItem::FI_kmDataTypeMask);
 		if (ukmDataType == CDashboardSectionItem::FI_keDataType_ITreeItem)
 			{
+			m_pParent->FSelectItem(oHitTestInfo.pItem);
 			NavigationTree_SelectTreeItem(oHitTestInfo.pItem->m_data.piTreeItem);
 			return;
 			}
@@ -471,16 +514,11 @@ WDashboardSection::OnMenuClicked(SHitTestInfo oHitTestInfo)
 	}
 */
 
-#define d_cxMarginSection		5
-#define d_cxWidthNumber			20
-#define d_cyHeightSectionItem	18
-#define d_cxWidthMenuOverflow	16
-#define d_yPosFirstItem			3 + d_cyHeightSectionItem
 
 QSize
 WDashboardSection::sizeHint() const
 	{
-	return QSize(150, m_arraypaItems.GetSize() * d_cyHeightSectionItem + 28 + 16);
+	return QSize(150, d_yPosFirstItem + d_cyHeightFooter + 14 + m_arraypaItems.GetSize() * d_cyHeightSectionItem);
 	}
 
 //	WDashboardSection::QWidget::heightForWidth()
@@ -503,21 +541,27 @@ void
 WDashboardSection::paintEvent(QPaintEvent *)
 	{
 	CPainterCell oPainter(this);
+	#if 1
+	oPainter.setRenderHint(QPainter::Antialiasing, true);
+	oPainter.setRenderHint(QPainter::TextAntialiasing, true);
+	oPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+	#endif
 //	oPainter.drawRect(0, 0, width() - 1, height() - 1);
+
+	// Initialize the pens and fonts
 	g_oPenTextNotEmpty = oPainter.pen();
 	g_oPenTextNotEmpty.setColor(d_coTextItemNotEmpty);
 	g_oPenTextEmpty = g_oPenTextNotEmpty;
 	g_oPenTextEmpty.setColor(d_coTextItemEmpty);
-	#if 1
-	oPainter.setRenderHint(QPainter::Antialiasing,true);
-	oPainter.setRenderHint(QPainter::SmoothPixmapTransform,true);
-	#endif
-	g_oPenDot.setColor(0xEB4D5C);
+	g_oPenDot.setColor(0xEB4D5C);	// Orange color
 	g_oPenDot.setWidth(16);
 	g_oPenDot.setCapStyle(Qt::RoundCap);
 //	oPainter.setOpacity(0.7);
 
-	oPainter.setPen(g_oPenTextNotEmpty);
+	// Draw the caption
+	oPainter.setFont(g_oFontBoldSmaller);
+	oPainter.setPen(g_oPenTextEmpty);
+	oPainter.drawText(d_cxMarginSectionLeft, d_cyMarginTopHeader + d_cyHeightSectionItem, m_sName);
 
 	QRect rcSection = rect();
 	qreal xRight = rcSection.width();
@@ -529,20 +573,18 @@ WDashboardSection::paintEvent(QPaintEvent *)
 	CDashboardSectionItem ** ppItem = m_arraypaItems.PrgpGetItemsStop(OUT &ppItemStop);
 	while (ppItem != ppItemStop)
 		{
-		oPainter.m_rcCell.setLeft(d_cxMarginSection);
+		oPainter.m_rcCell.setLeft(d_cxMarginSectionLeft);
 		oPainter.m_rcCell.setRight(xRight);
 		//oPainter.drawRect(oPainter.m_rcCell);
 		CDashboardSectionItem * pItem = *ppItem++;
 		UINT uFlagsItem = pItem->m_uFlagsItem;
 		//uFlagsItem = qrand() % 8;
-		if (uFlagsItem & CDashboardSectionItem::FI_kfSelected)
+		if (uFlagsItem & (CDashboardSectionItem::FI_kfSelected | CDashboardSectionItem::FI_kfMouseHover))
 			{
-			uFlagsItem |= CDashboardSectionItem::FI_kfDrawBold;	// All selected items are in bold
-			oPainter.FillRect0(d_coBackgroundItemSelected);
+			oPainter.FillRect0((uFlagsItem & CDashboardSectionItem::FI_kfSelected) ? d_coBackgroundItemSelected : d_coBackgroundItemMouseHover);
 			}
 		if (uFlagsItem & CDashboardSectionItem::FI_kfMouseHover)
 			{
-			oPainter.FillRect0(d_coBackgroundItemMouseHover);
 			QRect rcMenuOverflow = oPainter.m_rcCell;
 			int xLeft = rcMenuOverflow.right() - d_cxWidthMenuOverflow;
 			if (m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow)
@@ -551,48 +593,21 @@ WDashboardSection::paintEvent(QPaintEvent *)
 				oPainter.fillRect(rcMenuOverflow, (m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) ? d_coPurpleLight : d_coPurple);
 				}
 			QIcon oIcon = PGetMenuAction(eMenuIconOverflow)->icon();
-			oIcon.paint(&oPainter, xLeft, yTop - 3, 16, 16);
+			oIcon.paint(&oPainter, xLeft, yTop - 1, 16, 16);
 			}
+		oPainter.setPen((uFlagsItem & CDashboardSectionItem::FI_kfSelected) ? g_oPenTextNotEmpty : g_oPenTextEmpty);
 		oPainter.setFont((uFlagsItem & CDashboardSectionItem::FI_kfDrawBold) ? g_oFontBold : g_oFontNormal);
 		DrawItem(&oPainter, uFlagsItem, pItem->m_data.pvDataItem);
 		yTop += d_cyHeightSectionItem;
 		oPainter.m_rcCell.moveTop(yTop);
-		}
+		} // while
+
 	// Draw the footer
-	/*
-	if (m_oHitTestInfo.eHitTest & eHitTestSection_kfFooter)
-		{
-		//oPainter.FillRect0(d_coItemMouseHover);
-		oPainter.setPen(d_coBlue);
-		}
-	*/
-	oPainter.setFont(g_oFontNormal);
+	oPainter.m_rcCell.setLeft(d_cxMarginSectionLeft);
+	oPainter.m_rcCell.setRight(xRight);
+	oPainter.setFont(g_oFontBoldSmaller);
 	oPainter.setPen((m_oHitTestInfo.uFlagsHitTest & FHT_kfFooter) ? g_oPenTextNotEmpty : g_oPenTextEmpty);
-	DrawFooter(&oPainter, 0);
-
-	/*
-	//Qt::DashDotDotLine
-	QTextCharFormat warningFormat;
-	warningFormat.setUnderlineStyle(QTextCharFormat::WaveUnderline);
-	warningFormat.setUnderlineColor(Qt::darkYellow);
-	*/
-
-	// Draw the caption last using the bold font
-	oPainter.setFont(g_oFontBold);
-	oPainter.setPen(g_oPenTextNotEmpty);
-	/*
-	rcSection.setHeight(d_cyHeightSectionItem);
-	p.drawText(d_cxMarginSection, IN rcSection, Qt::AlignVCenter, m_sName);
-	*/
-	oPainter.drawText(d_cxMarginSection, d_cyHeightSectionItem, m_sName);
-	oPainter.drawLine(rcSection.bottomLeft(), rcSection.bottomRight());
-	/*
-	oPainter.drawRect( 10, 10, 85, 35 );
-	oPainter.drawRoundRect( 10, 55, 85, 35 );
-	QRect rect( 105, 10, 85, 35 );
-	oPainter.drawRoundRect( rect );
-	oPainter.drawRect( rect.translated( 0, 45 ) );
-	*/
+	DrawFooter(&oPainter, m_oHitTestInfo.uFlagsHitTest);
 	}
 
 WDashboardSection::SHitTestInfo

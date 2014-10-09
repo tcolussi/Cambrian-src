@@ -1988,7 +1988,7 @@ void
 CBin::BinAppendTextOffsetsTruncateIfEmpty_VE(IN const SOffsets * pOffsets, PSZAC pszFmtTemplate, ...)
 	{
 	Assert(pOffsets != NULL);
-	Assert(pOffsets->ibReset >= 0);
+	Assert(pOffsets->ibReset >= -1);
 	Assert(pOffsets->ibReset <= pOffsets->ibDataBegins);
 	Assert(m_paData != NULL);
 	Assert(m_paData->cbAlloc >= pOffsets->ibDataBegins);
@@ -1997,6 +1997,7 @@ CBin::BinAppendTextOffsetsTruncateIfEmpty_VE(IN const SOffsets * pOffsets, PSZAC
 		{
 		Assert(m_paData->cbData == pOffsets->ibDataBegins);
 		m_paData->cbData = pOffsets->ibReset;	// Truncate the blob
+		Assert(m_paData->cbData >= 0);
 		return;
 		}
 	va_list vlArgs;

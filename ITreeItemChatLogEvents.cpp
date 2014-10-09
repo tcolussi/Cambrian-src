@@ -1,6 +1,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#include "XcpApi.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	Reset the nickname for the Chat Log if it was automatically generated.
@@ -319,7 +320,7 @@ ITreeItemChatLogEvents::Socket_WriteXmlFormatted(PSZAC pszFmtTemplate, ...) cons
 //	/sendfile
 //	/sendbtc
 //	/version				Query the version of the software on the contact
-//	/c						Get the container
+//	/f						Fetch the container
 //	/api		[fn] [params}	Query an API on the contact
 //	/info					Query the information of the contact or group.  This is essentially a PAPI call.
 //	/add [user]
@@ -442,10 +443,10 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			goto Done;
 			}
 
-		pszParameters =  PszrCompareStringBeginCommand(pszCommand, "c");
+		pszParameters =  PszrCompareStringBeginCommand(pszCommand, d_szXv_ApiName_ContainerFetch);
 		if (pszParameters != NULL)
 			{
-			XcpApi_Invoke(IN (PSZUC)"ContainerFetch", d_zNA, PszroGetParameterNext(INOUT (PSZU)pszParameters));
+			XcpApi_Invoke(IN (PSZUC)d_szXv_ApiName_ContainerFetch, pszParameters);
 			goto Done;
 			}
 		pszParameters = PszrCompareStringBeginCommand(pszCommand, "sendxml");
@@ -499,7 +500,7 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			//"^_^_^_ <b>/sendbtc</b> to send Bitcoin to the peer<br/>"
 			"^_^_^_ <b>/sendxml</b> to send XML data directly through the socket (this is used for debugging)<br/>"
 			//"^_^_^_ <b>/api</b> to invoke a remote API call on the peer (this is used for debugging)<br/>"
-			"^_^_^_ <b>/c</b> fetch the data of a container.  /c 2 will fetch the date of container[2]<br/>"
+			"^_^_^_ <b>/f</b> to fetch the data of a container.  /f 2 will fetch the date of container[2]<br/>"
 			"^_^_^_ <b>//</b> to send a text message starting with a <b>/</b><br/>"
 			, pszMessage)));
 		return eUserCommand_Error;

@@ -124,6 +124,7 @@ public:
 
 	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
 	void XcpApiContact_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters);
+	void XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza * pbinXcpStanzaReply) const;
 
 	ITreeItemChatLogEvents * PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttributeGroupIdentifier);
 

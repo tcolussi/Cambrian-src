@@ -19,7 +19,7 @@ public:
 
 	void DrawTextWithinCell(const QString & sText);
 	void DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...);
-	void DrawTextUnderlineDotted(const QString & sText);
+	void DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle);
 	int DrawNumberWithinCircle(int nNumber);
 	void DrawIconLeft(const QIcon & oIcon);
 	void DrawIconLeft(EMenuAction eMenuIcon);
@@ -133,7 +133,7 @@ public:
 	WDashboardSectionChannels(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
 	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroupChannel);
-	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsItem);
+	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest);
 	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 };
 
@@ -151,7 +151,7 @@ public:
 	WDashboardSectionContacts(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
 	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvContact);
-	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsItem);
+	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest);
 };
 
 class WDashboardSectionBallots : public WDashboardSection

@@ -261,8 +261,9 @@ WMainWindow::WMainWindow() : QMainWindow()
 	#if 1
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
 	#endif
+	#if 0
 	addDockWidget(Qt::TopDockWidgetArea, PA_CHILD new WQmlToolbar);
-
+	#endif
 
 	g_pwChatLayoutContainer = new WLayoutContainer;
 	setCentralWidget(PA_CHILD g_pwChatLayoutContainer);
@@ -326,6 +327,7 @@ WMainWindow::~WMainWindow()
 void
 WMainWindow::SL_Quitting()
 	{
+	MessageLog_AppendTextFormatSev(eSeverityComment, "WMainWindow::SL_Quitting()\n");
 	//EMessageBoxInformation("WMainWindow::SL_Quitting()");
 	Configuration_Save();	// Before destroy the main window, save all open configurations
 	SettingsSave();			// Also remember the settings (window position)
@@ -377,6 +379,7 @@ WMainWindow::event(QEvent * pEvent)
 	switch (eEvent)
 		{
 	case QEvent::Close:	// The close button was clicked.  This is NOT the same a quitting the application, as the user may click on the Quit menu item to exit.
+		MessageLog_AppendTextFormatSev(eSeverityComment, "WMainWindow::event(Close)\n");
 		//EMessageBoxInformation("QEvent::Close");
 		#ifdef DEBUG
 		QCoreApplication::exit(0);	// This line is necessary so the QWebInspector is closed when the application closes

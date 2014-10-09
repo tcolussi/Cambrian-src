@@ -106,7 +106,7 @@ public:
 	void Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC;
 	CSocketXmpp * Xmpp_PGetSocketOnlyIfReady() const;
 
-	void XcpApi_Invoke(PSZUC pszApiName, const CXmlNode * pXmlNodeApiParameters, PSZUC pszXmlApiParameters);
+	void XcpApi_Invoke(PSZUC pszApiName, PSZUC pszXmlApiParameters = d_zNA);
 	void XcpApi_Invoke_RecommendationsGet();
 	void XcpApi_Invoke_Synchronize();
 

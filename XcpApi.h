@@ -105,6 +105,7 @@ Xv_		Xml value for an attribute
 #define d_szXop_MessageNew_xmlClose						"</" d_szXSop_EventsData "></m>"
 
 /////////////////////////////////////////////////
+#define d_szXop_ApiCall								"a"
 #define d_szXop_ApiCall_s							"a n='$s'"	// The attribute _r is implicitly assumed if there is no response prefix '_'
 #define d_szXop_ApiCall_RespondToEventID_s_ts_pE	"a n='$s' _i='$t'^E"
 #define d_szXop_ApiCall_RespondToEventOther_s_ts_pE	"a n='$s' _o='$t'^E"
@@ -117,10 +118,15 @@ Xv_		Xml value for an attribute
 	#define d_chXa_ApiName								'n'	// Fetch the name of the API
 	#define d_chXa_ApiResponsePrefix					'_'
 
+	// Use a one-letter name for popular/frequent APIs
 	#define d_chXv_ApiName_Version						'v'	// Query the version of the client (Example: SocietyPro 1.2.3.4)
 	#define d_szXv_ApiName_Version						"v"
 	#define d_chXv_ApiName_Ping							'p'
 	#define d_szXv_ApiName_Ping							"p"
+	#define d_chXv_ApiName_ContainerFetch				'f'	// The parameter is the index of the container to fetch
+	#define d_szXv_ApiName_ContainerFetch				"f"
+	#define d_chXv_ApiName_ContainerModified			'm'
+	#define d_szXv_ApiName_ContainerModified			"m"
 
 /////////////////////////////////////////////////
 #define d_szXop_TaskDownloading_ts				"d i='$t'"
