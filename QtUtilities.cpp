@@ -1390,15 +1390,16 @@ OLayoutForm::Layout_PwAddRowLabelEditTextArea(PSZAC pszLabel, const CString & sE
 	addRow(PA_CHILD pwEdit);
 	return pwEdit;
 	}
+*/
 
 WEditTextArea *
 OLayoutForm::Layout_PwAddRowLabelEditTextAreaReadOnly(PSZAC pszLabel, const CString & sEditText, int cLines)
 	{
-	WEditTextArea * pwEdit = Layout_PwAddRowLabelEditTextArea(pszLabel, sEditText, cLines);
+	WEditTextArea * pwEdit = Layout_PwAddRowLabelEditTextAreaH(pszLabel, sEditText, cLines);
 	pwEdit->setReadOnly(true);
 	return pwEdit;
 	}
-*/
+
 
 WEditTextArea *
 OLayoutForm::Layout_PwAddRowLabelEditTextAreaReadOnlyToHex(PSZAC pszLabel, const CBin & bin, int cLines)

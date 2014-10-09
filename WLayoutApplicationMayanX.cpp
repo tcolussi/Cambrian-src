@@ -389,7 +389,7 @@ WLayoutApplicationMayanX::SL_ExchangeLogin()
 		TProfile * pProfile = m_pApplication->m_pProfileParent;
 		// We do not have a UserID, so register one on the exchange
 		CInternetRequestWebMethodXmlMayanX oRequest("UserRegister");
-		oRequest.BinAppendXmlElementBinaryBase64("bIdentity", pProfile->m_binKeyPublic);
+		//oRequest.BinAppendXmlElementBinaryBase64("bIdentity", pProfile->m_binKeyPublic);
 		oRequest.BinAppendXmlElementText("sName", pProfile->m_strNameProfile);
 		oRequest.BinAppendXmlElementText("sJID", (PSZUC)"jon@chat.cambrian.org");
 		m_oInternetServer.RequestSend(&oRequest);
@@ -454,7 +454,7 @@ WLayoutApplicationMayanX::SL_InternetRequestCompleted(QNetworkReply * poNetworkR
 		if (!binChallenge.FIsEmptyBinary())
 			{
 			// We received a challenge, so respond to it now
-			CBin binResponseData = m_pApplication->m_pProfileParent->m_binKeyPublic;
+			CBin binResponseData = m_pApplication->m_pProfileParent->m_strKeyPublic;
 			binResponseData.BinAppendCBin(binChallenge);
 			//MessageLog_AppendTextFormatCo(d_coBlue, " bIdentity: {B/}\n bChallenge: {B/}\n bIdentity + bChallenge: {B/}\n", &m_pTreeItemParent->m_binKeyPublic, &binChallenge, &binResponseData);
 			binResponseData.BinHashToMd5();

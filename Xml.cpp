@@ -2389,7 +2389,7 @@ CXmlTree::EParseFileDataToXmlNodes(INOUT_F_VALID CErrorMessage * pError, INOUT P
 					continue;
 					AllocateElement:
 					Assert(pszuTagNameBegin != NULL);
-					Endorse(pszuTagNameBegin == '\0');	// We got an empty name because the tag is empty.  It is an error to have the <></> in an XML file, however the parser must handle this gracefully
+					Endorse(pszuTagNameBegin[0] == '\0');	// We got an empty name because the tag is empty.  It is an error to have the <></> in an XML file, however the parser must handle this gracefully
 					CXmlNode * pNodeNew = (CXmlNode *)m_accumulatorNodes.PvAllocateData(sizeof(CXmlNode));
 					Assert(IS_ALIGNED_32(pNodeNew));
 					pNodeNew->m_pszuTagName = pszuTagNameBegin;

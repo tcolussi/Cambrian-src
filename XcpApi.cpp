@@ -308,7 +308,7 @@ TContact::XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza
 	MessageLog_AppendTextFormatCo(d_coGrayDark, "\t Fetching container $i\n", iContainer);
 
 	TProfile * pProfile = PGetProfile();
-	pbinXcpStanzaReply->BinAppendText_VE("<f n='^S' k='^B'/>", &pProfile->m_strNameProfile, &pProfile->m_binKeyPublic);
+	pbinXcpStanzaReply->BinAppendText_VE("<f n='^S' k='^S'/>", &pProfile->m_strNameProfile, &pProfile->m_strKeyPublic);
 	}
 
 

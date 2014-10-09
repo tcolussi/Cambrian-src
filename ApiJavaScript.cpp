@@ -419,7 +419,7 @@ CListVariants::AddAudience(TGroup * pGroup)
 const QString
 OJapiBrowserTab::title()
 	{
-	return m_pTab->m_strNameDisplayTyped.ToQString();
+	return m_pTab->m_strNameDisplayTyped;
 	}
 
 OJapiBrowserTab::OJapiBrowserTab(TBrowserTab * pTab, OJapiBrowsersList * pBrowsersListParent)
@@ -570,13 +570,13 @@ OJapiProfile::OJapiProfile(TProfile *pProfile) : m_oBrowsersList(this) , m_oJuri
 QString
 OJapiProfile::id()
 	{
-	return m_pProfile->m_binKeyPublic.ToQString();
+	return m_pProfile->m_strKeyPublic;
 	}
 
 QString
 OJapiProfile::name()
 	{
-	return m_pProfile->m_strNameProfile.ToQString();
+	return m_pProfile->m_strNameProfile;
 	}
 
 POJapiBrowsersList
@@ -1150,7 +1150,7 @@ void OJapiJurisdiction::setCurrent(const QString & sJurisdiction)
 
 QString OJapiJurisdiction::current()
 	{
-	return PGetProfile_NZ()->m_strJurisdiction.ToQString();
+	return PGetProfile_NZ()->m_strJurisdiction;
 	}
 
 
@@ -1175,7 +1175,7 @@ bool OJapiAppChat::open(const QString &strJabberId)
 			Assert(pContact != NULL);
 			Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 
-			if ( strJabberId.compare(pContact->m_strJidBare.ToQString()) == 0)
+			if ( strJabberId.compare(pContact->m_strJidBare) == 0)
 				{
 				NavigationTree_SelectTreeItem(pContact);
 				return true;

@@ -14,8 +14,8 @@ public:
 	CChatConfiguration * m_pConfigurationParent;	// Configuration holding the profile. In the future, the GUI will be able to open multiple configurations simultaneously.
 	CStr m_strNameProfile;		// Name of the profile (aka "nym")
 	CStr m_strNymID;			// OT nym
-	CBin m_binKeyPrivate;
-	CBin m_binKeyPublic;
+	CStr m_strKeyPrivate;
+	CStr m_strKeyPublic;
 	CStr m_strComment;			// Description of the profile (this is useful for a user having multiple profiles)
 	CArrayPtrAccountsXmpp m_arraypaAccountsXmpp;	// Accounts using the profile
 	CArrayPtrApplications m_arraypaApplications;	// Applications using the profile

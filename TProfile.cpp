@@ -82,8 +82,8 @@ TProfile::GenerateKeys()
 	{
 	// At the moment, since we do not have PGP code, make both keys the SHA-1 of the name
 	m_strNymID.BinInitFromText("MyNymID123");
-	m_binKeyPrivate.BinInitFromCalculatingHashSha1(m_strNameProfile);
-	m_binKeyPublic = m_binKeyPrivate;
+	m_strKeyPrivate.BinInitFromText("PrivateKey123"); // BinInitFromCalculatingHashSha1(m_strNameProfile);
+	m_strKeyPublic.BinInitFromText("PublicKey123");
 	}
 
 void
@@ -211,8 +211,8 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeStr("Name", INOUT_F_UNCH_S &m_strNameProfile);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT_F_UNCH_S &m_strComment);
 	pXmlExchanger->XmlExchangeStr("NymID", INOUT_F_UNCH_S &m_strNymID);
-	pXmlExchanger->XmlExchangeBin("KeyPrivate", INOUT_F_UNCH_S &m_binKeyPrivate);
-	pXmlExchanger->XmlExchangeBin("KeyPublic", INOUT_F_UNCH_S &m_binKeyPublic);
+	pXmlExchanger->XmlExchangeStr("KeyPriv", INOUT_F_UNCH_S &m_strKeyPrivate);
+	pXmlExchanger->XmlExchangeStr("KeyPub", INOUT_F_UNCH_S &m_strKeyPublic);
 	pXmlExchanger->XmlExchangeObjects(d_chElementName_Accounts, INOUT &m_arraypaAccountsXmpp, TAccountXmpp::S_PaAllocateAccount, this);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Applications, INOUT_F_UNCH_S &m_arraypaApplications, IApplication::S_PaAllocateApplication_YZ, this);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Services, INOUT &m_arraypaServices, IService::S_PaAllocateService_YZ, this);

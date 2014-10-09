@@ -281,7 +281,7 @@ public:
 #define d_szSchemeCambrian			"c"
 #define d_chSchemeCambrianActionSeparator		','		// Seperator between the EventID and the Action
 
-#define d_SzMakeCambrianAction(szCambrianAction)	"c:,"szCambrianAction
+#define d_SzMakeCambrianAction(szCambrianAction)	"c:," szCambrianAction
 
 #define d_wSchemeCambrian			UINT16_FROM_CHARS(d_chSchemeCambrian, ':')
 #define FIsSchemeCambrian(pszUrl)	(*(WORD *)(pszUrl) == d_wSchemeCambrian)
