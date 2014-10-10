@@ -226,6 +226,7 @@ ITreeItem::TreeItem_GotFocus()
 	MainWindow_SetCurrentLayout(NULL);	// Make sure there are no old layout
 	}
 
+//	Set the focus on the layout of the Tree Item
 void
 ITreeItem::TreeItemLayout_SetFocus()
 	{

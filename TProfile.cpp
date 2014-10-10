@@ -128,7 +128,7 @@ TProfile::DeleteGroup(PA_DELETING TGroup * paGroupDelete)
 	*/
 	if (fDeletePermanently)
 		paGroupDelete->m_pAccount->m_arraypaGroups.DeleteTreeItem(PA_DELETING paGroupDelete);	// Delete the group object and remove it from the Navigation Tree
-	Dashboard_UpdateChannels();
+	Dashboard_RefreshGroupsAndChannels();
 	}
 
 //	Method to safely delete a contact from a profile
@@ -150,6 +150,7 @@ TProfile::DeleteContact(PA_DELETING TContact * paContactDelete)
 	*/
 	if (fDeletePermanently)
 		paContactDelete->m_pAccount->m_arraypaContacts.DeleteTreeItem(PA_DELETING paContactDelete);	// Delete the contact object and remove it from the Navigation Tree
+	Dashboard_RefreshContacts();
 	}
 
 //	TProfile::IRuntimeObject::PGetRuntimeInterface()

@@ -400,9 +400,11 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	switch (eMenuAction)
 		{
 	case eMenuAction_GroupAddContacts:
+	case eMenuAction_GroupChannelInvite:
 		DisplayDialogAddContactsToGroupFu();
 		return ezMenuActionNone;
 	case eMenuAction_GroupDelete:
+	case eMenuAction_GroupChannelLeave:
 		m_pAccount->m_pProfileParent->DeleteGroup(PA_DELETING this);
 		return ezMenuActionNone;
 	case eMenuAction_GroupUndelete:
@@ -424,7 +426,7 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		if (*pszName == d_chGroupChannelPrefix)
 			GroupChannel_SetName(pszName + 1);
 		TreeItem_IconUpdate();	// Redraw the icon
-		Dashboard_UpdateChannels();
+		Dashboard_RefreshGroupsAndChannels();
 		goto Default;
 	default:
 		Default:

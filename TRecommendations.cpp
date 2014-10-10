@@ -160,18 +160,16 @@ TContact::Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParam
 		CXmlNode * pXmlNodeChannels = pXmlNodeApiParameters->PFindElement(d_chAPIe_Recommendations_TGroupChannels);
 		if (pXmlNodeChannels != NULL)
 			{
-			BOOL fUpdateDashboard = FALSE;
+			BOOL fNewChannelAdded = FALSE;
 			TProfile * pProfile = PGetProfile();
 			CXmlNode * pXmlNodeChannel = pXmlNodeChannels->m_pElementsList;
 			while (pXmlNodeChannel != NULL)
 				{
-				fUpdateDashboard |= pProfile->m_arraypaChannelNames.FNewChannelAdded(pXmlNodeChannel->PszuFindAttributeValue(d_chAPIe_Recommendation_TGroupChannel_strName));
+				fNewChannelAdded |= pProfile->m_arraypaChannelNames.FNewChannelAdded(pXmlNodeChannel->PszuFindAttributeValue(d_chAPIe_Recommendation_TGroupChannel_strName));
 				pXmlNodeChannel = pXmlNodeChannel->m_pNextSibling;
 				}
-			if (fUpdateDashboard)
-				{
-				Dashboard_UpdateChannels();
-				}
+			if (fNewChannelAdded)
+				Dashboard_RefreshChannels();
 			}
 		}
 	//MessageLog_AppendTextFormatCo(d_coRed, "Contact_RecommendationsUpdateFromXml(): $B\n", &m_binXmlRecommendations);

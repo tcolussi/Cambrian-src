@@ -119,6 +119,7 @@ public:
 	virtual void TreeItem_GotFocus();
 
 	void TreeItemLayout_SetFocus();
+	EMenuAction TreeItem_EDisplayContextMenu(const EMenuActionByte rgzeMenuActions[]);
 
 	// Methods interacting with the CTreeItemW
 	void TreeItemW_SelectWithinNavigationTree();

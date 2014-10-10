@@ -83,7 +83,10 @@ void NavigationTree_DisplayCertificatesToogle();
 void Dashboard_UpdateAccordingToSelectedProfile(TProfile * pProfileSelected);
 void Dashboard_UpdateContact(TContact * pContact);
 void Dashboard_UpdateGroup(TGroup * pGroup);
-void Dashboard_UpdateChannels();
+void Dashboard_RefreshGroupsAndChannels();
+void Dashboard_RefreshGroups();
+void Dashboard_RefreshChannels();
+void Dashboard_RefreshContacts();
 void Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 void Dashboard_NewEventRelatedToBallot(IEventBallot * pEventBallot);
 

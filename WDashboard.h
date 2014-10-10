@@ -12,7 +12,6 @@ class CPainterCell : public OPainter
 {
 public:
 	QRect m_rcCell;
-	int m_yCenter;		// Center point of the cell.
 
 public:
 	CPainterCell(QPaintDevice * poPaintDevice): OPainter(poPaintDevice) { }
@@ -96,9 +95,10 @@ public:
 	WDashboardSection(PSZAC pszSectionName);
 	~WDashboardSection();
 	void SetParent(WDashboard * pParent);
+	void Refresh();
 	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvDataItem);
-	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsItem);
+	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest);
 	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 	//virtual void OnMenuClicked(SHitTestInfo oHitTestInfo);
 
@@ -152,6 +152,7 @@ public:
 	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvContact);
 	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest);
+	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 };
 
 class WDashboardSectionBallots : public WDashboardSection
@@ -188,6 +189,8 @@ public:
 	void RefreshContact(TContact * pContact);
 	void RefreshGroup(TGroup * pGroup);
 	void RefreshChannels();
+	void RefreshGroups();
+	void RefreshContacts();
 	BOOL FSelectItem(CDashboardSectionItem * pItem);
 }; // WDashboard
 

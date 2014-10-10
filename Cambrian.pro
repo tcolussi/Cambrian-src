@@ -93,7 +93,8 @@ SOURCES += \
     WDashboard.cpp \
     DDialogChannels.cpp \
     TChannel.cpp \
-    WQmlToolbar.cpp
+    WQmlToolbar.cpp \
+    MenuIcons.cpp
 
 
 HEADERS += \
@@ -172,7 +173,8 @@ HEADERS += \
     WDashboard.h \
     DDialogChannels.h \
     TChannel.h \
-    WQmlToolbar.h
+    WQmlToolbar.h \
+    MenuIcons.h
 
 
 FORMS +=

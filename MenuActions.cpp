@@ -959,3 +959,11 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "The menu action $i ($Q) is missing a code handler.  Please contact the developers.\n", eMenuAction, &sTextAction);
 		} // switch
 	} // MainWindow_MenuActionExecute()
+
+EMenuAction
+ITreeItem::TreeItem_EDisplayContextMenu(const EMenuActionByte rgzeMenuActions[])
+	{
+	WMenu oMenu;
+	oMenu.ActionsAdd(rgzeMenuActions);
+	return TreeItem_EDoMenuAction(oMenu.EDisplayContextMenu());
+	}

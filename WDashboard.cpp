@@ -2,6 +2,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "WDashboard.h"
+#include "MenuIcons.h"
 
 #define d_cxMarginHeaderLeft	16
 #define d_cxMarginSectionLeft	16	// Number of pixels for the left margin
@@ -261,32 +262,55 @@ WDashboardSectionContacts::DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTes
 	pPainter->DrawTextUnderlinedStyle(g_strScratchBufferStatusBar, (uFlagsHitTest & FHT_kfFooter) ? Qt::SolidLine : Qt::DotLine);
 	}
 
+const EMenuActionByte c_rgzeActionsMenuChannel[] =
+	{
+	eMenuAction_GroupChannelInvite,
+	eMenuAction_GroupChannelLeave,
+	ezMenuActionNone
+	};
+
 void
 WDashboardSectionChannels::OnItemClicked(SHitTestInfo oHitTestInfo)
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "WDashboardSectionChannels::OnItemClicked(0x$p, 0x$x)\n", oHitTestInfo.pItem, oHitTestInfo.uFlagsHitTest);
-	if (oHitTestInfo.uFlagsHitTest & FHT_kfFooter)
+	if (oHitTestInfo.uFlagsHitTest & (FHT_kfHeader | FHT_kfFooter))
 		{
 		void DisplayDialogChannelsBrowse(TProfile * pProfile);
 		DisplayDialogChannelsBrowse(m_pParent->PGetProfile());
 		return;
 		}
-	if (oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow)
+	if ((oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) && (oHitTestInfo.pItem != NULL))
 		{
-		WMenu oMenu;
-		oMenu.ActionAdd(eMenuAction_GroupChannelInvite);
-		oMenu.ActionAdd(eMenuAction_GroupChannelLeave);
-		EMenuAction eMenuAction = oMenu.EDisplayContextMenu();
-		switch (eMenuAction)
-			{
-		default:
-			break;
-			}
-
+		TGroup * pChannel = oHitTestInfo.pItem->m_data.pGroup;
+		Assert(pChannel != NULL);
+		Assert(pChannel->EGetRuntimeClass() == RTI(TGroup));
+		pChannel->TreeItem_EDisplayContextMenu(c_rgzeActionsMenuChannel);
 		return;
 		}
 	WDashboardSection::OnItemClicked(oHitTestInfo);
 	}
+
+const EMenuActionByte c_rgzeActionsMenuContact[] =
+	{
+	eMenuAction_ContactRemove,
+	ezMenuActionNone
+	};
+
+void
+WDashboardSectionContacts::OnItemClicked(SHitTestInfo oHitTestInfo)
+	{
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "WDashboardSectionGroups::OnItemClicked(0x$p, 0x$x)\n", oHitTestInfo.pItem, oHitTestInfo.uFlagsHitTest);
+	if ((oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) && (oHitTestInfo.pItem != NULL))
+		{
+		TContact * pContact = oHitTestInfo.pItem->m_data.pContact;
+		Assert(pContact != NULL);
+		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+		pContact->TreeItem_EDisplayContextMenu(c_rgzeActionsMenuContact);
+		return;
+		}
+	WDashboardSection::OnItemClicked(oHitTestInfo);
+	}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 singleton WDashboardCaption : public QWidget
@@ -462,13 +486,18 @@ WDashboard::RefreshGroup(TGroup * pGroup)
 void
 WDashboard::RefreshChannels()
 	{
-	m_sections.pwSectionChannels->SetParent(this);
-	m_sections.pwSectionChannels->Init(m_pProfile);
-	m_sections.pwSectionChannels->updateGeometry();
-	m_sections.pwSectionChannels->update();
+	m_sections.pwSectionChannels->Refresh();
+	}
+void
+WDashboard::RefreshContacts()
+	{
+	m_sections.pwSectionContacts->Refresh();
 	}
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+WDashboardSection::SHitTestInfo WDashboardSection::c_oHitTestInfoEmpty;
+
 WDashboardSection::WDashboardSection(PSZAC pszSectionName) : WWidget(NULL)
 	{
 	m_sName = pszSectionName;
@@ -481,8 +510,6 @@ WDashboardSection::~WDashboardSection()
 	//m_arraypaItems.DeleteAllItems();
 	}
 
-WDashboardSection::SHitTestInfo WDashboardSection::c_oHitTestInfoEmpty;
-
 void
 WDashboardSection::SetParent(WDashboard * pParent)
 	{
@@ -490,6 +517,16 @@ WDashboardSection::SetParent(WDashboard * pParent)
 	m_pParent = pParent;
 	m_arraypaItems.DeleteAllItems();
 	m_oHitTestInfo = c_oHitTestInfoEmpty;
+	}
+
+//	Re-initialize the section and redraw eve
+void
+WDashboardSection::Refresh()
+	{
+	SetParent(m_pParent);
+	Init(m_pParent->PGetProfile());
+	updateGeometry();
+	update();
 	}
 
 void
@@ -505,7 +542,7 @@ WDashboardSection::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void *
 	}
 
 void
-WDashboardSection::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsItem*/)
+WDashboardSection::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsHitTest*/)
 	{
 	Assert(pPainter != NULL);
 	}
@@ -577,7 +614,7 @@ WDashboardSection::paintEvent(QPaintEvent *)
 
 	// Draw the caption
 	oPainter.setFont(g_oFontBoldSmaller);
-	oPainter.setPen(g_oPenTextEmpty);
+	oPainter.setPen((m_oHitTestInfo.uFlagsHitTest & FHT_kfHeader) ? g_oPenTextNotEmpty : g_oPenTextEmpty);
 	oPainter.drawText(d_cxMarginSectionLeft, d_cyMarginTopHeader + d_cyHeightSectionItem, m_sName);
 
 	QRect rcSection = rect();
@@ -604,13 +641,19 @@ WDashboardSection::paintEvent(QPaintEvent *)
 			{
 			QRect rcMenuOverflow = oPainter.m_rcCell;
 			int xLeft = rcMenuOverflow.right() - d_cxWidthMenuOverflow;
+			/*
 			if (m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow)
 				{
 				rcMenuOverflow.setLeft(xLeft);
 				oPainter.fillRect(rcMenuOverflow, (m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) ? d_coPurpleLight : d_coPurple);
 				}
-			QIcon oIcon = PGetMenuAction(eMenuIconOverflow)->icon();
+			*/
+			/*
+			QIcon oIcon = OGetIcon(eMenuIcon_Overflow);
+			//QIcon oIcon = PGetMenuAction(eMenuIconOverflow)->icon();
 			oIcon.paint(&oPainter, xLeft, yTop - 1, 16, 16);
+			*/
+			OGetIcon((m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) ? eMenuIcon_OverflowHovered : eMenuIcon_Overflow).paint(&oPainter, xLeft, yTop, 16, 16);
 			}
 		oPainter.setPen((uFlagsItem & CDashboardSectionItem::FI_kfSelected) ? g_oPenTextNotEmpty : g_oPenTextEmpty);
 		oPainter.setFont((uFlagsItem & CDashboardSectionItem::FI_kfDrawBold) ? g_oFontBold : g_oFontNormal);
@@ -716,15 +759,15 @@ void
 Dashboard_UpdateAccordingToSelectedProfile(TProfile * pProfileSelected)
 	{
 	Endorse(pProfileSelected == NULL);
-	if (g_pwDashboard != NULL)
-		g_pwDashboard->ProfileSelectedChanged(pProfileSelected);
+	Assert(g_pwDashboard != NULL);
+	g_pwDashboard->ProfileSelectedChanged(pProfileSelected);
 	}
 
 void
 Dashboard_UpdateContact(TContact * pContact)
 	{
-	if (g_pwDashboard != NULL)
-		g_pwDashboard->RefreshContact(pContact);
+	Assert(g_pwDashboard != NULL);
+	g_pwDashboard->RefreshContact(pContact);
 	}
 
 void
@@ -735,9 +778,27 @@ Dashboard_UpdateGroup(TGroup * pGroup)
 	}
 
 void
-Dashboard_UpdateChannels()
+Dashboard_RefreshGroupsAndChannels()
+	{
+	Dashboard_RefreshGroups();
+	Dashboard_RefreshChannels();
+	}
+
+void
+Dashboard_RefreshGroups()
+	{
+	g_pwDashboard->RefreshGroups();
+	}
+void
+Dashboard_RefreshChannels()
 	{
 	g_pwDashboard->RefreshChannels();
+	}
+
+void
+Dashboard_RefreshContacts()
+	{
+	g_pwDashboard->RefreshContacts();
 	}
 
 void
@@ -752,8 +813,8 @@ Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_N
 void
 Dashboard_NewEventRelatedToBallot(IEventBallot * pEventBallot)
 	{
-	if (g_pwDashboard != NULL)
-		g_pwDashboard->NewEventRelatedToBallot(pEventBallot);
+	Assert(g_pwDashboard != NULL);
+	g_pwDashboard->NewEventRelatedToBallot(pEventBallot);
 	}
 
 void

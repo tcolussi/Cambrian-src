@@ -205,7 +205,6 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuIconXmpp = eMenuAction_AccountLogin,
 	eMenuIconAccept = eMenuAction_ContactApprove,	// At the moment the "Accept" icon is the same as the "Approve Peer"
 
-	eMenuIconMax
 	}; // EMenuAction
 
 typedef BYTE EMenuActionByte;		// A menu action stored wihin a single byte (as long as we have less than ~250 menu actions)
