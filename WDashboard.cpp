@@ -489,6 +489,11 @@ WDashboard::RefreshChannels()
 	m_sections.pwSectionChannels->Refresh();
 	}
 void
+WDashboard::RefreshGroups()
+	{
+	m_sections.pwSectionGroups->Refresh();
+	}
+void
 WDashboard::RefreshContacts()
 	{
 	m_sections.pwSectionContacts->Refresh();
