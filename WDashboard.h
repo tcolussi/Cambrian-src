@@ -169,9 +169,7 @@ singleton WDashboard : public QDockWidget
 	Q_OBJECT
 protected:
 	TProfile * m_pProfile;							// Pointer of the profile the dashboard is displaying
-	WLabel * m_pwLabelCaption;
 	OLayoutVerticalAlignTop * m_poLayoutVertial;	// Stack the sections vertically
-//	CArrayPtrDashboardSections m_arraypSections;
 	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section
 		{
 		WDashboardSectionBallots * pwSectionBalots;

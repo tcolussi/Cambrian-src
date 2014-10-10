@@ -3,6 +3,7 @@
 #endif
 #include "WDashboard.h"
 
+#define d_cxMarginHeaderLeft	16
 #define d_cxMarginSectionLeft	16	// Number of pixels for the left margin
 #define d_cxWidthNumber			20
 #define d_cxWidthMenuOverflow	18
@@ -292,10 +293,13 @@ singleton WDashboardCaption : public QWidget
 {
 public:
 	WDashboardCaption();
+	virtual QSize sizeHint() const { return QSize(150, 58); }
+	virtual void paintEvent(QPaintEvent *);
 };
 
 WDashboardCaption::WDashboardCaption()
 	{
+	/*
 	QToolButton * pwButtonUndock = new QToolButton(this);
 	pwButtonUndock->setToolTip("Float / Unfloat");
 	pwButtonUndock->setStyleSheet("QToolButton { border: none; padding: 3px; }");
@@ -310,6 +314,18 @@ WDashboardCaption::WDashboardCaption()
 	layout->addWidget(pwButtonUndock);
 	setLayout(layout);
 	setCursor(Qt::OpenHandCursor);		// This cursor shows to the user he/she may drag the widget to undock the Navigation Tree
+	*/
+	setStyleSheet("background-color:#3e313c; color:white; border-bottom:2px solid #372c36;");
+	}
+
+void
+WDashboardCaption::paintEvent(QPaintEvent *)
+	{
+	OPainter oPainter(this);
+	oPainter.setFont(g_oFontBoldThick);
+	QRect rcCaption = rect();
+	rcCaption.setLeft(d_cxMarginHeaderLeft);
+	oPainter.drawText(rcCaption, Qt::AlignVCenter, parentWidget()->windowTitle());
 	}
 
 #include "WNavigationTree.h"
@@ -333,12 +349,12 @@ WDashboard::WDashboard()
 	g_oFontBoldSmaller = g_oFontBold;
 	g_oFontBoldSmaller.setPixelSize(d_cyFontHeightFooter);
 
+	#if 0
 	m_pwLabelCaption = new WLabel;
 	//m_pwLabelCaption->setStyleSheet("background-color:#8080FF");
 	m_pwLabelCaption->setStyleSheet("background-color:#3e313c; color:white; font-size:16px; font-weight:900; border-bottom:2px solid #372c36; padding:16px; padding-left:11px");
 	m_pwLabelCaption->setMargin(0);
 	//m_pwLabelCaption->setFont(g_oFontBold);
-	#if 1
 	setTitleBarWidget(m_pwLabelCaption);
 	#else
 	setTitleBarWidget(new WDashboardCaption);
@@ -370,7 +386,8 @@ void
 WDashboard::ProfileSelectedChanged(TProfile * pProfile)
 	{
 	m_pProfile = pProfile;
-	m_pwLabelCaption->Label_SetTextPlain((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
+	setWindowTitle((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
+	//m_pwLabelCaption->Label_SetTextPlain((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
 	m_pItemSelected = NULL;
 	// Notify each section the selected profile changed
 	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
