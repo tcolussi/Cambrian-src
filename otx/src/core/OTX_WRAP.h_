@@ -1,0 +1,47 @@
+#ifndef OTX_WRAP_H
+/*
+This Class Wraps all the Gui and Libs of OT
+It is supposed to be declared once in the main window
+
+*/
+
+#define OTX_WRAP_H
+#include <Qwidget>
+#include <QPointer>
+#include <core/passwordcallback.hpp>
+#include "OTX.hpp"
+#include <core/handlers/contacthandler.hpp>
+#include <opentxs/OTAPI.hpp>
+#include <opentxs/OTAPI_Exec.hpp>
+#include <opentxs/OTAsymmetricKey.hpp>
+#include <opentxs/OTRecordList.hpp>
+#include <opentxs/OTCaller.hpp>
+
+#include <QDebug>
+
+class OTX_WRAP
+{
+
+public:
+
+    QPointer<OTX> pOTX;
+    QWidget *pParentWidget;
+    int currentNymIndex; // stores the current Nym Selected by default is the first nym on db
+    int createdNymIndex; // stres the last Nym Created in order to store in Cambrian. If the value is -1 is only a switch operation
+
+    OTX_WRAP(QWidget *parent);
+    ~OTX_WRAP();
+
+    void openCredentialSlot(int nymIndex);
+
+ private:
+ // It will be invoked only once per run in the constructor of this class.
+    bool SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup & theCallback);
+    bool SetupPasswordCallback(OTCaller & passwordCaller, OTCallback & passwordCallback);
+    void LoadWallewithPassprhase();
+
+
+};
+
+#endif // OTX_WRAP_H
+

@@ -1,0 +1,104 @@
+#include "OTX_WRAP.h"
+
+#include <iostream>
+
+
+
+OTX_WRAP::OTX_WRAP(QWidget *parent)
+{
+    pParentWidget= parent;
+
+    this->LoadWallewithPassprhase();
+
+}
+
+bool OTX_WRAP::SetupPasswordCallback(OTCaller & passwordCaller, OTCallback & passwordCallback)
+{
+    passwordCaller.setCallback(&passwordCallback);
+
+    bool bSuccess = OT_API_Set_PasswordCallback(passwordCaller);
+
+    if (!bSuccess)
+    {
+        qDebug() << QString("Error setting password callback!");
+        return false;
+    }
+
+    return true;
+}
+
+
+bool OTX_WRAP::SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup & theCallback)
+{
+    theCaller.setCallback(&theCallback);
+
+    bool bSuccess = OT_API_Set_AddrBookCallback(theCaller);
+
+    if (!bSuccess)
+    {
+        qDebug() << QString("Error setting address book callback!");
+        return false;
+    }
+
+    return true;
+}
+
+
+
+void OTX_WRAP::LoadWallewithPassprhase()
+{
+    QString mc_app_name = "SoproOTX";
+    QString mc_version = "v0.0.1";
+
+    //Compiled details
+
+    // ----------------------------------------
+    // Set Password Callback.
+    //
+    static OTCaller           passwordCaller;
+    static MTPasswordCallback passwordCallback;
+
+    if (!SetupPasswordCallback(passwordCaller, passwordCallback))
+    {
+        qDebug() << "Failure setting password callback in MTApplicationMC";
+        abort();
+    }
+    // ----------------------------------------
+    // Set Address Book Callback.
+    //
+    static OTLookupCaller theCaller;
+    static MTNameLookupQT theCallback;
+
+    if (!SetupAddressBookCallback(theCaller, theCallback))
+    {
+        qDebug() << "Failure setting address book callback in MTApplicationMC";
+        abort();
+    }
+    // ----------------------------------------
+    // Load OTAPI Wallet
+    //
+    OTAPI_Wrap::It()->LoadWallet();
+    // ----------------------------------------
+    /** Init Moneychanger code (Start when necessary below) **/
+
+     pOTX = OTX::It();
+
+    pOTX->installEventFilter(pOTX.data());
+
+}
+void OTX_WRAP::openCredentialSlot(int nymIndex)
+{
+    // get the nym id by index
+
+    std::string nymId= OTAPI_Wrap::It()->GetNym_ID(nymIndex);
+    pOTX->mc_show_nym_slot(QString::fromStdString(nymId));
+
+}
+
+OTX_WRAP::~OTX_WRAP()
+{   //std::cout << "Destroying otx wrap";
+    OTX::It(pParentWidget,true);
+}
+
+
+

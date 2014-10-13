@@ -1,0 +1,49 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="identity_BW">icons/identity_BW.png</file>
+        <file alias="identity">icons/identity.png</file>
+        <file>icons/account.png</file>
+        <file>icons/addressbook.png</file>
+        <file>icons/advanced.png</file>
+        <file>icons/agreements.png</file>
+        <file>icons/assets.png</file>
+        <file>icons/Basic-Copy-icon.png</file>
+        <file>icons/bitcoin.png</file>
+        <file>icons/buildings.png</file>
+        <file>icons/check-mark-small.png</file>
+        <file>icons/check-mark.png</file>
+        <file>icons/compose.png</file>
+        <file>icons/deposit.png</file>
+        <file>icons/downarrow.png</file>
+        <file>icons/green_up_arrow.png</file>
+        <file>icons/home.png</file>
+        <file>icons/lock.png</file>
+        <file>icons/markets.png</file>
+        <file>icons/moneychanger.png</file>
+        <file>icons/nym.png</file>
+        <file>icons/overview.png</file>
+        <file>icons/p2p.png</file>
+        <file>icons/p2psmall.png</file>
+        <file>icons/padlock_open.png</file>
+        <file>icons/purse.png</file>
+        <file>icons/qrcode_scan.png</file>
+        <file>icons/qrcode.png</file>
+        <file alias="Quit">icons/quit.png</file>
+        <file>icons/red_down_arrow.png</file>
+        <file>icons/refresh.png</file>
+        <file>icons/request.png</file>
+        <file>icons/requestpayment.png</file>
+        <file>icons/safe_box.png</file>
+        <file>icons/safe.png</file>
+        <file>icons/send.png</file>
+        <file>icons/sendfunds.png</file>
+        <file>icons/server.png</file>
+        <file>icons/settings.png</file>
+        <file>icons/signature-small.png</file>
+        <file>icons/signature.png</file>
+        <file>icons/uparrow.png</file>
+        <file>icons/user.png</file>
+        <file>icons/vault.png</file>
+        <file>icons/withdraw.png</file>
+    </qresource>
+</RCC>
