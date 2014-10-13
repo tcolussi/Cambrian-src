@@ -179,7 +179,7 @@ TBrowserTabs::TreeItemBrowser_DisplayWithinNavigationTree()
 	{
 	//MessageLog_AppendTextFormatCo(d_coChocolate, "TBrowserTabs::TreeItemBrowser_DisplayWithinNavigationTree()");
 	TreeItemW_DisplayWithinNavigationTree((m_pProfile->m_paTreeItemW_YZ != NULL) ?  m_pProfile : NULL);
-	TreeItemW_SetIcon(eMenuAction_DisplaySecureWebBrowsing);
+	TreeItemW_SetIcon(eMenuIcon_Browser);
 	}
 
 

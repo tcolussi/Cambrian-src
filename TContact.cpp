@@ -77,7 +77,8 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeTimestamp("tsSync", INOUT_F_UNCH_S &m_tsOtherLastSynchronized);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT &m_strComment);
 	pXmlExchanger->XmlExchangeBin("Rec", INOUT &m_binXmlRecommendations);
-	pXmlExchanger->XmlExchangeStr("KeyPublic", INOUT_F_UNCH_S &m_strKeyPublic);
+	pXmlExchanger->XmlExchangeStr("NymID", INOUT &m_strNymID);
+	pXmlExchanger->XmlExchangeStr("KeyPublic", INOUT &m_strKeyPublic);
 
 	m_listaTasksSendReceive.XmlExchange(INOUT pXmlExchanger);
 
@@ -131,26 +132,25 @@ TContact::TreeItem_PszGetNameDisplay() CONST_MCC
 	return _PszGetDisplayNameOr(m_strJidBare);
 	}
 
-EMenuAction
-TContact::Contact_EGetMenuActionPresence() const
+EMenuIcon
+TContact::Contact_EGetMenuIconPresence() const
 	{
 	if (g_fIsConnectedToInternet)
 		{
-		const BOOL fuInsecure = FALSE; // (m_uFlagsContact & FC_kfNoCambrianProtocol);
 		const UINT uFlagsPresence = (m_uFlagsContact & FC_kmPresenceMaskOnline);
 		if (uFlagsPresence)
 			{
 			if (uFlagsPresence == FC_kePresenceChat)
-				return fuInsecure ? eMenuIcon_PresenceInsecureOnline : eMenuAction_PresenceAccountOnline;
+				return eMenuIcon_PresenceAccountOnline;
 			else if (uFlagsPresence == FC_kePresenceAway)
-				return eMenuAction_PresenceAway;
+				return eMenuIcon_PresenceAway;
 			else if (uFlagsPresence == FC_kePresenceAwayExtended)
-				return eMenuAction_PresenceAwayExtended;
+				return eMenuIcon_PresenceAwayExtended;
 			else if (uFlagsPresence == FC_kePresenceBusy)
-				return eMenuAction_PresenceBusy;
+				return eMenuIcon_PresenceBusy;
 			}
 		}
-	return eMenuAction_PresenceAccountOffline;
+	return eMenuIcon_PresenceAccountOffline;
 	}
 
 //	TContact::ITreeItem::TreeItem_IconUpdate()
@@ -158,35 +158,34 @@ void
 TContact::TreeItem_IconUpdate()
 	{
 	QRGB coText = d_coTreeItem_Default;
-	EMenuAction eMenuIconPresence = eMenuAction_PresenceAccountOffline;
-	EMenuAction eMenuIconDisplay = eMenuAction_Contact;
+	EMenuIcon eMenuIconPresence = eMenuIcon_PresenceAccountOffline;
+	EMenuIcon eMenuIconDisplay = eMenuIcon_Contact;
 	/*
 	if (m_uFlagsContact & FC_kfContactNeedsInvitation)
 		eMenuIconDisplay = eMenuAction_Contact;
 	*/
 	if (m_uFlagsContact & FC_kmRosterSubscriptionBoth)
-		eMenuIconDisplay = eMenuAction_PresenceAccountOffline;	// If there is a form of subscription, display the icon offline
+		eMenuIconDisplay = eMenuIcon_PresenceAccountOffline;	// If there is a form of subscription, display the icon offline
 	if (g_fIsConnectedToInternet)
 		{
-		const BOOL fuInsecure = FALSE; // (m_uFlagsContact & FC_kfNoCambrianProtocol);
 		const UINT uFlagsPresence = (m_uFlagsContact & FC_kmPresenceMaskOnline);
 		if (uFlagsPresence)
 			{
 			if (uFlagsPresence == FC_kePresenceChat)
-				eMenuIconPresence = fuInsecure ? eMenuIcon_PresenceInsecureOnline : eMenuAction_PresenceAccountOnline;
+				eMenuIconPresence = eMenuIcon_PresenceAccountOnline;
 			else if (uFlagsPresence == FC_kePresenceAway)
-				eMenuIconPresence = eMenuAction_PresenceAway;
+				eMenuIconPresence = eMenuIcon_PresenceAway;
 			else if (uFlagsPresence == FC_kePresenceAwayExtended)
-				eMenuIconPresence = eMenuAction_PresenceAwayExtended;
+				eMenuIconPresence = eMenuIcon_PresenceAwayExtended;
 			else if (uFlagsPresence == FC_kePresenceBusy)
-				eMenuIconPresence = eMenuAction_PresenceBusy;
+				eMenuIconPresence = eMenuIcon_PresenceBusy;
 			eMenuIconDisplay = eMenuIconPresence;
 			}
 		}
 	if (m_cMessagesUnread > 0)
 		{
 		coText = d_coTreeItem_UnreadMessages;
-		eMenuIconDisplay = eMenuAction_MessageNew;
+		eMenuIconDisplay = eMenuIcon_MessageNew;
 		}
 	/*
 	if (m_uFlagsContact & FC_kfContactUnsolicited)
@@ -201,8 +200,7 @@ TContact::TreeItem_IconUpdate()
 		pAlias->ContactAlias_IconChanged(eMenuIconDisplay, eMenuIconPresence);
 		pAlias = pAlias->m_pNextAlias;
 		}
-
-	Dashboard_UpdateContact(this);	// TODO: Need to optimize this
+	Dashboard_RedrawContact(this);
 	} // TreeItem_IconUpdate()
 
 const EMenuActionByte c_rgzeActionsMenuContact[] =
@@ -761,10 +759,10 @@ IContactAlias::TreeItem_PszGetNameDisplay() CONST_MCC
 	}
 
 void
-IContactAlias::ContactAlias_IconChanged(EMenuAction eMenuIconDisplay, EMenuAction eMenuIconPresence)
+IContactAlias::ContactAlias_IconChanged(EMenuIcon eMenuIconDisplay, EMenuIcon eMenuIconPresence)
 	{
-	Assert(eMenuIconDisplay != ezMenuActionNone);
-	Assert(eMenuIconPresence <=  eMenuAction_PresenceLast);
+	Assert(eMenuIconDisplay != eMenuIcon_zNull);
+	Assert(eMenuIconPresence <= eMenuIcon_PresenceLast);
 	}
 
 //	Return the first alias matching the contact
@@ -882,7 +880,7 @@ TContactNew::TContactNew(TAccountXmpp * pAccount)
 	{
 	m_pAccount = pAccount;
 	TreeItemW_DisplayWithinNavigationTree(m_pAccount);
-	TreeItemW_SetTextColorAndIcon(d_coGray, eMenuAction_ContactAdd);
+	TreeItemW_SetTextColorAndIcon(d_coGray, eMenuIcon_ContactAdd);
 	}
 
 //	TContactNew::IRuntimeObject::PGetRuntimeInterface()

@@ -94,7 +94,7 @@ SOURCES += \
     DDialogChannels.cpp \
     TChannel.cpp \
     WQmlToolbar.cpp \
-    MenuIcons.cpp
+	MenuIcons.cpp
 
 
 HEADERS += \

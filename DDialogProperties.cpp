@@ -228,7 +228,7 @@ CListWidgetTreeItem::CListWidgetTreeItem(WListContacts * pwParent, ITreeItem * p
 
 WListContacts::WListContacts()
 	{
-	m_oIconContact = PGetMenuAction(eMenuAction_Contact)->icon();	// Create a cached copy of the icon for better performance
+	m_oIconContact = OGetIcon(eMenuIcon_Contact);	// Create a cached copy of the icon for better performance
 	}
 
 void
@@ -282,7 +282,7 @@ WListContacts::ContactsGetAll(IOUT CArrayPtrContacts * parraypContacts) const
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pContactOrGroup) : DDialogOkCancelWithLayouts("Add Peers to Group", eMenuAction_GroupAddContacts)
+DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pContactOrGroup) : DDialogOkCancelWithLayouts("Add Peers to Group", eMenuIcon_ContactAdd)
 	{
 	m_pwListContactsAvailable = new WListContacts;
 	m_pwListContactsInGroup = new WListContacts;
@@ -315,7 +315,7 @@ DDialogGroupAddContacts::DDialogGroupAddContacts(ITreeItemChatLogEvents * pConta
 	poLayoutVertical->addWidget(PA_CHILD m_pwListContactsInGroup);
 //	poLayoutVertical->addWidget(new WButtonIconForToolbar(eMenuAction_ContactRemove, "Remove selected peer(s) from the group"));
 	poLayoutHorizontal = new OLayoutHorizontal(m_poLayoutBody);
-	WButtonText * pwButtonOK = new WButtonTextWithIcon((m_pGroup != NULL) ? " Add Peers " : " Create Group ", eMenuAction_Group);
+	WButtonText * pwButtonOK = new WButtonTextWithIcon((m_pGroup != NULL) ? " Add Peers " : " Create Group ", eMenuIcon_ContactAdd);
 	poLayoutHorizontal->addWidget(pwButtonOK, d_zNA, Qt::AlignRight);
 
 	// Populate the lists of contacts
@@ -416,7 +416,7 @@ ITreeItemChatLogEvents::DisplayDialogBallotSend(CEventBallotSent * pEventBallotI
 	}
 
 #define SL_DDialogBallotSend(pfmSlot)		SL_DDialog(pfmSlot, DDialogBallotSend)
-DDialogBallotSend::DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, CEventBallotSent * pEventBallotInit) : DDialogOkCancelWithLayouts("Send Ballot", eMenuAction_BallotSend)
+DDialogBallotSend::DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, CEventBallotSent * pEventBallotInit) : DDialogOkCancelWithLayouts("Send Ballot", eMenuIcon_Vote)
 	{
 	Assert(pContactOrGroup != NULL);
 	m_pContactOrGroup = pContactOrGroup;
@@ -425,11 +425,11 @@ DDialogBallotSend::DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, C
 		paEventBallotInit = pEventBallotInit = new CEventBallotSent;	// Create an empty ballot event to initialize the dialog
 
 	Assert(m_poLayoutButtons != NULL);
-	WButtonTextWithIcon * pwButtonPreview = new WButtonTextWithIcon("Preview |Review your ballot before sending it to the group", eMenuAction_FindText);
+	WButtonTextWithIcon * pwButtonPreview = new WButtonTextWithIcon("Preview |Review your ballot before sending it to the group", eMenuIcon_Find);
 	m_poLayoutButtons->addWidget(pwButtonPreview);
 	connect(pwButtonPreview, SIGNAL(clicked()), this, SLOT(SL_buttonBallotPreview()));
 
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotSend(SL_ButtonBallotSend), "Send Ballot |Broadcast the ballot the group", eMenuAction_ContactInvite);
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotSend(SL_ButtonBallotSend), "Send Ballot |Broadcast the ballot the group", eMenuIcon_MessageEnvelopeForward);
 	//m_pwButtonOK->setDefault(false);	// Do not allow the Enter key to close the dialog
 	pwButtonPreview->setDefault(true);	// Need to document this code
 	pwButtonPreview->setAutoDefault(false);
@@ -455,7 +455,7 @@ DDialogBallotSend::DDialogBallotSend(ITreeItemChatLogEvents * pContactOrGroup, C
 			}
 		}
 
-	WButtonTextWithIcon * pwButtonAdd = new WButtonTextWithIcon("Add Additional Choice |Add a new choice to the ballot", eMenuIconAdd);
+	WButtonTextWithIcon * pwButtonAdd = new WButtonTextWithIcon("Add Additional Choice |Add a new choice to the ballot", eMenuIcon_Add);
 	m_poLayoutBody->addWidget(pwButtonAdd);
 	connect(pwButtonAdd, SIGNAL(clicked()), this, SLOT(SL_ButtonAdd()));
 
@@ -603,7 +603,7 @@ _OLayoutBallotChoice::_OLayoutBallotChoice(PA_PARENT DDialogBallotSend * pwDialo
 	{
 	_OLayoutBallotChoice * poLayoutLast = (_OLayoutBallotChoice *)pwDialogBallotParent->m_arraypLayoutChoices.PvGetElementLast_YZ();
 	pwDialogBallotParent->m_arraypLayoutChoices.Add(this);
-	m_pwButtonRemove = new WButtonIconForToolbar(eMenuIconRemove, "Remove this question from the ballot");
+	m_pwButtonRemove = new WButtonIconForToolbar(eMenuIcon_Remove, "Remove this question from the ballot");
 	addWidget(m_pwButtonRemove);
 	m_pwEditChoice = new WEdit;
 	connect(m_pwEditChoice, SIGNAL(returnPressed()), pwDialogBallotParent, SLOT(SL_ButtonAdd()));
@@ -634,12 +634,12 @@ CEventBallotReceived::DisplayDialogBallotVote(BOOL fPreviewMode)
 	}
 
 #define SL_DDialogBallotVote(pfmSlot)		SL_DDialog(pfmSlot, DDialogBallotVote)
-DDialogBallotVote::DDialogBallotVote(CEventBallotReceived * pEventBallotVote, BOOL fPreviewMode) : DDialogOkCancelWithLayouts("Vote", eMenuAction_BallotSend)
+DDialogBallotVote::DDialogBallotVote(CEventBallotReceived * pEventBallotVote, BOOL fPreviewMode) : DDialogOkCancelWithLayouts("Vote", eMenuIcon_Vote)
 	{
 	m_pEventBallotVote = pEventBallotVote;
 	TContact * pContactSender = pEventBallotVote->PGetContactForReply_YZ();	// Get the contact who sent the ballot
 
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotVote(SL_ButtonVote), "Vote |Cast my vote on this ballot", eMenuAction_BallotSend);
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogBallotVote(SL_ButtonVote), "Vote |Cast my vote on this ballot", eMenuIcon_Vote);
 	m_pwButtonOK->setDisabled(fPreviewMode);	// Disable the OK button if in preview mode so the vote does not get sent
 
 	Dialog_SetCaption(pEventBallotVote->m_strTitle);

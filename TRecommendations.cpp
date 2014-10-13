@@ -107,7 +107,7 @@ TProfile::XcpApiProfile_RecommendationsSerialize(INOUT CBinXcpStanza * pbinXcpSt
 
 CRecommendationContact::CRecommendationContact(PA_PARENT CArrayPtrRecommendationsWithHashTables * parraypaParent, const CXmlNode * pXmlNodeContact) : IRecommendation(c_eMenuIcon)
 	{
-	EMenuAction eMenuIcon = c_eMenuIcon;
+	EMenuIcon eMenuIcon = c_eMenuIcon;
 	PSZUC pszName = pXmlNodeContact->PszuFindAttributeValue(d_chAPIa_Recommendation_TContact_strName);
 	PSZUC pszContactIdentifier = pXmlNodeContact->PszuFindAttributeValue(d_chAPIa_Recommendation_TContact_strIdentifier);
 	TContact * pContact;
@@ -121,7 +121,7 @@ CRecommendationContact::CRecommendationContact(PA_PARENT CArrayPtrRecommendation
 		}
 	else
 		{
-		eMenuIcon = ((TContact *)m_pTreeItemExisting)->Contact_EGetMenuActionPresence();
+		eMenuIcon = ((TContact *)m_pTreeItemExisting)->Contact_EGetMenuIconPresence();
 		}
 	InitIconAndText(eMenuIcon, pszName, NULL, pszContactIdentifier);
 	parraypaParent->Add(PA_CHILD this);
@@ -165,7 +165,7 @@ TContact::Contact_RecommendationsUpdateFromXml(const CXmlNode * pXmlNodeApiParam
 			CXmlNode * pXmlNodeChannel = pXmlNodeChannels->m_pElementsList;
 			while (pXmlNodeChannel != NULL)
 				{
-				fNewChannelAdded |= pProfile->m_arraypaChannelNames.FNewChannelAdded(pXmlNodeChannel->PszuFindAttributeValue(d_chAPIe_Recommendation_TGroupChannel_strName));
+				fNewChannelAdded |= pProfile->m_arraypaChannelNamesAvailables.FNewChannelAdded(pXmlNodeChannel->PszuFindAttributeValue(d_chAPIe_Recommendation_TGroupChannel_strName));
 				pXmlNodeChannel = pXmlNodeChannel->m_pNextSibling;
 				}
 			if (fNewChannelAdded)
@@ -186,14 +186,14 @@ TContact::Contact_RecommendationsDisplayWithinNavigationTree(BOOL fSetFocus)
 	if (pRecommendation == NULL)
 		{
 		pRecommendation = new TRecommendations(this);
-		pRecommendation->TreeItemW_DisplayWithinNavigationTreeExpand(this, "Recommendations", eMenuAction_TreeItemRecommended);
+		pRecommendation->TreeItemW_DisplayWithinNavigationTreeExpand(this, "Recommendations", eMenuIcon_Recommend);
 		}
 	if (fSetFocus)
 		pRecommendation->TreeItemLayout_SetFocus();
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-IRecommendation::IRecommendation(EMenuAction eMenuIconRecommendationType)
+IRecommendation::IRecommendation(EMenuIcon eMenuIconRecommendationType)
 	{
 	m_eMenuIconRecommendationType = eMenuIconRecommendationType;
 	m_paTreeItemNew = NULL;
@@ -414,7 +414,7 @@ WLayoutRecommendations::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int i
 	}
 
 CRecommendationCategory *
-WLayoutRecommendations::_PAllocateRecommendationCategory(EMenuAction eMenuIconRecommendationType, PSZAC pszFmtTemplate0)
+WLayoutRecommendations::_PAllocateRecommendationCategory(EMenuIcon eMenuIconRecommendationType, PSZAC pszFmtTemplate0)
 	{
 	CRecommendationCategory * paCategory = new CRecommendationCategory(eMenuIconRecommendationType);
 	paCategory->InitIconAndText(eMenuIconRecommendationType, g_strScratchBufferStatusBar.Format(pszFmtTemplate0, m_pszNameDisplayContact));
@@ -517,7 +517,7 @@ TRecommendations::TreeItem_GotFocus()
 TMyRecommendations::TMyRecommendations(TProfile * pProfile)
 	{
 	m_pProfile = pProfile;
-	TreeItemW_DisplayWithinNavigationTreeExpand((pProfile->m_paTreeItemW_YZ != NULL) ? pProfile : NULL, "My Recommendations", eMenuAction_TreeItemRecommended);
+	TreeItemW_DisplayWithinNavigationTreeExpand((pProfile->m_paTreeItemW_YZ != NULL) ? pProfile : NULL, "My Recommendations", eMenuIcon_Recommend);
 	}
 
 //	TMyRecommendations::IRuntimeObject::PGetRuntimeInterface()

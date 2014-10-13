@@ -52,14 +52,14 @@ WNavigationTreeCaption::WNavigationTreeCaption()
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
+WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation Tree"))
 	{
 	g_pwNavigationTree = this;
 	setObjectName(c_sNavigation);
 	m_pTreeWidgetItemEditing = NULL;
 
 	//setStyleSheet("border: 1px solid red;");
-	g_pwButtonSwitchProfile = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIconIdentities, NULL);
+	g_pwButtonSwitchProfile = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIcon_ClassProfile, NULL);
 	g_pwButtonSwitchProfile->setCursor(Qt::ArrowCursor);	// We need to explicitly set the cursor to arrow because the caption uses the OpenHandCursor which every child inherits
 	g_pwMenuSwitchProfile = g_pwButtonSwitchProfile->PwGetMenu();
 	connect(g_pwMenuSwitchProfile, SIGNAL(aboutToShow()), this, SLOT(SL_MenuProfilesShow()));
@@ -95,13 +95,13 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 	OLayoutHorizontal * pLayout = new OLayoutHorizontal(pLayoutVertical);
 	//pLayout->addWidget(new WLabel("Status:"));
 
-	g_pwButtonStatusOfNavigationTree = new WButtonIconForToolbarWithDropDownMenu(this, eMenuAction_PresenceAccountOffline, "Status: Online");
+	g_pwButtonStatusOfNavigationTree = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIcon_PresenceAccountOffline, "Status: Online");
 	g_pwButtonStatusOfNavigationTree->setToolTip("Change your status");
 
-	EMenuAction eMenuAction_Presence = (EMenuAction)(g_uPreferences & P_kmPresenceMask);
-	if (eMenuAction_Presence == ezMenuActionNone)
-		eMenuAction_Presence = eMenuAction_PresenceAccountOnline;
-	Widget_SetIconButton(INOUT g_pwButtonStatusOfNavigationTree, eMenuAction_Presence);
+	EMenuIcon eMenuIcon_Presence = (EMenuIcon)(g_uPreferences & P_kmPresenceMask);
+	if (eMenuIcon_Presence == eMenuIcon_zNull)
+		eMenuIcon_Presence = eMenuIcon_PresenceAccountOnline;
+	Widget_SetIconButton(INOUT g_pwButtonStatusOfNavigationTree, eMenuIcon_Presence);
 	g_pwMenuStatus = (WMenu *)g_pwButtonStatusOfNavigationTree->menu();
 	g_pwMenuStatus->InitAsDymanicMenu();
 	/*
@@ -117,7 +117,7 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation"))
 	pLayout->addWidget(g_pwButtonStatusOfNavigationTree);
 	pLayout->addStretch();
 	//WButtonTextWithIcon * pwButtonAddContact = new WButtonTextWithIcon("Add Peer |Add a new peer to your profile", eMenuAction_ContactAdd);
-	WButtonIconForToolbar * pwButtonAddContact = new WButtonIconForToolbar(eMenuAction_ContactAdd, "Add a new peer to your " d_sza_profile);
+	WButtonIconForToolbar * pwButtonAddContact = new WButtonIconForToolbar(eMenuIcon_ContactAdd, "Add a new peer to your " d_sza_profile);
 	pLayout->addWidget(pwButtonAddContact, Qt::AlignBottom);
 	connect(pwButtonAddContact, SIGNAL(clicked()), this, SLOT(SL_ContactNew()));
 
@@ -391,18 +391,18 @@ ITreeItem::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ)
 	}
 
 void
-ITreeItem::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon)
+ITreeItem::TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuIcon eMenuIcon)
 	{
 	TreeItemW_DisplayWithinNavigationTree(pParent_YZ);
-	TreeItemW_SetIcon(eMenuActionIcon);
+	TreeItemW_SetIcon(eMenuIcon);
 	}
 
 //	This method is used mostly to do a prototype and populate the Navigation Tree quickly
 void
-ITreeItem::TreeItemW_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuAction eMenuActionIcon)
+ITreeItem::TreeItemW_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuIcon eMenuIcon)
 	{
 	m_strNameDisplayTyped.BinInitFromStringWithNullTerminator(pszName);
-	TreeItemW_DisplayWithinNavigationTree(pParent_YZ, eMenuActionIcon);
+	TreeItemW_DisplayWithinNavigationTree(pParent_YZ, eMenuIcon);
 	TreeItemW_Expand();
 	}
 
@@ -431,18 +431,18 @@ TTreeItemDemo::TTreeItemDemo()
 	m_pawLayoutDemo = NULL;
 	}
 
-TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon)
+TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuIcon eMenuIcon)
 	{
 	m_pawLayoutDemo = NULL;
-	TreeItemW_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuActionIcon);
+	TreeItemW_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuIcon);
 	}
 
-TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch)
+TTreeItemDemo::TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuIcon eMenuIcon, PSZAC pszDescription, PSZAC pszSearch)
 	{
 	m_pawLayoutDemo = NULL;
 	m_strDescription = (PSZUC)pszDescription;
 	m_strSearch = (PSZUC)pszSearch;
-	TreeItemW_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuActionIcon);
+	TreeItemW_DisplayWithinNavigationTreeExpand(pParent, pszName, eMenuIcon);
 	}
 
 
@@ -461,30 +461,30 @@ TTreeItemDemo::TreeItem_GotFocus()
 	}
 
 TTreeItemDemo *
-ITreeItem::TreeItemW_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon)
+ITreeItem::TreeItemW_PAllocateChild(PSZAC pszName, EMenuIcon eMenuIcon)
 	{
 	TTreeItemDemo * pChild = new TTreeItemDemo;
-	pChild->TreeItemW_DisplayWithinNavigationTreeExpand(this, pszName, eMenuActionIcon);
+	pChild->TreeItemW_DisplayWithinNavigationTreeExpand(this, pszName, eMenuIcon);
 	return pChild;
 	}
 
 TTreeItemDemo *
-ITreeItem::TreeItemW_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch)
+ITreeItem::TreeItemW_PAllocateChild(PSZAC pszName, EMenuIcon eMenuIcon, PSZAC pszDescription, PSZAC pszSearch)
 	{
-	TTreeItemDemo * pChild = TreeItemW_PAllocateChild(pszName, eMenuActionIcon);
+	TTreeItemDemo * pChild = TreeItemW_PAllocateChild(pszName, eMenuIcon);
 	pChild->m_strDescription = (PSZUC)pszDescription;
 	pChild->m_strSearch = (PSZUC)pszSearch;
 	return pChild;
 	}
 
 void
-ITreeItem::TreeItemW_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC pszName, ...)
+ITreeItem::TreeItemW_AllocateChildren_VEZ(EMenuIcon eMenuIcon, PSZAC pszName, ...)
 	{
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszName);
 	while (TRUE)
 		{
-		TreeItemW_PAllocateChild(pszName, eMenuActionIcon);
+		TreeItemW_PAllocateChild(pszName, eMenuIcon);
 		pszName = va_arg(vlArgs, PSZAC);
 		if (pszName == NULL)
 			break;

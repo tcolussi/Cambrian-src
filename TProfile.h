@@ -24,7 +24,7 @@ public:
 	CArrayPtrBrowsersTabbed m_arraypaBrowsersTabbed;
 	CArrayPtrEventsRecent m_arraypEventsRecentMessagesReceived;	// Recent text message received
 	CArrayPtrEventsRecent m_arraypEventsRecentBallots;			// Recent ballots sent and received
-	CArrayPtrChannelNames m_arraypaChannelNames;				// This array is necessary to know how many channels are available in the dashboard (communication panel)
+	CArrayPtrChannelNames m_arraypaChannelNamesAvailables;		// This array is necessary to know how many channels are available in the dashboard (communication panel)
 	CStr m_strData;									// Data of the profile (this variable is used for the JAPI)
 	CStr m_strJurisdiction;							// the current jurisdiction name, TODO: create an object TJurisdictoin
 	OJapiProfile * m_paoJapiProfile;
@@ -47,6 +47,7 @@ public:
 
 	TAccountXmpp * PAllocateAccount();
 	TAccountXmpp * PAllocateAccountAutomaticCreationUI(ISocketUI * piSocketUI);
+	TAccountXmpp * PGetFirstAccountOrAllocate_NZ();
 	#ifdef DEBUG_IMPORT_OLD_CONFIG_XML
 	void UnserializeContactsFromOldConfigXml();
 	#endif
@@ -68,6 +69,9 @@ public:
 	void GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC;
 	UINT GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC;
 	void GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC;
+	TGroup * PFindChannelByName(PSZUC pszChannelName) CONST_MCC;
+	BOOL FIsChannelNameUnused(PSZUC pszChannelName) CONST_MCC;
+	TGroup * GroupChannel_PCreateAndSelectWithinNavigationTree_NZ(PSZUC pszChannelName);
 
 	IService * PAllocateService_YZ(RTI_ENUM rtiService);
 	IService * PGetService_NZ(RTI_ENUM rtiService) CONST_MCC;

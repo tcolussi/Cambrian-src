@@ -42,7 +42,7 @@ void
 ICertificate::NavigationTree_DisplayCertificates(ICertificate * pCertificateParent)
 	{
 	TreeItemW_DisplayWithinNavigationTree(IN pCertificateParent);
-	TreeItemW_SetIcon(eMenuIconCertificate);
+	TreeItemW_SetIcon(eMenuIcon_Certificate);
 	TCertificate ** ppCertificateStop;
 	TCertificate ** ppCertificate = m_arraypaCertificates.PrgpGetCertificatesStop(OUT &ppCertificateStop);
 	while (ppCertificate != ppCertificateStop)
@@ -268,10 +268,13 @@ TCertificateServerName::TreeItem_PszGetNameDisplay() CONST_MCC
 void
 TCertificateServerName::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	{
+	Assert(pMenu != NULL);
+	/*
 	if (!m_dtuCertificateApproved.isValid())
 		pMenu->ActionAdd(eMenuIconServerSecure);
 	else
 		pMenu->ActionAdd(eMenuIconServerDeny);
+	*/
 	//pMenu->ActionsAdd(c_rgzeActionsMenuAccount);
 	}
 
@@ -281,9 +284,11 @@ TCertificateServerName::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	{
 	switch (eMenuAction)
 		{
+	/*
 	case eMenuIconServerSecure:
 		Approve();
 		break;
+	*/
 	default:
 		return ITreeItem::TreeItem_EDoMenuAction(eMenuAction);
 		}
@@ -308,12 +313,12 @@ TCertificateServerName::NavigationTree_DisplayServer()
 void
 TCertificateServerName::NavigationTree_IconUpdate()
 	{
-	EMenuAction eMenuActionIcon = eMenuIconServerSecure; // eMenuIconServerWarning;
+	EMenuIcon eMenuIcon = eMenuIcon_ServerSecure; // eMenuIconServerWarning;
 	if (m_dtuCertificateApproved.isValid())
 		{
-		eMenuActionIcon = m_dtuCertificateRevoked.isValid() ? eMenuIconServerDeny : eMenuIconServerSecure;
+		eMenuIcon = m_dtuCertificateRevoked.isValid() ? eMenuIcon_ServerDeny : eMenuIcon_ServerSecure;
 		}
-	TreeItemW_SetIcon(eMenuActionIcon);
+	TreeItemW_SetIcon(eMenuIcon);
 	}
 
 IXmlExchange *

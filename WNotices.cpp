@@ -219,7 +219,7 @@ NoticeListRoaming_AddNotice(PA_DELETING INotice * paiwNoticeNew)
 void
 NoticeListRoaming_AddMessageWarning_VE(ITreeItem * pSponsor, PSZAC pszTitle, PSZAC pszFmtTemplate, ...)
 	{
-	WNoticeMessageSponsored * pawNotice = new WNoticeMessageSponsored(pSponsor, pszTitle, eMenuIconWarning);
+	WNoticeMessageSponsored * pawNotice = new WNoticeMessageSponsored(pSponsor, pszTitle, eMenuIcon_Warning);
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszFmtTemplate);
 	pawNotice->NoticeMessage_SetText_VL(pszFmtTemplate, vlArgs);
@@ -531,7 +531,7 @@ void
 INoticeWithLayout::Notice_AddButtonIconClose()
 	{
 	//Notice_AddButton(PA_CHILD new WButtonTextWithIcon(pszButtonText, eMenuAction_Close), SL_INoticeWithLayout(SL_ButtonClose_clicked));
-	WButtonIconForToolbar * pwButton = new WButtonIconForToolbar(eMenuAction_Close, "Hide this notification message");
+	WButtonIconForToolbar * pwButton = new WButtonIconForToolbar(eMenuIcon_Close, "Hide this notification message");
 	Notice_PoGetLayoutButtons_NZ()->addWidget(PA_CHILD pwButton);
 	ConnectButton(pwButton, SL_INoticeWithLayout(SL_ButtonClose_clicked));
 	}
@@ -543,7 +543,7 @@ INoticeWithLayout::SL_ButtonClose_clicked()
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-INoticeWithIcon::INoticeWithIcon(PSZAC pszTitle, EMenuAction eMenuIcon)
+INoticeWithIcon::INoticeWithIcon(PSZAC pszTitle, EMenuIcon eMenuIcon)
 	{
 	m_pwGroupBox->setTitle(pszTitle);
 	m_pwButtonIcon = new WButtonIconForToolbar(this, eMenuIcon);
@@ -591,7 +591,7 @@ INoticeWithIcon::NoticeMessageExtra_Hide()
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-WNoticeMessageSponsored::WNoticeMessageSponsored(ITreeItem * pSponsor, PSZAC pszTitle, EMenuAction eMenuIcon) : INoticeWithIcon(pszTitle, eMenuIcon)
+WNoticeMessageSponsored::WNoticeMessageSponsored(ITreeItem * pSponsor, PSZAC pszTitle, EMenuIcon eMenuIcon) : INoticeWithIcon(pszTitle, eMenuIcon)
 	{
 	Assert(pSponsor != NULL);
 	mu_sponsor.piTreeItem = pSponsor;
@@ -623,7 +623,7 @@ WNoticeMessageSponsored::ETreeItemGotFocus(IN ITreeItem * piTreeItemFocus)
 WNoticeWarning::WNoticeWarning()
 	{
 	m_pwLabelStatus = NULL;
-	WButtonIconForToolbar * pButton = new WButtonIconForToolbar(this, eMenuIconWarning);
+	WButtonIconForToolbar * pButton = new WButtonIconForToolbar(this, eMenuIcon_Warning);
 	/*
 	QIcon oIcon = QIcon(":/ico/Warning");
 	pButton->setIcon(oIcon);

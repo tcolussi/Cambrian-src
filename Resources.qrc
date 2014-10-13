@@ -109,6 +109,11 @@
         <file alias="Hashtag">Icons/Hashtag.png</file>
         <file alias="MenuOverflow">Icons/MenuOverflow.png</file>
         <file alias="MenuOverflowH">Icons/MenuOverflowHover.png</file>
+        <file alias="CCircleGreen">Icons/CCircleGreen.png</file>
+		<file alias="CCircleGray">Icons/CCircleGray.png</file>
+        <file alias="CHash">Icons/CHash.png</file>
+        <file alias="CHexagon">Icons/CHexagon.png</file>
+        <file alias="CTriangle">Icons/CTriangle.png</file>
     </qresource>
     <qresource prefix="/snd">
         <file alias="NewMessage">Sounds/msg.wav</file>

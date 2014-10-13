@@ -19,6 +19,7 @@ public:
 	mutable CStr m_strRessource;				// Resource of the JID.  This field is either empty or begins with "/".  This value is not serialized as it is specific to an XMPP session.  This value may be updated each time the method PFindChatContactByJID() is called.
 	CStr m_strComment;							// Comment regarding the contact.  This comment is also used to store the original invitation for the handshake
 	CBin m_binXmlRecommendations;				// Store the raw XML of the recommendations from the contact
+	CStr m_strNymID;							// OT nym
 	CStr m_strKeyPublic;						// Public key of the contact (this key is used to encrypt messages)
 	/*
 	enum
@@ -31,8 +32,10 @@ public:
 	UINT m_uFlagsContactSerialized;
 	int m_cVersionXCP;								// Which version of the Cambrian Protocol is supported by the contact.  This field is a temporary 'hack' to determine if an XMPP stanza should be sent through XCP or regular XMPP.
 	*/
-	TIMESTAMP m_tsOtherLastSynchronized;			// Timestamp of last synchronization
-	TIMESTAMP m_tsTaskIdDownloadedLast;				// Timestamp of the last task downloaded.  This Task ID is essential to avoid repeating/executing the same task when there is a retry to resend the task data.
+	TIMESTAMP m_tsOtherLastSynchronized;			// [Sync] Timestamp of last synchronization
+	TIMESTAMP m_tsTaskIdDownloadedLast;				// [Sync] Timestamp of the last task downloaded.  This Task ID is essential to avoid repeating/executing the same task when there is a retry to resend the task data.
+	TIMESTAMP m_tsGuiLastSeenOnline;				// Date & time when the contact was last seen online
+	TIMESTAMP_MINUTES m_tsmLastStanzaReceived;		// Timestamp where the last network packet was received by the contact. This is useful to determine if the contact became idle.
 	CListTasksSendReceive m_listaTasksSendReceive;	// Pending tasks to be completed (sent or received) when the contact becomes online
 
 protected:
@@ -66,11 +69,7 @@ protected:
 		FC_kfXospSynchronizeOnNextXmppStanza				= 0x00100000,	// Trigger a synchronization on the next XMPP stanza
 		};
 	UINT m_uFlagsContact;		// Various flags for the contact (some of those bits are serialized)
-
 	IContactAlias * m_plistAliases;
-	TIMESTAMP m_tsLastSeenOnline;					// Date & time when the contact was last seen online
-	TIMESTAMP_MINUTES m_tsmLastStanzaReceived;		// Timestamp where the last network packet was received by the contact. This is useful to determine if the contact became idle.
-
 	POJapiContact m_paoJapiContact;					//
 
 public:
@@ -132,7 +131,7 @@ public:
 	void Contact_RecommendationsDisplayWithinNavigationTree(BOOL fSetFocus = FALSE);
 
 	void Contact_AddToGroup(int iGroup);
-	EMenuAction Contact_EGetMenuActionPresence() const;
+	EMenuIcon Contact_EGetMenuIconPresence() const;
 
 	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);							// From IXmlExchange
@@ -184,7 +183,7 @@ public:
 	virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;				// From IRuntimeObject
 	virtual void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);				// From IXmlExchange
 	virtual PSZUC TreeItem_PszGetNameDisplay() CONST_MCC;						// From ITreeItem
-	virtual void ContactAlias_IconChanged(EMenuAction eMenuIconDisplay, EMenuAction eMenuIconPresence);
+	virtual void ContactAlias_IconChanged(EMenuIcon eMenuIconDisplay, EMenuIcon eMenuIconPresence);
 };
 
 class CArrayPtrContactAliases : public CArrayPtrTreeItems

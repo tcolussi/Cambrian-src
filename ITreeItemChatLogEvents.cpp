@@ -76,7 +76,8 @@ ITreeItemChatLogEvents::ITreeItemChatLogEvents(TAccountXmpp * pAccount)
 	Assert(pAccount->EGetRuntimeClass() == RTI(TAccountXmpp));
 	m_pAccount = pAccount;
 	m_paVaultEvents = NULL;
-	m_tsCreated = d_ts_zNULL;
+	m_tsGuiCreated = d_ts_zNA;
+	m_tsGuiLastActivity = d_ts_zNA;
 	m_tsEventIdLastSentCached = d_ts_zNA;
 	m_tsOtherLastReceived = d_ts_zNA;
 	m_cMessagesUnread = 0;
@@ -137,16 +138,17 @@ ITreeItemChatLogEvents::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	if (pXmlExchanger->m_fSerializing && m_paVaultEvents != NULL)
 		{
 		m_paVaultEvents->WriteEventsToDiskIfModified();		// This line is important to be first because saving the events may modify some variables which may be serialized by ITreeItemChatLogEvents::XmlExchange()
-		if (m_tsCreated == d_zNA)
+		if (m_tsGuiCreated == d_zNA)
 			{
 			IEvent * pEventFirst = (IEvent *)m_paVaultEvents->m_arraypaEvents.PvGetElementFirst_YZ();	// This code is a bit of legacy and should be moved when the Tree Item (contact) is created)
 			if (pEventFirst != NULL)
-				m_tsCreated = pEventFirst->m_tsEventID;
+				m_tsGuiCreated = pEventFirst->m_tsEventID;
 			else
-				m_tsCreated = Timestamp_GetCurrentDateTime();
+				m_tsGuiCreated = Timestamp_GetCurrentDateTime();
 			}
 		}
-	pXmlExchanger->XmlExchangeTimestamp("tsCreated", INOUT_F_UNCH_S &m_tsCreated);
+	pXmlExchanger->XmlExchangeTimestamp("tsCreated", INOUT_F_UNCH_S &m_tsGuiCreated);
+	pXmlExchanger->XmlExchangeTimestamp("tsLastActivity", INOUT &m_tsGuiLastActivity);
 	pXmlExchanger->XmlExchangeTimestamp("tsOtherLastReceived", INOUT_F_UNCH_S &m_tsOtherLastReceived);
 	pXmlExchanger->XmlExchangeStr("D", INOUT_F_UNCH_S &m_strPathFolderDownload);
 	pXmlExchanger->XmlExchangeInt("U", INOUT_F_UNCH_S &m_cMessagesUnread);
@@ -601,16 +603,36 @@ ITreeItemChatLogEvents::Xmpp_QueryVersion()
 	Vault_AddEventToChatLogAndSendToContacts(PA_CHILD new CEventVersion);
 	}
 
+void
+ITreeItemChatLogEvents::UpdateTimestampLastActivity()
+	{
+	m_tsGuiLastActivity = Timestamp_GetCurrentDateTime();
+
+	//Dashboard_UpdateContact(this);	// TODO: Need to optimize this
+	}
+
+NCompareResult
+ITreeItemChatLogEvents::S_NCompareSortByTimestampLastActivity_RecentFirst(ITreeItemChatLogEvents * pChatLogA, ITreeItemChatLogEvents * pChatLogB, LPARAM)
+	{
+	return NCompareSortTimestamps(pChatLogB->m_tsGuiLastActivity, pChatLogA->m_tsGuiLastActivity);
+	}
+
 
 //	The sorting is reversed, where the most recent appear first
 NCompareResult
-ITreeItemChatLogEvents::S_NCompareSortByTimestampEventLastReceived(ITreeItemChatLogEvents * pChatLogA, ITreeItemChatLogEvents * pChatLogB, LPARAM)
+ITreeItemChatLogEvents::S_NCompareSortByTimestampEventLastReceived_RecentFirst(ITreeItemChatLogEvents * pChatLogA, ITreeItemChatLogEvents * pChatLogB, LPARAM)
 	{
 	return NCompareSortTimestamps(pChatLogB->m_tsOtherLastReceived, pChatLogA->m_tsOtherLastReceived);
 	}
 
 void
+CArrayPtrTreeItemChatLogEvents::SortByLastActivity()
+	{
+	Sort((PFn_NCompareSortElements)ITreeItemChatLogEvents::S_NCompareSortByTimestampLastActivity_RecentFirst);
+	}
+
+void
 CArrayPtrTreeItemChatLogEvents::SortByEventLastReceived()
 	{
-	Sort((PFn_NCompareSortElements)ITreeItemChatLogEvents::S_NCompareSortByTimestampEventLastReceived);
+	Sort((PFn_NCompareSortElements)ITreeItemChatLogEvents::S_NCompareSortByTimestampEventLastReceived_RecentFirst);
 	}

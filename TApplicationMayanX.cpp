@@ -3,7 +3,7 @@
 #endif
 #include "TApplicationMayanX.h"
 
-TApplicationMayanX::TApplicationMayanX(TProfile * pProfileParent) : IApplication(pProfileParent, eMenuIconCoffeeExchange)
+TApplicationMayanX::TApplicationMayanX(TProfile * pProfileParent) : IApplication(pProfileParent, eMenuIcon_Bitcoin) // eMenuIconCoffeeExchange)
 	{
 	m_pawLayout = NULL;
 	}
@@ -56,7 +56,8 @@ TProfile::PAllocateApplicationMayanX()
 	{
 	TApplicationMayanX * pApplication = (TApplicationMayanX *)PaAllocateApplicationMayanX(this);
 	m_arraypaApplications.Add(PA_CHILD pApplication);
-	pApplication->TreeItemW_DisplayWithinNavigationTreeExpand(this, "MayanX", eMenuIconCoffeeExchange);
+	//pApplication->TreeItemW_DisplayWithinNavigationTreeExpand(this, "MayanX", eMenuIconCoffeeExchange);
+	pApplication->TreeItemW_DisplayWithinNavigationTreeExpand(this, "MayanX", eMenuIcon_ClassOrganization);
 	return pApplication;
 	}
 

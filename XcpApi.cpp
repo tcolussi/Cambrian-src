@@ -46,7 +46,7 @@ TContact::PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttrib
 	if (pXmlAttributeGroupIdentifier == NULL)
 		return this;
 	return (pXmlAttributeGroupIdentifier->m_pszuTagName[0] == d_chXa_GroupChannel_strName) ?
-		m_pAccount->GroupChannel_PFindByName_YZ(IN pXmlAttributeGroupIdentifier->m_pszuTagValue) :
+		m_pAccount->GroupChannel_PFindByNameOrAddAsAvailable_YZ(IN pXmlAttributeGroupIdentifier->m_pszuTagValue) :
 		m_pAccount->Group_PFindByIdentifier_YZ(IN pXmlAttributeGroupIdentifier->m_pszuTagValue);
 	}
 
@@ -570,6 +570,8 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		pVault = pGroup->Vault_PGet_NZ();
 		} // if (group)
 
+	//MessageLog_AppendTextFormatCo(d_coRed, "Sync Begin: tsOtherLastSynchronized $t, tsOtherLastReceived $t\n", *ptsOtherLastSynchronized, pContactOrGroup_NZ->m_tsOtherLastReceived);
+
 	PSZUC pszContactIdentifier;
 	TContact * pContactOther;
 	TIMESTAMP tsOther;
@@ -609,10 +611,16 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			tsOther = pXmlNodeSync->TsGetAttributeValueTimestamp_ML(d_chXSa_tsOther);
 			if (tsOther > pContactOrGroup_NZ->m_tsOtherLastReceived)
 				{
-				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Missing events since $t until $t ($T)\n", pContactOrGroup_NZ->m_tsOtherLastReceived, tsOther, tsOther - pContactOrGroup_NZ->m_tsOtherLastReceived);
+				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Missing events from tsOther $t until $t ({tL}) ($T)\n", pContactOrGroup_NZ->m_tsOtherLastReceived, tsOther, tsOther, tsOther - pContactOrGroup_NZ->m_tsOtherLastReceived);
 				if ((m_pContact->m_uFlagsContact & TContact::FC_kfXospSynchronizeWhenPresenceOnline) == 0)
 					m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeWhenPresenceOnline | TContact::FC_kfXospSynchronizeOnNextXmppStanza;
 				//m_pContact->m_uFlagsContact |= TContact::FC_kfXospSynchronizeOnNextXmppStanza;	// It would be better to 'inject' the XML here.  Also, there is a need to handle the group/channels
+				if (pContactOrGroup_NZ->m_tsOtherLastReceived < *ptsOtherLastSynchronized)
+					{
+					// The last received event should be larger or equal to the last synchronized event
+					MessageLog_AppendTextFormatSev(eSeverityWarning, "Adjusting m_tsOtherLastReceived from $t to $t\n", pContactOrGroup_NZ->m_tsOtherLastReceived, *ptsOtherLastSynchronized);
+					pContactOrGroup_NZ->m_tsOtherLastReceived = *ptsOtherLastSynchronized;
+					}
 				}
 			BinAppendTextOffsetsInit_VE(OUT &oOffsets, "<" d_szXSop_EventIDsMine_);
 			ppEvent = ppEventFirst;
@@ -661,7 +669,8 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				m_pContact->ContactFlag_SynchronizeWhenPresenceOnline_Clear();
 				}
 			else
-				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Expecting Event ID $t as confirmation from '$s' instead of $t\n", pContactOrGroup_NZ->m_tsEventIdLastSentCached, pContactOrGroup_NZ->TreeItem_PszGetNameDisplay(), tsEventID);
+				MessageLog_AppendTextFormatSev(eSeverityWarning, "\t Expecting Event ID $t ({tL}) as confirmation from '$s' instead of $t ({tL})\n",
+					pContactOrGroup_NZ->m_tsEventIdLastSentCached, pContactOrGroup_NZ->m_tsEventIdLastSentCached, pContactOrGroup_NZ->TreeItem_PszGetNameDisplay(), tsEventID, tsEventID);
 			}
 			break;
 
@@ -884,6 +893,8 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		pXmlNodeSync = pXmlNodeSync->m_pNextSibling;
 		} // while
 
+	//MessageLog_AppendTextFormatCo(d_coRed, "Sync End: tsOtherLastSynchronized $t, tsOtherLastReceived $t\n", *ptsOtherLastSynchronized, pContactOrGroup_NZ->m_tsOtherLastReceived);
+
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = arraypaEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	if (ppEvent == ppEventStop)
@@ -936,6 +947,8 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 			}
 		MessageLog_AppendTextFormatCo(d_coBlue, "\t tsEventID $t ({tL}), tsOther $t ({tL}): {sm}\n", pEvent->m_tsEventID, pEvent->m_tsEventID, pEvent->m_tsOther, pEvent->m_tsOther, pszExtra);
 		} // while
+	if (pContactOrGroup_NZ->m_tsGuiLastActivity < pContactOrGroup_NZ->m_tsOtherLastReceived)
+		pContactOrGroup_NZ->m_tsGuiLastActivity = pContactOrGroup_NZ->m_tsOtherLastReceived;
 
 	pVault->m_arraypaEvents.AppendEventsSortedByIDs(PA_CHILD IN_MOD_SORT &arraypaEvents);	// Add the events to the vault
 	Assert(pVault->m_arraypaEvents.FEventsSortedByIDs());

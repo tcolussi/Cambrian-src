@@ -1782,9 +1782,13 @@ CEventPing::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_
 	if (dtsResponse > 0)
 		{
 		g_strScratchBufferStatusBar.BinAppendText_VE("  response time: <b>$L</b> ms", dtsResponse);
-		const TIMESTAMP_DELTA dtsClockDifference = m_tsContact - (m_tsEventID + m_tsOther) / 2;
-		if (dtsClockDifference > -1000 * d_ts_cDays && dtsClockDifference < 1000 * d_ts_cDays)
-			g_strScratchBufferStatusBar.BinAppendText_VE(" (clock difference: $T)", dtsClockDifference);	// Display the clock difference only if it is less than 1000 days (about 3 years).  Typically the clock difference should be a few seconds for systems connected to the UTC server, otherwise it may be a few at most a few minutes
+		if (dtsResponse <= d_ts_cMinutes)
+			{
+			// If the response is within a minute then display the clock difference. The longer the response time the less relevant is the clock difference because the clock difference is estimated from the the delay of the response.
+			const TIMESTAMP_DELTA dtsClockDifference = m_tsContact - (m_tsEventID + m_tsOther) / 2;
+			if (dtsClockDifference > -1000 * d_ts_cDays && dtsClockDifference < 1000 * d_ts_cDays)
+				g_strScratchBufferStatusBar.BinAppendText_VE(" (clock difference: $T)", dtsClockDifference);	// Display the clock difference only if it is less than 1000 days (about 3 years).  Typically the clock difference should be a few seconds for systems connected to the UTC server, otherwise it may be a few at most a few minutes
+			}
 		}
 	if (!m_strError.FIsEmptyString())
 		g_strScratchBufferStatusBar.BinAppendText_VE("  <b>(error: ^S)</b>", &m_strError);

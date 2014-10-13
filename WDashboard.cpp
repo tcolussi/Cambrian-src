@@ -4,6 +4,30 @@
 #include "WDashboard.h"
 #include "MenuIcons.h"
 
+//	Corporations and Coallitions
+
+//#define COLORS_THEME_PURPLE
+#ifdef COLORS_THEME_PURPLE
+	#define d_szStyleSheetCaption			"background-color:#3e313c; color:white; border-bottom:2px solid #372c36;"
+	#define d_szStyleSheetSection			"background-color:#4d394b;"
+	//#define d_coBackgroundSection			0x4d394b
+	#define d_coTextHeader					d_coWhite
+	#define d_coBackgroundItemSelected		0x4C9689
+	#define d_coBackgroundItemMouseHover	0x3E313C
+	#define d_coTextItemEmpty				0xab9ba9	// Color to draw the text of an empty item
+	#define d_coTextItemNotEmpty			d_coWhite
+
+#else
+	#define d_szStyleSheetCaption			"background-color:#444A47; color:white;" // border-bottom:2px solid #372c36;"
+	#define d_szStyleSheetSection			"background-color:#4D5250;"				// background-color:#A0A0FF;" == Light blue
+	//#define d_coBackgroundSection			0x4D5250
+	#define d_coTextHeader					d_coBlack
+	#define d_coBackgroundItemSelected		0xD39B46
+	#define d_coBackgroundItemMouseHover	d_coGrayLight
+	#define d_coTextItemEmpty				0xB2B4B3
+	#define d_coTextItemNotEmpty			d_coWhite
+#endif
+
 #define d_cxMarginHeaderLeft	16
 #define d_cxMarginSectionLeft	16	// Number of pixels for the left margin
 #define d_cxWidthNumber			20
@@ -14,7 +38,7 @@
 #define d_cyHeightFooter		26
 
 #define d_cyFontHeightItem		16	// 16 pixels
-#define d_cyFontHeightFooter	13	// 13 pixels
+#define d_cyFontHeightFooter	14	// 13 pixels
 
 QFont g_oFontNormal;
 QFont g_oFontBold;
@@ -55,22 +79,6 @@ CPainterCell::DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle
 	setRenderHint(Antialiasing, false);	// Remove the antialiasing to draw a sharp horizontal line
 	DrawLineHorizontal(m_rcCell.left(), rcBounds.right() + 1, rcBounds.bottom() + 1);
 	setPen(oPenOld);
-
-	/*
-	QFontMetrics oFontMetrics = fontMetrics();
-	int cxWidth = oFontMetrics.width(sText);
-	QPen oPenOld = pen();
-	QPen oPen = oPenOld;
-	oPen.setStyle(Qt::DotLine);
-	setPen(oPen);
-	DrawLineHorizontal(m_rcCell.left() + 2, cxWidth + 8, m_rcCell.top() + oFontMetrics.height() + 2);
-	setPen(oPenOld);
-	*/
-	/*
-	QFont oFontFooter = g_oFontNormal;
-	oFontFooter.setUnderline(true);
-	oPainter.setFont(oFontFooter);
-	*/
 	}
 
 void
@@ -83,9 +91,9 @@ CPainterCell::DrawIconLeft(const QIcon & oIcon)
 	}
 
 void
-CPainterCell::DrawIconLeft(EMenuAction eMenuIcon)
+CPainterCell::DrawIconLeft(EMenuIcon eMenuIcon)
 	{
-	DrawIconLeft(PGetMenuAction(eMenuIcon)->icon());
+	DrawIconLeft(OGetIcon(eMenuIcon));
 	}
 
 void
@@ -220,10 +228,10 @@ void
 WDashboardSectionChannels::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvGroupChannel)
 	{
 	TGroup * pGroup = (TGroup *)pvGroupChannel;
-	//pPainter->DrawIconLeft(eMenuAction_GroupChannel);
+	pPainter->DrawIconLeft(eMenuIcon_ClassChannel);
 	pPainter->DrawNumberWithinCircle(pGroup->m_cMessagesUnread);
 	pPainter->setFont((pGroup->m_cMessagesUnread > 0) ? g_oFontBoldThick : g_oFontNormal);
-	pPainter->DrawTextWithinCell("# " + pGroup->TreeItem_SGetNameDisplay().toLower());
+	pPainter->DrawTextWithinCell(pGroup->TreeItem_SGetNameDisplay().toLower());
 	}
 
 void
@@ -241,6 +249,7 @@ void
 WDashboardSectionGroups::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvGroup)
 	{
 	TGroup * pGroup = (TGroup *)pvGroup;
+	pPainter->DrawIconLeft(eMenuIcon_ClassGroup);
 	pPainter->DrawNumberWithinCircle(pGroup->m_cMessagesUnread);
 	pPainter->DrawTextWithinCell(pGroup->TreeItem_SGetNameDisplay());
 	}
@@ -250,22 +259,46 @@ WDashboardSectionContacts::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/
 	{
 	TContact * pContact = (TContact *)pvContact;
 	//EMenuAction eMenuIconPresence = pContact->Contact_EGetMenuActionPresence();
-	pPainter->DrawIconLeft(pContact->Contact_FuIsOnline() ? eMenuAction_PresenceAccountOnline : eMenuAction_PresenceAccountOffline);
+	pPainter->DrawIconLeft(pContact->Contact_FuIsOnline() ? eMenuIcon_ClassContactOnline : eMenuIcon_ClassContactOffline);
 	pPainter->DrawNumberWithinCircle(pContact->m_cMessagesUnread);
+	QFont oFont = (pContact->m_cMessagesUnread > 0) ? g_oFontBoldThick : g_oFontNormal;
+	if (!pContact->Contact_FuIsOnline())
+		oFont.setItalic(true);
+	pPainter->setFont(oFont);
 	pPainter->DrawTextWithinCell_VE("$s", pContact->TreeItem_PszGetNameDisplay());
 	}
 
 void
 WDashboardSectionContacts::DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest)
 	{
-	g_strScratchBufferStatusBar.Format("+ $I more peers...", 123);
+	g_strScratchBufferStatusBar.Format("+ $I more...", 123);
 	pPainter->DrawTextUnderlinedStyle(g_strScratchBufferStatusBar, (uFlagsHitTest & FHT_kfFooter) ? Qt::SolidLine : Qt::DotLine);
 	}
 
+const EMenuActionByte c_rgzeActionsMenuContact[] =
+	{
+	eMenuAction_ContactRemove,
+	ezMenuActionNone
+	};
+
 const EMenuActionByte c_rgzeActionsMenuChannel[] =
 	{
-	eMenuAction_GroupChannelInvite,
+	eMenuAction_GroupChannelInviteOthers,
 	eMenuAction_GroupChannelLeave,
+	eMenuAction_GroupLaunchBallot,
+	eMenuAction_GroupSetPurpose,
+	eMenuAction_GroupUpgradeService,
+	ezMenuActionNone
+	};
+
+const EMenuActionByte c_rgzeActionsMenuGroup[] =
+	{
+	eMenuAction_GroupAddContacts,
+	eMenuAction_GroupDelete,
+	eMenuAction_GroupLaunchBallot,
+	eMenuAction_GroupSetPurpose,
+	eMenuAction_GroupUpgradeService,
+	eMenuAction_GroupUpgradeToCorporation,
 	ezMenuActionNone
 	};
 
@@ -276,7 +309,7 @@ WDashboardSectionChannels::OnItemClicked(SHitTestInfo oHitTestInfo)
 	if (oHitTestInfo.uFlagsHitTest & (FHT_kfHeader | FHT_kfFooter))
 		{
 		void DisplayDialogChannelsBrowse(TProfile * pProfile);
-		DisplayDialogChannelsBrowse(m_pParent->PGetProfile());
+		DisplayDialogChannelsBrowse(m_pParent->PGetProfile_YZ());
 		return;
 		}
 	if ((oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) && (oHitTestInfo.pItem != NULL))
@@ -290,11 +323,19 @@ WDashboardSectionChannels::OnItemClicked(SHitTestInfo oHitTestInfo)
 	WDashboardSection::OnItemClicked(oHitTestInfo);
 	}
 
-const EMenuActionByte c_rgzeActionsMenuContact[] =
+void
+WDashboardSectionGroups::OnItemClicked(SHitTestInfo oHitTestInfo)
 	{
-	eMenuAction_ContactRemove,
-	ezMenuActionNone
-	};
+	if ((oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) && (oHitTestInfo.pItem != NULL))
+		{
+		TGroup * pChannel = oHitTestInfo.pItem->m_data.pGroup;
+		Assert(pChannel != NULL);
+		Assert(pChannel->EGetRuntimeClass() == RTI(TGroup));
+		pChannel->TreeItem_EDisplayContextMenu(c_rgzeActionsMenuGroup);
+		return;
+		}
+	WDashboardSection::OnItemClicked(oHitTestInfo);
+	}
 
 void
 WDashboardSectionContacts::OnItemClicked(SHitTestInfo oHitTestInfo)
@@ -317,29 +358,14 @@ singleton WDashboardCaption : public QWidget
 {
 public:
 	WDashboardCaption();
-	virtual QSize sizeHint() const { return QSize(150, 58); }
+	virtual QSize sizeHint() const { return QSize(0, 58); }
+	virtual QSize minimumSizeHint() const { return QSize(20, 0); }
 	virtual void paintEvent(QPaintEvent *);
 };
 
 WDashboardCaption::WDashboardCaption()
 	{
-	/*
-	QToolButton * pwButtonUndock = new QToolButton(this);
-	pwButtonUndock->setToolTip("Float / Unfloat");
-	pwButtonUndock->setStyleSheet("QToolButton { border: none; padding: 3px; }");
-	QPixmap oPixmap = style()->standardPixmap(QStyle::SP_TitleBarNormalButton);
-	pwButtonUndock->setIcon(oPixmap);
-	pwButtonUndock->setCursor(Qt::ArrowCursor);
-	pwButtonUndock->setFocusPolicy(Qt::ClickFocus);
-
-	QHBoxLayout * layout = new QHBoxLayout(this);
-	layout->setMargin(0);
-	layout->addStretch();
-	layout->addWidget(pwButtonUndock);
-	setLayout(layout);
-	setCursor(Qt::OpenHandCursor);		// This cursor shows to the user he/she may drag the widget to undock the Navigation Tree
-	*/
-	setStyleSheet("background-color:#3e313c; color:white; border-bottom:2px solid #372c36;");
+	setStyleSheet(d_szStyleSheetCaption);
 	}
 
 void
@@ -349,51 +375,67 @@ WDashboardCaption::paintEvent(QPaintEvent *)
 	oPainter.setFont(g_oFontBoldThick);
 	QRect rcCaption = rect();
 	rcCaption.setLeft(d_cxMarginHeaderLeft);
-	oPainter.drawText(rcCaption, Qt::AlignVCenter, parentWidget()->windowTitle());
+	//oPainter.drawText(rcCaption, Qt::AlignVCenter, parentWidget()->windowTitle());
+	WDashboard * pwParent = (WDashboard *)parentWidget();
+	TProfile * pProfile = pwParent->PGetProfile_YZ();
+	if (pProfile != NULL)
+		oPainter.drawText(rcCaption, Qt::AlignVCenter, pProfile->m_strNameProfile);
 	}
 
 #include "WNavigationTree.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-WDashboard::WDashboard()
+WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	{
 	Assert(g_pwDashboard == NULL);
 	g_pwDashboard = this;
-	m_pProfile = NULL;
-	m_pItemSelected = NULL;
+	m_pProfile_YZ = NULL;
+	m_pItemSelected_YZ = NULL;
 	setObjectName("Dashboard");
 
 	//g_oFontNormal = font();
 	g_oFontNormal.setFamily("Lato, sans-serif");
 	//g_oFontNormal.setFamily("Times New Roman");
 	g_oFontNormal.setPixelSize(d_cyFontHeightItem);
+	g_oFontNormal.setWeight(QFont::Bold);	// Make everything bold
 	g_oFontBoldThick = g_oFontBold = g_oFontNormal;
 	g_oFontBold.setWeight(QFont::Bold);
 	g_oFontBoldThick.setWeight(99);
 	g_oFontBoldSmaller = g_oFontBold;
 	g_oFontBoldSmaller.setPixelSize(d_cyFontHeightFooter);
 
-	#if 0
-	m_pwLabelCaption = new WLabel;
-	//m_pwLabelCaption->setStyleSheet("background-color:#8080FF");
-	m_pwLabelCaption->setStyleSheet("background-color:#3e313c; color:white; font-size:16px; font-weight:900; border-bottom:2px solid #372c36; padding:16px; padding-left:11px");
-	m_pwLabelCaption->setMargin(0);
-	//m_pwLabelCaption->setFont(g_oFontBold);
-	setTitleBarWidget(m_pwLabelCaption);
-	#else
 	setTitleBarWidget(new WDashboardCaption);
-	#endif
-
 	QWidget * pwWidgetDashboard = new QWidget;	// Main widget for the dashboard
-	#if 0
-	pwWidgetDashboard->setStyleSheet("background-color:#A0A0FF;");	// Light blue
+	m_poLayoutVertial = new OLayoutVerticalAlignTop0(pwWidgetDashboard);
+
+	#define WANT_SCROLL_BAR
+	#ifdef WANT_SCROLL_BAR
+
+	QScrollArea * pwScrollArea = new QScrollArea;
+	pwScrollArea->setFrameShape(QFrame::NoFrame);
+	pwScrollArea->setWidgetResizable(true);
+	pwScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	pwScrollArea->setStyleSheet(
+	/*
+	" QScrollBar {"
+	" border: 2px solid green;"
+	" background: yellow;"
+	" }"
+	*/
+	"* { background-color:#4D5250; }"
+	);
+
+	//vertical box that contains all the checkboxes for the filters
+	pwWidgetDashboard->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+	pwScrollArea->setWidget(pwWidgetDashboard);
+	setWidget(pwScrollArea);
+
 	#else
-	pwWidgetDashboard->setStyleSheet("background-color:#4d394b;");
-	#endif
+	QWidget * pwWidgetDashboard = new QWidget;	// Main widget for the dashboard
+	pwWidgetDashboard->setStyleSheet(d_szStyleSheetSection);
 	setWidget(PA_CHILD pwWidgetDashboard);
-	m_poLayoutVertial = new OLayoutVerticalAlignTop(pwWidgetDashboard);
-	Layout_MarginsClear(INOUT m_poLayoutVertial);
-	m_poLayoutVertial->setSpacing(0);
+	m_poLayoutVertial = new OLayoutVerticalAlignTop0(pwWidgetDashboard);
+	#endif
 
 	InitToGarbage(OUT &m_sections, sizeof(m_sections));
 	m_sections.pwSectionBalots = new WDashboardSectionBallots("BALLOTS");
@@ -409,10 +451,10 @@ WDashboard::WDashboard()
 void
 WDashboard::ProfileSelectedChanged(TProfile * pProfile)
 	{
-	m_pProfile = pProfile;
-	setWindowTitle((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
+	m_pProfile_YZ = pProfile;
+	//setWindowTitle((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
 	//m_pwLabelCaption->Label_SetTextPlain((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
-	m_pItemSelected = NULL;
+	m_pItemSelected_YZ = NULL;
 	// Notify each section the selected profile changed
 	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
 		{
@@ -429,20 +471,16 @@ WDashboard::ProfileSelectedChanged(TProfile * pProfile)
 BOOL
 WDashboard::FSelectItem(CDashboardSectionItem * pItem)
 	{
-	if (pItem == m_pItemSelected)
+	if (pItem == m_pItemSelected_YZ)
 		return FALSE;
-	if (m_pItemSelected != NULL)
+	if (m_pItemSelected_YZ != NULL)
 		{
-		if (m_pItemSelected->m_uFlagsItem & CDashboardSectionItem::FI_kfSelected)
-			{
-			m_pItemSelected->m_uFlagsItem &= ~CDashboardSectionItem::FI_kfSelected;
-			}
+		if (m_pItemSelected_YZ->m_uFlagsItem & CDashboardSectionItem::FI_kfSelected)
+			m_pItemSelected_YZ->m_uFlagsItem &= ~CDashboardSectionItem::FI_kfSelected;
 		}
 	if (pItem != NULL)
-		{
 		pItem->m_uFlagsItem |= CDashboardSectionItem::FI_kfSelected;
-		}
-	m_pItemSelected = pItem;
+	m_pItemSelected_YZ = pItem;
 	update();	// Redraw the whole dashboard. This is not efficient, however it works.  Ideally there should be a mechanism to redraw individual items
 	return TRUE;
 	}
@@ -451,8 +489,8 @@ void
 WDashboard::NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ)
 	{
 	Assert(pContactOrGroup_NZ != NULL);
-	if (pContactOrGroup_NZ->PGetProfile() == m_pProfile)
-		ProfileSelectedChanged(m_pProfile);	// At the moment, refresh the entire thing.  This is not efficient, but it works
+	if (pContactOrGroup_NZ->PGetProfile() == m_pProfile_YZ)
+		ProfileSelectedChanged(m_pProfile_YZ);	// At the moment, refresh the entire dashboard.  This is not efficient, but it works
 	}
 
 void
@@ -466,7 +504,7 @@ void
 WDashboard::RefreshContact(TContact * pContact)
 	{
 	Assert(pContact != NULL);
-	if (pContact->PGetProfile() == m_pProfile)
+	if (pContact->PGetProfile() == m_pProfile_YZ)
 		m_sections.pwSectionContacts->update();
 	}
 
@@ -474,7 +512,7 @@ void
 WDashboard::RefreshGroup(TGroup * pGroup)
 	{
 	Assert(pGroup != NULL);
-	if (pGroup->PGetProfile() == m_pProfile)
+	if (pGroup->PGetProfile() == m_pProfile_YZ)
 		{
 		if (pGroup->Group_FuIsChannel())
 			m_sections.pwSectionChannels->update();
@@ -494,10 +532,55 @@ WDashboard::RefreshGroups()
 	m_sections.pwSectionGroups->Refresh();
 	}
 void
+WDashboard::RefreshGroupsOrChannel(TGroup * pGroupOrChannel)
+	{
+	if (pGroupOrChannel->Group_FuIsChannel())
+		RefreshChannels();
+	else
+		RefreshGroups();
+	}
+
+void
 WDashboard::RefreshContacts()
 	{
 	m_sections.pwSectionContacts->Refresh();
 	}
+
+void
+WDashboard::RedrawContact(TContact * pContact)
+	{
+	Assert(pContact != NULL);
+	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
+	// At the moment, redraw the entire widget
+	m_sections.pwSectionContacts->WidgetRedraw();
+	}
+
+void
+WDashboard::RedrawGroup(TGroup * pGroup)
+	{
+	Assert(pGroup != NULL);
+	Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+	WDashboardSection * pwSection = pGroup->Group_FuIsChannel() ? (WDashboardSection *)m_sections.pwSectionChannels : (WDashboardSection *)m_sections.pwSectionGroups;
+	pwSection->WidgetRedraw();
+	}
+
+void
+WDashboard::BumpContact(TContact * pContact)
+	{
+	Assert(pContact != NULL);
+	RefreshContacts();	// Need to be optimized
+	}
+
+void
+WDashboard::BumpTreeItem(ITreeItem * pTreeItem)
+	{
+	Assert(pTreeItem != NULL);
+	if (pTreeItem->EGetRuntimeClass() == RTI(TGroup))
+		{
+		RefreshGroupsOrChannel((TGroup *)pTreeItem);
+		}
+	}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -529,7 +612,7 @@ void
 WDashboardSection::Refresh()
 	{
 	SetParent(m_pParent);
-	Init(m_pParent->PGetProfile());
+	Init(m_pParent->PGetProfile_YZ());
 	updateGeometry();
 	update();
 	}
@@ -577,9 +660,16 @@ WDashboardSection::OnMenuClicked(SHitTestInfo oHitTestInfo)
 QSize
 WDashboardSection::sizeHint() const
 	{
-	return QSize(150, d_yPosFirstItem + d_cyHeightFooter + 14 + m_arraypaItems.GetSize() * d_cyHeightSectionItem);
+	return QSize(0, d_yPosFirstItem + d_cyHeightFooter + 14 + m_arraypaItems.GetSize() * d_cyHeightSectionItem);
 	}
-
+/*
+QSize
+WDashboardSection::minimumSizeHint()
+	{
+	MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "WDashboardSection::minimumSizeHint()\n");
+	return QSize(500, 500);
+	}
+*/
 //	WDashboardSection::QWidget::heightForWidth()
 int
 WDashboardSection::heightForWidth(int cxWidth) const
@@ -589,17 +679,14 @@ WDashboardSection::heightForWidth(int cxWidth) const
 	return QWidget::heightForWidth(cxWidth);
 	}
 
-#define d_coBackgroundItemSelected		0x4C9689
-#define d_coBackgroundItemMouseHover	0x3E313C
-#define d_coTextItemEmpty				0xab9ba9	// Color to draw the text of an empty item
-#define d_coTextItemNotEmpty			d_coWhite
-#define d_coTextHeader					d_coWhite;
-
 //	WDashboardSection::QWidget::paintEvent()
 void
 WDashboardSection::paintEvent(QPaintEvent *)
 	{
 	CPainterCell oPainter(this);
+	QRect rcSection = rect();
+	//oPainter.fillRect(rcSection, d_coBackgroundSection);
+
 	#if 1
 	oPainter.setRenderHint(QPainter::Antialiasing, true);
 	oPainter.setRenderHint(QPainter::TextAntialiasing, true);
@@ -618,11 +705,11 @@ WDashboardSection::paintEvent(QPaintEvent *)
 //	oPainter.setOpacity(0.7);
 
 	// Draw the caption
+	g_oFontBoldSmaller.setWeight(99);
 	oPainter.setFont(g_oFontBoldSmaller);
 	oPainter.setPen((m_oHitTestInfo.uFlagsHitTest & FHT_kfHeader) ? g_oPenTextNotEmpty : g_oPenTextEmpty);
 	oPainter.drawText(d_cxMarginSectionLeft, d_cyMarginTopHeader + d_cyHeightSectionItem, m_sName);
 
-	QRect rcSection = rect();
 	qreal xRight = rcSection.width();
 	qreal yTop = d_yPosFirstItem;
 
@@ -646,18 +733,6 @@ WDashboardSection::paintEvent(QPaintEvent *)
 			{
 			QRect rcMenuOverflow = oPainter.m_rcCell;
 			int xLeft = rcMenuOverflow.right() - d_cxWidthMenuOverflow;
-			/*
-			if (m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow)
-				{
-				rcMenuOverflow.setLeft(xLeft);
-				oPainter.fillRect(rcMenuOverflow, (m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) ? d_coPurpleLight : d_coPurple);
-				}
-			*/
-			/*
-			QIcon oIcon = OGetIcon(eMenuIcon_Overflow);
-			//QIcon oIcon = PGetMenuAction(eMenuIconOverflow)->icon();
-			oIcon.paint(&oPainter, xLeft, yTop - 1, 16, 16);
-			*/
 			OGetIcon((m_oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) ? eMenuIcon_OverflowHovered : eMenuIcon_Overflow).paint(&oPainter, xLeft, yTop, 16, 16);
 			}
 		oPainter.setPen((uFlagsItem & CDashboardSectionItem::FI_kfSelected) ? g_oPenTextNotEmpty : g_oPenTextEmpty);
@@ -761,7 +836,7 @@ WDashboardSection::leaveEvent(QEvent *)
 	}
 
 void
-Dashboard_UpdateAccordingToSelectedProfile(TProfile * pProfileSelected)
+Dashboard_RefreshAccordingToSelectedProfile(TProfile * pProfileSelected)
 	{
 	Endorse(pProfileSelected == NULL);
 	Assert(g_pwDashboard != NULL);
@@ -804,6 +879,30 @@ void
 Dashboard_RefreshContacts()
 	{
 	g_pwDashboard->RefreshContacts();
+	}
+
+void
+Dashboard_RedrawContact(TContact * pContact)
+	{
+	g_pwDashboard->RedrawContact(pContact);
+	}
+
+void
+Dashboard_RedrawGroup(TGroup * pGroup)
+	{
+	g_pwDashboard->RedrawGroup(pGroup);
+	}
+
+void
+Dashboard_BumpContact(TContact * pContact)
+	{
+	g_pwDashboard->BumpContact(pContact);
+	}
+
+void
+Dashboard_BumpTreeItem(ITreeItem * pTreeItem)
+	{
+	g_pwDashboard->BumpTreeItem(pTreeItem);
 	}
 
 void

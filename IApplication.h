@@ -55,10 +55,10 @@ class IApplication : public ITreeItem	// (application)
 {
 public:
     TProfile * m_pProfileParent;
-    EMenuAction m_eMenuIcon;			// Icon to display in the Navigation Tree
+	EMenuIcon m_eMenuIcon;			// Icon to display in the Navigation Tree
 //	SHashSha1 m_hashApplicationID;		// Value to identify the application (I think this is no longer needed)
 public:
-    IApplication(TProfile * pProfileParent, EMenuAction eMenuIcon);
+	IApplication(TProfile * pProfileParent, EMenuIcon eMenuIcon);
     virtual PSZAC PszGetClassNameApplication() = 0;		// Return the class name of the application to be serialized to disk
 
     virtual POBJECT PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const;		// From IRuntimeObject

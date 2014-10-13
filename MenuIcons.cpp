@@ -1,21 +1,86 @@
 //	Central repository for all icons, mostly used by menus.
 //
-//	Since the same icon is reused for many menu actions, the icons have their own enum.
+//	Since the same icon is reused often, they have their own enum.
 //
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
 #include "MenuIcons.h"
 
-//	Array mapping an eMenuIcon to its resource name
+//	Array mapping an eMenuIcon to its resource name.  Must be in sync with EMenuIcon
 const PSZAC c_mapepszIconResources[eMenuIconMax] =
 	{
 	NULL,
+
+	"StatusAway",					// eMenuIcon_PresencePresenceAway
+	"StatusAwayExtended",	// eMenuIcon_PresencePresenceAwayExtended
+	"StatusBusy",		// eMenuIcon_PresencePresenceBusy
+	"StatusInvisible",		// eMenuIcon_PresencePresenceInvisible
+	"NYI",						// eMenuIcon_PresenceAccountDisabled
+	"StatusOnline",				// eMenuIcon_PresenceAccountOnline
+	"StatusOffline",			// eMenuIcon_PresenceAccountOffline
+	"StatusConnecting",		// eMenuIcon_PresenceAccountConnecting
+	"StatusDisconnected",	// eMenuIcon_PresenceAccountDisconnected
+	"ServerConnect",		// eMenuIcon_AccountReconnect
+
+	"Chat",				// eMenuIcon_Chat
+	"ChatMessage3",		// eMenuIcon_MessageNew
+	"Pencil",			// eMenuIcon_Pencil_10x10
+	"Pencil_16x16",		// eMenuIcon_Pencil_16x16
+
+	"CCircleGreen",		// eMenuIcon_ClassContactOnline
+	"CCircleGray",		// eMenuIcon_ClassContactOffline
+	"CTriangle",		// eMenuIcon_ClassGroup	 (There is no square, so use a triangle in the meantime)
+	"CHash",			// eMenuIcon_ClassChannel
+	"CTriangle",		// eMenuIcon_ClassOrganization
+	"CHexagon",			// eMenuIcon_ClassJuristiction
+	"Role",				// eMenuIcon_ClassProfile
+
 	"MenuOverflow",		// eMenuIcon_Overflow
-	"MenuOverflowH",	// eMenuIcon_OverflowHovered,
+	"MenuOverflowH",	// eMenuIcon_OverflowHovered
+
+	"Error",			// eMenuIcon_Failure
+	"LogErrors",		// eMenuIcon_ShowLogErrors
+	"LogMessages",		// eMenuIcon_ShowLogMessages
+
+	"Certificate",		// eMenuIcon_Certificate
+	"Server",			// eMenuIcon_ServerSecure
+	"ServerWarning",	// eMenuIcon_ServerWarning
+	"ServerDeny",		// eMenuIcon_ServerDeny
+	"Question",			// eMenuIcon_Question
+	"Warning",			// eMenuIcon_Warning
+	"Accept",			// eMenuIcon_AcceptOrApprove
+	"Deny",				// eMenuIcon_Deny
+
+	"Add",				// eMenuIcon_Add
+	"Remove",			// eMenuIcon_Remove
+	"ContactAdd",		// eMenuIcon_ContactAdd
+	"Contact",			// eMenuIcon_Contact
+	"Group",			// eMenuIcon_Group
+
+	"Deleted",			// eMenuIcon_RecycleBin
+
+	"Copy",				// eMenuIcon_Copy
+	"Find",				// eMenuIcon_Find,
+	"Forward",			// eMenuIcon_MessageEnvelopeForward (old: eMenuAction_ContactInvite)
+	"FileUpload",		// eMenuIcon_FileUpload
+	"Vote",				// eMenuIcon_Vote (old: eMenuAction_BallotSend)
+	"Reputation",		// eMenuIcon_Recommend
+
+	"XMPP",				// eMenuIcon_XMPP
+	"Bitcoin",			// eMenuIcon_Bitcoin
+
+	"Browser",			// eMenuIcon_Browser (old: eMenuAction_DisplaySecureWebBrowsing)
+	"GoBack",			// eMenuIcon_GoBack
+	"GoForward",		// eMenuIcon_GoForward
+
+	"Close",			// eMenuIcon_Close
+	"Quit",				// eMenuIcon_Quit
+	"Menu",				// eMenuIcon_Menu
+
 	};
 
-//	Array of all icons.
+//	Array of all icons
 QIcon g_rgoIcons[eMenuIconMax];
 
 const QIcon &
@@ -34,3 +99,36 @@ OGetIcon(EMenuIcon eMenuIcon)
 		}
 	return *poIcon;
 	}
+
+#if 0
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	Flags for the uFlagsMenuItem
+#define FMI_kmEMenuIcon				0x00FF	// Mask to extract the EMenuIcon for the menu item
+#define FMI_kmEMenuInitFunction		0xFF00	// Mask Function to initialize the menu item
+
+
+typedef void (* PFn_MenuInit)(WMenu * pwMenu, QAction * poAction, PVPARAM pvContext);
+
+enum EMenuInitFunction
+	{
+	eMenuInitFunction_
+
+	};
+
+struct SMenuItem
+	{
+	PSZAC pszmText;	// Text for the menu item (including status text and accelerator)
+	UINT uFlagsMenuItem;	// Various flags for the menu item (including its icon)
+	};
+
+SMenuItem g_rgMenuItems[eMenuItemMax];
+
+void ActionAdd(EMenuItem eMenuItem)
+	{
+	WMenu oMenu;
+	//oMenu.addAction
+	QAction * oMenu.addAction();
+	oMenu.removeAction();
+	}
+#endif
+

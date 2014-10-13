@@ -12,7 +12,7 @@
 #include "WNavigationTree.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogInvitationCore::DDialogInvitationCore(CInvitation * pInvitationInit, PSZAC pszCaption, EMenuAction eMenuIcon) : DDialogOkCancelWithLayouts(pszCaption, eMenuIcon)
+DDialogInvitationCore::DDialogInvitationCore(CInvitation * pInvitationInit, PSZAC pszCaption, EMenuIcon eMenuIcon) : DDialogOkCancelWithLayouts(pszCaption, eMenuIcon)
 	{
 	m_pInvitationInit = pInvitationInit;
 	m_paInvitationEdit = NULL;
@@ -115,12 +115,12 @@ DDialogInvitationCore::AddContactInvitationToNavigationTree_MB(TAccountXmpp * pA
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define SL_DDialogInvitationContactAdd(pfmSlot)		SL_DDialog(pfmSlot, DDialogInvitationContactAdd)
-DDialogInvitationContactAdd::DDialogInvitationContactAdd(CInvitation * pInvitationInit) : DDialogInvitationCore(pInvitationInit, "Add Peer From Invitation", eMenuAction_AccountAcceptInvitation)
+DDialogInvitationContactAdd::DDialogInvitationContactAdd(CInvitation * pInvitationInit) : DDialogInvitationCore(pInvitationInit, "Add Peer From Invitation", eMenuIcon_XMPP)
 	{
 	if (pInvitationInit == NULL)
 		CreateEditInvitation();
 	CreateLabelInvitationFrom();
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogInvitationContactAdd(SL_ButtonOK_clicked), "Add Peer", eMenuAction_ContactAdd);
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogInvitationContactAdd(SL_ButtonOK_clicked), "Add Peer", eMenuIcon_ContactAdd);
 	}
 
 void
@@ -134,7 +134,7 @@ DDialogInvitationContactAdd::SL_ButtonOK_clicked()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define SL_DDialogAccountAdd(pfmSlot)	SL_DDialog(pfmSlot, DDialogAccountAdd)
-DDialogAccountAdd::DDialogAccountAdd(TProfile * pProfile, EMenuAction eMenuAction, CInvitation * pInvitationInit) : DDialogInvitationCore(pInvitationInit, (eMenuAction == eMenuAction_AccountRegister) ? "Register New Account" : (eMenuAction == eMenuAction_AccountLogin) ? "Account Login" : "One-Time Sign Up", eMenuIconXmpp)
+DDialogAccountAdd::DDialogAccountAdd(TProfile * pProfile, EMenuAction eMenuAction, CInvitation * pInvitationInit) : DDialogInvitationCore(pInvitationInit, (eMenuAction == eMenuAction_AccountRegister) ? "Register New Account" : (eMenuAction == eMenuAction_AccountLogin) ? "Account Login" : "One-Time Sign Up", eMenuIcon_XMPP)
 	{
 	Assert(pProfile != NULL);
 	m_pProfile = pProfile;
@@ -161,8 +161,8 @@ DDialogAccountAdd::DDialogAccountAdd(TProfile * pProfile, EMenuAction eMenuActio
 //	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogAccountAdd(SL_ButtonOK_clicked), (eMenuAction != eMenuAction_AccountLogin) ? "Create Account|Register a new account on the server" : "Login|Login to your server", eMenuIconXmpp);
 	DialogBody_AddRowWidgets_PA("Username:|Enter the username you wish to add the account", m_pwEditUsername, "Password:|Enter the password for your account", m_pwEditPassword);
 	m_pwButtonAdvanced = PwAllocateButton("Advanced...|Advanced options to connect to the server, including certificate pinning.", SL_DDialogAccountAdd(SL_ButtonAdvanced_clicked));
-	m_pwButtonAdvanced->Button_SetIcon(eMenuIconServerSecure);
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogAccountAdd(SL_ButtonOK_clicked), (eMenuAction != eMenuAction_AccountLogin) ? "Create Account|Register a new account on the server" : "Login|Login to your server", eMenuIconXmpp);
+	m_pwButtonAdvanced->Button_SetIcon(eMenuIcon_ServerSecure);
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogAccountAdd(SL_ButtonOK_clicked), (eMenuAction != eMenuAction_AccountLogin) ? "Create Account|Register a new account on the server" : "Login|Login to your server", eMenuIcon_XMPP);
 	if (m_pwEditInvitation != NULL)
 		{
 		m_poLayoutButtons->addStretch(1);
@@ -479,7 +479,7 @@ const char c_szToolTipPort[] = "<html>Enter the port to connect to the server.<b
 "</ul></div></html>";
 
 #define SL_DDialogAccountAddAdvanced(pfmSlot)	SL_DDialog(pfmSlot, DDialogAccountAddAdvanced)
-DDialogAccountAddAdvanced::DDialogAccountAddAdvanced(DDialogAccountAdd * pDialogParent) : DDialogOkCancelWithLayouts("Advanced Options", eMenuIconXmpp)
+DDialogAccountAddAdvanced::DDialogAccountAddAdvanced(DDialogAccountAdd * pDialogParent) : DDialogOkCancelWithLayouts("Advanced Options", eMenuIcon_XMPP)
 	{
 	Assert(pDialogParent != NULL);
 	m_pDialogParent = pDialogParent;

@@ -190,7 +190,7 @@ OLayoutForm::Layout_AddFormCertificate(const CSslCertificate & oCertificate)
 	const QByteArray arraybKey = oKey.toDer();
 	QSsl::KeyAlgorithm eAlgorithm = oKey.algorithm();
 	
-	Layout_AddRowLabelFormat_VE_Gsb("$s $i bit Public Key:", (eAlgorithm == QSsl::Rsa) ? "RSA" : (eAlgorithm == QSsl::Dsa) ? "DSA" : "Unknown", oKey.length());
+	Layout_PwAddRowLabelFormat_VE_Gsb("$s $i bit Public Key:", (eAlgorithm == QSsl::Rsa) ? "RSA" : (eAlgorithm == QSsl::Dsa) ? "DSA" : "Unknown", oKey.length());
 	WSplitter * pSplitterPublicKey = Layout_PwAddSplitterHorizontal();
 	WEditTextAreaReadOnly * pwEditPublicKey = pSplitterPublicKey->Splitter_PwAddEditTextAreaReadOnly(NULL, CString(arraybKey.toHex()));
 	OLayoutForm * pLayoutPublicKeys = pSplitterPublicKey->Splitter_PoAddWidgetAndLayoutForm();
@@ -374,9 +374,9 @@ WCertificateAuthenticator::WCertificateAuthenticator(TCertificate * pCertificate
 		"please do some research to ensure the encryption certificate is indeed legitimate.\n"
 		"To accomplish this, you may contact a friend or visit a website listing the fingerprints of valid certificates.");
 	m_pwEditFingerprint->Edit_SetWatermark("Enter any fingerprint (MD5, SHA-1, SHA-256 or SHA-512) from below");
-	QPushButton * pwButtonAuthenticate = new WButtonTextWithIcon("Authenticate |Confirm the certificate is genuine based on its fingerprint", eMenuIconAccept);
+	QPushButton * pwButtonAuthenticate = new WButtonTextWithIcon("Authenticate |Confirm the certificate is genuine based on its fingerprint", eMenuIcon_AcceptOrApprove);
 	OLayoutHorizontal * poLayout = new OLayoutHorizontal(PA_PARENT this);
-	poLayout->Layout_AddWidgetsH_VEZA(new WButtonIconForToolbar(NULL, eMenuIconQuestion), new WLabelSelectable("Certificate Fingerprint:"), m_pwEditFingerprint, pwButtonAuthenticate, NULL);
+	poLayout->Layout_AddWidgetsH_VEZA(new WButtonIconForToolbar((QWidget *)NULL, eMenuIcon_Question), new WLabelSelectable("Certificate Fingerprint:"), m_pwEditFingerprint, pwButtonAuthenticate, NULL);
 	connect(m_pwEditFingerprint, SIGNAL(returnPressed()), this, SLOT(SL_Authenticate()));
 	connect(pwButtonAuthenticate, SIGNAL(clicked()), this, SLOT(SL_Authenticate()));
 //	m_pwEditFingerprint->setFocus();
@@ -552,9 +552,9 @@ WNoticeWarningCertificateNotAuthenticated::WNoticeWarningCertificateNotAuthentic
 	m_pwGroupBox->Widget_SetTitleColorError();
 
 	//WButtonTextWithIcon * pButtonAuthenticate = new WButtonTextWithIcon("Authenticate...|Secure the server communication by authenticating the encryption certificate.", eMenuIconAccept);
-	WButtonTextWithIcon * pButtonCertificateApprove = new WButtonTextWithIcon("Approve Certificate |Accept the certificate as genuine", eMenuIconAccept);
-	WButtonTextWithIcon * pButtonCertificateView = new WButtonTextWithIcon("View Certificate...|Inspect the certificate before approving it", eMenuIconCertificate);
-	m_pButtonConnectNow = new WButtonTextWithIcon("Connect Now!", eMenuAction_AccountReconnect);
+	WButtonTextWithIcon * pButtonCertificateApprove = new WButtonTextWithIcon("Approve Certificate |Accept the certificate as genuine", eMenuIcon_AcceptOrApprove);
+	WButtonTextWithIcon * pButtonCertificateView = new WButtonTextWithIcon("View Certificate...|Inspect the certificate before approving it", eMenuIcon_Certificate);
+	m_pButtonConnectNow = new WButtonTextWithIcon("Connect Now!", eMenuIcon_AccountReconnect);
 	m_poLayoutBody->Layout_PoAddLayoutVerticalWithWidgets_VEZA(pButtonCertificateApprove, pButtonCertificateView, m_pButtonConnectNow, NULL);
 
 	TCertificate * pCertificate = PGetCertificate_YZ();

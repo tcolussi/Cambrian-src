@@ -22,7 +22,7 @@ TGroupMember::TGroupMember(TGroup * pGroup, TContact * pContact) : IContactAlias
 void
 TGroupMember::TreeItemGroupMember_DisplayWithinNavigationTree()
 	{
-	TreeItemW_DisplayWithinNavigationTree(m_pGroup, eMenuAction_Contact);
+	TreeItemW_DisplayWithinNavigationTree(m_pGroup, eMenuIcon_Contact);
 	}
 
 //	Callback to remove the pencil icon.
@@ -131,34 +131,34 @@ TGroupMember::TreeItem_GotFocus()
 void
 TGroupMember::TreeItem_IconUpdate()
 	{
-	EMenuAction eMenuIcon;
+	EMenuIcon eMenuIcon;
 	QRGB coTextColor;
 	if (m_cMessagesUnread <= 0)
 		{
 		coTextColor = d_coTreeItem_Default;
-		eMenuIcon = m_pContact->Contact_EGetMenuActionPresence();
+		eMenuIcon = m_pContact->Contact_EGetMenuIconPresence();
 		}
 	else
 		{
 		coTextColor = d_coTreeItem_UnreadMessages;
-		eMenuIcon = eMenuAction_MessageNew;
+		eMenuIcon = eMenuIcon_MessageNew;
 		}
 	if ((m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_mComposingText)
-		eMenuIcon = eMenuIconPencil_10x10;
+		eMenuIcon = eMenuIcon_Pencil_10x10;
 	TreeItemW_SetTextColorAndIcon(coTextColor, eMenuIcon);
 	}
 
 //	TGroupMember::IContactAlias::ContactAlias_IconChanged()
 void
-TGroupMember::ContactAlias_IconChanged(EMenuAction eMenuIconDisplay, EMenuAction eMenuIconPresence)
+TGroupMember::ContactAlias_IconChanged(EMenuIcon eMenuIconDisplay, EMenuIcon eMenuIconPresence)
 	{
 	QRGB coText = d_coTreeItem_Default;
 	if (m_cMessagesUnread > 0)
 		{
 		coText = d_coTreeItem_UnreadMessages;
-		eMenuIconDisplay = eMenuAction_MessageNew;
+		eMenuIconDisplay = eMenuIcon_MessageNew;
 		}
-	else if (eMenuIconDisplay == eMenuAction_MessageNew)
+	else if (eMenuIconDisplay == eMenuIcon_MessageNew)
 		eMenuIconDisplay = eMenuIconPresence;
 	TreeItemW_SetTextColorAndIcon(coText, eMenuIconDisplay);
 	}
@@ -223,6 +223,15 @@ TGroup::Group_InitNewIdentifier()
 	{
 	HashSha1_InitRandom(OUT &m_hashGroupIdentifier);
 	}
+
+//	Return TRUE if the channel can be displayed in the Navigation Tree.
+//	Return FALSE if the group is NOT a channel, or if it has been deleted.
+BOOL
+TGroup::Group_FuIsChannelUsed() const
+	{
+	return Group_FuIsChannel() && TreeItemFlags_FCanDisplayWithinNavigationTree();
+	}
+
 
 TGroupMember *
 TGroup::Member_PFindOrAddContact_NZ(TContact * pContact)
@@ -400,7 +409,7 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 	switch (eMenuAction)
 		{
 	case eMenuAction_GroupAddContacts:
-	case eMenuAction_GroupChannelInvite:
+	case eMenuAction_GroupChannelInviteOthers:
 		DisplayDialogAddContactsToGroupFu();
 		return ezMenuActionNone;
 	case eMenuAction_GroupDelete:
@@ -415,6 +424,9 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		return ezMenuActionNone;
 	case eMenuAction_GroupProperties:
 		DisplayDialogProperties();
+		return ezMenuActionNone;
+	case eMenuAction_GroupLaunchBallot:
+		LaunchApplication_Ballotmaster();
 		return ezMenuActionNone;
 	case eMenuSpecialAction_ITreeItemRenamed:
 		// If the name of the group begins with the hashtag (#) then the group is upgraded to a channel
@@ -554,21 +566,22 @@ TGroup::TreeItem_IconUpdate()
 	else
 		TreeItemW_SetTextColorAndIcon(d_coTreeItem_UnreadMessages, eMenuAction_MessageNew);
 	*/
-	EMenuAction eMenuIcon;
+	EMenuIcon eMenuIcon;
 	QRGB coTextColor;
 	if (m_cMessagesUnread <= 0)
 		{
 		coTextColor = d_coTreeItem_Default;
-		eMenuIcon = Group_FuIsChannel() ? eMenuAction_GroupChannel : eMenuAction_Group;
+		eMenuIcon = Group_FuIsChannel() ? eMenuIcon_ClassChannel : eMenuIcon_Group;
 		}
 	else
 		{
 		coTextColor = d_coTreeItem_UnreadMessages;
-		eMenuIcon = eMenuAction_MessageNew;
+		eMenuIcon = eMenuIcon_MessageNew;
 		}
 	if ((m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_mComposingText)
-		eMenuIcon = eMenuIconPencil_16x16;
+		eMenuIcon = eMenuIcon_Pencil_16x16;
 	TreeItemW_SetTextColorAndIcon(coTextColor, eMenuIcon);
+	Dashboard_RedrawGroup(this);
 	}
 
 //	TGroup::ITreeItemChatLogEvents::Vault_GetHashFileName()
@@ -591,7 +604,7 @@ TAccountXmpp::Group_PAllocate()
 	int iGroup = m_arraypaGroups.Add(PA_CHILD pGroup);
 	pGroup->m_strNameDisplayTyped.Format("Group #$i", iGroup + 1);
 	pGroup->Group_InitNewIdentifier();
-	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
+	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuIcon_Group);
 	return pGroup;
 	}
 
@@ -633,10 +646,6 @@ TAccountXmpp::GroupChannel_PFindByName_YZ(PSZUC pszChannelName) const
 	{
 	Assert(pszChannelName != NULL);
 	Report(pszChannelName[0] != '\0');	// Creating a channel without a name is not recommended!
-	if (pszChannelName[0] == d_chGroupChannelPrefix)
-		pszChannelName++;	// Skip the prefix
-
-	(void)m_pProfileParent->m_arraypaChannelNames.FNewChannelAdded(pszChannelName);	// At the moment, always add the channel name.  This is not efficient, but guarantees coherency.
 
 	TGroup ** ppGroupStop;
 	TGroup ** ppGroup = m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
@@ -646,10 +655,19 @@ TAccountXmpp::GroupChannel_PFindByName_YZ(PSZUC pszChannelName) const
 		Assert(pGroup != NULL);
 		Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
 		Assert(pGroup->m_pAccount == this);
-		if (pGroup->m_strNameChannel_YZ.FCompareStringsChannelNames(pszChannelName))
+		if (pGroup->Group_FuIsChannel() && pGroup->m_strNameChannel_YZ.FCompareStringsChannelNames(pszChannelName))
 			return pGroup;
 		}
 	return NULL;
+	}
+
+TGroup *
+TAccountXmpp::GroupChannel_PFindByNameOrAddAsAvailable_YZ(PSZUC pszChannelName) const
+	{
+	if (pszChannelName[0] == d_chGroupChannelPrefix)
+		pszChannelName++;	// Skip the prefix
+	(void)m_pProfileParent->m_arraypaChannelNamesAvailables.FNewChannelAdded(pszChannelName);	// At the moment, always add the channel name.  This is not efficient, but guarantees coherency.
+	return GroupChannel_PFindByName_YZ(pszChannelName);
 	}
 
 TGroup *
@@ -661,7 +679,7 @@ TAccountXmpp::GroupChannel_PFindByNameOrCreate_YZ(PSZUC pszChannelName, INOUT CB
 	if (pszChannelName[0] == d_chGroupChannelPrefix)
 		pszChannelName++;	// Skip the prefix
 
-	(void)m_pProfileParent->m_arraypaChannelNames.FNewChannelAdded(pszChannelName);	// At the moment, always add the channel name.  This is not efficient, but guarantees coherency.
+	(void)m_pProfileParent->m_arraypaChannelNamesAvailables.FNewChannelAdded(pszChannelName);	// At the moment, always add the channel name.  This is not efficient, but guarantees coherency.
 
 	TGroup * pGroup;
 	TGroup ** ppGroupStop;
@@ -675,15 +693,45 @@ TAccountXmpp::GroupChannel_PFindByNameOrCreate_YZ(PSZUC pszChannelName, INOUT CB
 		if (pGroup->m_strNameChannel_YZ.FCompareStringsChannelNames(pszChannelName))
 			return pGroup;
 		}
-	pGroup = new TGroup(this);
+	pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_Group_Profile_Get(pszChannelName);	// If the channel does not exist, then query the contact who sent the stanza to get more information about the group
+	return GroupChannel_PCreate_NZ(pszChannelName);
+	} // GroupChannel_PFindByNameOrCreate_YZ()
+
+TGroup *
+TAccountXmpp::GroupChannel_PCreate_NZ(PSZUC pszChannelName)
+	{
+	TGroup * pGroup = new TGroup(this);
 	m_arraypaGroups.Add(PA_CHILD pGroup);
 	pGroup->Group_InitNewIdentifier();
 	pGroup->GroupChannel_SetName(pszChannelName);
-
-	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_GroupChannel);
-	pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_Group_Profile_Get(pszChannelName);	// If the channel does not exist, then query the contact who sent the stanza to get more information about the group
+	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuIcon_ClassChannel);
 	return pGroup;
-	} // GroupChannel_PFindByNameOrCreate_YZ()
+	}
+
+TGroup *
+TProfile::GroupChannel_PCreateAndSelectWithinNavigationTree_NZ(PSZUC pszChannelName)
+	{
+	TGroup * pGroupChannel = PFindChannelByName(pszChannelName);
+	if (pGroupChannel != NULL)
+		{
+		// The channel is already present, just restore it if necessary and select it within the Navigation Tree
+		if (!pGroupChannel->Group_FuIsChannelUsed())
+			pGroupChannel->TreeItemGroup_DisplayWithinNavigationTree();
+		}
+	else
+		{
+		// We have a new channel, therefore create it
+		TAccountXmpp * pAccount = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTAccount();	// This is a temporary hack until the accounts are siblings of contacts
+		if (pAccount == NULL || pAccount->m_pProfileParent != this)
+			pAccount = PGetFirstAccountOrAllocate_NZ();
+		pGroupChannel = pAccount->GroupChannel_PCreate_NZ(pszChannelName);
+		}
+	Assert(pGroupChannel->Group_FuIsChannel());
+	pGroupChannel->UpdateTimestampLastActivity();	// Make sure the new channel is at the top of the list
+	Dashboard_BumpTreeItem(pGroupChannel);
+	pGroupChannel->TreeItemW_SelectWithinNavigationTree();
+	return pGroupChannel;
+	}
 
 void
 TGroup::GroupChannel_SetName(PSZUC pszChannelName)
@@ -726,7 +774,7 @@ TAccountXmpp::Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcp
 		pGroup = new TGroup(this);
 		m_arraypaGroups.Add(PA_CHILD pGroup);
 		pGroup->m_hashGroupIdentifier = shaGroupIdentifier;
-		pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuAction_Group);
+		pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuIcon_Group);
 		pbinXcpApiExtraRequest->BinXmlAppendXcpApiRequest_Group_Profile_Get(pszGroupIdentifier);	// If the group does not exist, then query the contact who sent the stanza to get more information about the group
 		return pGroup;
 		}

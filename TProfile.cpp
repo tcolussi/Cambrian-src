@@ -72,7 +72,7 @@ TProfile::~TProfile()
 	m_arraypaBrowsers.DeleteAllTreeItems();
 	m_arraypaServices.DeleteAllRuntimeObjects();
 	m_arraypaBrowsersTabbed.DeleteAllRuntimeObjects();
-	m_arraypaChannelNames.DeleteAllChannels();
+	m_arraypaChannelNamesAvailables.DeleteAllChannels();
 	//delete m_paoJapiProfile;
 	}
 
@@ -81,7 +81,7 @@ void
 TProfile::GenerateKeys()
 	{
 	// At the moment, since we do not have PGP code, make both keys the SHA-1 of the name
-	m_strNymID.BinInitFromText("MyNymID123");
+	m_strNymID.BinAppendText_VE("MyNymID$l", Timestamp_GetCurrentDateTime());
 	m_strKeyPrivate.BinInitFromText("PrivateKey123"); // BinInitFromCalculatingHashSha1(m_strNameProfile);
 	m_strKeyPublic.BinInitFromText("PublicKey123");
 	}
@@ -180,7 +180,7 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		CBin * pbinTemp = pXmlExchanger->PGetBinTemporaryDuringSerializationInitAlreadyEncoded();	// Use the temporary buffer to serialize all the channels
 		CChannelName * pChannel = NULL;
 		CChannelName ** ppChannelStop;
-		CChannelName ** ppChannel = m_arraypaChannelNames.PrgpGetChannelsStop(OUT &ppChannelStop);
+		CChannelName ** ppChannel = m_arraypaChannelNamesAvailables.PrgpGetChannelsStop(OUT &ppChannelStop);
 		while (ppChannel != ppChannelStop)
 			{
 			pChannel = *ppChannel++;
@@ -192,7 +192,7 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	else
 		{
 		// Unserialize the channels
-		Assert(m_arraypaChannelNames.FIsEmpty());
+		Assert(m_arraypaChannelNamesAvailables.FIsEmpty());
 		const CXmlNode * pXmlNodeChannels = pXmlExchanger->XmlExchange_PFindElement(d_chElementName_Channels);
 		if (pXmlNodeChannels != NULL)
 			{
@@ -200,7 +200,7 @@ TProfile::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 			while (pXmlNodeChannel != NULL)
 				{
 				CChannelName * paChannel = new CChannelName;
-				m_arraypaChannelNames.Add(PA_CHILD paChannel);
+				m_arraypaChannelNamesAvailables.Add(PA_CHILD paChannel);
 				pXmlNodeChannel->UpdateAttributeValueCStr('n', OUT_F_UNCH &paChannel->m_strName);
 				pXmlNodeChannel->UpdateAttributeValueTimestamp('t', OUT_F_UNCH &paChannel->m_tsFirstRecommended);
 				pXmlNodeChannel = pXmlNodeChannel->m_pNextSibling;
@@ -265,7 +265,7 @@ public:
 
 TDisplayDeletedItems::TDisplayDeletedItems(TProfile * pProfile) : ITreeItemOfProfileOrphaned(pProfile)
 	{
-	TreeItemW_DisplayWithinNavigationTreeExpand(m_pProfile, "Deleted Items", eMenuAction_ProfileShowDeletedObjects);
+	TreeItemW_DisplayWithinNavigationTreeExpand(m_pProfile, "Deleted Items", eMenuIcon_RecycleBin);
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
@@ -411,6 +411,7 @@ TProfile::GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
+		pAccount->m_arraypaGroups.SortByLastActivity();
 		TGroup ** ppGroupStop;
 		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
 		while (ppGroup != ppGroupStop)
@@ -422,7 +423,7 @@ TProfile::GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC
 				parraypGroups->Add(pGroup);
 			}
 		}
-	parraypGroups->SortByEventLastReceived();
+	parraypGroups->SortByLastActivity();
 	}
 
 UINT
@@ -433,6 +434,7 @@ TProfile::GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
+		pAccount->m_arraypaGroups.SortByLastActivity();
 		TGroup ** ppGroupStop;
 		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
 		while (ppGroup != ppGroupStop)
@@ -444,8 +446,8 @@ TProfile::GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC
 				parraypChannels->Add(pGroup);
 			}
 		}
-	parraypChannels->SortByEventLastReceived();
-	return m_arraypaChannelNames.GetSize();
+	parraypChannels->SortByLastActivity();
+	return m_arraypaChannelNamesAvailables.GetSize();
 	}
 
 void
@@ -456,10 +458,11 @@ TProfile::GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC
 	while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
+		pAccount->m_arraypaContacts.SortByLastActivity();
 		parraypContacts->Append(IN &pAccount->m_arraypaContacts);
 		}
 	parraypContacts->RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfObjectInvisible);
-	parraypContacts->SortByEventLastReceived();
+	parraypContacts->SortByLastActivity();
 	}
 
 TContact *

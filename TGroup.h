@@ -31,7 +31,7 @@ public:
 	virtual EMenuAction TreeItem_EDoMenuAction(EMenuAction eMenuAction);			// From ITreeItem
 	virtual void TreeItem_GotFocus();												// From ITreeItem
 	virtual void TreeItem_IconUpdate();
-	void ContactAlias_IconChanged(EMenuAction eMenuIconDisplay, EMenuAction eMenuIconPresence);	// From IContactAlias
+	void ContactAlias_IconChanged(EMenuIcon eMenuIconDisplay, EMenuIcon eMenuIconPresence);	// From IContactAlias
 
 public:
 	static IXmlExchange * S_PaAllocateGroupMember(PVOID poGroupParent, const CXmlNode * pXmlNodeElement);	// This static method must be compatible with interface PFn_PaAllocateXmlObject2_YZ()
@@ -80,6 +80,7 @@ public:
 	void Group_InitNewIdentifier();
 	inline EGroupType EGetGroupType() const { return (EGroupType)(m_uFlagsGroup & FG_kmGroupTypeMask); }
 	inline BOOL Group_FuIsChannel() const { return (m_uFlagsGroup & FG_kfIsChannel); }
+	BOOL Group_FuIsChannelUsed() const;
 	void GroupChannel_SetName(PSZUC pszChannelName);
 
 	void XcpApiGroup_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;

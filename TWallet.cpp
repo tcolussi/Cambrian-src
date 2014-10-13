@@ -532,7 +532,7 @@ TWallet::TWallet(PSZUC pszPassword, const QString & sPathFileWallet, INOUT CBin 
 
 	if (!pbinWalletEncrypted->FIsEmptyBinary())
 		pbinWalletEncrypted->DataDecryptAES256(IN &m_hashKey);
-	TreeItemW_DisplayWithinNavigationTreeExpand(g_pBanking, (PSZAC)pszPassword, eMenuIconBitcoin);	// Display the wallet in the navigation tree using the password as the name (in the future the name will be stored elsewhere)
+	TreeItemW_DisplayWithinNavigationTreeExpand(g_pBanking, (PSZAC)pszPassword, eMenuIcon_Bitcoin);	// Display the wallet in the navigation tree using the password as the name (in the future the name will be stored elsewhere)
 	}
 
 TWallet::~TWallet()
@@ -629,9 +629,9 @@ TWallet::GenerateDummyTransactions()
 		if (pEventLast == NULL)
 			continue;
 		TIMESTAMP tsTransactionEnd = pEventLast->m_tsEventID;
-		if (tsTransactionEnd <= pContact->m_tsCreated)
+		if (tsTransactionEnd <= pContact->m_tsGuiCreated)
 			continue;
-		TIMESTAMP tsTransactionBegin = pContact->m_tsCreated;
+		TIMESTAMP tsTransactionBegin = pContact->m_tsGuiCreated;
 		if (tsTransactionBegin < tsLastWeek)
 			tsTransactionBegin = tsLastWeek;
 		IEventWalletTransaction * pTransaction = PAllocateEventTransaction(pContact);
@@ -696,7 +696,7 @@ TWalletView::TWalletView(ITreeItem * pParentFilterBy, PSZAC pszName, EWalletView
 	{
 	m_pTreeItemFilterBy = pParentFilterBy;
 	m_eWalletViewFlags = eWalletViewFlags;
-	TreeItemW_DisplayWithinNavigationTreeExpand(pParentFilterBy, pszName, eMenuIconBitcoin);
+	TreeItemW_DisplayWithinNavigationTreeExpand(pParentFilterBy, pszName, eMenuIcon_Bitcoin);
 	}
 
 TWalletView::~TWalletView()

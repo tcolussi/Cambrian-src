@@ -25,7 +25,7 @@ protected:
 	CStr m_strJidInvitationFrom;	// The JID of the person who created invitation (only for eMenuAction_AccountAcceptInvitation)
 
 public:
-	DDialogInvitationCore(CInvitation * pInvitationInit, PSZAC pszCaption, EMenuAction eMenuIcon);
+	DDialogInvitationCore(CInvitation * pInvitationInit, PSZAC pszCaption, EMenuIcon eMenuIcon);
 	~DDialogInvitationCore();
 	void CreateEditInvitation();
 	void CreateLabelInvitationFrom();

@@ -136,8 +136,8 @@ protected:
 	WLabelSelectable * m_pwLabelMessage;		// Core widget displaying the message text for the notice
 	WLabelSelectable * m_pwLabelMessageExtra;	// Optional widget to display additional text just below the message text.  By default, this label is NULL (hidden).
 public:
-	INoticeWithIcon(PSZAC pszTitle, EMenuAction eMenuIcon);
-	void Notice_SetIcon(EMenuAction eMenuActionIcon);
+	INoticeWithIcon(PSZAC pszTitle, EMenuIcon eMenuIcon);
+	void Notice_SetIcon(EMenuIcon eMenuIcon);
 	void NoticeMessage_SetText_VE(PSZAC pszFmtTemplate, ...);
 	void NoticeMessage_SetText_VL(PSZAC pszFmtTemplate, va_list vlArgs);
 	void NoticeMessageExtra_SetText_VE(PSZAC pszFmtTemplate, ...);
@@ -149,7 +149,7 @@ public:
 class WNoticeMessageSponsored : public INoticeWithIcon
 {
 public:
-	WNoticeMessageSponsored(ITreeItem * pSponsor, PSZAC pszTitle, EMenuAction eMenuIcon);
+	WNoticeMessageSponsored(ITreeItem * pSponsor, PSZAC pszTitle, EMenuIcon eMenuIcon);
 	virtual BOOL FDeleteDuplicateNotice(INOUT INotice * piwNoticeNew);
 	virtual ENoticeAction ETreeItemGotFocus(IN ITreeItem * piTreeItemFocus);
 	RTI_IMPLEMENTATION(WNoticeMessageSponsored)

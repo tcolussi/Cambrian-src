@@ -80,20 +80,24 @@ void NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProf
 void NavigationTree_DisplayProfilesToogle();
 void NavigationTree_DisplayCertificatesToogle();
 
-void Dashboard_UpdateAccordingToSelectedProfile(TProfile * pProfileSelected);
-void Dashboard_UpdateContact(TContact * pContact);
-void Dashboard_UpdateGroup(TGroup * pGroup);
+void Dashboard_RefreshAccordingToSelectedProfile(TProfile * pProfileSelected);
 void Dashboard_RefreshGroupsAndChannels();
 void Dashboard_RefreshGroups();
 void Dashboard_RefreshChannels();
 void Dashboard_RefreshContacts();
 void Dashboard_NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 void Dashboard_NewEventRelatedToBallot(IEventBallot * pEventBallot);
+void Dashboard_BumpContact(TContact * pContact);
+void Dashboard_BumpTreeItem(ITreeItem * pTreeItem);
+void Dashboard_RedrawContact(TContact * pContact);
+void Dashboard_RedrawGroup(TGroup * pGroup);
 
 void TimerQueue_CallbackAdd(int cSeconds, PFn_TimerQueueCallback pfnCallback, PVPARAM pvParam);
 void TimerQueue_CallbackPostponeOrAdd(int cSeconds, PFn_TimerQueueCallback pfnCallback, PVPARAM pvParam);
 void TimerQueue_CallbackRemove(PVPARAM pvParam);
 void TimerQueue_ExecuteExpiredCallbacks();
 void TimerQueue_DisplayToMessageLog();
+
+void LaunchApplication_Ballotmaster();
 
 #endif // MAINWINDOW_H

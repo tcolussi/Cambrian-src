@@ -78,7 +78,7 @@ TProfile::PGetService_NZ(RTI_ENUM rtiService) CONST_MCC
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-IApplication::IApplication(TProfile * pProfileParent, EMenuAction eMenuIcon)
+IApplication::IApplication(TProfile * pProfileParent, EMenuIcon eMenuIcon)
     {
     m_pProfileParent = pProfileParent;
     m_eMenuIcon = eMenuIcon;

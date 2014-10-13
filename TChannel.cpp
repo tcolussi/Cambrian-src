@@ -37,3 +37,35 @@ CArrayPtrChannelNames::FNewChannelAdded(PSZUC pszChannelName)
 	pChannel->m_uFlags = d_zNA;	// Not used yet
 	return TRUE;
 	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+CHashTableChannels::CHashTableChannels() : CHashTable((PFn_PszGetHashKey)S_PszGetHashKeyChannelName, eHashFunctionStringCase)
+	{
+	}
+
+TGroup *
+CHashTableChannels::PFindChannel(PSZUC pszChannelName)
+	{
+	CHashElementChannel * pHashElement = (CHashElementChannel *)PFindHashElement(pszChannelName);
+	if (pHashElement != NULL)
+		return pHashElement->m_pChannel;
+	return NULL;
+	}
+
+TGroup *
+CHashTableChannels::PFindChannelOrAllocate(PSZUC pszChannelName)
+	{
+	UINT uHashValue;
+	CHashElementChannel * pHashElement = (CHashElementChannel *)PFindHashElementWithHashValue(pszChannelName, OUT &uHashValue);
+	if (pHashElement == NULL)
+		{
+		int cbChannelName = CbAllocUtoU(pszChannelName);
+		pHashElement = (CHashElementChannel *)PAllocateHashElement(cbChannelName);
+		Assert(IS_ALIGNED_32(pHashElement));
+		pHashElement->SetHashValue(uHashValue);
+		pHashElement->m_pChannel = NULL;
+		memcpy(OUT pHashElement->m_rgzchName, IN pszChannelName, cbChannelName);
+		Add(INOUT pHashElement);
+		}
+	return NULL;
+	}

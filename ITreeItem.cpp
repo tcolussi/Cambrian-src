@@ -237,26 +237,23 @@ ITreeItem::TreeItemLayout_SetFocus()
 #define d_coGreenLime		MAKE_QRGB(0, 255, 0)
 
 void
-ITreeItem::TreeItemW_SetIconWithToolTip(EMenuAction eMenuIcon, const QString & sToolTip)
+ITreeItem::TreeItemW_SetIconWithToolTip(EMenuIcon eMenuIcon, const QString & sToolTip)
 	{
 	if (m_paTreeItemW_YZ == NULL)
 		return;	// Sometimes the Tree Item is not visible in the Navigation Tree, so there is no need to update its icon or tool tip
-	QAction * pAction = PGetMenuAction(eMenuIcon);
-	Assert(pAction != NULL);
-	if (pAction != NULL)
-		m_paTreeItemW_YZ->setIcon(0, pAction->icon());
+	m_paTreeItemW_YZ->setIcon(0, OGetIcon(eMenuIcon));
 	m_paTreeItemW_YZ->setToolTip(0, sToolTip);
 	}
 
 //	Set the icon of the QTreeWidgetItem from a menu action.
 void
-ITreeItem::TreeItemW_SetIcon(EMenuAction eMenuIcon)
+ITreeItem::TreeItemW_SetIcon(EMenuIcon eMenuIcon)
 	{
 	TreeItemW_SetIconWithToolTip(eMenuIcon);
 	}
 
 void
-ITreeItem::TreeItemW_SetTextColorAndIcon(QRGB coTextColor, EMenuAction eMenuIcon)
+ITreeItem::TreeItemW_SetTextColorAndIcon(QRGB coTextColor, EMenuIcon eMenuIcon)
 	{
 	if (m_paTreeItemW_YZ == NULL)
 		return;	// Sometimes the Tree Item is not visible in the Navigation Tree, so there is no need to update its icon or tool tip
@@ -313,7 +310,7 @@ ITreeItem::TreeItemW_SetIconComposingText()
 	}
 
 void
-ITreeItem::TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon)
+ITreeItem::TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuIcon eMenuIcon)
 	{
 	Assert(pszuErrorMessage != NULL);
 	CString sError(pszuErrorMessage);

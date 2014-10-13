@@ -244,7 +244,7 @@ WMainWindow::WMainWindow() : QMainWindow()
 	g_pwMenuAdvanced = new WMenuDropdown(NULL);
 	#endif
 	g_pwMenuAdvanced->InitAsDymanicMenu();
-	WButtonIconForToolbar * pwButtonTest = new WButtonIconForToolbar(eMenuIconMenu);
+	WButtonIconForToolbar * pwButtonTest = new WButtonIconForToolbar(eMenuIcon_Menu);
 	pwButtonTest->setStyleSheet("QToolButton { border: none;  padding-top:3px; padding-right:5px; padding-bottom:3px } QToolButton::menu-indicator { image: none; }");
 	pwButtonTest->setPopupMode(QToolButton::InstantPopup);
 	pwButtonTest->setMenu(g_pwMenuAdvanced);

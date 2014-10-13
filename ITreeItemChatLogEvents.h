@@ -46,9 +46,10 @@ class ITreeItemChatLogEvents : public ITreeItemChatLog
 public:
 	TAccountXmpp * m_pAccount;				// Account where the object (Tree Item) belongs to.  Essentially, this pointer is the 'parent' of the contact or group.
 	CVaultEvents * m_paVaultEvents;			// Vault containing the events of the Chat Log.  This vault contains a linked list of its chained history, however this implementation is transparently handled by CVaultEvents.
-	TIMESTAMP m_tsCreated;					// Date & time when the contact or group was created.  This gives an idea to the user when the contact was first added to the GUI.
-	TIMESTAMP m_tsEventIdLastSentCached;	// Cached version of the last event sent (this cache is useful when a user is only receiving message, aka listening, and therefore optimize SocietyPro when searching of events to find the last message sent).  This timestamp is used for synchronization.
-	TIMESTAMP m_tsOtherLastReceived;		// Timestamp of the last received message.  This timestamp is useful to display in the GUI how long it has been since a message was received.
+	TIMESTAMP m_tsGuiCreated;				// Date & time when the contact or group was created.  This gives an idea to the user when the contact was first added to the GUI.
+	TIMESTAMP m_tsGuiLastActivity;			// Date & time when there was some activity with the contact or group.  This timestamp is typically the largest value of the last event sent or received, however may be something else related to some activity.  This timestamp is used for sorting most recent contacts or groups.
+	TIMESTAMP m_tsEventIdLastSentCached;	// [Sync] Cached version of the last event sent (this cache is useful when a user is only receiving message, aka listening, and therefore optimize SocietyPro when searching of events to find the last message sent).
+	TIMESTAMP m_tsOtherLastReceived;		// [Sync] Timestamp of the last received message.  This timestamp is also useful to display in the GUI how long it has been since a message was received.
 	CStr m_strPathFolderDownload;			// Path to store where the downloaded files should be stored (each contact may have a different folder, so it is easier to categorize the download by projects). This field is in this class because if a class is capable to display a Chat Log, then it is also capable to receive files.
 	int m_cMessagesUnread;					// Number of unread messages from the contact (this number is displayed in parenthesis after the contact name)
 protected:
@@ -114,14 +115,18 @@ public:
 	void DisplayDialogSendFile();
 	BOOL DisplayDialogAddContactsToGroupFu();
 
-	static NCompareResult S_NCompareSortByTimestampEventLastReceived(ITreeItemChatLogEvents * pChatLogA, ITreeItemChatLogEvents * pChatLogB, LPARAM lParamCompareSort = d_zNA);
+	void UpdateTimestampLastActivity();
+	static NCompareResult S_NCompareSortByTimestampLastActivity_RecentFirst(ITreeItemChatLogEvents * pChatLogA, ITreeItemChatLogEvents * pChatLogB, LPARAM lParamCompareSort = d_zNA);
+	static NCompareResult S_NCompareSortByTimestampEventLastReceived_RecentFirst(ITreeItemChatLogEvents * pChatLogA, ITreeItemChatLogEvents * pChatLogB, LPARAM lParamCompareSort = d_zNA);
 	friend class CVaultEvents;
 }; // ITreeItemChatLogEvents
 
 class CArrayPtrTreeItemChatLogEvents : public CArrayPtrTreeItems
 {
 public:
+	void SortByLastActivity();
 	void SortByEventLastReceived();
+
 };
 
 #endif // ITreeItemChatLogEvents_H

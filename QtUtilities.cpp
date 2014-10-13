@@ -176,12 +176,18 @@ WLabelSelectableWrap::WLabelSelectableWrap(PA_PARENT QBoxLayout * poParentLayout
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	See also Widget_SetIconButton()
-WButtonIconForToolbar::WButtonIconForToolbar(QWidget * pwParent, EMenuAction eMenuIcon) : QToolButton(pwParent)
+WButtonIconForToolbar::WButtonIconForToolbar(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon) : QToolButton(pwParent)
 	{
 	_Init(eMenuIcon);
 	}
+WButtonIconForToolbar::WButtonIconForToolbar(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon)
+	{
+	Assert(poParentLayout != NULL);
+	poParentLayout->addWidget(PA_CHILD this);;
+	_Init(eMenuIcon);
+	}
 
-WButtonIconForToolbar::WButtonIconForToolbar(EMenuAction eMenuIcon, PSZAC pszmToolTip)
+WButtonIconForToolbar::WButtonIconForToolbar(EMenuIcon eMenuIcon, PSZAC pszmToolTip)
 	{
 	_Init(eMenuIcon);
 	Assert(!FTextContainsTooltip(pszmToolTip));	// The text is already the tooltip, so there is no need to include the tooltip separator
@@ -189,22 +195,17 @@ WButtonIconForToolbar::WButtonIconForToolbar(EMenuAction eMenuIcon, PSZAC pszmTo
 	}
 
 void
-WButtonIconForToolbar::_Init(EMenuAction eMenuIcon)
+WButtonIconForToolbar::_Init(EMenuIcon eMenuIcon)
 	{
-	QAction * pAction = PGetMenuAction(eMenuIcon);
-	Assert(pAction != NULL);
-	if (pAction != NULL)
-		{
-		const QIcon oIcon = pAction->icon();
-		Assert(!oIcon.isNull());
-		setIcon(oIcon);
-		setIconSize(oIcon.actualSize(QSize(32, 32)));
-		}
+	const QIcon oIcon = OGetIcon(eMenuIcon);
+	Assert(!oIcon.isNull());
+	setIcon(oIcon);
+	setIconSize(oIcon.actualSize(QSize(32, 32)));
 	setStyleSheet("QAbstractButton { border: none; }"); //  :hover {border: 1px} :pressed {border: 1px}");
 	setFocusPolicy(Qt::ClickFocus);	// Icons do not capture the focus by tabbing; only if the user explicitly clicks on the icon
 	}
 
-WButtonIconForToolbarWithDropDownMenu::WButtonIconForToolbarWithDropDownMenu(PA_PARENT QWidget * pwParent, EMenuAction eMenuIcon, PSZAC pszmButtonTextAndToolTip) : WButtonIconForToolbar(pwParent, eMenuIcon)
+WButtonIconForToolbarWithDropDownMenu::WButtonIconForToolbarWithDropDownMenu(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon, PSZAC pszmButtonTextAndToolTip) : WButtonIconForToolbar(pwParent, eMenuIcon)
 	{
 	setText(pszmButtonTextAndToolTip);
 	setStyleSheet("QToolButton { border: none; padding: 1 10 1 1; }");		// Add 10 pixels to the left for the drop down arrow
@@ -233,12 +234,12 @@ WButtonText::Button_SetTextAndToolTip(PSZAC pszmButtonTextAndToolTip)
 	}
 
 void
-WButtonText::Button_SetIcon(EMenuAction eMenuIcon)
+WButtonText::Button_SetIcon(EMenuIcon eMenuIcon)
 	{
 	Widget_SetIconButton(OUT this, eMenuIcon);
 	}
 
-WButtonTextWithIcon::WButtonTextWithIcon(PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIcon) : WButtonText(pszmButtonTextAndToolTip)
+WButtonTextWithIcon::WButtonTextWithIcon(PSZAC pszmButtonTextAndToolTip, EMenuIcon eMenuIcon) : WButtonText(pszmButtonTextAndToolTip)
 	{
 	Button_SetIcon(eMenuIcon);
 	}
@@ -521,6 +522,11 @@ WEditTextArea::WEditTextArea(const QString & sText)
 	setText(sText);	// We must call the method setText() and not use the constructor of QTextEdit() otherwise the new line characters ('\n') are lost
 	}
 
+WEditTextArea::WEditTextArea(int cLines)
+	{
+	_InitTextArea();
+	Edit_SetHeightLines(cLines);
+	}
 
 void
 WEditTextArea::_InitTextArea()
@@ -976,6 +982,11 @@ OLayoutHorizontal::OLayoutHorizontal(PA_PARENT QBoxLayout * poParentLayout)
 	Assert(poParentLayout != NULL);
 	poParentLayout->addLayout(PA_CHILD this);
 	}
+void
+OLayoutHorizontal::Layout_MarginsClear()
+	{
+	::Layout_MarginsClear(INOUT this);
+	}
 
 OLayoutVertical *
 OLayoutHorizontal::Layout_PoAddLayoutVerticalWithWidgets_VLZA(QWidget * pawWidgetFirst, va_list vlaArgs)
@@ -1063,9 +1074,26 @@ OLayoutHorizontal::Layout_AddLabelsAndWidgetsV_VEZA(PSZAC pszmFirstLabelAndToolT
 	Layout_AddLabelsAndWidgetsV_VLZA(pszmFirstLabelAndToolTip, vlArgs);
 	}
 
+OLayoutHorizontalAlignLeft::OLayoutHorizontalAlignLeft(PA_PARENT QWidget * pwParent) : OLayoutHorizontal(PA_PARENT pwParent)
+	{
+	setAlignment(Qt::AlignLeft);
+	}
 OLayoutHorizontalAlignLeft::OLayoutHorizontalAlignLeft(PA_PARENT QBoxLayout * poParentLayout) : OLayoutHorizontal(PA_PARENT poParentLayout)
 	{
 	setAlignment(Qt::AlignLeft);
+	}
+OLayoutHorizontalAlignLeft0::OLayoutHorizontalAlignLeft0(PA_PARENT QWidget * pwParent) : OLayoutHorizontalAlignLeft(PA_PARENT pwParent)
+	{
+	Layout_MarginsClear();
+	}
+OLayoutHorizontalAlignLeft0::OLayoutHorizontalAlignLeft0(PA_PARENT QBoxLayout * poParentLayout) : OLayoutHorizontalAlignLeft(PA_PARENT poParentLayout)
+	{
+	Layout_MarginsClear();
+	}
+
+OLayoutHorizontalAlignRight::OLayoutHorizontalAlignRight(PA_PARENT QBoxLayout * poParentLayout) : OLayoutHorizontal(PA_PARENT poParentLayout)
+	{
+	setAlignment(Qt::AlignRight);
 	}
 
 OLayoutVertical::OLayoutVertical(PA_PARENT QWidget * pwParent) : QVBoxLayout(PA_PARENT pwParent)
@@ -1076,6 +1104,17 @@ OLayoutVertical::OLayoutVertical(PA_PARENT QBoxLayout * poParentLayout)
 	{
 	Assert(poParentLayout != NULL);
 	poParentLayout->addLayout(PA_CHILD this);
+	}
+void
+OLayoutVertical::Layout_MarginsClear()
+	{
+	::Layout_MarginsClear(INOUT this);
+	}
+void
+OLayoutVertical::Layout_MarginsClearAndSpacing()
+	{
+	::Layout_MarginsClear(INOUT this);
+	setSpacing(0);
 	}
 
 QWidget *
@@ -1177,7 +1216,7 @@ OLayoutVertical::Layout_PoAddRowLabelsAndWidgets_VLZA(PSZAC pszmFirstLabelAndToo
 	}
 
 WButtonTextWithIcon *
-OLayoutVertical::Layout_PwAddRowButtonAndLabel(PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIconButton, PSZAC pszmLabelTextAndToolTip)
+OLayoutVertical::Layout_PwAddRowButtonAndLabel(PSZAC pszmButtonTextAndToolTip, EMenuIcon eMenuIconButton, PSZAC pszmLabelTextAndToolTip)
 	{
 	WButtonTextWithIcon * pwButton = new WButtonTextWithIcon(pszmButtonTextAndToolTip, eMenuIconButton);
 	WLabel * pwLabel = new WLabel(pszmLabelTextAndToolTip);
@@ -1273,6 +1312,15 @@ OLayoutVerticalAlignTop::OLayoutVerticalAlignTop(PA_PARENT QBoxLayout * poParent
 	{
 	setAlignment(Qt::AlignTop);
 	}
+OLayoutVerticalAlignTop0::OLayoutVerticalAlignTop0(PA_PARENT QWidget * pwParent) : OLayoutVerticalAlignTop(PA_PARENT pwParent)
+	{
+	Layout_MarginsClearAndSpacing();
+	}
+OLayoutVerticalAlignTop0::OLayoutVerticalAlignTop0(PA_PARENT QBoxLayout * poParentLayout) : OLayoutVerticalAlignTop(PA_PARENT poParentLayout)
+	{
+	Layout_MarginsClearAndSpacing();
+	}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 OLayoutForm::OLayoutForm(PA_PARENT QWidget * pwParent)
@@ -1295,13 +1343,34 @@ OLayoutForm::Layout_RemoveMargins()
 	setContentsMargins(0, 0, 0, 0);
 	}
 
-void
-OLayoutForm::Layout_AddRowLabelFormat_VE_Gsb(PSZAC pszFmtTemplate, ...)
+WLabel *
+OLayoutForm::Layout_PwAddRowLabelFormat_VE_Gsb(PSZAC pszFmtTemplate, ...)
 	{
 	va_list vlArgs;
 	va_start(OUT vlArgs, pszFmtTemplate);
 	g_strScratchBufferStatusBar.Format_VL(pszFmtTemplate, vlArgs);
-	addRow(PA_CHILD new WLabel(g_strScratchBufferStatusBar));
+	WLabel * pwLabel = new WLabel(g_strScratchBufferStatusBar);
+	addRow(PA_CHILD pwLabel);
+	return pwLabel;
+	}
+
+
+WLabel *
+OLayoutForm::Layout_PwAddRowBlankAndLabelDescription(PSZAC pszLabel)
+	{
+	WLabel * pwLabel = new WLabel(pszLabel);
+	pwLabel->setStyleSheet("color: #9E9EA6");	// Display the text in a grey color
+	addRow(c_sEmpty, PA_CHILD pwLabel);
+	return pwLabel;
+	}
+
+WLabel *
+OLayoutForm::Layout_PwAddRowLabelAndWidget(PSZAC pszLabel, PA_CHILD QWidget * pawWidget)
+	{
+	WLabel * pwLabel = new WLabel(pszLabel);
+	pwLabel->setStyleSheet("color: #555459; font-weight: bold;");
+	addRow(PA_CHILD pwLabel, PA_CHILD pawWidget);
+	return pwLabel;
 	}
 
 WEditPassword *
@@ -1378,7 +1447,7 @@ OLayoutForm::Layout_PwAddRowLabelEditTextAreaH(PSZAC pszLabel, const CStr & strE
 	return pwEdit;
 	}
 
-/*
+
 // Add two rows: one with a label and another with a multi-line text edit
 WEditTextArea *
 OLayoutForm::Layout_PwAddRowLabelEditTextArea(PSZAC pszLabel, const CString & sEditText, int cLines)
@@ -1390,7 +1459,7 @@ OLayoutForm::Layout_PwAddRowLabelEditTextArea(PSZAC pszLabel, const CString & sE
 	addRow(PA_CHILD pwEdit);
 	return pwEdit;
 	}
-*/
+
 
 WEditTextArea *
 OLayoutForm::Layout_PwAddRowLabelEditTextAreaReadOnly(PSZAC pszLabel, const CString & sEditText, int cLines)
@@ -1424,7 +1493,7 @@ OLayoutForm::Layout_PwAddRowLabelEditAndPushButton(PSZAC pszLabel, const QString
 	}
 
 WButtonTextWithIcon *
-OLayoutForm::Layout_PwAddRowLabelAndPushButton(PSZAC pszmLabelTextAndToolTip, PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIconButton)
+OLayoutForm::Layout_PwAddRowLabelAndPushButton(PSZAC pszmLabelTextAndToolTip, PSZAC pszmButtonTextAndToolTip, EMenuIcon eMenuIconButton)
 	{
 	WButtonTextWithIcon * pwButton = new WButtonTextWithIcon(pszmButtonTextAndToolTip, eMenuIconButton);
 	addRow(PA_CHILD new WLabel(pszmLabelTextAndToolTip), pwButton);
@@ -1708,9 +1777,9 @@ CTreeWidgetItem::ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove)
 	}
 
 void
-CTreeWidgetItem::InitIconAndText(EMenuAction eMenuIcon, PSZUC pszTextColumn1, PSZUC pszTextColumn2, PSZUC pszTextColumn3, PSZUC pszTextColumn4)
+CTreeWidgetItem::InitIconAndText(EMenuIcon eMenuIcon, PSZUC pszTextColumn1, PSZUC pszTextColumn2, PSZUC pszTextColumn3, PSZUC pszTextColumn4)
 	{
-	setIcon(0, PGetMenuAction(eMenuIcon)->icon());
+	setIcon(0, OGetIcon(eMenuIcon));
 	setText(0, CString(pszTextColumn1));
 	setText(1, CString(pszTextColumn2));
 	setText(2, CString(pszTextColumn3));
@@ -1816,10 +1885,28 @@ WidgetButton_SetTextAndToolTip(QAbstractButton * pwButton, PSZAC pszmButtonTextA
 		pwButton->setToolTip(QString::fromUtf8(pszToolTip + 1));
 	}
 
+//	See also class WButtonIconForToolbar
+void
+Widget_SetIconButton(INOUT QAbstractButton * pwButton, EMenuIcon eMenuIcon)
+	{
+	Assert(pwButton != NULL);
+	pwButton->setIcon(OGetIcon(eMenuIcon));
+	}
+
+//	Set the icon of a widget (typically a window or a dialog) using the same icon of a menu action.
+void
+Widget_SetIcon(INOUT QWidget * pwWidget, EMenuIcon eMenuIcon)
+	{
+	Assert(pwWidget != NULL);
+	pwWidget->setWindowIcon(OGetIcon(eMenuIcon));
+	}
+
+
+const QMargins c_oMarginsEmpty;
 void
 Layout_MarginsClear(INOUT QLayout * poLayout)
 	{
-	poLayout->setContentsMargins(0, 0, 0, 0);
+	poLayout->setContentsMargins(c_oMarginsEmpty);
 	}
 
 void
@@ -2172,4 +2259,12 @@ CFileOpenWrite::CFileOpenWrite(const CStr & strFileName) : CFile(strFileName)
 	(void)open(QIODevice::WriteOnly);
 	}
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
+void
+OPainter::FillRectWithGradientVertical(const QRect & rcFill, QRGB coTop, QRGB coBottom)
+	{
+	QLinearGradient oGradient(0, 0, 0, rcFill.height());
+	oGradient.setColorAt(0, coTop);
+	oGradient.setColorAt(1, coBottom);
+	fillRect(rcFill, oGradient);
+	}

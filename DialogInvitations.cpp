@@ -322,14 +322,14 @@ Invitation_NoticeDisplay(PA_DELETING CInvitation * pazInvitation)
 
 #define SL_WNoticeInvitation(_pfmName)		SL_INotice(_pfmName, WNoticeInvitationPending)
 
-WNoticeInvitationPending::WNoticeInvitationPending(PA_CHILD CInvitation * paInvitation)  : INoticeWithIcon("Accept Invitation?", eMenuIconQuestion)
+WNoticeInvitationPending::WNoticeInvitationPending(PA_CHILD CInvitation * paInvitation)  : INoticeWithIcon("Accept Invitation?", eMenuIcon_Question)
 	{
 	Assert(paInvitation != NULL);
 	m_paInvitation = paInvitation;
 	MessageLog_AppendTextFormatCo(d_coGreen, "constructing WNoticeInvitationPending()\n");
 	NoticeMessage_SetText_VE("You have received an invitation from <b>^S</b>.  If you wish to add <b>^S</b> to your peer list, click on the <b>Accept</b> button.", &m_paInvitation->m_strJidInvitationFrom, &m_paInvitation->m_strJidInvitationFrom);
-	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Accept...|Create a new peer to communicate with the person who created the invitation", eMenuIconAccept), SL_WNoticeInvitation(SL_ButtonInvitationAccept_clicked));
-	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Reject|Ignore the invitation", eMenuIconDeny), SL_WNoticeInvitation(SL_ButtonInvitationReject_clicked));
+	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Accept...|Create a new peer to communicate with the person who created the invitation", eMenuIcon_AcceptOrApprove), SL_WNoticeInvitation(SL_ButtonInvitationAccept_clicked));
+	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Reject|Ignore the invitation", eMenuIcon_Deny), SL_WNoticeInvitation(SL_ButtonInvitationReject_clicked));
 	}
 
 WNoticeInvitationPending::~WNoticeInvitationPending()
@@ -370,7 +370,7 @@ WNoticeInvitationPending::SL_ButtonInvitationReject_clicked()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define SL_WNoticeInviteContactsByEmail(_pfmName)			SL_INotice(_pfmName, WNoticeInviteContactsByEmail)
-WNoticeInviteContactsByEmail::WNoticeInviteContactsByEmail(TAccountXmpp * pAccount) : INoticeWithIcon("Invite Peers?", eMenuIconQuestion)
+WNoticeInviteContactsByEmail::WNoticeInviteContactsByEmail(TAccountXmpp * pAccount) : INoticeWithIcon("Invite Peers?", eMenuIcon_Question)
 	{
 	Assert(pAccount != NULL);
 	mu_sponsor.pAccount = pAccount;	// This line is necessary for the notice to delete itself if the account is deleted
@@ -378,7 +378,7 @@ WNoticeInviteContactsByEmail::WNoticeInviteContactsByEmail(TAccountXmpp * pAccou
 
 	NoticeMessage_SetText_VE("You may invite multiple peers by email");
 
-	WButtonTextWithIcon * pwButtonSend = new WButtonTextWithIcon("Send|Send the invitation by email", eMenuAction_ContactInvite);
+	WButtonTextWithIcon * pwButtonSend = new WButtonTextWithIcon("Send|Send the invitation by email", eMenuIcon_MessageEnvelopeForward);
 	OLayoutHorizontalAlignLeft * poLayoutEmailAddresses = m_poLayoutNotice->Layout_PoAddRowLabelsAndWidgets_VEZA("Email Addresses", new WEdit, NULL);
 	poLayoutEmailAddresses->addWidget(pwButtonSend, 0, Qt::AlignBottom);
 	ConnectButton(pwButtonSend, SL_WNoticeInviteContactsByEmail(SL_ButtonSend_clicked));

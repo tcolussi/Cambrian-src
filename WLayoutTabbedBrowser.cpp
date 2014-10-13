@@ -168,8 +168,8 @@ WWebViewTabbed::WWebViewTabbed(TBrowserTab *pTab, TProfile *pProfile) : QSplitte
 	poLayout->setContentsMargins(2, 2, 2, 0);
 
 	// back and forward buttons
-	m_pwButtonBack    = new WButtonIconForToolbar(eMenuIconGoBack, "Go Back");
-	m_pwButtonForward = new WButtonIconForToolbar(eMenuIconGoForward, "Go Forward");
+	m_pwButtonBack    = new WButtonIconForToolbar(eMenuIcon_GoBack, "Go Back");
+	m_pwButtonForward = new WButtonIconForToolbar(eMenuIcon_GoForward, "Go Forward");
 	poLayout->addWidget(m_pwButtonBack);
 	poLayout->addWidget(m_pwButtonForward);
 

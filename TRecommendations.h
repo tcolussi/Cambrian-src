@@ -13,12 +13,12 @@
 class IRecommendation : public CTreeWidgetItem
 {
 public:
-	EMenuAction m_eMenuIconRecommendationType;	// Use the menu action/icon to classify the recommendation type (each type of recommendation will have a different icon)
+	EMenuIcon m_eMenuIconRecommendationType;	// Use the menu action/icon to classify the recommendation type (each type of recommendation will have a different icon)
 	ITreeItem * m_paTreeItemNew;				// Newly allocated recommendation
 	ITreeItem * m_pTreeItemExisting;			// Existing recommendation in the Navigation Tree
 	CArrayPtrContacts m_arraypContactsAlsoRecommending;	// Other contacts also recommending this recommendation
 public:
-	IRecommendation(EMenuAction eMenuIconRecommendationType);
+	IRecommendation(EMenuIcon eMenuIconRecommendationType);
 	virtual ~IRecommendation();
 };
 
@@ -50,7 +50,7 @@ public:
 class CRecommendationCategory : public IRecommendation
 {
 public:
-	inline CRecommendationCategory(EMenuAction eMenuIconRecommendationType) : IRecommendation(eMenuIconRecommendationType) { }
+	inline CRecommendationCategory(EMenuIcon eMenuIconRecommendationType) : IRecommendation(eMenuIconRecommendationType) { }
 };
 
 class CRecommendationContact : public IRecommendation
@@ -58,7 +58,7 @@ class CRecommendationContact : public IRecommendation
 public:
 	CRecommendationContact(PA_PARENT CArrayPtrRecommendationsWithHashTables * parraypaParent, const CXmlNode * pXmlNodeContact);
 public:
-	static const EMenuAction c_eMenuIcon = eMenuAction_Contact;
+	static const EMenuIcon c_eMenuIcon = eMenuIcon_Contact;
 };
 
 class CRecommendationGroup : public IRecommendation
@@ -66,7 +66,7 @@ class CRecommendationGroup : public IRecommendation
 public:
 	CRecommendationGroup(PA_PARENT CArrayPtrRecommendationsWithHashTables * parraypaParent, const CXmlNode * pXmlNodeGroup);
 public:
-	static const EMenuAction c_eMenuIcon = eMenuAction_Group;
+	static const EMenuIcon c_eMenuIcon = eMenuIcon_Group;
 };
 
 //	Tree Item having a contact as its parent
@@ -124,7 +124,7 @@ protected:
 public:
 	WLayoutRecommendations(TProfile * pProfile, TContact * pContact = NULL);
 	void PopulateTreeWidget();
-	CRecommendationCategory * _PAllocateRecommendationCategory(EMenuAction eMenuIconRecommendationType, PSZAC pszFmtTemplate0);
+	CRecommendationCategory * _PAllocateRecommendationCategory(EMenuIcon eMenuIconRecommendationType, PSZAC pszFmtTemplate0);
 
 protected slots:
 	void SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int iColumn);

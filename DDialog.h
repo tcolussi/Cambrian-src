@@ -18,7 +18,7 @@ public:
 	void Dialog_SetCaption(PSZAC pszCaption);
 	void Dialog_SetCaption(const CStr & strCaption);
 	void Dialog_SetCaptionFormat_VE(PSZAC pszFmtTemplate, ...);
-	void Dialog_SetIcon(EMenuAction eMenuIcon);
+	void Dialog_SetIcon(EMenuIcon eMenuIcon);
 	void Dialog_SetSizeMinimum(int cxWidthMinimum = d_zDEFAULT, int cyHeightMinimum = d_zDEFAULT);
 	void Dialog_SetSizeFixed(int cxWidth, int cyHeight);
 	BOOL FuExec();
@@ -58,12 +58,12 @@ protected:
 	OLayoutVertical * m_poLayoutBody;				// Layout for the body located on the left
 	OLayoutVertical * m_poLayoutButtons;			// Layout for the buttons located on the right.  This pointer is necessary in case we wish to add more buttons
 public:
-	DDialogOkCancelWithLayouts(PSZAC pszCaption, EMenuAction eMenuIcon);
+	DDialogOkCancelWithLayouts(PSZAC pszCaption, EMenuIcon eMenuIcon);
 	virtual ~DDialogOkCancelWithLayouts();
 	void Dialog_AddButtonsOkCancel(DDialogOkCancel::PFmSlot pfmSlotOk = NULL, DDialogOkCancel::PFmSlot pfmSlotCancel = NULL);
 	void Dialog_AddButtonsOkCancel_VEZ(DDialogOkCancel::PFmSlot pfmSlotOk = NULL, DDialogOkCancel::PFmSlot pfmSlotCancel = NULL, PA_CHILDREN QWidget * pawButtonExtra = NULL, ...);
-	void Dialog_AddButtonsOkCancel_RenameButtonOk(DDialogOkCancel::PFmSlot pfmSlotOk, PSZAC pszmTextAndToolTipButtonOk, EMenuAction eMenuIconButtonOK = ezMenuActionNone);
-	void Dialog_RenameButtonOk(PSZAC pszmTextAndToolTipButtonOk, EMenuAction eMenuIconButtonOK = ezMenuActionNone);
+	void Dialog_AddButtonsOkCancel_RenameButtonOk(DDialogOkCancel::PFmSlot pfmSlotOk, PSZAC pszmTextAndToolTipButtonOk, EMenuIcon eMenuIconButtonOK = eMenuIcon_zNull);
+	void Dialog_RenameButtonOk(PSZAC pszmTextAndToolTipButtonOk, EMenuIcon eMenuIconButtonOK = eMenuIcon_zNull);
 	void Dialog_AddRowWidget_PA(PSZAC pszmLabelAndToolTip, QWidget * pawWidget);
 	void DialogBody_AddRowWidget_PA(QWidget * pawWidget);
 	void DialogBody_AddRowWidget_PA(PSZAC pszmLabelAndToolTip, QWidget * pawWidget);

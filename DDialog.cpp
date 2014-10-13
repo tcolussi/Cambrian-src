@@ -34,7 +34,7 @@ DDialog::Dialog_SetCaptionFormat_VE(PSZAC pszFmtTemplate, ...)
 	}
 
 void
-DDialog::Dialog_SetIcon(EMenuAction eMenuIcon)
+DDialog::Dialog_SetIcon(EMenuIcon eMenuIcon)
 	{
 	Widget_SetIcon(INOUT this, eMenuIcon);
 	}
@@ -125,7 +125,7 @@ void DDialogOkCancel::SL_ButtonCancel_clicked()
 	reject();
 	}
 
-DDialogOkCancelWithLayouts::DDialogOkCancelWithLayouts(PSZAC pszCaption, EMenuAction eMenuIcon)
+DDialogOkCancelWithLayouts::DDialogOkCancelWithLayouts(PSZAC pszCaption, EMenuIcon eMenuIcon)
 	{
 	Dialog_SetCaption(pszCaption);
 	Dialog_SetIcon(eMenuIcon);
@@ -170,18 +170,18 @@ DDialogOkCancelWithLayouts::Dialog_AddButtonsOkCancel_VEZ(DDialogOkCancel::PFmSl
 	}
 //	Add the buttons OK and Cancel, however with the OK button renamed to custom text
 void
-DDialogOkCancelWithLayouts::Dialog_AddButtonsOkCancel_RenameButtonOk(DDialogOkCancel::PFmSlot pfmSlotOk, PSZAC pszmTextAndToolTipButtonOk, EMenuAction eMenuIconButtonOK)
+DDialogOkCancelWithLayouts::Dialog_AddButtonsOkCancel_RenameButtonOk(DDialogOkCancel::PFmSlot pfmSlotOk, PSZAC pszmTextAndToolTipButtonOk, EMenuIcon eMenuIconButtonOK)
 	{
 	Dialog_AddButtonsOkCancel(pfmSlotOk);
 	Dialog_RenameButtonOk(pszmTextAndToolTipButtonOk, eMenuIconButtonOK);
 	}
 
 void
-DDialogOkCancelWithLayouts::Dialog_RenameButtonOk(PSZAC pszmTextAndToolTipButtonOk, EMenuAction eMenuIconButtonOK)
+DDialogOkCancelWithLayouts::Dialog_RenameButtonOk(PSZAC pszmTextAndToolTipButtonOk, EMenuIcon eMenuIconButtonOK)
 	{
 	Assert(m_poLayoutButtons != NULL);
 	m_pwButtonOK->Button_SetTextAndToolTip(pszmTextAndToolTipButtonOk);
-	if (eMenuIconButtonOK != ezMenuActionNone)
+	if (eMenuIconButtonOK != eMenuIcon_zNull)
 		m_pwButtonOK->Button_SetIcon(eMenuIconButtonOK);
 	m_poLayoutButtons->Layout_ResizeWidthsOfAllWidgets();
 	}

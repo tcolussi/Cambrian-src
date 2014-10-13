@@ -214,8 +214,8 @@ WLayoutBrowser::WLayoutBrowser(TProfile * pProfile, CStr * pstrUrlAddress_NZ)
 	pWidget->setMaximumHeight(24);
 	OLayoutHorizontal * poLayout = new OLayoutHorizontal(pWidget);
 	poLayout->setContentsMargins(2, 2, 2, 0);
-	m_pwButtonBack = new WButtonIconForToolbar(eMenuIconGoBack, "Go Back");
-	m_pwButtonForward = new WButtonIconForToolbar(eMenuIconGoForward, "Go Forward");
+	m_pwButtonBack = new WButtonIconForToolbar(eMenuIcon_GoBack, "Go Back");
+	m_pwButtonForward = new WButtonIconForToolbar(eMenuIcon_GoForward, "Go Forward");
 	poLayout->addWidget(m_pwButtonBack);
 	poLayout->addWidget(m_pwButtonForward);
 
@@ -412,6 +412,11 @@ LaunchApplication(const QString & sName)
 	LaunchBrowser(sName, sUrl);
 	}
 
+void
+LaunchApplication_Ballotmaster()
+	{
+	LaunchApplication("ballotmaster");
+	}
 
 void
 LaunchBrowser(const QString & /*sName*/, const QString & sUrlAbsolute)

@@ -1254,7 +1254,7 @@ CSocketXmpp::DisplayErrorMessageToUser(EDisplayExtraError eDisplayExtraError, PS
 	ITreeItem * pTreeItemError = PFindContactFromStanza();	// Try to determine if the error is related to a contact or related to the account
 	if (pTreeItemError == NULL)
 		pTreeItemError = m_pAccount;
-	pTreeItemError->TreeItemW_SetIconError(pszMessageError, (eDisplayExtraError & eDisplayExtraError_kfSetIconOffline) ? eMenuAction_PresenceAccountOffline : eMenuIconFailure);
+	pTreeItemError->TreeItemW_SetIconError(pszMessageError, (eDisplayExtraError & eDisplayExtraError_kfSetIconOffline) ? eMenuIcon_PresenceAccountOffline : eMenuIcon_Failure);
 	NoticeListRoaming_RefreshDisplay();	// If an error occurs, perhaps there may be notices which must be updated and/or no longer relevant
 	} // DisplayErrorMessageToUser()
 

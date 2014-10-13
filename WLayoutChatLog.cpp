@@ -134,7 +134,7 @@ TContact::TreeItemContact_UpdateIconComposingStarted(ITreeItemChatLogEvents * pC
 		{
 		Assert(pContactOrGroup->EGetRuntimeClass() == RTI(TContact));
 		Assert(pContactOrGroup == this);
-		TreeItemW_SetIcon(eMenuIconPencil_10x10);	// Use a smaller icon for a contact
+		TreeItemW_SetIcon(eMenuIcon_Pencil_10x10);	// Use a smaller icon for a contact
 		}
 
 	/*
@@ -304,7 +304,6 @@ TContact::TreeItem_IconUpdateOnMessagesRead()
 			}
 		}
 	*/
-	Dashboard_UpdateContact(this);
 	}
 
 //	TGroup::ITreeItem::TreeItem_IconUpdateOnMessagesRead()
@@ -331,21 +330,20 @@ TGroup::TreeItem_IconUpdateOnMessagesRead()
 			}
 		}
 	TreeItemChatLog_UpdateTextAndIcon();
-	Dashboard_UpdateGroup(this);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define SL_INoticeUnsolicited(_pfmName)					SL_INotice(_pfmName, WNoticeContactUnsolicited)
 
-WNoticeContactUnsolicited::WNoticeContactUnsolicited(TContact * pContact) : INoticeWithIcon("Approve Peer?", eMenuIconQuestion)
+WNoticeContactUnsolicited::WNoticeContactUnsolicited(TContact * pContact) : INoticeWithIcon("Approve Peer?", eMenuIcon_Question)
 	{
 	Assert(pContact != NULL);
 //	NoticeListAuxiliary_AddNotice(this);
 	mu_sponsor.pContact = pContact;	// This line is necessary for the notice to delete itself if the contact is deleted
 
 	NoticeMessage_SetText_VE("You received an unsolicited message from <b>{C/}</b>:<br/>If <b>$s</b> is a peer you wish to keep, please approve him/her to your peers list.", &pContact->m_strJidBare, pContact->TreeItem_PszGetNameDisplay());
-	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Approve|Add the peer to your list of approved peers", eMenuAction_ContactApprove), SL_INoticeUnsolicited(SL_ButtonContactApprove_clicked));
+	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Approve|Add the peer to your list of approved peers", eMenuIcon_AcceptOrApprove), SL_INoticeUnsolicited(SL_ButtonContactApprove_clicked));
 	}
 
 void
@@ -365,7 +363,7 @@ WNoticeContactUnsolicited::SL_ButtonContactReject_clicked()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #define SL_WNoticeContactInvite(_pfmName)			SL_INotice(_pfmName, WNoticeContactInvite)
 
-WNoticeContactInvite::WNoticeContactInvite(TContact * pContact) : INoticeWithIcon("Invite Peer?", eMenuIconQuestion)
+WNoticeContactInvite::WNoticeContactInvite(TContact * pContact) : INoticeWithIcon("Invite Peer?", eMenuIcon_Question)
 	{
 	Assert(pContact != NULL);
 	mu_sponsor.pContact = pContact;	// This line is necessary for the notice to delete itself if the contact is deleted
@@ -378,7 +376,7 @@ WNoticeContactInvite::WNoticeContactInvite(TContact * pContact) : INoticeWithIco
 //	pContact->Invitation_InitFromXml(strInvitationXml);
 
 	NoticeMessage_SetText_VE("Until now, you never received any message from <b>^S</b>.  The text below is a <i>canned invitation</i> you may wish to send <b>^s</b> by email or via other messaging system.", &pContact->m_strJidBare, pszNickNameContact);
-	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Copy|Copy the invitation text below into the clipboard", eMenuAction_Copy), SL_WNoticeContactInvite(SL_ButtonCopy_clicked));
+	Notice_AddButton(PA_CHILD new WButtonTextWithIcon("Copy|Copy the invitation text below into the clipboard", eMenuIcon_Copy), SL_WNoticeContactInvite(SL_ButtonCopy_clicked));
 
 	CStr strInvitation;
 	strInvitation.Format("Hi $s,\nThis is an invitation to create a chat account to communicate with $S.\n\n"
@@ -486,19 +484,19 @@ WLayoutChatLog::WLayoutChatLog(ITreeItemChatLogEvents * pContactOrGroupParent)
 	pLayoutMessageInput->addWidget(m_pwChatInput);
 	OLayoutVertical * pLayoutButtons = new OLayoutVerticalAlignTop(pLayoutMessageInput);
 	pLayoutButtons->setSpacing(0);
-	m_pwButtonSendBitcoin = new WButtonIconForToolbar(eMenuIconBitcoin, "Send Bitcoins");
+	m_pwButtonSendBitcoin = new WButtonIconForToolbar(eMenuIcon_Bitcoin, "Send Bitcoins");
 	pLayoutButtons->addWidget(m_pwButtonSendBitcoin);
 	connect(m_pwButtonSendBitcoin, SIGNAL(clicked()), this, SLOT(SL_ButtonSendBitcoin()));
 
-	WButtonIconForToolbar * pwButton = new WButtonIconForToolbar(eMenuAction_ContactSendFile, "Send File\n\nYou may drag and drop the file, or copy & paste the file from Windows Explorer");
+	WButtonIconForToolbar * pwButton = new WButtonIconForToolbar(eMenuIcon_FileUpload, "Send File\n\nYou may drag and drop the file, or copy & paste the file from Windows Explorer");
 	pLayoutButtons->addWidget(pwButton);
 	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonSendFile()));
 
-	pwButton = new WButtonIconForToolbar(eMenuAction_ContactAdd, "Add people to the converstation");
+	pwButton = new WButtonIconForToolbar(eMenuIcon_ContactAdd, "Add people to the converstation");
 	pLayoutButtons->addWidget(pwButton);
 	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonAddContacts()));
 
-	pwButton = new WButtonIconForToolbar(eMenuAction_BallotSend, "Send a ballot to the group to vote");
+	pwButton = new WButtonIconForToolbar(eMenuIcon_Vote, "Send a ballot to the group to vote");
 	pLayoutButtons->addWidget(pwButton);
 	connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonSendBallot()));
 
@@ -785,7 +783,7 @@ WLayoutChatLog::Layout_NoticeDisplay(IN INotice * piwNotice)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogSendBitcoin::DDialogSendBitcoin() : DDialogOkCancelWithLayouts("Send Bitcoins", eMenuIconBitcoin)
+DDialogSendBitcoin::DDialogSendBitcoin() : DDialogOkCancelWithLayouts("Send Bitcoins", eMenuIcon_Bitcoin)
 	{
 	m_pwEditQuantity = new WEditNumber;
 	m_pwEditComment = new WEditTextArea;
@@ -798,9 +796,9 @@ DDialogSendBitcoin::DDialogSendBitcoin() : DDialogOkCancelWithLayouts("Send Bitc
 	pwList->addItem("Susanne");
 	OLayoutHorizontalAlignLeft * pLayoutArbiration = new OLayoutHorizontalAlignLeft(m_poLayoutBody);
 	pLayoutArbiration->Layout_AddLabelAndWidgetV_PA("Arbitrator (in case of a dispute)", pwList);
-	pLayoutArbiration->addWidget(new WButtonTextWithIcon(" Help me Pick... ", eMenuAction_FindText), 0, Qt::AlignBottom);
+	pLayoutArbiration->addWidget(new WButtonTextWithIcon(" Help me Pick... ", eMenuIcon_Find), 0, Qt::AlignBottom);
 	//DialogBody_AddRowWidget_PA();
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogSendBitcoin(SL_ButtonSendBitcoins), "Send|Send the Bitcoins", eMenuIconBitcoin);
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DDialogSendBitcoin(SL_ButtonSendBitcoins), "Send|Send the Bitcoins", eMenuIcon_Bitcoin);
 	}
 
 void

@@ -36,6 +36,7 @@ TMarketplace::TMarketplace()
 	{
 	m_pawMarketplace = NULL;
 
+	#if 0
 	// This code is not part of the 'Marketplace', however was added for demo purpose
 	new TTreeItemDemo(NULL, "Reputation", eMenuIconReputation);
 
@@ -113,6 +114,7 @@ TMarketplace::TMarketplace()
 	g_oConfiguration.NavigationTree_DisplayAllCertificates();
 	// Password Vault
 	// CryptoWill
+	#endif
 
 	}
 

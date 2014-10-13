@@ -21,7 +21,7 @@ public:
 	void DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle);
 	int DrawNumberWithinCircle(int nNumber);
 	void DrawIconLeft(const QIcon & oIcon);
-	void DrawIconLeft(EMenuAction eMenuIcon);
+	void DrawIconLeft(EMenuIcon eMenuIcon);
 	void FillRect0(QRGB coBackgroundFill);
 };
 
@@ -96,6 +96,7 @@ public:
 	~WDashboardSection();
 	void SetParent(WDashboard * pParent);
 	void Refresh();
+	void WidgetRedraw() { update(); }
 	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvDataItem);
 	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest);
@@ -104,6 +105,7 @@ public:
 
 protected:
 	virtual QSize sizeHint() const;					// From QWidget
+	//virtual QSize minimumSizeHint();
 	virtual int heightForWidth(int cxWidth) const;	// From QWidget
 	virtual void paintEvent(QPaintEvent *);			// From QWidget
 	virtual void mouseMoveEvent(QMouseEvent * pEventMouse);
@@ -113,7 +115,6 @@ protected:
 	SHitTestInfo OGetHitTestInfo(QMouseEvent * pEventMouse) const;
 	SHitTestInfo OGetHitTestInfo(int xPos, int yPos) const;
 	BOOL FSetHitTestInfo(SHitTestInfo oHitTestInfo);
-	void WidgetRedraw() { update(); }
 
 	static SHitTestInfo c_oHitTestInfoEmpty;
 }; // WDashboardSection
@@ -143,6 +144,7 @@ public:
 	WDashboardSectionGroups(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
 	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroup);
+	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 };
 
 class WDashboardSectionContacts : public WDashboardSection
@@ -169,7 +171,7 @@ singleton WDashboard : public QDockWidget
 {
 	Q_OBJECT
 protected:
-	TProfile * m_pProfile;							// Pointer of the profile the dashboard is displaying
+	TProfile * m_pProfile_YZ;							// Pointer of the profile the dashboard is displaying
 	OLayoutVerticalAlignTop * m_poLayoutVertial;	// Stack the sections vertically
 	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section
 		{
@@ -178,11 +180,11 @@ protected:
 		WDashboardSectionContacts * pwSectionContacts;
 		WDashboardSectionGroups * pwSectionGroups;		// Private groups
 		} m_sections;
-	CDashboardSectionItem * m_pItemSelected;		// Which item is selected (has the focus)
+	CDashboardSectionItem * m_pItemSelected_YZ;		// Which item is selected (has the focus)
 
 public:
 	WDashboard();
-	inline TProfile * PGetProfile() const { return m_pProfile; }
+	inline TProfile * PGetProfile_YZ() const { return m_pProfile_YZ; }
 	void ProfileSelectedChanged(TProfile * pProfile);
 	void NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 	void NewEventRelatedToBallot(IEventBallot * pEventBallot);
@@ -190,8 +192,16 @@ public:
 	void RefreshGroup(TGroup * pGroup);
 	void RefreshChannels();
 	void RefreshGroups();
+	void RefreshGroupsOrChannel(TGroup * pGroupOrChannel);
 	void RefreshContacts();
+	void RedrawContact(TContact * pContact);
+	void RedrawGroup(TGroup * pGroup);
+	void BumpContact(TContact * pContact);
+	void BumpTreeItem(ITreeItem * pTreeItem);
+
 	BOOL FSelectItem(CDashboardSectionItem * pItem);
+
+	//virtual QSize sizeHint() const { return QSize(300, 0); }
 }; // WDashboard
 
 #endif // WDASHBOARD_H

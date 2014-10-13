@@ -127,21 +127,21 @@ public:
 	void TreeItemW_RemoveFromNavigationTree();
 	void TreeItemW_DisplayWithinNavigationTreeBefore(ITreeItem * pTreeItemBefore);
 	void TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ);
-	void TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuAction eMenuActionIcon);
-	void TreeItemW_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuAction eMenuActionIcon);
-	TTreeItemDemo * TreeItemW_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon);
-	TTreeItemDemo * TreeItemW_PAllocateChild(PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch = NULL);
-	void TreeItemW_AllocateChildren_VEZ(EMenuAction eMenuActionIcon, PSZAC pszName, ...);
+	void TreeItemW_DisplayWithinNavigationTree(ITreeItem * pParent_YZ, EMenuIcon eMenuIcon);
+	void TreeItemW_DisplayWithinNavigationTreeExpand(ITreeItem * pParent_YZ, PSZAC pszName, EMenuIcon eMenuIcon);
+	TTreeItemDemo * TreeItemW_PAllocateChild(PSZAC pszName, EMenuIcon eMenuIcon);
+	TTreeItemDemo * TreeItemW_PAllocateChild(PSZAC pszName, EMenuIcon eMenuIcon, PSZAC pszDescription, PSZAC pszSearch = NULL);
+	void TreeItemW_AllocateChildren_VEZ(EMenuIcon eMenuIcon, PSZAC pszName, ...);
 	void TreeItemW_Rename();
 	void TreeItemW_SetTextColor(QRGB coTextColor);
-	void TreeItemW_SetIconWithToolTip(EMenuAction eMenuIcon, const QString & sToolTip = c_sEmpty);
-	void TreeItemW_SetIcon(EMenuAction eMenuIcon);
-	void TreeItemW_SetTextColorAndIcon(QRGB coTextColor, EMenuAction eMenuIcon);
+	void TreeItemW_SetIconWithToolTip(EMenuIcon eMenuIcon, const QString & sToolTip = c_sEmpty);
+	void TreeItemW_SetIcon(EMenuIcon eMenuIcon);
+	void TreeItemW_SetTextColorAndIcon(QRGB coTextColor, EMenuIcon eMenuIcon);
 	void TreeItemW_UpdateText();
 	void TreeItemW_SetTextToDisplayNameIfGenerated();
 	void TreeItemW_SetTextToDisplayMessagesUnread(int cMessagesUnread);
 	void TreeItemW_SetIconComposingText();
-	void TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuAction eMenuIcon = eMenuIconFailure);
+	void TreeItemW_SetIconError(PSZUC pszuErrorMessage, EMenuIcon eMenuIcon = eMenuIcon_Failure);
 	ITreeItem * TreeItemW_PGetParent() const;
 
 	CTreeItemW * TreeItemW_PAllocate();
@@ -203,8 +203,8 @@ public:
 	CStr m_strDescription;
 public:
 	TTreeItemDemo();
-	TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon);
-	TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuAction eMenuActionIcon, PSZAC pszDescription, PSZAC pszSearch = NULL);
+	TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuIcon eMenuIcon);
+	TTreeItemDemo(ITreeItem * pParent, PSZAC pszName, EMenuIcon eMenuIcon, PSZAC pszDescription, PSZAC pszSearch = NULL);
 	~TTreeItemDemo();
 	virtual void TreeItem_GotFocus();
 }; // TTreeItemDemo

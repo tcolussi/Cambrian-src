@@ -38,7 +38,7 @@ WLayoutMyProfiles::WLayoutMyProfiles()
 	OLayoutHorizontalAlignLeft * poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
 	//poLayout->Layout_AddLabelAndWidgetH_PA("ID:", m_pwEditProfile);
 	poLayout->addWidget(m_pwEditProfile);
-	WButtonTextWithIcon * pwButtonCreateNewID = new WButtonTextWithIcon("Create " d_sza_Profile" ", eMenuIconIdentities);
+	WButtonTextWithIcon * pwButtonCreateNewID = new WButtonTextWithIcon("Create " d_sza_Profile" ", eMenuIcon_ClassProfile);
 	poLayout->addWidget(pwButtonCreateNewID);
 
 	m_pwCheckboxAutomatic = new QCheckBox("Automatically create an XMPP account for my new " d_sza_profile);
@@ -142,11 +142,11 @@ WLayoutProfile::WLayoutProfile(TProfile * pProfile)
 		m_pwGroupBoxAccountNew = Splitter_PwAddGroupBox_VE("Please assign an XMPP account for your " d_sza_profile " '$S'", &pProfile->m_strNameProfile);
 		OLayoutVerticalAlignTop * poLayout = new OLayoutVerticalAlignTop(m_pwGroupBoxAccountNew);
 		poLayout->Layout_PwAddRowLabelWrap("SocietyPro needs an XMPP account to send and receive messages with others:");
-		WButtonTextWithIcon * pwButtonAccountNewAutomatic = poLayout->Layout_PwAddRowButtonAndLabel("Automatic!", eMenuIconXmpp, "Automatically and instantly create an XMPP account");
+		WButtonTextWithIcon * pwButtonAccountNewAutomatic = poLayout->Layout_PwAddRowButtonAndLabel("Automatic!", eMenuIcon_XMPP, "Automatically and instantly create an XMPP account");
 		m_pwEditSocketMessageLog_YZ = new WEditMessageLogHidden;
 		poLayout->addWidget(m_pwEditSocketMessageLog_YZ);
-		WButtonTextWithIcon * pwButtonAccountNewManual = poLayout->Layout_PwAddRowButtonAndLabel("Sign Up...", eMenuIconXmpp, "Manually create an XMPP account by specifying a username and password");
-		WButtonTextWithIcon * pwButtonAccountLogin = poLayout->Layout_PwAddRowButtonAndLabel("Login...", eMenuIconXmpp, "Login to an existing XMPP account using a username and password");
+		WButtonTextWithIcon * pwButtonAccountNewManual = poLayout->Layout_PwAddRowButtonAndLabel("Sign Up...", eMenuIcon_XMPP, "Manually create an XMPP account by specifying a username and password");
+		WButtonTextWithIcon * pwButtonAccountLogin = poLayout->Layout_PwAddRowButtonAndLabel("Login...", eMenuIcon_XMPP, "Login to an existing XMPP account using a username and password");
 		poLayout->Layout_AddWidgetSpacer();
 		connect(pwButtonAccountNewAutomatic, SIGNAL(clicked()), this, SLOT(SL_ButtonAccountNewInstant()));
 		connect(pwButtonAccountNewManual, SIGNAL(clicked()), this, SLOT(SL_ButtonAccountNewManual()));
@@ -195,6 +195,16 @@ CStr::InitWithRandomUsername(const CStr & strUsernameBase, UINT uRandomValue)
 	*pchUsernameRandom = '\0';
 	m_paData->cbData = pchUsernameRandom - pszUsernameRandom + 1;
 	} // InitWithRandomUsername()
+
+//	This method is a temporary hack until the contacts are no longer children of accounts
+TAccountXmpp *
+TProfile::PGetFirstAccountOrAllocate_NZ()
+	{
+	TAccountXmpp * pAccount = m_arraypaAccountsXmpp.PGetAccountFirst_YZ();
+	if (pAccount != NULL)
+		return pAccount;
+	return PAllocateAccount();
+	}
 
 TAccountXmpp *
 TProfile::PAllocateAccount()

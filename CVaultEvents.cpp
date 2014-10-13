@@ -192,6 +192,8 @@ CVaultEvents::ReadEventsFromDisk(const SHashSha1 * pHashFileName)
 			pContact->m_tsOtherLastSynchronized = tsOtherLastReceived;
 			pContact->ContactFlag_SynchronizeWhenPresenceOnline_Set();	// If the timestamp is adjusted, then trigger a synchronization
 			}
+		if (pContact->m_tsGuiLastActivity < tsOtherLastReceived)
+			pContact->m_tsGuiLastActivity = tsOtherLastReceived;
 		}
 	else
 		{

@@ -237,7 +237,7 @@ TAccountXmpp::TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(PSZUC pszCo
 	#endif
 	pContact->TreeItemContact_UpdateIcon();
 	pContact->TreeItemW_EnsureVisible();	// Make sure the new contact is visible in the Navigation Tree
-	pContact->m_tsCreated = Timestamp_GetCurrentDateTime();
+	pContact->m_tsGuiCreated = Timestamp_GetCurrentDateTime();
 	if (m_paSocket != NULL)
 		Contact_RosterSubscribe(pContact);
 	Configuration_Save();		// Save the configuration after adding a new contact (just in case the application crashes)
@@ -647,33 +647,33 @@ TAccountXmpp::TreeItemAccount_UpdateIcon()
 	if (m_paTreeItemW_YZ == NULL)
 		return;	// The account is not yet in the Navigation Tree.  This happens when Cambrian starts and is loading the accounts from the configuration
 	QRGB coText = d_coTreeItem_Default;
-	EMenuAction eMenuAction = eMenuAction_PresenceAccountOffline;
+	EMenuIcon eMenuIcon = eMenuIcon_PresenceAccountOffline;
 	if (!m_arraypContactsMessagesUnread.FIsEmpty())
 		{
 		// We have unread messages, so display the text in Green and display the icon of unread messages
 		coText = d_coTreeItem_UnreadMessages;
-		eMenuAction = eMenuAction_MessageNew;
+		eMenuIcon = eMenuIcon_MessageNew;
 		}
 	else if (m_paSocket != NULL)
 		{
 		// The socket is ready, so the account is online
 		if (m_paSocket->Socket_FuIsReadyToSendMessages())
 			{
-			eMenuAction = (EMenuAction)(m_uFlagsAccountStatus & FAS_kmStatusPresenceMask);
-			if (eMenuAction == ezMenuActionNone)
+			eMenuIcon = (EMenuIcon)(m_uFlagsAccountStatus & FAS_kmStatusPresenceMask);
+			if (eMenuIcon == eMenuIcon_zNull)
 				{
 				// Fetch the presence from the global settings
-				eMenuAction = (EMenuAction)(g_uPreferences & P_kmPresenceMask);
-				if (eMenuAction == ezMenuActionNone)
-					eMenuAction = eMenuAction_PresenceAccountOnline;
+				eMenuIcon = (EMenuIcon)(g_uPreferences & P_kmPresenceMask);
+				if (eMenuIcon == eMenuIcon_zNull)
+					eMenuIcon = eMenuIcon_PresenceAccountOnline;
 				}
 			}
 		else
 			{
 			if (m_paSocket->Socket_FDisplayIconFailure())
-				eMenuAction = eMenuIconFailure;
+				eMenuIcon = eMenuIcon_Failure;
 			else
-				eMenuAction = eMenuAction_PresenceAccountConnecting;
+				eMenuIcon = eMenuIcon_PresenceAccountConnecting;
 			}
 		}
 	TreeItemW_SetTextColor(coText);
@@ -683,8 +683,8 @@ TAccountXmpp::TreeItemAccount_UpdateIcon()
 			return;
 		}
 	else
-		eMenuAction = eMenuAction_PresenceAccountDisconnected;	// Always display the disconnect icon if the device is disconnected
-	TreeItemW_SetIcon(eMenuAction);
+		eMenuIcon = eMenuIcon_PresenceAccountDisconnected;	// Always display the disconnect icon if the device is disconnected
+	TreeItemW_SetIcon(eMenuIcon);
 	} // TreeItemAccount_UpdateIcon()
 
 void
@@ -789,7 +789,7 @@ PSZUC
 TAccountXmpp::TreeItemAccount_SetIconConnectingToServer_Gsb()
 	{
 	PSZUC pszMessage = g_strScratchBufferStatusBar.Format("Connecting to server $S...", &m_strServerName);
-	TreeItemW_SetIconWithToolTip(eMenuAction_PresenceAccountConnecting, g_strScratchBufferStatusBar);
+	TreeItemW_SetIconWithToolTip(eMenuIcon_PresenceAccountConnecting, g_strScratchBufferStatusBar);
 	return pszMessage;
 	}
 
@@ -815,7 +815,7 @@ TAccountXmpp::TreeItemAccount_SetIconDisconnected()
 	{
 	// Set the disconnected icon only if there is no error
 	if ((m_uFlagsTreeItem & FTI_kmIconMask) == 0)
-		TreeItemW_SetIcon(eMenuAction_PresenceAccountDisconnected);
+		TreeItemW_SetIcon(eMenuIcon_PresenceAccountDisconnected);
 	TreeItemAccount_UpdateIconOfAllContacts();
 	}
 

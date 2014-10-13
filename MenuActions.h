@@ -42,6 +42,8 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_AccountDelete,			// Delete/remove the selected account
 	eMenuAction_AccountProperties,		// Display the properties of the selected account
 	eMenuAction_AccountReconnect,		// Reconnect to the server
+	//eMenuAction_AccountEnable,
+	//eMenuAction_AccountDisable,			// Prevent the account to reconned
 
 	eMenuAction_Contact,				// Generic icon for a contact
 	eMenuAction_ContactAdd,				// Add a new contact to the selected account
@@ -74,9 +76,13 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_GroupRemoveContact,
 	eMenuAction_GroupProperties,		// Display the properties of the group
 
-	eMenuAction_GroupChannel,
-	eMenuAction_GroupChannelInvite,
-	eMenuAction_GroupChannelLeave,
+	eMenuAction_GroupLaunchBallot,			// Lanuch the ballotmaster
+	eMenuAction_GroupSetPurpose,			// Set the topic/purpose
+	eMenuAction_GroupUpgradeService,		// Upgrade the service to speed up message delivery
+	eMenuAction_GroupUpgradeToCorporation,	// Make this group a corporation
+
+	eMenuAction_GroupChannelInviteOthers,	// Invite others to join the channel
+	eMenuAction_GroupChannelLeave,			// Stop receiving messages from this channel
 
 	eMenuAction_TreeItemRecommended,	// Generic menu action to recommend an item in the Navigation Tree
 	eMenuAction_TreeItemRename,			// Generic menu action to rename an item in the Navigation Tree
@@ -131,14 +137,9 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	///////////////////////////////////
 	// The following are no longer menu actions, but icons.  Since most menu actions have an associated icon, it is convenient to have the icons in the same enumeration.
 	eMenuIcon_PresenceInsecureOnline,	// The user is online using a non-Cambrian insecure client.
-	eMenuIconFailure,
-	eMenuIconCertificate,
-	eMenuIconServerSecure,
-	eMenuIconServerWarning,
-	eMenuIconServerDeny,
+
 	eMenuIconQuestion,
 	eMenuIconWarning,
-	eMenuIconDeny,
 	eMenuIconAdd,
 	eMenuIconRemove,
 	eMenuIconPencil_10x10,
@@ -153,7 +154,6 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuIconCorporations,
 	eMenuIconIdentities,
 
-	eMenuIconMenu,
 	eMenuIconSettings,
 	eMenuIconCommunicate,
 	eMenuIconBanking,
@@ -245,9 +245,6 @@ extern WMenu * g_pwMenuTools;
 extern WMenu * g_pwMenuAdvanced;
 
 void ConnectMenuActions(WMenu * pMenuSignal, QObject * pObjectSlots);
-
-void Widget_SetIcon(INOUT QWidget * pwWidget, EMenuAction eMenuAction);
-void Widget_SetIconButton(INOUT QAbstractButton * pwButton, EMenuAction eMenuAction);
 
 QAction * PGetMenuAction(EMenuAction eMenuAction);
 PSZAC PszGetMenuActionText(EMenuAction eMenuAction);

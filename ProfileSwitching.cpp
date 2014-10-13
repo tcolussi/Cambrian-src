@@ -145,7 +145,7 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 TTreeItemInbox::TTreeItemInbox()
 	{
-	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, (PSZAC)c_szContacts, eMenuIconCommunicate);
+	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, (PSZAC)c_szContacts, eMenuIcon_Chat);
 	}
 
 //	TTreeItemInbox::ITreeItem::TreeItem_GotFocus()
@@ -158,7 +158,7 @@ TTreeItemInbox::TreeItem_GotFocus()
 TProfiles::TProfiles()
 	{
 	//TreeItemW_DisplayWithinNavigationTreeExpand(NULL, d_sza_Profile"s", eMenuIconSettings);
-	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, "Roles", eMenuAction_DisplayProfileInfo);
+	TreeItemW_DisplayWithinNavigationTreeExpand(NULL, "Roles", eMenuIcon_ClassProfile);
 	}
 
 void
@@ -199,14 +199,14 @@ void
 TProfile::TreeItemProfile_DisplayProfileInfoWithinNavigationTree()
 	{
 	Endorse(g_pTreeItemProfiles == NULL); // Display the profile at the root rather than under "Profiles"
-	TreeItemW_DisplayWithinNavigationTree(g_pTreeItemProfiles, eMenuIconIdentities);
+	TreeItemW_DisplayWithinNavigationTree(g_pTreeItemProfiles, eMenuIcon_ClassProfile);
 	TAccountXmpp * pAccount = NULL;
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
 	while (ppAccount != ppAccountStop)
 		{
 		pAccount = *ppAccount++;
-		pAccount->PGetAlias_NZ()->TreeItemW_DisplayWithinNavigationTreeExpand(this, pAccount->m_strJID, eMenuIconXmpp);
+		pAccount->PGetAlias_NZ()->TreeItemW_DisplayWithinNavigationTreeExpand(this, pAccount->m_strJID, eMenuIcon_XMPP);
 		}
 	}
 
@@ -257,7 +257,8 @@ void
 TBrowser::TreeItemBrowser_DisplayWithinNavigationTree()
 	{
 	TreeItemW_DisplayWithinNavigationTree((m_pProfile->m_paTreeItemW_YZ != NULL) ?  m_pProfile : NULL);
-	TreeItemW_SetIcon(m_uFlags ? eMenuIconMarketplace : eMenuAction_DisplaySecureWebBrowsing);
+	//TreeItemW_SetIcon(m_uFlags ? eMenuIconMarketplace : eMenuAction_DisplaySecureWebBrowsing);
+	TreeItemW_SetIcon(eMenuIcon_Browser);
 	}
 
 //	TAccountXmpp::ITreeItem::TreeItem_PszGetNameDisplay()
@@ -352,7 +353,7 @@ NavigationTree_UpdateNameOfSelectedProfile()
 	else
 		g_strScratchBufferStatusBar.Format("Switch " d_sza_Profile);
 	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
-	Dashboard_UpdateAccordingToSelectedProfile(pProfileSelected);
+	Dashboard_RefreshAccordingToSelectedProfile(pProfileSelected);
 	}
 
 

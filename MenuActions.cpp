@@ -92,9 +92,14 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Remove Peer from Group" _ "i=ContactRemove" _, // eMenuAction_GroupRemoveContact
 	"Group Properties..." _ "i=Properties" _, // eMenuAction_GroupProperties
 
-	"Channel" _ "i=Hashtag" _, // eMenuAction_GroupChannel
+	"Launch Ballot" _ "i=Vote" _, // eMenuAction_GroupLaunchBallot
+	"Set Purpose" _, // eMenuAction_GroupSetPurpose
+	"Upgrade Service" _, // eMenuAction_GroupUpgradeService
+	"Upgrade to Corporation" _, // eMenuAction_GroupUpgradeToCorporation
+
+	//"Channel" _ "i=Hashtag" _, // eMenuAction_GroupChannel
 	"Invite peers..." _ "s=Invite others to join the channel" _ "i=GroupAdd" _,	// eMenuAction_GroupChannelInvite
-	"Leave channel" _ "i=GroupDelete" _, // eMenuAction_GroupChannelLeave
+	"Leave channel" _ "s=Stop receiving messages from this channel" _ "i=GroupDelete" _, // eMenuAction_GroupChannelLeave
 
 
 	"Recommend" _ "s=Recommend the selected item to my peers" _ "i=Reputation" _,	// eMenuAction_TreeItemRecommended
@@ -157,14 +162,14 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 
 	///////////////////////////////////
 	"Insecure" _ "i=InsecureOnline" _,	// eMenuIcon_PresenceInsecureOnline
-	"Failure" _ "i=Error" _,	// eMenuIconFailure
+	/*
 	"Certificate" _ "i=Certificate" _, // eMenuIconCertificate
 	"Approve Server" _ "i=Server" _, // eMenuIconServerSecure
 	"ServerWarning" _ "i=ServerWarning" _, // eMenuIconServerWarning
 	"Revoke Server" _ "i=ServerDeny" _, // eMenuIconServerDeny
+	*/
 	"Question" _ "i=Question" _, // eMenuIconQuestion
 	"Warning" _ "i=Warning" _, // eMenuIconWarning
-	"Deny" _ "i=Deny" _, // eMenuIconDeny
 	"Add" _ "i=Add" _, // eMenuIconAdd
 	"Remove" _ "i=Remove" _, // eMenuIconRemove
 	"Pencil" _ "i=Pencil" _, // eMenuIconPencil_10x10
@@ -179,7 +184,6 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Corporations" _ "i=Corporation" _, // eMenuIconCorporations
 	"Identities" _ d_sza_IconProfile _, // eMenuIconIdentities
 
-	"Menu" _ "i=Menu" _, // eMenuIconMenu
 	"Settings" _ "i=Settings" _, // eMenuIconSettings
 	"Communicate" _ "i=Chat" _, // eMenuIconCommunicate
 	"Banking" _ "i=Banking" _, // eMenuIconBanking
@@ -382,28 +386,6 @@ PszGetMenuActionText(EMenuAction eMenuAction)
 	Assert(eMenuAction > ezMenuActionNone);
 	Assert(eMenuAction < LENGTH(g_rgpActions));
 	return c_mapepszmMenuActions[eMenuAction];	// May return NULL
-	}
-
-//	Set the icon of a widget (typically a window or a dialog) using the same icon of a menu action.
-void
-Widget_SetIcon(INOUT QWidget * pwWidget, EMenuAction eMenuAction)
-	{
-	Assert(pwWidget != NULL);
-	QAction * pAction = PGetMenuAction(eMenuAction);
-	Assert(pAction != NULL);
-	if (pAction != NULL)
-		pwWidget->setWindowIcon(pAction->icon());
-	}
-
-//	See also class WButtonIconForToolbar
-void
-Widget_SetIconButton(INOUT QAbstractButton * pwButton, EMenuAction eMenuAction)
-	{
-	Assert(pwButton != NULL);
-	QAction * pAction = PGetMenuAction(eMenuAction);
-	Assert(pAction != NULL);
-	if (pAction != NULL)
-		pwButton->setIcon(pAction->icon());
 	}
 
 
@@ -904,7 +886,8 @@ MainWindow_MenuActionExecute(QAction * pAction)
 	case eMenuAction_DisplayBallotMaster:
 		//void DisplayApplicationBallotMaster();
 		//DisplayApplicationBallotMaster();
-		LaunchApplication("ballotmaster");
+		//LaunchApplication("ballotmaster");
+		LaunchApplication_Ballotmaster();
 		return;
 
 	case eMenuAction_DisplayGroupManager:

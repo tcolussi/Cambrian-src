@@ -31,7 +31,7 @@ CStr g_strAssertLast;	// Remember the content of the last assertion.  This is to
 
 DDialogAssertionFailure * g_pawlistAssertionFailures;	// Linked list of all the assertion failures (this list is used so Cambrian does not display the same assertion failure twice)
 
-DDialogAssertionFailure::DDialogAssertionFailure(const CStr & strMessageHtml, const CStr & strAssert) : DDialogOkCancelWithLayouts(c_szInternalErrorDetected, eMenuAction_ShowLogErrors)
+DDialogAssertionFailure::DDialogAssertionFailure(const CStr & strMessageHtml, const CStr & strAssert) : DDialogOkCancelWithLayouts(c_szInternalErrorDetected, eMenuIcon_ShowLogErrors)
 	{
 	m_pNext = g_pawlistAssertionFailures;
 	g_pawlistAssertionFailures = this;
@@ -48,9 +48,9 @@ DDialogAssertionFailure::DDialogAssertionFailure(const CStr & strMessageHtml, co
 	DialogBody_AddRowWidget_PA(new WLabelSelectableWrap(strMessageHtml));	// I have no idea this code does not work, especially when an assertion contains the logical OR operator ("||")
 	#endif
 
-	WButtonTextWithIcon * pwButtonClose = new WButtonTextWithIcon("&Close|Dismiss this error message", eMenuAction_Close);
-	WButtonTextWithIcon * pwButtonCopyToClipboard = new WButtonTextWithIcon("Copy|Copy the invitation link into the clipboard", eMenuAction_Copy);
-	WButtonTextWithIcon * pwButtonViewErrorLog = new WButtonTextWithIcon("View Error Log...|Display the Error Log which displays detailed information about previous errors", eMenuAction_ShowLogErrors);
+	WButtonTextWithIcon * pwButtonClose = new WButtonTextWithIcon("&Close|Dismiss this error message", eMenuIcon_Close);
+	WButtonTextWithIcon * pwButtonCopyToClipboard = new WButtonTextWithIcon("Copy|Copy the invitation link into the clipboard", eMenuIcon_Copy);
+	WButtonTextWithIcon * pwButtonViewErrorLog = new WButtonTextWithIcon("View Error Log...|Display the Error Log which displays detailed information about previous errors", eMenuIcon_ShowLogErrors);
 	m_poLayoutButtons->Layout_AddWidgetsAndResizeWidths_VEZA(pwButtonClose, pwButtonCopyToClipboard, pwButtonViewErrorLog, NULL);
 	connect(pwButtonClose, SIGNAL(clicked()), this, SLOT(reject()));
 	connect(pwButtonCopyToClipboard, SIGNAL(clicked()), this, SLOT(SL_CopyToClipboard()));

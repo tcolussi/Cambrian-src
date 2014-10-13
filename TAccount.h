@@ -176,7 +176,9 @@ public:
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier, INOUT CBinXcpStanza * pbinXcpApiExtraRequest, EFindGroup eFindGroup);
 	TGroup * Group_PFindByIdentifier_YZ(PSZUC pszGroupIdentifier);
 	TGroup * GroupChannel_PFindByName_YZ(PSZUC pszChannelName) const;
+	TGroup * GroupChannel_PFindByNameOrAddAsAvailable_YZ(PSZUC pszChannelName) const;
 	TGroup * GroupChannel_PFindByNameOrCreate_YZ(PSZUC pszChannelName, INOUT CBinXcpStanza * pbinXcpApiExtraRequest);
+	TGroup * GroupChannel_PCreate_NZ(PSZUC pszChannelName);
 
 	void Group_AddToNavigationTree(PA_CHILD TGroup * paGroup);
 

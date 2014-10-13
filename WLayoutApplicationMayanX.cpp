@@ -95,13 +95,13 @@ WLayoutApplicationMayanX::WLayoutApplicationMayanX(TApplicationMayanX * pApplica
 	m_poLayoutButtons->addRow(m_pwLabelWelcome);
 	m_pwButtonRegister = new WButtonTextWithIcon(m_pApplication->m_strxUserID.FIsEmptyString() ?
 		"Register...|Register my profile on the MayanX Exchange" :
-		"Login...|Login to the MayanX Exchange", eMenuIconCoffeeBuy);
+		"Login...|Login to the MayanX Exchange", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
 	m_poLayoutButtons->addRow(m_pwButtonRegister);
 	m_nPriceMin = 0;
 	m_nPriceMax = 0;
 	m_pwLabelPriceLast = new WLabel;
 	m_poLayoutButtons->addRow(m_pwLabelPriceLast);
-	m_pwButtonPing = new WButtonTextWithIcon("Socket Ping", eMenuAction_ContactPing);
+	m_pwButtonPing = new WButtonTextWithIcon("Socket Ping", eMenuIcon_Bitcoin); // eMenuAction_ContactPing);
 	m_poLayoutButtons->addRow(m_pwButtonPing);
 	connect(m_pwButtonPing, SIGNAL(clicked()), this, SLOT(SL_ButtonPing()));
 	connect(m_pwButtonRegister, SIGNAL(clicked()), this, SLOT(SL_ExchangeLogin()));
@@ -478,7 +478,7 @@ WLayoutApplicationMayanX::SL_InternetRequestCompleted(QNetworkReply * poNetworkR
 				poLayoutOrder->Layout_AddLabelAndWidgetH_PA("Quantity:", m_pwEditQuantity);
 				m_pwEditPrice = new WEditNumber;
 				poLayoutOrder->Layout_AddLabelAndWidgetH_PA("Price:", m_pwEditPrice);
-				WButtonTextWithIcon * pwButton = new WButtonTextWithIcon("Place Order", eMenuIconCoffeeBuy);
+				WButtonTextWithIcon * pwButton = new WButtonTextWithIcon("Place Order", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
 				poLayoutOrder->addWidget(pwButton);
 				poLayoutOrder->addWidget(PA_CHILD new QWidget, 1);
 				connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonUserOrderAdd()));
@@ -491,7 +491,7 @@ WLayoutApplicationMayanX::SL_InternetRequestCompleted(QNetworkReply * poNetworkR
                 poLayoutUserBalance->Layout_AddLabelAndWidgetH_PA("User Id:", m_pwEditUpdateBalanceUserId);
                 poLayoutUserBalance->Layout_AddLabelAndWidgetH_PA("Quantity:", m_pwEditUpdateBalanceQuantity);
                 m_pwLabelBalance=new WLabel;
-                pwButton = new WButtonTextWithIcon("Update Balance", eMenuIconCoffeeBuy);
+				pwButton = new WButtonTextWithIcon("Update Balance", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
                 poLayoutUserBalance->addWidget(pwButton);
                 poLayoutUserBalance->addWidget(m_pwLabelBalance);
 				poLayoutUserBalance->addWidget(PA_CHILD new QWidget, 1);
@@ -502,7 +502,7 @@ WLayoutApplicationMayanX::SL_InternetRequestCompleted(QNetworkReply * poNetworkR
                 m_poLayoutButtons->addRow(poLayoutCancelAnOrder);
                 m_pwEditIdToCancelOrder = new WEditNumber;
                 poLayoutCancelAnOrder->Layout_AddLabelAndWidgetH_PA("Id:", m_pwEditIdToCancelOrder);
-                pwButton = new WButtonTextWithIcon("Cancel Order", eMenuIconCoffeeBuy);
+				pwButton = new WButtonTextWithIcon("Cancel Order", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
                 poLayoutCancelAnOrder->addWidget(pwButton);
                 poLayoutCancelAnOrder->addWidget(PA_CHILD new QWidget, 1);
                 connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonUserOrderCancel()));
@@ -516,7 +516,7 @@ WLayoutApplicationMayanX::SL_InternetRequestCompleted(QNetworkReply * poNetworkR
                 poLayoutUpdateAnOrder->Layout_AddLabelAndWidgetH_PA("Price:", m_pwEditPriceToUpdateOrder);
                 m_pwEditQuantityToUpdateOrder = new WEditNumber;
                 poLayoutUpdateAnOrder->Layout_AddLabelAndWidgetH_PA("Quantity:", m_pwEditQuantityToUpdateOrder);
-                pwButton = new WButtonTextWithIcon("Update Order", eMenuIconCoffeeBuy);
+				pwButton = new WButtonTextWithIcon("Update Order", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
                 poLayoutUpdateAnOrder->addWidget(pwButton);
                 poLayoutUpdateAnOrder->addWidget(PA_CHILD new QWidget, 1);
                 connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonUserOrderUpdate()));
@@ -530,7 +530,7 @@ WLayoutApplicationMayanX::SL_InternetRequestCompleted(QNetworkReply * poNetworkR
                 poLayoutUpdateUsersAccount->Layout_AddLabelAndWidgetH_PA("User Id:", m_pwEditUpdateAccountId);
                 poLayoutUpdateUsersAccount->Layout_AddLabelAndWidgetH_PA("User Name:", m_pwEditUpdateAccountName);
                 poLayoutUpdateUsersAccount->Layout_AddLabelAndWidgetH_PA("User Role:", m_pwEditUpdateAccountRole);
-                pwButton = new WButtonTextWithIcon("Update User Account", eMenuIconCoffeeBuy);
+				pwButton = new WButtonTextWithIcon("Update User Account", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
                 poLayoutUpdateUsersAccount->addWidget(pwButton);
                 poLayoutUpdateUsersAccount->addWidget(PA_CHILD new QWidget, 1);
                 connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonUserAccountUpdate()));
@@ -540,7 +540,7 @@ WLayoutApplicationMayanX::SL_InternetRequestCompleted(QNetworkReply * poNetworkR
                 m_poLayoutButtons->addRow(poLayoutUserDocuments);
                 m_pwEditGetUserDocumentId=new WEditNumber;
                 poLayoutUserDocuments->Layout_AddLabelAndWidgetH_PA("Document Id:", m_pwEditGetUserDocumentId);
-                pwButton = new WButtonTextWithIcon("Get Document", eMenuIconCoffeeBuy);
+				pwButton = new WButtonTextWithIcon("Get Document", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
                 poLayoutUserDocuments->addWidget(pwButton);
                 poLayoutUserDocuments->addWidget(PA_CHILD new QWidget, 1);
                 connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonUserDocumentGet()));
@@ -550,22 +550,22 @@ WLayoutApplicationMayanX::SL_InternetRequestCompleted(QNetworkReply * poNetworkR
                 m_poLayoutButtons->addRow(poLayoutFetchData);
                     //Fetching User's Balances
 
-                    pwButton = new WButtonTextWithIcon("Fetch User's' Balances",eMenuIconCoffeeBuy);
+					pwButton = new WButtonTextWithIcon("Fetch User's' Balances", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
                     poLayoutFetchData->addWidget(pwButton);
                     connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonFetchUserBalances()));
 
                     //Fetching Users
-                    pwButton = new WButtonTextWithIcon("Fetch Users",eMenuIconCoffeeBuy);
+					pwButton = new WButtonTextWithIcon("Fetch Users", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
                     poLayoutFetchData->addWidget(pwButton);
                     connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonFetchUsers()));
 
                     //Fetching User's Documents
-                    pwButton = new WButtonTextWithIcon("Fetch User's Documents",eMenuIconCoffeeBuy);
+					pwButton = new WButtonTextWithIcon("Fetch User's Documents", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
                     poLayoutFetchData->addWidget(pwButton);
                     connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonFetchUserDocuments()));
 
                     //Upload a Document
-                    pwButton = new WButtonTextWithIcon("Upload a Document...",eMenuIconCoffeeBuy);
+					pwButton = new WButtonTextWithIcon("Upload a Document...", eMenuIcon_Bitcoin); // eMenuIconCoffeeBuy);
                     poLayoutFetchData->addWidget(pwButton);
                     connect(pwButton, SIGNAL(clicked()), this, SLOT(SL_ButtonUploadADocument()));
 

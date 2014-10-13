@@ -1394,9 +1394,7 @@ UComputeHashValueFromStringNoCase(PSZUC pszHashKey)
 	UINT uHashValue = 0;
 	while (TRUE)
 		{
-		UINT ch = (BYTE)*pszHashKey++;
-		if (ch >= 'A' && ch <= 'Z')
-			ch += 32;	// Make lowercase
+		CHS ch = Ch_GetCharLowercase(*pszHashKey++);
 		uHashValue = (uHashValue << 5) + uHashValue + ch;
 		if (ch == '\0')
 			return (uHashValue | d_kfHashValueNonZero);

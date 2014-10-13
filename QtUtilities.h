@@ -76,7 +76,7 @@ public:
 class WLabelIcon : public WLabel
 {
 public:
-	WLabelIcon(PA_PARENT QWidget * pwParent, EMenuAction eMenuIcon);
+	WLabelIcon(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon);
 };
 
 //	Invisible widget, typically to add a space between buttons
@@ -90,9 +90,10 @@ class WSpacer : public QLabel
 class WButtonIconForToolbar : public QToolButton
 {
 public:
-	WButtonIconForToolbar(PA_PARENT QWidget * pwParent, EMenuAction eMenuIcon);
-	WButtonIconForToolbar(EMenuAction eMenuIcon, PSZAC pszmToolTip = NULL);
-	void _Init(EMenuAction eMenuIcon);
+	WButtonIconForToolbar(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon);
+	WButtonIconForToolbar(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon);
+	WButtonIconForToolbar(EMenuIcon eMenuIcon, PSZAC pszmToolTip = NULL);
+	void _Init(EMenuIcon eMenuIcon);
 
 	WMenu * PwGetMenu() const { return (WMenu *)menu(); }
 };
@@ -101,7 +102,7 @@ public:
 class WButtonIconForToolbarWithDropDownMenu : public WButtonIconForToolbar
 {
 public:
-	WButtonIconForToolbarWithDropDownMenu(PA_PARENT QWidget * pwParent, EMenuAction eMenuIcon, PSZAC pszmButtonTextAndToolTip);
+	WButtonIconForToolbarWithDropDownMenu(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon, PSZAC pszmButtonTextAndToolTip);
 };
 
 class WButtonText : public QPushButton
@@ -109,14 +110,14 @@ class WButtonText : public QPushButton
 public:
 	WButtonText(PSZAC pszmButtonTextAndToolTip);
 	void Button_SetTextAndToolTip(PSZAC pszmButtonTextAndToolTip);
-	void Button_SetIcon(EMenuAction eMenuIcon);
+	void Button_SetIcon(EMenuIcon eMenuIcon);
 };
 
 //	This is a text button with an icon on the left of the text.  This is different than WButtonIconForToolbarWithDropDownMenu because no menu will be displayed when clicked.
 class WButtonTextWithIcon : public WButtonText
 {
 public:
-	WButtonTextWithIcon(PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIcon);
+	WButtonTextWithIcon(PSZAC pszmButtonTextAndToolTip, EMenuIcon eMenuIcon);
 };
 
 //	A normal checkbox where the user may switched on (checked) or off (unchecked)
@@ -229,6 +230,7 @@ public:
 	WEditTextArea(QWidget * pwParent);
 	WEditTextArea(const CStr & strText);
 	WEditTextArea(const QString & sText);
+	WEditTextArea(int cLines);
 	void _InitTextArea();
 	void Edit_SetColorBackgroundToGray();
 	void Edit_SetHeightLines(int cLines);
@@ -376,11 +378,12 @@ class OLayoutHorizontal : public QHBoxLayout
 public:
 	OLayoutHorizontal(PA_PARENT QWidget * pwParent);
 	OLayoutHorizontal(PA_PARENT QBoxLayout * poParentLayout);
+	void Layout_MarginsClear();
 	OLayoutVertical * Layout_PoAddLayoutVerticalWithWidgets_VLZA(QWidget * pawWidgetFirst, va_list vlaArgs);
 	OLayoutVertical * Layout_PoAddLayoutVerticalWithWidgets_VEZA(QWidget * pawWidgetFirst, ...);
 	OLayoutVertical * Layout_PoAddLayoutVerticalWithButtons_VEZA(QWidget * pawButtonFirst, ...);
 	void Layout_AddWidgetsH_VEZA(QWidget * pawWidgetFirst, ...);
-	void Layout_AddIconLabelAndWidgetsH_VEZA(EMenuAction eMenuActionIcon, PSZAC pszmFirstLabelAndToolTip, QWidget * pawWidgetFirst, ...);
+	void Layout_AddIconLabelAndWidgetsH_VEZA(EMenuIcon eMenuIcon, PSZAC pszmFirstLabelAndToolTip, QWidget * pawWidgetFirst, ...);
 	void Layout_AddLabelAndWidgetH_PA(PSZAC pszmLabelAndToolTip, QWidget * pawWidget);
 	void Layout_AddLabelAndWidgetV_PA(PSZAC pszmLabelAndToolTip, QWidget * pawWidget);
 	void Layout_AddLabelsAndWidgetsV_VEZA(PSZAC pszmFirstLabelAndToolTip, ...);
@@ -391,7 +394,20 @@ public:
 class OLayoutHorizontalAlignLeft : public OLayoutHorizontal
 {
 public:
+	OLayoutHorizontalAlignLeft(PA_PARENT QWidget * pwParent);
 	OLayoutHorizontalAlignLeft(PA_PARENT QBoxLayout * poParentLayout);
+};
+class OLayoutHorizontalAlignLeft0 : public OLayoutHorizontalAlignLeft
+{
+public:
+	OLayoutHorizontalAlignLeft0(PA_PARENT QWidget * pwParent);
+	OLayoutHorizontalAlignLeft0(PA_PARENT QBoxLayout * poParentLayout);
+};
+
+class OLayoutHorizontalAlignRight : public OLayoutHorizontal
+{
+public:
+	OLayoutHorizontalAlignRight(PA_PARENT QBoxLayout * poParentLayout);
 };
 
 //	Display widgets on top of each other centered vertically
@@ -400,13 +416,15 @@ class OLayoutVertical : public QVBoxLayout
 public:
 	OLayoutVertical(PA_PARENT QWidget * pwParent);
 	OLayoutVertical(PA_PARENT QBoxLayout * poParentLayout);
+	void Layout_MarginsClear();
+	void Layout_MarginsClearAndSpacing();
 	QWidget * Layout_PwGetWidgetAt(int iWidget) const;
 	void Layout_ResizeWidthsOfAllWidgets();
 	void Layout_AddWidgetsAndResizeWidths_VEZA(QWidget * pawWidgetFirst, ...);
 	void Layout_AddWidgetsAndResizeWidths_VLZA(QWidget * pawWidgetFirst, va_list vlArgs);
 	OLayoutHorizontalAlignLeft * Layout_PoAddRowLabelsAndWidgets_VEZA(PSZAC pszmFirstLabelAndToolTip, ...);
 	OLayoutHorizontalAlignLeft * Layout_PoAddRowLabelsAndWidgets_VLZA(PSZAC pszmFirstLabelAndToolTip, va_list vlArgs);
-	WButtonTextWithIcon * Layout_PwAddRowButtonAndLabel(PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIconButton, PSZAC pszmLabelTextAndToolTip);
+	WButtonTextWithIcon * Layout_PwAddRowButtonAndLabel(PSZAC pszmButtonTextAndToolTip, EMenuIcon eMenuIconButton, PSZAC pszmLabelTextAndToolTip);
 	WEdit * Layout_PwAddRowLabelEditReadOnly(PSZAC pszmLabelTextAndToolTipEdit, PSZUC pszEditText);
 	WEdit * Layout_PwAddRowLabelEditReadOnlyToHex(PSZAC pszmLabelTextAndToolTipEdit, const CBin & bin);
 	WLabel * Layout_PwAddRowLabelEditButton(PSZAC pszmLabelTextAndToolTipEdit, PA_CHILD WEdit * pwEdit, PA_CHILD QWidget * pawButton);
@@ -425,6 +443,13 @@ public:
 	OLayoutVerticalAlignTop(PA_PARENT QWidget * pwParent);
 	OLayoutVerticalAlignTop(PA_PARENT QBoxLayout * poParentLayout);
 };
+class OLayoutVerticalAlignTop0 : public OLayoutVerticalAlignTop
+{
+public:
+	OLayoutVerticalAlignTop0(PA_PARENT QWidget * pwParent);
+	OLayoutVerticalAlignTop0(PA_PARENT QBoxLayout * poParentLayout);
+};
+
 
 class OLayoutForm : public QFormLayout
 {
@@ -432,7 +457,9 @@ public:
 	explicit OLayoutForm(PA_PARENT QWidget * pwParent);
 	explicit OLayoutForm(PA_PARENT QBoxLayout * poParentLayout);
 	void Layout_RemoveMargins();
-	void Layout_AddRowLabelFormat_VE_Gsb(PSZAC pszFmtTemplate, ...);
+	WLabel * Layout_PwAddRowLabelFormat_VE_Gsb(PSZAC pszFmtTemplate, ...);
+	WLabel * Layout_PwAddRowBlankAndLabelDescription(PSZAC pszLabel);
+	WLabel * Layout_PwAddRowLabelAndWidget(PSZAC pszLabel, PA_CHILD QWidget * pawWidget);
 	WEdit * Layout_PwAddRowLabelEdit(PSZAC pszLabel, const CString & sEditText);
 	WEdit * Layout_PwAddRowLabelEditReadOnly(PSZAC pszLabel, const CString & sEditText);
 	WEdit * Layout_PwAddRowLabelEditReadOnlyInt(PSZAC pszLabel, int nValue);
@@ -446,7 +473,7 @@ public:
 	WEditTextArea * Layout_PwAddRowLabelEditTextAreaReadOnlyToHex(PSZAC pszLabel, const CBin & bin, int cLines);
 	WEditPassword * Layout_PwAddRowLabelEditPassword(PSZAC pszLabel);
 	WEdit * Layout_PwAddRowLabelEditAndPushButton(PSZAC pszLabel, const QString & sEditText, PSZAC pszButtonText, OUT QPushButton ** ppwButton);
-	WButtonTextWithIcon * Layout_PwAddRowLabelAndPushButton(PSZAC pszmLabelTextAndToolTip, PSZAC pszmButtonTextAndToolTip, EMenuAction eMenuIconButton);
+	WButtonTextWithIcon * Layout_PwAddRowLabelAndPushButton(PSZAC pszmLabelTextAndToolTip, PSZAC pszmButtonTextAndToolTip, EMenuIcon eMenuIconButton);
 
 	void Layout_AddRowLabelError(PSZAC pszLabel, const QString & sError);
 	void Layout_AddRowErrors(const CArrayPsz & arraypszErrors);
@@ -518,7 +545,7 @@ public:
 	void ItemFlagsRemove(Qt::ItemFlag efItemFlagsRemove);
 	void ItemFlagsEditingEnable() { ItemFlagsAdd(Qt::ItemIsEditable); }
 	void ItemFlagsEditingDisable() { ItemFlagsRemove(Qt::ItemIsEditable); }
-	void InitIconAndText(EMenuAction eMenuIcon, PSZUC pszTextColumn1, PSZUC pszTextColumn2 = NULL, PSZUC pszTextColumn3 = NULL, PSZUC pszTextColumn4 = NULL);
+	void InitIconAndText(EMenuIcon eMenuIcon, PSZUC pszTextColumn1, PSZUC pszTextColumn2 = NULL, PSZUC pszTextColumn3 = NULL, PSZUC pszTextColumn4 = NULL);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -545,6 +572,8 @@ void Widget_SetWidth(INOUT QWidget * pwWidget, int nWidth);
 void Widget_ScrollToEnd(INOUT QAbstractScrollArea * pwWidget);
 
 void WidgetButton_SetTextAndToolTip(INOUT QAbstractButton * pwButton, PSZAC pszmButtonTextAndToolTip);
+void Widget_SetIconButton(INOUT QAbstractButton * pwButton, EMenuIcon eMenuIcon);
+void Widget_SetIcon(INOUT QWidget * pwWidget, EMenuIcon eMenuIcon);
 
 void Layout_MarginsClear(INOUT QLayout * poLayout);
 
@@ -593,6 +622,7 @@ public:
 	OPainter(QPaintDevice * poPaintDevice) : QPainter(poPaintDevice) { }
 	void DrawLineHorizontal(int xLeft, int xRight, int yPos);
 	void DrawLineVertical(int xPos, int yTop, int yBottom);
+	void FillRectWithGradientVertical(const QRect & rcFill, QRGB coTop, QRGB coBottom);
 };
 
 

@@ -29,7 +29,7 @@ DisplayDialogContactNew()
 
 #define	SL_DialogContactNew(_pfmName)		SL_DDialog(_pfmName, DialogContactNew)
 
-DialogContactNew::DialogContactNew(TAccountXmpp * pAccount) : DDialogOkCancelWithLayouts("Add New Peer", eMenuAction_ContactAdd)
+DialogContactNew::DialogContactNew(TAccountXmpp * pAccount) : DDialogOkCancelWithLayouts("Add New Peer", eMenuIcon_ContactAdd)
 	{
 	Assert(pAccount != NULL);
 	m_pAccount = pAccount;
@@ -42,7 +42,7 @@ DialogContactNew::DialogContactNew(TAccountXmpp * pAccount) : DDialogOkCancelWit
 	m_pwEditHtmlUsernames->Edit_SetWatermark("New Peers");
 	DialogBody_AddRowWidget_PA(m_pwEditHtmlUsernames);
 	connect(m_pwEditUsername, SIGNAL(textChanged(QString)), this, SLOT(SL_EditUsername_textChanged(QString)));
-	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DialogContactNew(SL_ButtonOK_clicked), "Add Peer", eMenuAction_ContactAdd);
+	Dialog_AddButtonsOkCancel_RenameButtonOk(SL_DialogContactNew(SL_ButtonOK_clicked), "Add Peer", eMenuIcon_ContactAdd);
 	m_pwEditUsername->setFocus();
 	}
 
@@ -202,7 +202,7 @@ WLayoutContactNew::WLayoutContactNew(TAccountXmpp * pAccount)
 	m_pwEditInvitation= new WEditReadOnly;
 	m_pwEditInvitation->Edit_SetToolTip((PSZUC)"Personalized invitation link to download SocietyPro.\nPlease send this link to your friends by email or by instant messaging.");
 	m_pwEditInvitation->Edit_SetTextU(pAccount->ChatLog_PszGetInvitationLink(OUT_IGNORED &g_strScratchBufferStatusBar));
-	m_pwButtonCopyInvitation = new WButtonTextWithIcon("Copy|Copy the invitation link into the clipboard", eMenuAction_Copy);
+	m_pwButtonCopyInvitation = new WButtonTextWithIcon("Copy|Copy the invitation link into the clipboard", eMenuIcon_Copy);
 	poLayoutVertical->Layout_PwAddRowLabelEditButton("Invitation Link:", m_pwEditInvitation, m_pwButtonCopyInvitation);
 	connect(m_pwButtonCopyInvitation, SIGNAL(clicked()), this, SLOT(SL_CopyInvitation()));
 
@@ -211,7 +211,7 @@ WLayoutContactNew::WLayoutContactNew(TAccountXmpp * pAccount)
 
 	m_pwEditUsername = new WEdit;
 	m_pwEditUsername->setPlaceholderText("Paste received invitation link, or enter multiple usernames separated with a space");
-	WButtonTextWithIcon * pwButtonAddContacts = new WButtonTextWithIcon("Add|Add the new peers", eMenuAction_ContactAdd);
+	WButtonTextWithIcon * pwButtonAddContacts = new WButtonTextWithIcon("Add|Add the new peers", eMenuIcon_ContactAdd);
 	poLayoutVertical->Layout_PwAddRowLabelEditButton("New Peers:", m_pwEditUsername, pwButtonAddContacts);
 
 	m_pwEditHtmlUsernames = new WEditTextAreaReadOnlyGray;

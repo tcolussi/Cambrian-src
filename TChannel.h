@@ -29,4 +29,23 @@ public:
 	BOOL FNewChannelAdded(PSZUC pszChannelName);
 };
 
+
+class CHashElementChannel : public CHashElement
+{
+public:
+	TGroup * m_pChannel;
+	CHU m_rgzchName[0];		// The channel name is appended at the end of the hash element
+};
+
+class CHashTableChannels : public CHashTable
+{
+public:
+	CHashTableChannels();
+	TGroup * PFindChannel(PSZUC pszChannelName);
+	TGroup * PFindChannelOrAllocate(PSZUC pszChannelName);
+
+public:
+	static PSZUC S_PszGetHashKeyChannelName(const CHashElementChannel * pHashElement) { return pHashElement->m_rgzchName; }		// This routine must have a compatible interface as PFn_PszGetHashKey()
+};
+
 #endif // TCHANNEL_H
