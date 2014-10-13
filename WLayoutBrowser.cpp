@@ -419,6 +419,14 @@ LaunchApplication_Ballotmaster()
 	}
 
 void
+LaunchApplication_GroupManager(TGroup * pGroup_YZ)
+	{
+	QString & sName = "Group Manager";
+
+	}
+
+
+void
 LaunchBrowser(const QString & /*sName*/, const QString & sUrlAbsolute)
 	{
 	//EMessageBoxInformation("opening page $Q", &sUrl);

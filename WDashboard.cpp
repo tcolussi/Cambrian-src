@@ -442,6 +442,7 @@ WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	m_sections.pwSectionChannels = new WDashboardSectionChannels("CHANNELS");
 	m_sections.pwSectionContacts = new WDashboardSectionContacts("PEERS");
 	m_sections.pwSectionGroups = new WDashboardSectionGroups("PRIVATE GROUPS");
+	m_sections.pwSectionCorporations = new WDashboardSectionGroups("Corporations & Coalitions");
 
 	// Add each section to the vertical layout
 	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)

@@ -179,6 +179,7 @@ protected:
 		WDashboardSectionChannels * pwSectionChannels;
 		WDashboardSectionContacts * pwSectionContacts;
 		WDashboardSectionGroups * pwSectionGroups;		// Private groups
+		WDashboardSectionGroups * pwSectionCorporations;	// Corporations & Coalitions
 		} m_sections;
 	CDashboardSectionItem * m_pItemSelected_YZ;		// Which item is selected (has the focus)
 

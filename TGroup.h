@@ -45,8 +45,9 @@ public:
 
 enum EGroupType
 	{
-	eGroupType_kzOpen		= 0,	// Default group type which shows in the Navigation Tree
-	eGroupType_keAudience	= 1,	// Private distribution list to send polls (at the moment)
+	eGroupType_kzOpen			= 0,	// Default group type which shows in the Navigation Tree
+	eGroupType_keAudience		= 1,	// Private distribution list to send polls (at the moment)
+	eGroupType_keCorporation	= 2,	// The group is a corporation
 	eGroupType_kmMask		= 0x000F
 	};
 
