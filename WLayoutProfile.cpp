@@ -20,7 +20,8 @@ TProfile::TreeItem_GotFocus()
 
 WLayoutMyProfiles::WLayoutMyProfiles()
 	{
-	m_pAccountNew = NULL;
+
+    m_pAccountNew = NULL;
 	OLayoutVerticalAlignTop * poLayoutVertical = Splitter_PoAddGroupBoxAndLayoutVertical_VE("Welcome to SocietyPro");
 	WLabelSelectableWrap * pwLabel = new WLabelSelectableWrap(g_oConfiguration.m_arraypaProfiles.FIsEmpty() ?
 		"To get started, you need to pick a name for your role:<br/><br/>"
@@ -30,15 +31,17 @@ WLayoutMyProfiles::WLayoutMyProfiles()
 		"Creating a " d_sza_profile " is easy; you pick a name you wish other people will recognize you." :
 		"You already have a " d_sza_profile ", however you are welcome to 'play' multiple " d_sza_profile "s.");
 	poLayoutVertical->addWidget(pwLabel);
-	m_pwEditProfile = new WEdit;
+
+#ifndef COMPILE_WITH_OPEN_TRANSACTIONS
+    m_pwEditProfile = new WEdit;
 	m_pwEditProfile->Edit_SetWatermark("Enter name, nickname or business name of your new " d_sza_profile);
 	m_pwEditProfile->Edit_SetToolTip((PSZUC)"Examples:\n\tJoe Smith\n\tSuperman\n\tACME Widgets, Inc.");
 //	m_pwEditProfile->setFocus();
-
-	OLayoutHorizontalAlignLeft * poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
+    OLayoutHorizontalAlignLeft * poLayout = new OLayoutHorizontalAlignLeft(poLayoutVertical);
 	//poLayout->Layout_AddLabelAndWidgetH_PA("ID:", m_pwEditProfile);
 	poLayout->addWidget(m_pwEditProfile);
-	WButtonTextWithIcon * pwButtonCreateNewID = new WButtonTextWithIcon("Create " d_sza_Profile" ", eMenuIcon_ClassProfile);
+
+    WButtonTextWithIcon * pwButtonCreateNewID = new WButtonTextWithIcon("Create " d_sza_Profile" ", eMenuIcon_ClassProfile);
 	poLayout->addWidget(pwButtonCreateNewID);
 
 	m_pwCheckboxAutomatic = new QCheckBox("Automatically create an XMPP account for my new " d_sza_profile);
@@ -51,7 +54,8 @@ WLayoutMyProfiles::WLayoutMyProfiles()
 
 	connect(pwButtonCreateNewID, SIGNAL(clicked()), this, SLOT(SL_ButtonCreateNewProfile()));
 	connect(m_pwEditProfile, SIGNAL(returnPressed()), this, SLOT(SL_ButtonCreateNewProfile()));
-	}
+#endif
+}
 
 WLayoutMyProfiles::~WLayoutMyProfiles()
 	{
@@ -64,7 +68,8 @@ WLayoutMyProfiles::~WLayoutMyProfiles()
 void
 WLayoutMyProfiles::SL_ButtonCreateNewProfile()
 	{
-	CStr strProfileName = *m_pwEditProfile;
+    #ifndef COMPILE_WITH_OPEN_TRANSACTIONS
+    CStr strProfileName = *m_pwEditProfile;
 	if (strProfileName.FIsEmptyString())
 		{
 		EMessageBoxWarning("Please enter a valid name for your " d_sza_profile ".");
@@ -112,13 +117,16 @@ WLayoutMyProfiles::SL_ButtonCreateNewProfile()
 		{
 		pProfile->TreeItemLayout_SetFocus();
 		}
-	} // SL_ButtonCreateNewProfile()
+#endif
+} // SL_ButtonCreateNewProfile()
 
 //	WLayoutMyProfiles::WLayout::Layout_SetFocus()
 void
 WLayoutMyProfiles::Layout_SetFocus()
 	{
-	m_pwEditProfile->setFocus();
+    #ifndef COMPILE_WITH_OPEN_TRANSACTIONS
+    m_pwEditProfile->setFocus();
+   #endif
 	}
 
 //	WLayoutMyProfiles::ISocketUI::SocketUI_OnSuccess()

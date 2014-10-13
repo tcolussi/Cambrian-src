@@ -9,6 +9,7 @@ It is supposed to be declared once in the main window
 #ifndef PRECOMPILEDHEADERS_H
     #include "PreCompiledHeaders.h"
 #endif
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 #include <Qwidget>
 #include <QPointer>
 #include <core/passwordcallback.hpp>
@@ -60,4 +61,4 @@ public:
 };
 
 #endif // OTX_WRAP_H
-
+#endif // USING OT

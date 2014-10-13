@@ -2,9 +2,10 @@
 #ifndef PRECOMPILEDHEADERS_H
     #include "PreCompiledHeaders.h"
 #endif
+
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 #include <iostream>
 #include <OTCrypto.hpp>
-
 static OTCaller           passwordCaller;
 static MTPasswordCallback passwordCallback;
 
@@ -218,6 +219,6 @@ OTX_WRAP::~OTX_WRAP()
 {   //std::cout << "Destroying otx wrap";
     OTX::It(pParentWidget,true);
 }
-
+#endif
 
 

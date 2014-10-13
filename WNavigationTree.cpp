@@ -288,7 +288,7 @@ WNavigationTree::SL_MenuProfilesShow()
 		}
 	if (cProfiles > 1)
 		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All " d_sza_Profile "s>", d_iProfile_DisplayAll, eMenuIconIdentities);
-	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Create New " d_sza_Profile "...>", d_iProfile_CreateNew, eMenuIconIdentities);
+        g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Manage Roles...>", d_iProfile_CreateNew, eMenuIconIdentities);
 	}
 
 void
@@ -301,7 +301,7 @@ WNavigationTree::SL_MenuProfileSelected(QAction * pAction)
     std::cout << pAction->text().toStdString();
 
     // open only if Manage Role Screen is created
-    if (pAction->text().toStdString().compare("<Manage Role...>")==0)
+    if (pAction->text().toStdString().compare("<Manage Roles...>")==0)
       pOTX->openRoleCreationScreen();
 
 
