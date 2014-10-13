@@ -3,6 +3,11 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+	#include <OTX_WRAP.h>
+	#include <QPointer>
+	extern  OTX_WRAP * pOTX;
+#endif
 
 extern bool g_fIsConnectedToInternet;
 extern TIMESTAMP_MINUTES g_tsmMinutesSinceApplicationStarted;

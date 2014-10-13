@@ -421,8 +421,10 @@ LaunchApplication_Ballotmaster()
 void
 LaunchApplication_GroupManager(TGroup * pGroup_YZ)
 	{
-	QString & sName = "Group Manager";
-
+	QString sName = "Group Manager";
+	if (pGroup_YZ != NULL)
+		sName += "?id=" + HashSha1_ToQStringBase85(IN &pGroup_YZ->m_hashGroupIdentifier);	// TODO: Need to percent encode the URL
+	LaunchApplication(sName);
 	}
 
 

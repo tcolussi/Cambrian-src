@@ -157,10 +157,48 @@ HUNGARIAN PREFIX
 #endif
 #include <QApplication>
 #include <QSharedMemory>
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+#include <iostream>
+// IMPORTS TO ACCESS TO OT API
+#include <../../src/opentxs/OTAPI.hpp>
+#include <../../src/opentxs/OTAPI_Exec.hpp>
+#include <../../src/opentxs/OTLog.hpp>
+#include <../../src/opentxs/OTPaths.hpp>
+#include <core/OTX.hpp>
+
+class __OTclient_RAII
+{
+public:
+  __OTclient_RAII()
+  {
+      // SSL gets initialized in here, before any keys are loaded.
+      OTAPI_Wrap::AppInit();
+  }
+  ~__OTclient_RAII()
+  {
+
+      OTAPI_Wrap::AppCleanup();
+  }
+};
+#endif
 
 int
 main(int argc, char *argv[])
 	{
+	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+	//  Init OTX
+
+    //
+    __OTclient_RAII the_client_cleanup;  // <===== SECOND constructor is called here.
+    // ----------------------------------------
+    if (NULL == OTAPI_Wrap::It())
+    {
+        OTLog::vError(0, "Error, exiting: OTAPI_Wrap::AppInit() call must have failed.\n");
+        return -1;
+    }
+	#endif
+
+	
 	Assert(sizeof(UINT) == 4);
 	QApplication oApplication(argc, argv);
 	//oApplication.setQuitOnLastWindowClosed(false);

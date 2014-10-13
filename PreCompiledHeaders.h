@@ -13,6 +13,7 @@
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
+//#define COMPILE_WITH_OPEN_TRANSACTIONS
 //#define DEBUG_IMPORT_OLD_CONFIG_XML
 
 #ifndef PRECOMPILEDHEADERS_H

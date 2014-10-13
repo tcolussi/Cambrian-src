@@ -24,7 +24,9 @@ TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	m_tsOtherLastSynchronized = d_ts_zNA;
 	m_tsTaskIdDownloadedLast = d_ts_zNA;
 	m_paoJapiContact = NULL;
+	#if 0
 	m_strKeyPublic = (PSZUC)"PubKeyTest";
+	#endif
 	}
 
 TContact::~TContact()

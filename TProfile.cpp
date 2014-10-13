@@ -81,9 +81,11 @@ void
 TProfile::GenerateKeys()
 	{
 	// At the moment, since we do not have PGP code, make both keys the SHA-1 of the name
+	#if 0
 	m_strNymID.BinAppendText_VE("MyNymID$l", Timestamp_GetCurrentDateTime());
 	m_strKeyPrivate.BinInitFromText("PrivateKey123"); // BinInitFromCalculatingHashSha1(m_strNameProfile);
 	m_strKeyPublic.BinInitFromText("PublicKey123");
+	#endif
 	}
 
 void

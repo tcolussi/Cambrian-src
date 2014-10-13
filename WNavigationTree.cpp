@@ -295,6 +295,18 @@ void
 WNavigationTree::SL_MenuProfileSelected(QAction * pAction)
 	{
 	const int iProfile = pAction->data().toInt();
+	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+	const int iProfile = pAction->data().toInt();
+
+    std::cout << pAction->text().toStdString();
+
+    // open only if Manage Role Screen is created
+    if (pAction->text().toStdString().compare("<Manage Role...>")==0)
+      pOTX->openRoleCreationScreen();
+
+
+    if (!pOTX->RCS_ACTION_CANCEL)
+	#endif
 	NavigationTree_PopulateTreeItemsAccordingToSelectedProfile((TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementAtSafe_YZ(iProfile), iProfile == d_iProfile_CreateNew);
 	}
 

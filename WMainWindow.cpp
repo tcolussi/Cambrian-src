@@ -16,6 +16,11 @@
 #include "WLayoutContainer.h"
 #include "WQmlToolbar.h"
 #include <QSound>
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+	#include <iostream>
+	#include <OTX_WRAP.h>
+	OTX_WRAP * pOTX;
+#endif
 
 #ifdef DEBUG
 	//#define DEBUG_DISABLE_TIMER		// Useful for debugging the code booting the application without displaying the connection notifications in the Message Log
@@ -209,6 +214,12 @@ WMenuDropdown::WMenuDropdown(PSZAC pszName) : WMenu(pszName)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WMainWindow::WMainWindow() : QMainWindow()
 	{
+	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+	//Define the OTX pointer to access to all objects
+	OTX_WRAP * otw=new OTX_WRAP(this); // <-- Here the wallet is opened and if does not exists create a new wallet given a passphrase
+	pOTX=otw;
+	#endif
+
 	g_pwMainWindow = this;
 	#if defined(Q_OS_WIN)
 	g_hwndMainWindow = (HWND)winId();
@@ -320,6 +331,9 @@ WMainWindow::~WMainWindow()
 	g_pwNavigationTree->NavigationTree_TreeItemUnselect();
 	g_oConfiguration.Destroy();	// Destroy the configuration, with the accounts, contacts and groups.
 	MessageLog_ModuleShutdown();
+	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    delete pOTX;  // Destroy pointer to OTX
+	#endif
 	}
 
 
