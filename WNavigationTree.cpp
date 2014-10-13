@@ -296,7 +296,7 @@ WNavigationTree::SL_MenuProfileSelected(QAction * pAction)
 	{
 	const int iProfile = pAction->data().toInt();
 	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-	const int iProfile = pAction->data().toInt();
+
 
     std::cout << pAction->text().toStdString();
 
