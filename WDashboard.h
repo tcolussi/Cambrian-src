@@ -51,10 +51,10 @@ public:
 
 		IEvent * pEvent;
 		IEventBallot * pEventBallot;
-		} m_data;
+		} mu_data;
 
 public:
-	CDashboardSectionItem(void * pvDataItem) { m_uFlagsItem = 0; m_data.pvDataItem = pvDataItem; }
+	CDashboardSectionItem(void * pvDataItem) { m_uFlagsItem = 0; mu_data.pvDataItem = pvDataItem; }
 };
 
 class CArrayPtrDashboardSectionItems : private CArray
@@ -76,6 +76,8 @@ protected:
 	WDashboard * m_pParent;	// This pointer is necessary when an item is clicked, the other item(s) selected from other section(s) are unselected.
 	CString m_sName;		// Name of the section
 	CArrayPtrDashboardSectionItems m_arraypaItems;	// Items to draw
+	int m_cTotalItemsAvailable;						// Total number of items (the section will display "$i more..." if the total available is larger than the number of items to draw
+	CStr m_strTextFooterIfItemsAvailableIsZero;		// Text to display in the footer if m_cTotalItemsAvailable <= 0.  Typically this will display "New ..."
 
 	//	Extra information regarding the hit-testing
 	enum
@@ -116,6 +118,8 @@ protected:
 	SHitTestInfo OGetHitTestInfo(int xPos, int yPos) const;
 	BOOL FSetHitTestInfo(SHitTestInfo oHitTestInfo);
 
+	void _OnItemClicked_ITreeItem(SHitTestInfo oHitTestInfo, const EMenuActionByte rgzeMenuActions[]);
+
 	static SHitTestInfo c_oHitTestInfoEmpty;
 }; // WDashboardSection
 
@@ -126,24 +130,37 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class WDashboardSectionChannels : public WDashboardSection
+class WDashboardSection_TGroup : public WDashboardSection
 {
 protected:
-	int m_cChannelsTotal;
+	EMenuIcon m_eMenuIcon;
+
 public:
-	WDashboardSectionChannels(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
+	WDashboardSection_TGroup(PSZAC pszGroupName, EMenuIcon eMenuIcon);
+	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroup);
+};
+
+class WDashboardSectionChannels : public WDashboardSection_TGroup
+{
+public:
+	WDashboardSectionChannels();
 	virtual void Init(TProfile * pProfile_YZ);
-	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroupChannel);
-	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest);
 	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 };
 
-class WDashboardSectionGroups : public WDashboardSection
+class WDashboardSectionGroups : public WDashboardSection_TGroup
 {
 public:
-	WDashboardSectionGroups(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
+	WDashboardSectionGroups();
 	virtual void Init(TProfile * pProfile_YZ);
-	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvGroup);
+	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
+};
+
+class WDashboardSectionCorporations : public WDashboardSection_TGroup
+{
+public:
+	WDashboardSectionCorporations();
+	virtual void Init(TProfile * pProfile_YZ);
 	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 };
 
@@ -153,7 +170,6 @@ public:
 	WDashboardSectionContacts(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
 	virtual void Init(TProfile * pProfile_YZ);
 	virtual void DrawItem(CPainterCell * pPainter, UINT uFlagsItem, void * pvContact);
-	virtual void DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest);
 	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 };
 
@@ -162,6 +178,7 @@ class WDashboardSectionBallots : public WDashboardSection
 public:
 	WDashboardSectionBallots(PSZAC pszSectionName) : WDashboardSection(pszSectionName) { }
 	virtual void Init(TProfile * pProfile_YZ);
+	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 };
 
 
@@ -173,13 +190,13 @@ singleton WDashboard : public QDockWidget
 protected:
 	TProfile * m_pProfile_YZ;							// Pointer of the profile the dashboard is displaying
 	OLayoutVerticalAlignTop * m_poLayoutVertial;	// Stack the sections vertically
-	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section
+	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section.  To change the order of the sections, change their order in this structure.
 		{
-		WDashboardSectionBallots * pwSectionBalots;
 		WDashboardSectionChannels * pwSectionChannels;
 		WDashboardSectionContacts * pwSectionContacts;
 		WDashboardSectionGroups * pwSectionGroups;		// Private groups
-		WDashboardSectionGroups * pwSectionCorporations;	// Corporations & Coalitions
+		WDashboardSectionCorporations * pwSectionCorporations;	// Corporations & Coalitions
+		WDashboardSectionBallots * pwSectionBalots;
 		} m_sections;
 	CDashboardSectionItem * m_pItemSelected_YZ;		// Which item is selected (has the focus)
 
@@ -187,8 +204,7 @@ public:
 	WDashboard();
 	inline TProfile * PGetProfile_YZ() const { return m_pProfile_YZ; }
 	void ProfileSelectedChanged(TProfile * pProfile);
-	void NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
-	void NewEventRelatedToBallot(IEventBallot * pEventBallot);
+	void RefreshAll();
 	void RefreshContact(TContact * pContact);
 	void RefreshGroup(TGroup * pGroup);
 	void RefreshChannels();
@@ -199,6 +215,8 @@ public:
 	void RedrawGroup(TGroup * pGroup);
 	void BumpContact(TContact * pContact);
 	void BumpTreeItem(ITreeItem * pTreeItem);
+	void NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
+	void NewEventRelatedToBallot(IEventBallot * pEventBallot);
 
 	BOOL FSelectItem(CDashboardSectionItem * pItem);
 

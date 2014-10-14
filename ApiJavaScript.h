@@ -856,4 +856,12 @@ public slots:
 };
 
 
+//	Application Names Identifiers.  Those values are not meant to be localized, but to offer a mechanism to select an application by name.
+//	Ideally it should be an enum to select applications.  It would be more performant and more reliable than comparing strings.
+#define d_szNameApplicationHtml_Ballotmaster			"Ballotmaster"
+#define d_szNameApplicationHtml_Channels				"Channels"
+#define d_szNameApplicationHtml_GroupManager			"Group Manager"
+#define d_szNameApplicationHtml_Corporations			"Corporations"
+#define d_szNameApplicationHtml_PeerManager				"Peer Manager"
+
 #endif // APIJAVASCRIPT_H

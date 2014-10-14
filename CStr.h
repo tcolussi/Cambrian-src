@@ -32,6 +32,7 @@ public:
 	BOOL FIsEmptyString() const;
 	int CchGetLength() const;
 
+	inline VOID InitFromStringA(PSZAC pszaString) { BinInitFromStringWithNullTerminator(pszaString); }
 	inline VOID InitFromStringU(PSZUC pszuString) { BinInitFromStringWithNullTerminator((PSZAC)pszuString); }
 	VOID InitFromStringW(PSZWC pszwString);
 	void InitFromStringQ(const QString & sString);
@@ -53,6 +54,7 @@ public:
 	void FormatErrorCode(EError err);
 	void FormatErrorAtLineNumber(int nLineNumberError);
 
+	void NormalizeStringForChannelName();
 	BOOL FCompareStringsChannelNames(PSZUC pszuChannelName) const;
 	BOOL FCompareStringsJIDs(PSZUC pszuJID) const;
 	BOOL FCompareStringsNoCaseUntilCharacter(PSZUC pszuStringCompare, UINT chCompareUntil) const;

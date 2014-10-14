@@ -19,21 +19,18 @@ public:
 class TBrowserTabs : public ITreeItem
 {
 	RTI_IMPLEMENTATION(TBrowserTabs)
-
 protected:
 	TProfile * m_pProfile;
-
 public:
 	WLayoutTabbedBrowser *m_pawLayoutBrowser;
 	CArrayPtrBrowserTabs m_arraypaTabs;
 
+public:
 	TBrowserTabs(TProfile * pProfile);
 	~TBrowserTabs();
 
-	void SetIconAndName(EMenuAction eMenuActionIcon, PSZAC pszName);
-	TBrowserTab * AddTab(CStr &sUrl);
-	TBrowserTab * AddTab();
-	TBrowserTab * PGetCurrentBrowserTab_YZ();
+	TBrowserTab * PBrowserTabAdd(const CStr & strUrl = c_strEmpty);
+	TBrowserTab * PBrowserTabGetCurrentSelected_YZ();
 	void DeleteTab(int index);
 	int GetTabsCount();
 
@@ -45,15 +42,16 @@ public:
 	void TreeItemBrowser_DisplayWithinNavigationTree();
 
 public:
-	static IXmlExchange* S_PaAllocateBrowserTabbed(PVOID pProfileParent);
+	static IXmlExchange * S_PaAllocateBrowserTabbed(PVOID pProfileParent);
 
-}; // TBrowser
+}; // TBrowserTabs
 
 
 class CArrayPtrBrowsersTabbed : public CArrayPtrTreeItems
 {
 public:
 	inline TBrowserTabs ** PrgpGetBrowsersStop(OUT TBrowserTabs *** pppBrowserStop) const { return (TBrowserTabs **)PrgpvGetElementsStop(OUT (void ***)pppBrowserStop); }
+	inline TBrowserTabs * PGetBrowserTabsFirst_YZ() const { return (TBrowserTabs *)PvGetElementFirst_YZ(); }
 };
 
 #endif // TBROWSERTABS_H

@@ -60,6 +60,7 @@ enum EMenuIcon			// Must be in sync with c_mapepszIconResources[]
 	eMenuIcon_Group,
 
 	eMenuIcon_RecycleBin,
+	eMenuIcon_HashtagBlack,
 
 	eMenuIcon_Copy,
 	eMenuIcon_Find,

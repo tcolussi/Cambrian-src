@@ -195,12 +195,11 @@ OJapiGroup::OJapiGroup(TGroup * pGroup, OJapiCambrian * poCambrian)
 QString
 OJapiGroup::id()
 	{
-	/*
-	CStr str;
-	str.Format("$p", this);
-	return str;
-	*/
+	#if 0
 	return HashSha1_ToQStringBase85(IN &m_pGroup->m_hashGroupIdentifier);
+	#else
+	return m_pGroup->Group_SGetIdentifier();
+	#endif
 	}
 
 QString
@@ -490,33 +489,32 @@ OJapiBrowsersList::OJapiBrowsersList(OJapiProfile *poProfile)
 POJapiBrowserTab
 OJapiBrowsersList::PGetCurrentTab_YZ()
 	{
-	TBrowserTabs *pBrowserTabs = PGetBrowser_YZ();
-	if ( pBrowserTabs != NULL)
+	TBrowserTabs * pBrowserTabs = PGetBrowser_YZ();
+	if (pBrowserTabs != NULL)
 		{
-		TBrowserTab *pTab = pBrowserTabs->PGetCurrentBrowserTab_YZ();
-		if ( pTab != NULL )
+		TBrowserTab * pTab = pBrowserTabs->PBrowserTabGetCurrentSelected_YZ();
+		if (pTab != NULL)
 			return pTab->POJapiGet(this);
 		}
-
 	return NULL;
 	}
 
 TBrowserTabs*
 OJapiBrowsersList::PGetBrowser_YZ()
 	{
-	return (TBrowserTabs*) m_poJapiProfileParent_NZ->m_pProfile->m_arraypaBrowsersTabbed.PvGetElementFirst_YZ();
+	return m_poJapiProfileParent_NZ->m_pProfile->m_arraypaBrowsersTabbed.PGetBrowserTabsFirst_YZ();
 	}
 
 QVariantList
 OJapiBrowsersList::listBrowsers()
 	{
 	QVariantList list;
-	TBrowserTabs *pBrowserTabs = PGetBrowser_YZ();
-	if ( pBrowserTabs )
+	TBrowserTabs * pBrowserTabs = PGetBrowser_YZ();
+	if (pBrowserTabs != NULL)
 		{
-		TBrowserTab **ppBrowserTabStop;
-		TBrowserTab **ppBrowserTab = pBrowserTabs->m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);
-		while( ppBrowserTab != ppBrowserTabStop )
+		TBrowserTab ** ppBrowserTabStop;
+		TBrowserTab ** ppBrowserTab = pBrowserTabs->m_arraypaTabs.PrgpGetBrowserTabStop(OUT &ppBrowserTabStop);
+		while (ppBrowserTab != ppBrowserTabStop)
 			{
 			TBrowserTab *pBrowser = *ppBrowserTab++;
 			list.append(QVariant::fromValue(pBrowser->POJapiGet(this) ));
@@ -528,23 +526,12 @@ OJapiBrowsersList::listBrowsers()
 POJapiBrowserTab
 OJapiBrowsersList::newBrowser()
 	{
-	TBrowserTabs *pBrowserTabs = PGetBrowser_YZ();
-	TProfile *pProfile = m_poJapiProfileParent_NZ->m_pProfile;
-
-	if ( !pBrowserTabs )
-		{
-		// create browser
-		CStr sTreeItemName("Web Browser");
-		pBrowserTabs = new TBrowserTabs(pProfile);
-		pBrowserTabs->SetIconAndName(eMenuAction_DisplaySecureWebBrowsing, sTreeItemName);
-		pProfile->m_arraypaBrowsersTabbed.Add(PA_CHILD pBrowserTabs);
-		pBrowserTabs->TreeItemBrowser_DisplayWithinNavigationTree();
-		}
-
+	TBrowserTabs * pBrowserTabs = PGetBrowser_YZ();
+	if (pBrowserTabs == NULL)
+		pBrowserTabs = m_poJapiProfileParent_NZ->m_pProfile->BrowserTabs_PCreateAndDisplayBrowserTabs();	// Create the browser tabs
 	// add a new tab
-	TBrowserTab *pTab = pBrowserTabs->AddTab();
+	TBrowserTab * pTab = pBrowserTabs->PBrowserTabAdd();
 	pBrowserTabs->TreeItemW_SelectWithinNavigationTree();
-
 	return pTab->POJapiGet(this);
 	}
 
@@ -552,12 +539,13 @@ OJapiBrowsersList::newBrowser()
 POJapiProfile
 TProfile::POJapiGet()
 	{
-	if ( m_paoJapiProfile == NULL)
+	if (m_paoJapiProfile == NULL)
 		m_paoJapiProfile = new OJapiProfile(this);
 	return m_paoJapiProfile;
 	}
 
-OJapiCambrian *TProfile::POJapiGetCambrian()
+OJapiCambrian *
+TProfile::POJapiGetCambrian()
 	{
 	return new OJapiCambrian(this, NULL);
 	}
@@ -671,6 +659,7 @@ enum EApplicationHtmlinfo
 	eApplicationHtmlInfoBallotmaster = 9,
 	};
 
+//	???: Is the order in this list important?
 SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 {
 	{"Navshell Peers"	 , "navshell-contacts/index.html"		, PaAllocateJapiGeneric, NULL },
@@ -681,8 +670,11 @@ SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 	{"JAPI Tests"        , "japi/test/test.html"				, PaAllocateJapiGeneric, NULL },
 	{"Scratch"           , "html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
 	{"HTML5 xik"         , "html5-xik/index.html"						, PaAllocateJapiGeneric, NULL },
-	{"Group Manager"	 , "html5-group-manager/index.html"				, PaAllocateJapiGeneric, NULL },
-	{"Ballotmaster"		 , "html5-pollmaster/index.html"				, PaAllocateJapiGeneric, NULL },
+	{d_szNameApplicationHtml_GroupManager		, "html5-group-manager/index.html"				, PaAllocateJapiGeneric, NULL },
+	{d_szNameApplicationHtml_Ballotmaster		, "html5-pollmaster/index.html"					, PaAllocateJapiGeneric, NULL },
+	{d_szNameApplicationHtml_Channels			, "html5-channels/index.html"					, PaAllocateJapiGeneric, NULL },
+	{d_szNameApplicationHtml_Corporations		, "html5-corporations/index.html"				, PaAllocateJapiGeneric, NULL },
+	{d_szNameApplicationHtml_PeerManager		, "html5-peer-manager/index.html"				, PaAllocateJapiGeneric, NULL },
 	{"Home"		         , "html5-static/home/index.html"				, PaAllocateJapiGeneric, NULL },
 	{"Default NewTab"	 , "html5-static/default-new-tab/index.html"	, PaAllocateJapiGeneric, NULL },
 	{"Underconstruction" , "html5-static/underconstruction/index.html"	, PaAllocateJapiGeneric, NULL },
@@ -707,17 +699,17 @@ PGetApplicationHtmlInfo(PSZAC pszNameApplication)
 	}
 
 
-QVariantList OCapiRootGUI::apps()
+//	List all the applications available
+QVariantList
+OCapiRootGUI::apps()
 	{
 	QVariantList list;
 	for (SApplicationHtmlInfo * pInfo = &g_rgApplicationHtmlInfo[0]; pInfo != g_rgApplicationHtmlInfo + LENGTH(g_rgApplicationHtmlInfo); pInfo++)
 		{
 		if (pInfo->paoJapi == NULL)
 			pInfo->paoJapi = pInfo->pfnPaAllocateJapi(pInfo);
-
-		list.append( QVariant::fromValue(pInfo->paoJapi) );
+		list.append(QVariant::fromValue(pInfo->paoJapi));
 		}
-
 	return list;
 	}
 

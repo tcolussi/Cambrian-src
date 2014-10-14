@@ -93,9 +93,9 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Group Properties..." _ "i=Properties" _, // eMenuAction_GroupProperties
 
 	"Launch Ballot" _ "i=Vote" _, // eMenuAction_GroupLaunchBallot
-	"Set Purpose" _, // eMenuAction_GroupSetPurpose
+	"Set Purpose..." _, // eMenuAction_GroupSetPurpose
 	"Upgrade Service" _, // eMenuAction_GroupUpgradeService
-	"Upgrade to Corporation" _, // eMenuAction_GroupUpgradeToCorporation
+	"Upgrade to Corporation" _ "s=Make this group a corporation" _ "i=CTriangle" _, // eMenuAction_GroupUpgradeToCorporation
 
 	//"Channel" _ "i=Hashtag" _, // eMenuAction_GroupChannel
 	"Invite peers..." _ "s=Invite others to join the channel" _ "i=GroupAdd" _,	// eMenuAction_GroupChannelInvite
@@ -884,10 +884,7 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		NavigationTree_NewTabbedBrowser();
 		return;
 	case eMenuAction_DisplayBallotMaster:
-		//void DisplayApplicationBallotMaster();
-		//DisplayApplicationBallotMaster();
-		//LaunchApplication("ballotmaster");
-		LaunchApplication_Ballotmaster();
+		LaunchApplication_Ballotmaster(NULL);
 		return;
 
 	case eMenuAction_DisplayGroupManager:

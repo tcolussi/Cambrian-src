@@ -180,39 +180,78 @@ CArrayPtrDashboardSectionItems::AllocateTreeItems(const CArrayPtrTreeItems & arr
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+WDashboardSection_TGroup::WDashboardSection_TGroup(PSZAC pszGroupName, EMenuIcon eMenuIcon) : WDashboardSection(pszGroupName)
+	{
+	m_eMenuIcon = eMenuIcon;
+	}
+
+void
+WDashboardSection_TGroup::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvGroup)
+	{
+	TGroup * pGroup = (TGroup *)pvGroup;
+	Assert(pGroup != NULL);
+	Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+	pPainter->DrawIconLeft(m_eMenuIcon);
+	pPainter->DrawNumberWithinCircle(pGroup->m_cMessagesUnread);
+	pPainter->setFont((pGroup->m_cMessagesUnread > 0) ? g_oFontBoldThick : g_oFontNormal);
+	g_strScratchBufferStatusBar = pGroup->TreeItem_PszGetNameDisplay();
+	g_strScratchBufferStatusBar.NormalizeStringForChannelName();		// Draw all groups with their names normalized
+	pPainter->DrawTextWithinCell(g_strScratchBufferStatusBar);
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+WDashboardSectionChannels::WDashboardSectionChannels() : WDashboardSection_TGroup("CHANNELS", eMenuIcon_ClassChannel)
+	{
+	m_strTextFooterIfItemsAvailableIsZero.InitFromStringA("New Channel...");
+	}
+WDashboardSectionGroups::WDashboardSectionGroups() : WDashboardSection_TGroup("PRIVATE GROUPS", eMenuIcon_ClassGroup)
+	{
+	m_strTextFooterIfItemsAvailableIsZero.InitFromStringA("New Group...");
+	}
+WDashboardSectionCorporations::WDashboardSectionCorporations() : WDashboardSection_TGroup("CORPORATIONS & COALITIONS", eMenuIcon_ClassOrganization)
+	{
+	m_strTextFooterIfItemsAvailableIsZero.InitFromStringA("New Corporation...");
+	}
+
 void
 WDashboardSectionChannels::Init(TProfile * pProfile_YZ)
 	{
 	CArrayPtrGroups arraypChannels;
 	if (pProfile_YZ != NULL)
-		m_cChannelsTotal = pProfile_YZ->GetRecentChannels(OUT &arraypChannels);
-	else
-		m_cChannelsTotal = 0;
+		m_cTotalItemsAvailable = pProfile_YZ->GetRecentChannels(OUT &arraypChannels);
 	m_arraypaItems.AllocateTreeItems(arraypChannels, 8);
 	}
-
 void
 WDashboardSectionGroups::Init(TProfile * pProfile_YZ)
 	{
 	CArrayPtrGroups arraypGroups;
 	if (pProfile_YZ != NULL)
-		pProfile_YZ->GetRecentGroups(OUT &arraypGroups);
+		m_cTotalItemsAvailable = pProfile_YZ->GetRecentGroups(OUT &arraypGroups);
 	m_arraypaItems.AllocateTreeItems(arraypGroups, 8);
 	}
+void
+WDashboardSectionCorporations::Init(TProfile * pProfile_YZ)
+	{
+	CArrayPtrGroups arraypGroups;
+	if (pProfile_YZ != NULL)
+		m_cTotalItemsAvailable = pProfile_YZ->GetRecentCorporations(OUT &arraypGroups);
+	m_arraypaItems.AllocateTreeItems(arraypGroups, 8);
+	}
+
 
 void
 WDashboardSectionContacts::Init(TProfile * pProfile_YZ)
 	{
 	CArrayPtrContacts arraypContacts;
 	if (pProfile_YZ != NULL)
-		pProfile_YZ->GetRecentContacts(OUT &arraypContacts);
+		m_cTotalItemsAvailable = pProfile_YZ->GetRecentContacts(OUT &arraypContacts);
 	m_arraypaItems.AllocateTreeItems(arraypContacts, 8);
 	}
 
 void
 WDashboardSectionBallots::Init(TProfile * /*pProfile_YZ*/)
 	{
-	hide();
+	//hide();
 	/*
 	IEvent ** ppEventStop;
 	IEvent ** ppEvent = pProfile->m_arraypEventsRecentBallots.PrgpGetEventsStopLast(OUT &ppEventStop);
@@ -222,36 +261,6 @@ WDashboardSectionBallots::Init(TProfile * /*pProfile_YZ*/)
 		m_arraypaItems.AddItem(new CDashboardSectionItem_IEventBallot((IEventBallot *)pEvent));
 		}
 	*/
-	}
-
-void
-WDashboardSectionChannels::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvGroupChannel)
-	{
-	TGroup * pGroup = (TGroup *)pvGroupChannel;
-	pPainter->DrawIconLeft(eMenuIcon_ClassChannel);
-	pPainter->DrawNumberWithinCircle(pGroup->m_cMessagesUnread);
-	pPainter->setFont((pGroup->m_cMessagesUnread > 0) ? g_oFontBoldThick : g_oFontNormal);
-	pPainter->DrawTextWithinCell(pGroup->TreeItem_SGetNameDisplay().toLower());
-	}
-
-void
-WDashboardSectionChannels::DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest)
-	{
-	int cChannelsRemaining = m_cChannelsTotal - m_arraypaItems.GetSize();
-	if (cChannelsRemaining > 0)
-		g_strScratchBufferStatusBar.Format("+$I more...", cChannelsRemaining);
-	else
-		g_strScratchBufferStatusBar.Format("New Channel...");
-	pPainter->DrawTextUnderlinedStyle(g_strScratchBufferStatusBar, (uFlagsHitTest & FHT_kfFooter) ? Qt::SolidLine : Qt::DotLine);
-	}
-
-void
-WDashboardSectionGroups::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void * pvGroup)
-	{
-	TGroup * pGroup = (TGroup *)pvGroup;
-	pPainter->DrawIconLeft(eMenuIcon_ClassGroup);
-	pPainter->DrawNumberWithinCircle(pGroup->m_cMessagesUnread);
-	pPainter->DrawTextWithinCell(pGroup->TreeItem_SGetNameDisplay());
 	}
 
 void
@@ -266,13 +275,6 @@ WDashboardSectionContacts::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/
 		oFont.setItalic(true);
 	pPainter->setFont(oFont);
 	pPainter->DrawTextWithinCell_VE("$s", pContact->TreeItem_PszGetNameDisplay());
-	}
-
-void
-WDashboardSectionContacts::DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest)
-	{
-	g_strScratchBufferStatusBar.Format("+ $I more...", 123);
-	pPainter->DrawTextUnderlinedStyle(g_strScratchBufferStatusBar, (uFlagsHitTest & FHT_kfFooter) ? Qt::SolidLine : Qt::DotLine);
 	}
 
 const EMenuActionByte c_rgzeActionsMenuContact[] =
@@ -302,56 +304,66 @@ const EMenuActionByte c_rgzeActionsMenuGroup[] =
 	ezMenuActionNone
 	};
 
+const EMenuActionByte c_rgzeActionsMenuCorporations[] =
+	{
+	eMenuAction_GroupLaunchBallot,
+	ezMenuActionNone
+	};
+
+
 void
 WDashboardSectionChannels::OnItemClicked(SHitTestInfo oHitTestInfo)
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "WDashboardSectionChannels::OnItemClicked(0x$p, 0x$x)\n", oHitTestInfo.pItem, oHitTestInfo.uFlagsHitTest);
 	if (oHitTestInfo.uFlagsHitTest & (FHT_kfHeader | FHT_kfFooter))
 		{
-		void DisplayDialogChannelsBrowse(TProfile * pProfile);
-		DisplayDialogChannelsBrowse(m_pParent->PGetProfile_YZ());
+		LaunchApplication_Channels(NULL);
 		return;
 		}
-	if ((oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) && (oHitTestInfo.pItem != NULL))
-		{
-		TGroup * pChannel = oHitTestInfo.pItem->m_data.pGroup;
-		Assert(pChannel != NULL);
-		Assert(pChannel->EGetRuntimeClass() == RTI(TGroup));
-		pChannel->TreeItem_EDisplayContextMenu(c_rgzeActionsMenuChannel);
-		return;
-		}
-	WDashboardSection::OnItemClicked(oHitTestInfo);
+	_OnItemClicked_ITreeItem(oHitTestInfo, c_rgzeActionsMenuChannel);
 	}
 
 void
 WDashboardSectionGroups::OnItemClicked(SHitTestInfo oHitTestInfo)
 	{
-	if ((oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) && (oHitTestInfo.pItem != NULL))
+	if (oHitTestInfo.uFlagsHitTest & (FHT_kfHeader | FHT_kfFooter))
 		{
-		TGroup * pChannel = oHitTestInfo.pItem->m_data.pGroup;
-		Assert(pChannel != NULL);
-		Assert(pChannel->EGetRuntimeClass() == RTI(TGroup));
-		pChannel->TreeItem_EDisplayContextMenu(c_rgzeActionsMenuGroup);
+		LaunchApplication_GroupManager(NULL);
 		return;
 		}
-	WDashboardSection::OnItemClicked(oHitTestInfo);
+	_OnItemClicked_ITreeItem(oHitTestInfo, c_rgzeActionsMenuGroup);
+	}
+void
+WDashboardSectionCorporations::OnItemClicked(SHitTestInfo oHitTestInfo)
+	{
+	if (oHitTestInfo.uFlagsHitTest & (FHT_kfHeader | FHT_kfFooter))
+		{
+		LaunchApplication_Corporations(NULL);
+		return;
+		}
+	_OnItemClicked_ITreeItem(oHitTestInfo, c_rgzeActionsMenuCorporations);
 	}
 
 void
 WDashboardSectionContacts::OnItemClicked(SHitTestInfo oHitTestInfo)
 	{
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "WDashboardSectionGroups::OnItemClicked(0x$p, 0x$x)\n", oHitTestInfo.pItem, oHitTestInfo.uFlagsHitTest);
-	if ((oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) && (oHitTestInfo.pItem != NULL))
+	if (oHitTestInfo.uFlagsHitTest & (FHT_kfHeader | FHT_kfFooter))
 		{
-		TContact * pContact = oHitTestInfo.pItem->m_data.pContact;
-		Assert(pContact != NULL);
-		Assert(pContact->EGetRuntimeClass() == RTI(TContact));
-		pContact->TreeItem_EDisplayContextMenu(c_rgzeActionsMenuContact);
+		LaunchApplication_PeerManager(NULL);
 		return;
 		}
-	WDashboardSection::OnItemClicked(oHitTestInfo);
+	_OnItemClicked_ITreeItem(oHitTestInfo, c_rgzeActionsMenuContact);
 	}
 
+void
+WDashboardSectionBallots::OnItemClicked(SHitTestInfo oHitTestInfo)
+	{
+	if (oHitTestInfo.uFlagsHitTest & (FHT_kfHeader | FHT_kfFooter))
+		{
+		LaunchApplication_Ballotmaster(NULL);
+		return;
+		}
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 singleton WDashboardCaption : public QWidget
@@ -438,11 +450,11 @@ WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	#endif
 
 	InitToGarbage(OUT &m_sections, sizeof(m_sections));
-	m_sections.pwSectionBalots = new WDashboardSectionBallots("BALLOTS");
-	m_sections.pwSectionChannels = new WDashboardSectionChannels("CHANNELS");
+	m_sections.pwSectionChannels = new WDashboardSectionChannels;
+	m_sections.pwSectionGroups = new WDashboardSectionGroups();
+	m_sections.pwSectionCorporations = new WDashboardSectionCorporations();
 	m_sections.pwSectionContacts = new WDashboardSectionContacts("PEERS");
-	m_sections.pwSectionGroups = new WDashboardSectionGroups("PRIVATE GROUPS");
-	m_sections.pwSectionCorporations = new WDashboardSectionGroups("Corporations & Coalitions");
+	m_sections.pwSectionBalots = new WDashboardSectionBallots("BALLOTS");
 
 	// Add each section to the vertical layout
 	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
@@ -455,13 +467,19 @@ WDashboard::ProfileSelectedChanged(TProfile * pProfile)
 	m_pProfile_YZ = pProfile;
 	//setWindowTitle((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
 	//m_pwLabelCaption->Label_SetTextPlain((pProfile != NULL) ? pProfile->m_strNameProfile : c_strEmpty);
+	RefreshAll();
+	}
+
+void
+WDashboard::RefreshAll()
+	{
 	m_pItemSelected_YZ = NULL;
 	// Notify each section the selected profile changed
 	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
 		{
 		WDashboardSection * pwSection = *ppwSection;
 		pwSection->SetParent(this);
-		pwSection->Init(pProfile);
+		pwSection->Init(m_pProfile_YZ);
 		pwSection->updateGeometry();
 		}
 	//m_poLayoutVertial->invalidate();
@@ -484,21 +502,6 @@ WDashboard::FSelectItem(CDashboardSectionItem * pItem)
 	m_pItemSelected_YZ = pItem;
 	update();	// Redraw the whole dashboard. This is not efficient, however it works.  Ideally there should be a mechanism to redraw individual items
 	return TRUE;
-	}
-
-void
-WDashboard::NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ)
-	{
-	Assert(pContactOrGroup_NZ != NULL);
-	if (pContactOrGroup_NZ->PGetProfile() == m_pProfile_YZ)
-		ProfileSelectedChanged(m_pProfile_YZ);	// At the moment, refresh the entire dashboard.  This is not efficient, but it works
-	}
-
-void
-WDashboard::NewEventRelatedToBallot(IEventBallot * /*pEventBallot*/)
-	{
-	// Search if the ballot is already there, and if not, add it
-	//m_sections.pwSectionBalots->m_arraypaItems
 	}
 
 void
@@ -583,6 +586,20 @@ WDashboard::BumpTreeItem(ITreeItem * pTreeItem)
 	}
 
 
+void
+WDashboard::NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ)
+	{
+	Assert(pContactOrGroup_NZ != NULL);
+	if (pContactOrGroup_NZ->PGetProfile() == m_pProfile_YZ)
+		ProfileSelectedChanged(m_pProfile_YZ);	// At the moment, refresh the entire dashboard.  This is not efficient, but it works
+	}
+
+void
+WDashboard::NewEventRelatedToBallot(IEventBallot * /*pEventBallot*/)
+	{
+	// Search if the ballot is already there, and if not, add it
+	//m_sections.pwSectionBalots->m_arraypaItems
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WDashboardSection::SHitTestInfo WDashboardSection::c_oHitTestInfoEmpty;
@@ -605,6 +622,7 @@ WDashboardSection::SetParent(WDashboard * pParent)
 	Assert(pParent != NULL);
 	m_pParent = pParent;
 	m_arraypaItems.DeleteAllItems();
+	m_cTotalItemsAvailable = d_zNA;
 	m_oHitTestInfo = c_oHitTestInfoEmpty;
 	}
 
@@ -631,9 +649,19 @@ WDashboardSection::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/, void *
 	}
 
 void
-WDashboardSection::DrawFooter(CPainterCell * pPainter, UINT /*uFlagsHitTest*/)
+WDashboardSection::DrawFooter(CPainterCell * pPainter, UINT uFlagsHitTest)
 	{
 	Assert(pPainter != NULL);
+	int cMore = m_cTotalItemsAvailable - m_arraypaItems.GetSize();
+	if (cMore > 0)
+		g_strScratchBufferStatusBar.Format("+$I more...", cMore);
+	else
+		{
+		if (m_strTextFooterIfItemsAvailableIsZero.FIsEmptyString())
+			return;
+		g_strScratchBufferStatusBar = m_strTextFooterIfItemsAvailableIsZero;
+		}
+	pPainter->DrawTextUnderlinedStyle(g_strScratchBufferStatusBar, (uFlagsHitTest & FHT_kfFooter) ? Qt::SolidLine : Qt::DotLine);
 	}
 
 void
@@ -645,7 +673,7 @@ WDashboardSection::OnItemClicked(SHitTestInfo oHitTestInfo)
 		if (ukmDataType == CDashboardSectionItem::FI_keDataType_ITreeItem)
 			{
 			m_pParent->FSelectItem(oHitTestInfo.pItem);
-			NavigationTree_SelectTreeItem(oHitTestInfo.pItem->m_data.piTreeItem);
+			NavigationTree_SelectTreeItem(oHitTestInfo.pItem->mu_data.piTreeItem);
 			return;
 			}
 		}
@@ -661,7 +689,12 @@ WDashboardSection::OnMenuClicked(SHitTestInfo oHitTestInfo)
 QSize
 WDashboardSection::sizeHint() const
 	{
-	return QSize(0, d_yPosFirstItem + d_cyHeightFooter + 14 + m_arraypaItems.GetSize() * d_cyHeightSectionItem);
+	int cyHeight = d_cyHeightFooter + 14 + d_yPosFirstItem + (m_arraypaItems.GetSize() * d_cyHeightSectionItem);
+	#if 0
+	if (!m_strTextFooterIfItemsAvailableIsZero.FIsEmptyString())
+		cyHeight += d_cyHeightFooter;
+	#endif
+	return QSize(d_zNA, cyHeight);
 	}
 /*
 QSize
@@ -738,7 +771,7 @@ WDashboardSection::paintEvent(QPaintEvent *)
 			}
 		oPainter.setPen((uFlagsItem & CDashboardSectionItem::FI_kfSelected) ? g_oPenTextNotEmpty : g_oPenTextEmpty);
 		oPainter.setFont((uFlagsItem & CDashboardSectionItem::FI_kfDrawBold) ? g_oFontBold : g_oFontNormal);
-		DrawItem(&oPainter, uFlagsItem, pItem->m_data.pvDataItem);
+		DrawItem(&oPainter, uFlagsItem, pItem->mu_data.pvDataItem);
 		yTop += d_cyHeightSectionItem;
 		oPainter.m_rcCell.moveTop(yTop);
 		} // while
@@ -810,13 +843,27 @@ WDashboardSection::FSetHitTestInfo(SHitTestInfo oHitTestInfo)
 	}
 
 void
+WDashboardSection::_OnItemClicked_ITreeItem(SHitTestInfo oHitTestInfo, const EMenuActionByte rgzeMenuActions[])
+	{
+	Assert(rgzeMenuActions != NULL);
+	if ((oHitTestInfo.uFlagsHitTest & FHT_kfMenuOverflow) && (oHitTestInfo.pItem != NULL))
+		{
+		ITreeItem * pTreeItem = oHitTestInfo.pItem->mu_data.piTreeItem;
+		Assert(pTreeItem != NULL);
+		Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItem) == pTreeItem);
+		pTreeItem->TreeItem_EDisplayContextMenu(rgzeMenuActions);
+		return;
+		}
+	WDashboardSection::OnItemClicked(oHitTestInfo);
+	}
+
+void
 WDashboardSection::mouseMoveEvent(QMouseEvent * pEventMouse)
 	{
 	//MessageLog_AppendTextFormatSev(eSeverityNoise, "[$@] WDashboardSection::mouseMoveEvent() - buttons=$x\n", pEventMouse->buttons());
 	if (pEventMouse->buttons() == Qt::NoButton)
 		(void)FSetHitTestInfo(OGetHitTestInfo(pEventMouse));
 	}
-
 
 void
 WDashboardSection::mouseReleaseEvent(QMouseEvent * pEventMouse)
@@ -836,12 +883,20 @@ WDashboardSection::leaveEvent(QEvent *)
 	(void)FSetHitTestInfo(c_oHitTestInfoEmpty);
 	}
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void
 Dashboard_RefreshAccordingToSelectedProfile(TProfile * pProfileSelected)
 	{
 	Endorse(pProfileSelected == NULL);
 	Assert(g_pwDashboard != NULL);
 	g_pwDashboard->ProfileSelectedChanged(pProfileSelected);
+	}
+
+//	Refresh the entire dashboard, by repopulating everything
+void
+Dashboard_RefreshAll()
+	{
+	g_pwDashboard->RefreshAll();
 	}
 
 void

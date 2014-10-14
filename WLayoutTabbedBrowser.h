@@ -3,7 +3,6 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include <QWebFrame>
 #include <qtabwidget.h>
 #include "TBrowserTab.h"
 
@@ -19,9 +18,6 @@ class CArrayPtrCWebViews : public CArray
 public:
 	inline WWebViewTabbed ** PrgpGetWebViewsStop(OUT WWebViewTabbed *** pppWebViewStop) const { return (WWebViewTabbed **)  PrgpvGetElementsStop(OUT (void***) pppWebViewStop); }
 };
-
-
-
 
 
 

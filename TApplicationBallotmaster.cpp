@@ -16,6 +16,7 @@ TimerQueueCallback_PollStop(PVPARAM pvEventBallotPoll)
 	((CEventBallotPoll *)pvEventBallotPoll)->StopPoll();
 	}
 
+#if 0
 void
 DisplayApplicationBallotMaster()
 	{
@@ -34,7 +35,7 @@ DisplayApplicationBallotMaster()
 	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
 	pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}
-
+#endif
 
 CServiceBallotmaster::CServiceBallotmaster(TProfile * pProfileParent) : IService(pProfileParent), m_oVaultBallots(pProfileParent->PGetContactDummy_NZ())
 	{
@@ -728,13 +729,10 @@ OJapiPoll::send(const QString & sGroupId)
 	return false;
 	}
 
-void OJapiAppBallotmaster::open()
+void
+OJapiAppBallotmaster::open()
     {
-	//LaunchBrowser("Ballotmaster", "html5-pollmaster/index.html");
-	LaunchApplication("Ballotmaster");
-	//CStr strUrl = (PSZUC)"file:///C:/Users/Cesar/.Cambrian/Apps/Ballotmaster/default.htm";
-	//MessageLog_AppendTextFormatCo(d_coGreen, "OJapiAppBallotmaster::go($S)", &strUrl);
-	//m_pBallotmaster->m_pawLayoutBrowser->NavigateToAddress(strUrl);
+	LaunchApplication_Ballotmaster(NULL);
     }
 
 POJapiPollResults

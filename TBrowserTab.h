@@ -21,11 +21,11 @@ public:
 	WWebViewTabbed * m_pwWebViewTab;
 	TBrowserTab(TBrowserTabs * pBrowserTabs);
 	~TBrowserTab();
-	CStr m_url;
+	CStr m_strUrl;
 
 public:
-	void OpenApp(CStr &strAppName);
-	void SetUrl(CStr &strUrl);
+	void OpenApp(const CStr & strAppName);
+	void SetUrl(const CStr & strUrl);
 	void Show();
 	void NavigateForward();
 	void NavigateBack();

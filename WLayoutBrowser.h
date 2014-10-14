@@ -28,11 +28,14 @@ public slots:
 	void SL_NavigateToAddress();
 	void SL_GoBack();
 	void SL_GoForward();
-	void SL_UrlChanged(QUrl url);
+	void SL_UrlChanged(const QUrl & url);
 }; // WLayoutBrowser
 
-void LaunchBrowser(const QString & sName, const QString & sUrlRelative);
-void LaunchApplication(const QString & sName);
-CStr ResolveAppPath(const CStr &strAppName);
+void LaunchBrowser(const CStr & strUrlAbsolute);
+void LaunchApplication(const QString & sNameApplication);
+void LaunchApplication(PSZAC pszNameApplication, PSZUC pszQueryString = NULL);
+void LaunchApplicationWithIdentifier(PSZAC pszNameApplication, PSZUC pszIdentifier);
+void LaunchApplicationWithIdentifierGroup(PSZAC pszNameApplication, TGroup * pGroup);
+CStr StrGetUrlForApplication(PSZAC pszNameApplication);
 
 #endif // WLAYOUTBROWSER_H

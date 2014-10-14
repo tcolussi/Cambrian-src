@@ -405,7 +405,7 @@ TProfile::GetRecommendations_Channels(IOUT CArrayPtrGroups * parraypChannelsReco
 		} // while
 	}
 
-void
+UINT
 TProfile::GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC
 	{
 	TAccountXmpp ** ppAccountStop;
@@ -421,11 +421,37 @@ TProfile::GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC
 			TGroup * pGroup = *ppGroup++;
 			Assert(pGroup != NULL);
 			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && !pGroup->Group_FuIsChannel())
+			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && pGroup->UGetGroupType() == eGroupType_kzOpen)
 				parraypGroups->Add(pGroup);
 			}
 		}
 	parraypGroups->SortByLastActivity();
+	return parraypGroups->GetSize();
+	}
+
+
+UINT
+TProfile::GetRecentCorporations(OUT CArrayPtrGroups * parraypCorporations) CONST_MCC
+	{
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		pAccount->m_arraypaGroups.SortByLastActivity();
+		TGroup ** ppGroupStop;
+		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+		while (ppGroup != ppGroupStop)
+			{
+			TGroup * pGroup = *ppGroup++;
+			Assert(pGroup != NULL);
+			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+			if (pGroup->TreeItemFlags_FCanDisplayWithinNavigationTree() && pGroup->UGetGroupType() == eGroupType_keCorporation)
+				parraypCorporations->Add(pGroup);
+			}
+		}
+	parraypCorporations->SortByLastActivity();
+	return parraypCorporations->GetSize();
 	}
 
 UINT
@@ -452,7 +478,7 @@ TProfile::GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC
 	return m_arraypaChannelNamesAvailables.GetSize();
 	}
 
-void
+UINT
 TProfile::GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC
 	{
 	TAccountXmpp ** ppAccountStop;
@@ -465,6 +491,7 @@ TProfile::GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC
 		}
 	parraypContacts->RemoveAllTreeItemsMatchingFlag(ITreeItem::FTI_kfObjectInvisible);
 	parraypContacts->SortByLastActivity();
+	return parraypContacts->GetSize();
 	}
 
 TContact *

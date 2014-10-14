@@ -21,46 +21,42 @@ TBrowserTabs::~TBrowserTabs()
 	MainWindow_DeleteLayout(PA_DELETING m_pawLayoutBrowser);
 	}
 
-void
-TBrowserTabs::SetIconAndName(EMenuAction /*eMenuActionIcon*/, PSZAC pszName)
-	{
-	m_strNameDisplayTyped.BinInitFromStringWithNullTerminator(pszName);
-	}
 
-TBrowserTab*
-TBrowserTabs::AddTab(CStr &sUrl)
+TBrowserTab *
+TBrowserTabs::PBrowserTabAdd(const CStr & strUrl)
 	{
 	// special case: use the first new tab to set the first non null url
 	TBrowserTab *pBrowserTab = (TBrowserTab*) m_arraypaTabs.PvGetElementFirst_YZ();
-	if ( m_arraypaTabs.GetSize() == 1 && !sUrl.FIsEmptyString() &&  pBrowserTab->m_url.FIsEmptyString() )
+	if ( m_arraypaTabs.GetSize() == 1 && !strUrl.FIsEmptyString() && pBrowserTab->m_strUrl.FIsEmptyString())
 		{
-		pBrowserTab->SetUrl(sUrl);
+		pBrowserTab->SetUrl(strUrl);
 		}
 	else
 		{
 		pBrowserTab = new TBrowserTab(this);
-		pBrowserTab->m_url = sUrl;
+		pBrowserTab->m_strUrl = strUrl;
 
 		m_arraypaTabs.Add(pBrowserTab);
-		if ( m_pawLayoutBrowser)
+		if (m_pawLayoutBrowser != NULL)
 			m_pawLayoutBrowser->AddTab(pBrowserTab);
 		}
-
 	//if ( m_paTreeItemW_YZ != NULL)
 	//	pBrowserTab->TreeItemW_DisplayWithinNavigationTree(this);
 
 	return pBrowserTab;
 	}
-
+/*
 TBrowserTab*
 TBrowserTabs::AddTab()
 	{
 	CStr url;
 	TBrowserTab* pTab = AddTab(url);
 	return pTab;
-}
+	}
+*/
 
-TBrowserTab *TBrowserTabs::PGetCurrentBrowserTab_YZ()
+TBrowserTab *
+TBrowserTabs::PBrowserTabGetCurrentSelected_YZ()
 	{
 	int nIndex = -1;
 
@@ -78,7 +74,8 @@ TBrowserTab *TBrowserTabs::PGetCurrentBrowserTab_YZ()
 	return NULL;
 	}
 
-void TBrowserTabs::DeleteTab(int index)
+void
+TBrowserTabs::DeleteTab(int index)
 	{
 	TBrowserTab *pBrowserTab = (TBrowserTab *)m_arraypaTabs.PvGetElementAtSafe_YZ(index);
 	if ( pBrowserTab != NULL)
@@ -149,27 +146,25 @@ void
 TBrowserTabs::TreeItem_GotFocus()
 	{
 	//MessageLog_AppendTextFormatCo(d_coChocolate, "TBrowserTabs::TreeItem_GotFocus()");
-	if ( m_pawLayoutBrowser == NULL)
+	if (m_pawLayoutBrowser == NULL)
 		{
 		m_pawLayoutBrowser = new WLayoutTabbedBrowser(this, m_pProfile);
 
 		// add tabs added before the layout was initialized
-		TBrowserTab **ppBrowserTabStop;
-		TBrowserTab **ppBrowserTab = m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);
-		while(ppBrowserTab != ppBrowserTabStop)
+		TBrowserTab ** ppBrowserTabStop;
+		TBrowserTab ** ppBrowserTab = m_arraypaTabs.PrgpGetBrowserTabStop(OUT &ppBrowserTabStop);
+		while (ppBrowserTab != ppBrowserTabStop)
 			{
 			TBrowserTab *pBrowserTab = *ppBrowserTab++;
 			m_pawLayoutBrowser->AddTab(pBrowserTab);
-			CStr text("Tab");
-			pBrowserTab->m_strNameDisplayTyped = text;
+			pBrowserTab->m_strNameDisplayTyped.InitFromStringA("Tab");
 			//pBrowserTab->TreeItemW_DisplayWithinNavigationTree(this);
 			}
 
 		// add default tab if there was none
 		if ( m_arraypaTabs.GetSize() == 0)
-			AddTab();
+			PBrowserTabAdd();
 		}
-
 
 	MainWindow_SetCurrentLayout(IN m_pawLayoutBrowser);
 	}

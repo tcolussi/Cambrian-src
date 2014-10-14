@@ -14,26 +14,26 @@ TBrowserTab::TBrowserTab(TBrowserTabs *pBrowserTabs)
 	}
 
 TBrowserTab::~TBrowserTab()
-{
-}
-
-void TBrowserTab::OpenApp(CStr &strAppName)
 	{
-	CStr strUrl = ResolveAppPath(strAppName);
+	}
+
+void
+TBrowserTab::OpenApp(const CStr & strAppName)
+	{
+	CStr strUrl = StrGetUrlForApplication(strAppName);
 	SetUrl(strUrl);
 	}
 
 void
-TBrowserTab::SetUrl(CStr &strUrl)
+TBrowserTab::SetUrl(const CStr & strUrl)
 	{
-	m_url = strUrl;
-	if ( m_pwWebViewTab != NULL)
-		{
+	m_strUrl = strUrl;
+	if (m_pwWebViewTab != NULL)
 		m_pwWebViewTab->NavigateToAddress(strUrl);
 	}
-	}
 
-void TBrowserTab::Show()
+void
+TBrowserTab::Show()
 	{
 	Assert(m_pwWebViewTab != NULL);
 	Assert(m_pBrowserTabs != NULL);
@@ -43,22 +43,26 @@ void TBrowserTab::Show()
 	m_pBrowserTabs->m_pawLayoutBrowser->m_pTabWidget->setCurrentWidget(m_pwWebViewTab);
 	}
 
-void TBrowserTab::NavigateForward()
+void
+TBrowserTab::NavigateForward()
 	{
 	m_pwWebViewTab->m_pwWebView->forward();
 	}
 
-void TBrowserTab::NavigateBack()
+void
+TBrowserTab::NavigateBack()
 	{
 	m_pwWebViewTab->m_pwWebView->back();
 	}
 
-void TBrowserTab::NavigateReload()
+void
+TBrowserTab::NavigateReload()
 	{
 	m_pwWebViewTab->m_pwWebView->reload();
 	}
 
-POBJECT TBrowserTab::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject *piParent) const
+POBJECT
+TBrowserTab::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject *piParent) const
 	{
 	Report(piParent == NULL);
 	return ITreeItem::PGetRuntimeInterface(rti, m_pBrowserTabs);
@@ -68,7 +72,7 @@ void
 TBrowserTab::XmlExchange(CXmlExchanger *pXmlExchanger)
 	{
 	ITreeItem::XmlExchange(pXmlExchanger);
-	pXmlExchanger->XmlExchangeStr("url", &m_url);
+	pXmlExchanger->XmlExchangeStr("url", &m_strUrl);
 	}
 
 void
@@ -85,6 +89,6 @@ IXmlExchange *
 TBrowserTab::S_PaAllocateBrowser(PVOID pBrowserTabsParent)
 	{
 	Assert(pBrowserTabsParent != NULL);
-	return new TBrowserTab((TBrowserTabs*) pBrowserTabsParent);
+	return new TBrowserTab((TBrowserTabs *)pBrowserTabsParent);
 	}
 

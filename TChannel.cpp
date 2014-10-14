@@ -69,3 +69,34 @@ CHashTableChannels::PFindChannelOrAllocate(PSZUC pszChannelName)
 		}
 	return NULL;
 	}
+
+//	Convert all characters of a channel name to a standard form.  This means all characters are lowercase, and any whitespace or punctuation is replaced with the dash.
+void
+CStr::NormalizeStringForChannelName()
+	{
+	CHS chPrevious = '\0';
+	if (m_paData == NULL)
+		return;
+	CHU * pch = m_paData->rgbData;
+	while (TRUE)
+		{
+		CHS ch = Ch_GetCharLowercase(*pch);
+		if (ch == '\0')
+			break;
+		if (Ch_FIsPunctuationOrWhiteSpaceOrNullTerminator(ch))
+			ch = '-';	// Replace any white space or punctuation with a dash
+		if (ch == '-' && ch == chPrevious)
+			break;	// Skip consecutive dashes
+		chPrevious = ch;
+		*pch++ = ch;
+		}
+	*pch = '\0';
+	}
+
+//	Channel names are compare by ignoring anything not alphanumeric.
+BOOL
+CStr::FCompareStringsChannelNames(PSZUC pszuChannelName) const
+	{
+	Assert(pszuChannelName != NULL);
+	return FCompareStringsNoCase(pszuChannelName);	// TODO: TBD
+	}

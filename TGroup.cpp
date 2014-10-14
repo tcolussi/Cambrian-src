@@ -224,6 +224,23 @@ TGroup::Group_InitNewIdentifier()
 	HashSha1_InitRandom(OUT &m_hashGroupIdentifier);
 	}
 
+void
+TGroup::Group_GetIdentifier(CHU pszGroupIdentifier[30]) const
+	{
+	InitToGarbage(OUT pszGroupIdentifier, 30);
+	HashSha1_ToStringBase85(OUT pszGroupIdentifier, IN &m_hashGroupIdentifier);
+	}
+
+QString
+TGroup::Group_SGetIdentifier() const
+	{
+	CHU szGroupIdentifier[32];
+	Group_GetIdentifier(OUT szGroupIdentifier);
+	return QString::fromUtf8((const char *)szGroupIdentifier);
+
+	}
+
+
 //	Return TRUE if the channel can be displayed in the Navigation Tree.
 //	Return FALSE if the group is NOT a channel, or if it has been deleted.
 BOOL
@@ -426,7 +443,13 @@ TGroup::TreeItem_EDoMenuAction(EMenuAction eMenuAction)
 		DisplayDialogProperties();
 		return ezMenuActionNone;
 	case eMenuAction_GroupLaunchBallot:
-		LaunchApplication_Ballotmaster();
+		LaunchApplication_Ballotmaster(this);
+		return ezMenuActionNone;
+	case eMenuAction_GroupUpgradeToCorporation:
+		Assert(UGetGroupType() == eGroupType_kzOpen);
+		m_uFlagsGroup |= eGroupType_keCorporation;
+		UpdateTimestampLastActivity();			// Make sure the new corporation is at the top
+		Dashboard_RefreshAll();
 		return ezMenuActionNone;
 	case eMenuSpecialAction_ITreeItemRenamed:
 		// If the name of the group begins with the hashtag (#) then the group is upgraded to a channel
@@ -571,7 +594,7 @@ TGroup::TreeItem_IconUpdate()
 	if (m_cMessagesUnread <= 0)
 		{
 		coTextColor = d_coTreeItem_Default;
-		eMenuIcon = Group_FuIsChannel() ? eMenuIcon_ClassChannel : eMenuIcon_Group;
+		eMenuIcon = Group_FuIsChannel() ? eMenuIcon_HashtagBlack : eMenuIcon_Group;
 		}
 	else
 		{
@@ -704,7 +727,7 @@ TAccountXmpp::GroupChannel_PCreate_NZ(PSZUC pszChannelName)
 	m_arraypaGroups.Add(PA_CHILD pGroup);
 	pGroup->Group_InitNewIdentifier();
 	pGroup->GroupChannel_SetName(pszChannelName);
-	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuIcon_ClassChannel);
+	pGroup->TreeItemW_DisplayWithinNavigationTree(this, eMenuIcon_HashtagBlack);
 	return pGroup;
 	}
 

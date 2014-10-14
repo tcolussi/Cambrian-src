@@ -86,6 +86,7 @@ void NavigationTree_DisplayProfilesToogle();
 void NavigationTree_DisplayCertificatesToogle();
 
 void Dashboard_RefreshAccordingToSelectedProfile(TProfile * pProfileSelected);
+void Dashboard_RefreshAll();
 void Dashboard_RefreshGroupsAndChannels();
 void Dashboard_RefreshGroups();
 void Dashboard_RefreshChannels();
@@ -103,6 +104,10 @@ void TimerQueue_CallbackRemove(PVPARAM pvParam);
 void TimerQueue_ExecuteExpiredCallbacks();
 void TimerQueue_DisplayToMessageLog();
 
-void LaunchApplication_Ballotmaster();
+void LaunchApplication_Ballotmaster(TGroup * pGroupToSelect_YZ);
+void LaunchApplication_Channels(TGroup * pChannelToSelect_YZ);
+void LaunchApplication_GroupManager(TGroup * pGroupToSelect_YZ);
+void LaunchApplication_Corporations(TGroup * pCorporationToSelect_YZ);
+void LaunchApplication_PeerManager(TContact * pContactToSelect_YZ);
 
 #endif // MAINWINDOW_H

@@ -79,7 +79,11 @@ public:
 	BOOL Group_FCanBePermenentlyDeleted() const;
 	void Group_RemoveAllReferencesToContactsAboutBeingDeleted();
 	void Group_InitNewIdentifier();
+	void Group_GetIdentifier(CHU pszGroupIdentifier[30]) const;
+	QString Group_SGetIdentifier() const;
+
 	inline EGroupType EGetGroupType() const { return (EGroupType)(m_uFlagsGroup & FG_kmGroupTypeMask); }
+	inline UINT UGetGroupType() const { return (m_uFlagsGroup & (FG_kmGroupTypeMask | FG_kfIsChannel)); }
 	inline BOOL Group_FuIsChannel() const { return (m_uFlagsGroup & FG_kfIsChannel); }
 	BOOL Group_FuIsChannelUsed() const;
 	void GroupChannel_SetName(PSZUC pszChannelName);

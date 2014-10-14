@@ -1354,6 +1354,7 @@ CBin::BinAppendHtmlTextCch(PCHUC pchText, int cchuText)
 void
 CBin::BinAppendUrlPercentEncode(PSZUC pszUrl)
 	{
+	Assert(pszUrl != NULL);
 	while (TRUE)
 		{
 		CHS ch = *pszUrl++;

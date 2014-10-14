@@ -5,7 +5,6 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "WLayoutBrowser.h"
-#include <QWebFrame>
 #include "TBrowserTabs.h"
 #include "WLayoutTabbedBrowser.h"
 #include "TApplicationBallotmaster.h"
@@ -296,7 +295,7 @@ WLayoutBrowser::SL_GoForward()
 	}
 
 void
-WLayoutBrowser::SL_UrlChanged(QUrl url)
+WLayoutBrowser::SL_UrlChanged(const QUrl & url)
 	{
 	if (m_pwEdit != NULL)
 		{
@@ -366,100 +365,130 @@ LaunchBrowser(const QString & sName, const QString & sUrlRelative)
     pBrowser->TreeItemW_SelectWithinNavigationTree();
 	}*/
 
-CStr ResolveAppPath(const CStr &strAppName)
+CStr
+StrGetUrlForApplication(PSZAC pszNameApplication)
 	{
-	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(strAppName.PszaGetUtf8NZ());
 	CStr strUrl;
-
+	const SApplicationHtmlInfo *pInfo = PGetApplicationHtmlInfo(pszNameApplication);
 	Assert(pInfo != NULL && "Application doesn't exist");
 	if (pInfo != NULL)
 		{
-		#if 0
-		strUrl = "file:///" + MainWindow_SGetPathOfApplication(pInfo->pszLocation);
-		#else
 		strUrl = MainWindow_SGetUrlPathOfApplication(pInfo->pszLocation);
-		#endif
 		QUrl qurlAbsolute(strUrl);
-
-		// underconstruction page if the file doesn't exist
-		if ( qurlAbsolute.isLocalFile() )
+		// Use the page 'Under Construction' if the application does not exist
+		if (qurlAbsolute.isLocalFile())
 			{
-			QFile oHtmlFile(qurlAbsolute.toLocalFile());
 			QString strTest = qurlAbsolute.toString();
-			if ( !oHtmlFile.exists() )
+			QFile oFile(qurlAbsolute.toLocalFile());
+			if (!oFile.exists())
 				{
+				MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "The HTML application located at '$S' cannot be found.  Therefore SocietyPro will display the HTML application 'Under Construction'\n", &strUrl);
 				pInfo = PGetApplicationHtmlInfo("Underconstruction");
 				Assert(pInfo != NULL && "Underconstruction app doesn't exist");
-				if ( pInfo != NULL )
-					{
-					#if 0
-					strUrl = "file:///" + MainWindow_SGetPathOfApplication(pInfo->pszLocation);
-					#else
+				if (pInfo != NULL)
 					strUrl = MainWindow_SGetUrlPathOfApplication(pInfo->pszLocation);
-					#endif
-					}
 				}
 			}
 		}
-
 	return strUrl;
 	}
 
 void
-LaunchApplication(const QString & sName)
+LaunchApplication(const QString & sNameApplication)
 	{
-	QString sUrl = ResolveAppPath(sName);
-	LaunchBrowser(sName, sUrl);
+	CStr strNameApplication = sNameApplication;
+	LaunchApplication((PSZAC)strNameApplication);
+	}
+
+//	The query string begins with a '?'
+void
+LaunchApplication(PSZAC pszNameApplication, PSZUC pszQueryString)
+	{
+	CStr strUrlAbsolute = StrGetUrlForApplication(pszNameApplication);
+	strUrlAbsolute.AppendTextU(pszQueryString);
+	LaunchBrowser(strUrlAbsolute);
 	}
 
 void
-LaunchApplication_Ballotmaster()
+LaunchApplicationWithIdentifier(PSZAC pszNameApplication, PSZUC pszIdentifier)
 	{
-	LaunchApplication("ballotmaster");
+	CStr strQueryString;
+	if (pszIdentifier != NULL && pszIdentifier[0] != '\0')
+		strQueryString.Format("?id={s%}", pszIdentifier);
+	LaunchApplication(pszNameApplication, strQueryString);
 	}
 
 void
-LaunchApplication_GroupManager(TGroup * pGroup_YZ)
+LaunchApplicationWithIdentifierGroup(PSZAC pszNameApplication, TGroup * pGroup)
 	{
-	QString sName = "Group Manager";
-	if (pGroup_YZ != NULL)
-		sName += "?id=" + HashSha1_ToQStringBase85(IN &pGroup_YZ->m_hashGroupIdentifier);	// TODO: Need to percent encode the URL
-	LaunchApplication(sName);
+	CHU szGroupIdentifier[32];
+	szGroupIdentifier[0] = '\0';
+	if (pGroup != NULL)
+		pGroup->Group_GetIdentifier(OUT szGroupIdentifier);
+	LaunchApplicationWithIdentifier(pszNameApplication, szGroupIdentifier);
 	}
 
+void
+LaunchApplication_Ballotmaster(TGroup * pGroupSelect_YZ)
+	{
+	LaunchApplicationWithIdentifierGroup(d_szNameApplicationHtml_Ballotmaster, pGroupSelect_YZ);
+	}
+void
+LaunchApplication_Channels(TGroup * pChannelToSelect_YZ)
+	{
+	LaunchApplicationWithIdentifierGroup(d_szNameApplicationHtml_Channels, pChannelToSelect_YZ);
+	}
+void
+LaunchApplication_GroupManager(TGroup * pGroupToSelect_YZ)
+	{
+	LaunchApplicationWithIdentifierGroup(d_szNameApplicationHtml_GroupManager, pGroupToSelect_YZ);
+	}
+void
+LaunchApplication_Corporations(TGroup * pCorporationToSelect_YZ)
+	{
+	LaunchApplicationWithIdentifierGroup(d_szNameApplicationHtml_Corporations, pCorporationToSelect_YZ);
+	}
+void
+LaunchApplication_PeerManager(TContact * UNUSED_PARAMETER(pContactToSelect_YZ))
+	{
+	LaunchApplication(d_szNameApplicationHtml_PeerManager);
+	}
+
+TBrowserTabs *
+TProfile::BrowserTabs_PCreateAndDisplayBrowserTabs()
+	{
+	TBrowserTabs * pBrowserTabs = new TBrowserTabs(this);
+	m_arraypaBrowsersTabbed.Add(PA_CHILD pBrowserTabs);
+	pBrowserTabs->m_strNameDisplayTyped.InitFromStringA("Web Browser");
+	pBrowserTabs->TreeItemBrowser_DisplayWithinNavigationTree();
+	return pBrowserTabs;
+	}
 
 void
-LaunchBrowser(const QString & /*sName*/, const QString & sUrlAbsolute)
+LaunchBrowser(const CStr & strUrlAbsolute)
 	{
 	//EMessageBoxInformation("opening page $Q", &sUrl);
-	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser($Q)\n", &sUrlAbsolute);
+	MessageLog_AppendTextFormatCo(d_coBlueDark, "LaunchBrowser($S)\n", &strUrlAbsolute);
 
 	TProfile * pProfile = NavigationTree_PGetSelectedTreeItemMatchingInterfaceTProfile();
 	if (pProfile == NULL)
 		return;
 
 	// find browser or open a new one
-	TBrowserTabs *pBrowser = (TBrowserTabs*) pProfile->m_arraypaBrowsersTabbed.PvGetElementFirst_YZ();
-	if ( !pBrowser ) {
-		CStr sTreeItemName("Web Browser");
-		pBrowser = new TBrowserTabs(pProfile);
-		pBrowser->SetIconAndName(eMenuAction_DisplaySecureWebBrowsing, sTreeItemName);
-		pProfile->m_arraypaBrowsersTabbed.Add(PA_CHILD pBrowser);
-		pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
-	}
+	TBrowserTabs * pBrowserTabs = pProfile->m_arraypaBrowsersTabbed.PGetBrowserTabsFirst_YZ();
+	if (pBrowserTabs == NULL)
+		pBrowserTabs = pProfile->BrowserTabs_PCreateAndDisplayBrowserTabs();
 
-
-	CStr strUrl(sUrlAbsolute);
 	// find an open tab for the selected url
-	TBrowserTab **ppBrowserTabStop;
-	TBrowserTab **ppBrowserTab;
-	ppBrowserTab = pBrowser->m_arraypaTabs.PrgpGetBrowserTabStop(&ppBrowserTabStop);
-	while ( ppBrowserTab != ppBrowserTabStop)
+	TBrowserTab ** ppBrowserTabStop;
+	TBrowserTab ** ppBrowserTab;
+	ppBrowserTab = pBrowserTabs->m_arraypaTabs.PrgpGetBrowserTabStop(OUT &ppBrowserTabStop);
+	while (ppBrowserTab != ppBrowserTabStop)
 		{
 		TBrowserTab *pBrowserTab = *ppBrowserTab++;
-		if ( pBrowserTab->m_url.FStringBeginsWith(strUrl.PszaGetUtf8NZ()))
+		if ( pBrowserTab->m_strUrl.FStringBeginsWith(strUrlAbsolute.PszaGetUtf8NZ()))
 			{
-			pBrowser->TreeItemW_SelectWithinNavigationTree();
+			pBrowserTabs->TreeItemW_SelectWithinNavigationTree();
 			pBrowserTab->Show();
 			return;
 			}
@@ -470,8 +499,8 @@ LaunchBrowser(const QString & /*sName*/, const QString & sUrlAbsolute)
 	CStr strUrl = "file:///" + pProfile->m_pConfigurationParent->SGetPathOfFileName(strUrlRelative);//"Apps/Test/index.htm");
 	*/
 	// add a new tab
-	pBrowser->AddTab(strUrl);
-	pBrowser->TreeItemW_SelectWithinNavigationTree();
+	pBrowserTabs->PBrowserTabAdd(strUrlAbsolute);
+	pBrowserTabs->TreeItemW_SelectWithinNavigationTree();
 
 	/*
 	// find a browser with tabs already opened
@@ -490,7 +519,6 @@ LaunchBrowser(const QString & /*sName*/, const QString & sUrlAbsolute)
 	*/
 	}
 
-
 void
 NavigationTree_NewTabbedBrowser()
 	{
@@ -498,13 +526,5 @@ NavigationTree_NewTabbedBrowser()
 	//MessageLog_AppendTextFormatCo(d_coBlack, "LaunchBrowser($p)\n", pProfile);
 	if (pProfile == NULL)
 		return;
-
-	CStr sName("Web Browser");
-	//CStr url1("file:///C:/Users/Cesar/.Cambrian/Apps/html5-pollmaster/index.html");
-	TBrowserTabs * pBrowser = new TBrowserTabs(pProfile);
-	pBrowser->SetIconAndName(eMenuAction_DisplaySecureWebBrowsing, sName);
-	pBrowser->TreeItemBrowser_DisplayWithinNavigationTree();
-	pBrowser->TreeItemW_SelectWithinNavigationTree();
-	//pBrowser->AddTab(url1);
-	pProfile->m_arraypaBrowsersTabbed.Add(PA_CHILD pBrowser);
+	pProfile->BrowserTabs_PCreateAndDisplayBrowserTabs()->TreeItemW_SelectWithinNavigationTree();
 	}

@@ -59,6 +59,7 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 	"Group",			// eMenuIcon_Group
 
 	"Deleted",			// eMenuIcon_RecycleBin
+	"Hashtag",			// eMenuIcon_HashtagBlack
 
 	"Copy",				// eMenuIcon_Copy
 	"Find",				// eMenuIcon_Find,

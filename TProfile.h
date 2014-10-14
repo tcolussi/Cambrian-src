@@ -66,12 +66,15 @@ public:
 	void GetRecommendations_Links() const;	// NYI
 	void InitHashTablesOfIdentifiers(IOUT CHashTableIdentifiersOfContacts * pHashTableContacts, IOUT CHashTableIdentifiersOfGroups * pHashTableGroups) const;
 
-	void GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC;
+	UINT GetRecentGroups(OUT CArrayPtrGroups * parraypGroups) CONST_MCC;
+	UINT GetRecentCorporations(OUT CArrayPtrGroups * parraypCorporations) CONST_MCC;
 	UINT GetRecentChannels(OUT CArrayPtrGroups * parraypChannels) CONST_MCC;
-	void GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC;
+	UINT GetRecentContacts(CArrayPtrContacts * parraypContacts) CONST_MCC;
 	TGroup * PFindChannelByName(PSZUC pszChannelName) CONST_MCC;
 	BOOL FIsChannelNameUnused(PSZUC pszChannelName) CONST_MCC;
 	TGroup * GroupChannel_PCreateAndSelectWithinNavigationTree_NZ(PSZUC pszChannelName);
+
+	TBrowserTabs * BrowserTabs_PCreateAndDisplayBrowserTabs();
 
 	IService * PAllocateService_YZ(RTI_ENUM rtiService);
 	IService * PGetService_NZ(RTI_ENUM rtiService) CONST_MCC;

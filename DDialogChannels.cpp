@@ -61,7 +61,7 @@ DisplayDialogChannelNewFu(TProfile * pProfile)
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogChannels::DDialogChannels(TProfile * pProfile) : DDialogOkCancelWithLayouts("Join Channel", eMenuIcon_ClassChannel)
+DDialogChannels::DDialogChannels(TProfile * pProfile) : DDialogOkCancelWithLayouts("Join Channel", eMenuIcon_HashtagBlack)
 	{
 	Assert(pProfile != NULL);
 	m_pProfile = pProfile;
@@ -79,13 +79,13 @@ DDialogChannels::DDialogChannels(TProfile * pProfile) : DDialogOkCancelWithLayou
 
 	OLayoutHorizontal * poLayoutHorizontal = new OLayoutHorizontal(m_poLayoutBody);
 	WButtonText * pwButtonChannelNew = new WButtonTextWithIcon("New Channel...", eMenuIcon_Add);
-	WButtonText * pwButtonOK = new WButtonTextWithIcon("Join Channels ", eMenuIcon_ClassChannel);
+	WButtonText * pwButtonOK = new WButtonTextWithIcon("Join Channels ", eMenuIcon_HashtagBlack);
 	connect(pwButtonOK, SIGNAL(clicked()), this, SLOT(SL_ButtonOK()));
 	connect(pwButtonChannelNew, SIGNAL(clicked()), this, SLOT(SL_ButtonNew()));
 	poLayoutHorizontal->addWidget(pwButtonOK);
 	poLayoutHorizontal->addWidget(pwButtonChannelNew, d_zNA, Qt::AlignRight);
 
-	QIcon oIconChannel = OGetIcon(eMenuIcon_ClassChannel);
+	QIcon oIconChannel = OGetIcon(eMenuIcon_HashtagBlack);
 	CChannelName ** ppChannelNameStop;
 	CChannelName ** ppChannelName = pProfile->m_arraypaChannelNamesAvailables.PrgpGetChannelsStop(OUT &ppChannelNameStop);
 	while (ppChannelName != ppChannelNameStop)
@@ -139,7 +139,7 @@ DDialogChannels::SL_ButtonNew()
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-DDialogChannelNew::DDialogChannelNew(TProfile * pProfile) : DDialogOkCancelWithLayouts("Create a Channel", eMenuIcon_ClassChannel)
+DDialogChannelNew::DDialogChannelNew(TProfile * pProfile) : DDialogOkCancelWithLayouts("Create a Channel", eMenuIcon_HashtagBlack)
 	{
 	Assert(pProfile != NULL);
 	m_pProfile = pProfile;

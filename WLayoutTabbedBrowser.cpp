@@ -47,8 +47,8 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 	WWebViewTabbed *paWebView = new WWebViewTabbed(pTBrowserTab, m_pProfile);
 	pTBrowserTab->m_pwWebViewTab = paWebView;
 
-	if ( !pTBrowserTab->m_url.FIsEmptyString() )
-		paWebView->NavigateToAddress(pTBrowserTab->m_url );
+	if (!pTBrowserTab->m_strUrl.FIsEmptyString())
+		paWebView->NavigateToAddress(pTBrowserTab->m_strUrl);
 	else
 		{
 		// open default page
@@ -72,7 +72,8 @@ WLayoutTabbedBrowser::AddTab(TBrowserTab *pTBrowserTab)
 	return m_arraypaWebViews.Add(paWebView);
 	}
 
-void WLayoutTabbedBrowser::RemoveTab ( int index )
+void
+WLayoutTabbedBrowser::RemoveTab ( int index )
 	{
 	WWebViewTabbed *pWebView = (WWebViewTabbed *)m_arraypaWebViews.PvGetElementAtSafe_YZ(index);
 	if ( pWebView )
@@ -82,7 +83,7 @@ void WLayoutTabbedBrowser::RemoveTab ( int index )
 		delete pWebView;
 
 		if ( m_pTabWidget->count() == 0 )
-			m_pBrowserTabs->AddTab();
+			m_pBrowserTabs->PBrowserTabAdd();
 		}
 	}
 
@@ -127,7 +128,7 @@ WLayoutTabbedBrowser::SL_AddTab(bool checked = false)
 	{
 	MessageLog_AppendTextFormatCo(d_coBluePastel, "WLayoutBrowser::SL_AddTab($i)\n", checked);
 	// add the new tab using the TBrowserTabs object /*???*/
-	m_pBrowserTabs->AddTab();
+	m_pBrowserTabs->PBrowserTabAdd();
 	}
 
 void
@@ -135,9 +136,10 @@ WLayoutTabbedBrowser::SL_TabCloseRequested(int index)
 	{
 	MessageLog_AppendTextFormatCo(d_coBlueDark, "WLayoutBrowser::SL_TabCloseRequested($i)\n", index);
 	m_pBrowserTabs->DeleteTab(index);
-}
+	}
 
-void WLayoutTabbedBrowser::SL_CurrentChanged(int index)
+void
+WLayoutTabbedBrowser::SL_CurrentChanged(int index)
 	{
 	//MessageLog_AppendTextFormatCo(d_coBlue, "WLayoutTabbedBrowser::SL_CurrentChanged($i, $i)\n", index, (index==m_pTabWidget->count() ) );
 	// add the new tab using the TBrowserTabs object
@@ -145,17 +147,12 @@ void WLayoutTabbedBrowser::SL_CurrentChanged(int index)
 	if ( index == m_pTabWidget->count() && m_pTabWidget->count() > 0)
 		{
 		MessageLog_AppendTextFormatCo(d_coBlue, "WLayoutTabbedBrowser::SL_CurrentChanged-($i/$i) => addTab()\n", index, m_pTabWidget->count() );
-		m_pBrowserTabs->AddTab();
+		m_pBrowserTabs->PBrowserTabAdd();
 		}
 	}
 
-
-
-////////////////////////////////////////////////////////////////////////////////////
-
-
-
-WWebViewTabbed::WWebViewTabbed(TBrowserTab *pTab, TProfile *pProfile) : QSplitter(Qt::Vertical)
+///////////////////////////////////////////////////////////////////////////////////////////////////
+WWebViewTabbed::WWebViewTabbed(TBrowserTab * pTab, TProfile * pProfile) : QSplitter(Qt::Vertical)
 	{
 	m_pTab = pTab;
 	m_pProfile = pProfile;
@@ -202,15 +199,15 @@ WWebViewTabbed::WWebViewTabbed(TBrowserTab *pTab, TProfile *pProfile) : QSplitte
 	}
 
 void
-WWebViewTabbed::NavigateToAddress(const CStr &strAddress)
+WWebViewTabbed::NavigateToAddress(const CStr & strAddress)
 	{
 	Assert(m_pwWebView != NULL);
 	Assert(m_pTab != NULL);
 	//MessageLog_AppendTextFormatCo(COX_MakeBold(d_coBlack), "WWebViewTabbed::NavigateToAddress __ $S\n", &strAddress);
 
 	// update tree item
-	if ( !m_pTab->m_url.FCompareStringsNoCase(strAddress))
-		m_pTab->m_url = strAddress;
+	if ( !m_pTab->m_strUrl.FCompareStringsNoCase(strAddress))
+		m_pTab->m_strUrl = strAddress;
 
 	// update address bar
 	if ( m_pwEdit->text() != strAddress.ToQString() )
@@ -241,7 +238,7 @@ WWebViewTabbed::SL_UrlChanged(QUrl url)
 		{
 		QString sUrl = url.toString();
 		m_pwEdit->setText(sUrl);
-		m_pTab->m_url = sUrl;
+		m_pTab->m_strUrl = sUrl;
 	}
 }
 
