@@ -18,11 +18,11 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 
 		// Style for each division
 		//".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 3rem; }"
-		".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 40px ; }"
+		".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 55px ; }"
 		".p {  }"
 
 		// Style for an icon
-		".i { float:left; position: absolute; left: 3; margin-top: 3; height: 36; width: 36; "
+		".i { float:left; position: absolute; left: 15; margin-top: 3; height: 36; width: 36; "
 		"border-radius: .2rem;"
 		"background-size: 100%;"
 		" }"
@@ -45,6 +45,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		"\"><div id='m'></div><div id='c'/></div></body></html>"
 		);
 	QWebPage * poPage = page();
+	poPage->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
 	poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);	// Enable the context menu item named "Inspect".  This is useful for debugging web pages.
 	m_poFrame = poPage->mainFrame();
 	m_poFrame->setScrollBarPolicy(Qt::Horizontal, Qt::ScrollBarAlwaysOff);
@@ -54,6 +55,9 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 	CArrayPtrEvents arraypEvents;
 	m_pContactOrGroup->Vault_GetEventsForChatLog(OUT &arraypEvents);
 	ChatLog_EventsAppend(IN arraypEvents);
+
+	//connect(this, SIGNAL(highlighted(QUrl)), this, SLOT(SL_HyperlinkMouseHovering(QUrl)));
+	connect(this, SIGNAL(linkClicked(QUrl)), this, SLOT(SL_HyperlinkClicked(QUrl)));
 	}
 
 void
@@ -65,7 +69,8 @@ WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventSta
 		AssertValidEvent(pEvent);
 		pbinHtml->BinAppendText_VE(
 			"<div class='d'>"
-				"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()
+				//"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()
+				"<div class='i i$i'></div>", pEvent->Event_FIsEventTypeSent()
 			);
 		pEvent->ChatLogAppendHtmlDivider(IOUT pbinHtml);
 		pbinHtml->BinAppendText_VE("<span class='m' id='{t_}'>", pEvent->m_tsEventID);
@@ -199,6 +204,88 @@ WChatLogHtml::ChatLog_ChatStateTextUpdate(INOUT TContact * pContact, EChatState 
 		ChatLog_ChatStateTextRefresh();
 	}
 
+//	WChatLogHtml::QObject::event()
+bool
+WChatLogHtml::event(QEvent * pEvent)
+	{
+	if (pEvent->type() == QEvent::FocusIn)
+		m_pContactOrGroup->TreeItem_IconUpdateOnMessagesRead();
+	return QWebView::event(pEvent);
+	}
+
+#pragma GCC diagnostic ignored "-Wswitch"
+
+//	WChatLogHtml::QTextEdit::contextMenuEvent()
+void
+WChatLogHtml::contextMenuEvent(QContextMenuEvent * pEventContextMenu)
+	{
+	QWebView::contextMenuEvent(pEventContextMenu);
+	} // contextMenuEvent()
+
+void
+WChatLogHtml::SL_HyperlinkMouseHovering(const QUrl & url)
+	{
+	CStr strTip;
+	QString sUrl = url.toString();
+	CStr strUrl = sUrl;		// Convert the URL to UTF-8
+	PSZUC pszUrl = strUrl;
+	if (FIsSchemeCambrian(pszUrl))
+		{
+		const CHS chCambrianAction = ChGetCambrianActionFromUrl(pszUrl);
+		if (chCambrianAction == d_chCambrianAction_None)
+			{
+			TIMESTAMP tsEventID;
+			PSZUC pszAction = Timestamp_PchDecodeFromBase64Url(OUT &tsEventID, pszUrl + 2);
+			Assert(pszAction[0] == d_chSchemeCambrianActionSeparator);
+			IEvent * pEvent = m_pContactOrGroup->Vault_PFindEventByID(tsEventID);
+			if (pEvent != NULL)
+				pEvent->HyperlinkGetTooltipText(pszAction + 1, IOUT &strTip);
+			else
+				MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "WChatLogHtml::SL_HyperlinkMouseHovering() - Unable to find matching tsEventID $t from hyperlink $s\n", tsEventID, pszUrl);
+			} // if
+		sUrl = strTip.ToQString();
+		}
+	QToolTip::showText(QCursor::pos(), sUrl, this);
+	} // SL_HyperlinkMouseHovering()
+
+void
+WChatLogHtml::SL_HyperlinkClicked(const QUrl & url)
+	{
+	QString sUrl = url.toString();
+	CStr strUrl = sUrl;		// Convert the URL to UTF-8
+	PSZUC pszUrl = strUrl;
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "WChatLogHtml::SL_HyperlinkClicked($s)\n", pszUrl);
+	if (FIsSchemeCambrian(pszUrl))
+		{
+		const CHS chCambrianAction = ChGetCambrianActionFromUrl(pszUrl);
+		if (chCambrianAction == d_chCambrianAction_None)
+			{
+			TIMESTAMP tsEventID;
+			PSZUC pszAction = Timestamp_PchDecodeFromBase64Url(OUT &tsEventID, pszUrl + 2);
+			Assert(pszAction[0] == d_chSchemeCambrianActionSeparator);
+			IEvent * pEvent = m_pContactOrGroup->Vault_PFindEventByID(tsEventID);
+			if (pEvent != NULL)
+				{
+				EGui eGui = pEvent->HyperlinkClickedE(pszAction + 1);
+				if (eGui == eGui_zUpdate)
+					ChatLog_EventUpdate(pEvent);
+				return;
+				}
+			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "WChatLogHtml::SL_HyperlinkClicked() - Unable to find matching tsEventID $t from hyperlink $s\n", tsEventID, pszUrl);
+			}
+		else
+			{
+			if (chCambrianAction == d_chCambrianAction_DisplayAllHistory)
+				{
+				CWaitCursor wait;
+				ChatLog_EventsRepopulate();
+				}
+			} // if...else
+		return;
+		} // if
+	if (url.scheme() != QLatin1String("file") && !url.isRelative())
+		QDesktopServices::openUrl(url);
+	} // SL_HyperlinkClicked()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 const char c_szHtmlMessageDelivered[] = "<img src='qrc:/ico/Delivered' style='float:right'/>";

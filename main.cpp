@@ -229,6 +229,7 @@ main(int argc, char *argv[])
 	wMainWindow.ConfigurationLoadFromXml();
 
     startupScreen * startup = new startupScreen();
+	Assert(startup != NULL);	// Remove the compiler warning
     //startup->showMaximized();
     wMainWindow.show();
 

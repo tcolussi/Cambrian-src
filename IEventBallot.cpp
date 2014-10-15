@@ -175,13 +175,9 @@ const char c_szHtmlCheckboxSelected[]	= "&#9746;";	// Ballot with a x
 #define d_chActionForEventBallot_Vote			'v'
 #define d_coBallot		0xCCFF99		// Display the ballot with a light green color
 
-//	IMPLEMENTATION NOTES
-//	I would like to use the HTML <li></li> however I am unable to set the background color, nor proper indenting, so I use plain HTML.
 void
-IEventBallot::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
+IEventBallot::_AppendHtmlForChatLog(IOUT CBin * pbinHtmlBallot) CONST_MCC
 	{
-	CBin * pbinHtmlBallot = &g_strScratchBufferStatusBar;
-	_BinHtmlInitWithTime(OUT pbinHtmlBallot);
 	BOOL fBallotSent = Event_FIsEventTypeSent();
 	pbinHtmlBallot->BinAppendText_VE(fBallotSent ? "Sending Ballot: <b>^S</b>" : "Please vote on the following:<br/><b>^S</b>", &m_strTitle);
 	if (!m_strDescription.FIsEmptyString())
@@ -261,9 +257,28 @@ IEventBallot::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MA
 			m_arraypaChoices.BinHtmlAppendVoteChoices(INOUT pbinHtmlBallot, ukmChoices, ((CEventBallotReceived *)this)->m_strComment);
 			}
 		}
+	} // _AppendHtmlForChatLog()
+
+#ifdef COMPILE_WITH_CHATLOG_HTML
+void
+IEventBallot::AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC
+	{
+	_AppendHtmlForChatLog(IOUT pbinHtml);
+	}
+#else
+//	IMPLEMENTATION NOTES
+//	I would like to use the HTML <li></li> however I am unable to set the background color, nor proper indenting, so I use plain HTML.
+void
+IEventBallot::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
+	{
+	CBin * pbinHtmlBallot = &g_strScratchBufferStatusBar;
+	_BinHtmlInitWithTime(OUT pbinHtmlBallot);
+	_AppendHtmlForChatLog(IOUT pbinHtmlBallot);
+
 	//MessageLog_AppendTextFormatCo(d_coBlack, "$S", pbinHtmlBallot);
 	poCursorTextBlock->InsertHtmlBin(*pbinHtmlBallot, QBrush(d_coBallot));
 	} // ChatLogUpdateTextBlock()
+#endif
 
 void
 CArrayPtrBallotChoices::BinHtmlAppendVoteChoices(INOUT CBin * pbinHtml, UINT_BALLOT_CHOICES ukmChoices, const CStr & strComment) const
@@ -300,7 +315,16 @@ IEventBallot::HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * ps
 	Assert(pszActionOfHyperlink[0] == d_chActionForEventBallot_Vote);
 	pstrTooltipText->Format("Cast your vote on this ballot!");
 	}
+#ifdef COMPILE_WITH_CHATLOG_HTML
+EGui
+IEventBallot::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
+	{
+	Assert(pszActionOfHyperlink[0] == d_chActionForEventBallot_Vote);
+	((CEventBallotReceived *)this)->DisplayDialogBallotVote();
+	return eGui_NoUpdate;
+	}
 
+#else
 //	IEventBallot::IEvent::HyperlinkClicked()
 void
 IEventBallot::HyperlinkClicked(PSZUC pszActionOfHyperlink, OCursor *)
@@ -308,6 +332,7 @@ IEventBallot::HyperlinkClicked(PSZUC pszActionOfHyperlink, OCursor *)
 	Assert(pszActionOfHyperlink[0] == d_chActionForEventBallot_Vote);
 	((CEventBallotReceived *)this)->DisplayDialogBallotVote();
 	}
+#endif
 
 //	IEventBallot::IEvent::DetachFromObjectsAboutBeingDeleted()
 void

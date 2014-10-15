@@ -30,7 +30,7 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 
 	"CCircleGreen",		// eMenuIcon_ClassContactOnline
 	"CCircleGray",		// eMenuIcon_ClassContactOffline
-	"CTriangle",		// eMenuIcon_ClassGroup	 (There is no square, so use a triangle in the meantime)
+	"CSquare",			// eMenuIcon_ClassGroup
 	"CHash",			// eMenuIcon_ClassChannel
 	"CTriangle",		// eMenuIcon_ClassOrganization
 	"CHexagon",			// eMenuIcon_ClassJuristiction

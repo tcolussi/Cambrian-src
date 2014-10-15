@@ -8,8 +8,8 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.5.0"
-#define d_szwApplicationVersion		   L"0.1.5.0"
+#define d_szApplicationVersion			"0.1.5.1"
+#define d_szwApplicationVersion		   L"0.1.5.1"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -26,6 +26,7 @@
 #include <QTextBrowser>
 #include <QWebView>
 #include <QWebFrame>
+#include <QWebElement>
 #include <QMainWindow>
 
 //	Determine which platform / operating system Cambrian was compiled
