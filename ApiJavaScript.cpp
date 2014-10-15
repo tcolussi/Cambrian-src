@@ -660,7 +660,7 @@ if (xmppCount | m_pProfile->m_arraypaApplications.GetSize())
     }
 qDebug() << "delete profile";
   m_pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING m_pProfile);
-
+  m_pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
 }
 else
 {
@@ -684,6 +684,7 @@ if (OTAPI_Wrap::It()->Wallet_CanRemoveNym(nymId)
 #endif
  qDebug() << "Delete profile without roles";
  m_pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING m_pProfile);
+ m_pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
 NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(NULL);
 return true;
 }

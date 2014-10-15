@@ -228,8 +228,9 @@ main(int argc, char *argv[])
 
 	wMainWindow.ConfigurationLoadFromXml();
 
-    /*startupScreen * startup = new startupScreen();
-    startup->showFullScreen();*/
-	wMainWindow.show();
+    startupScreen * startup = new startupScreen();
+    //startup->showMaximized();
+    wMainWindow.show();
+
 	return oApplication.exec();
 	} // main()
