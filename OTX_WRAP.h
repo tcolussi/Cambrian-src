@@ -47,8 +47,18 @@ public:
     std::string getNym_name(std::string nymId);
     std::string getNymID(int32_t nymIndex);
     std::string getNymPublicKey(std::string nymid);
-
     void openRoleCreationScreen();
+
+    //Signin and Encryption
+    QString signText(QString s_nymId, QString qstrText);
+    QString encryptText(QString e_nymId, QString plainText);
+    QString signAndEncrypt(QString signerNymId, QString recipientNymId, QString plainText);
+
+    // Verify Signature and Decrypt functions
+     bool verifySignature(QString s_nymId, QString signedPlainText, QString &messagePayload);
+     QString decryptText(QString nymId,QString encryptedText);//decrypt using current NYM
+     bool decryptAndVerify(QString signerNymId,QString recipientNymId,QString signedEncryptedText,QString &decryptedText);
+
 
  ~OTX_WRAP();
  private:

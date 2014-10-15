@@ -28,6 +28,8 @@ public:
 private slots:
     void on_lineEdit_textChanged(const QString &arg1);
 
+    void on_lineEdit_returnPressed();
+
 private:
     Ui::MTIdentifierWidget *ui;
 };

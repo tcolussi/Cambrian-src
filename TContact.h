@@ -21,7 +21,8 @@ public:
 	CBin m_binXmlRecommendations;				// Store the raw XML of the recommendations from the contact
 	CStr m_strNymID;							// OT nym
 	CStr m_strKeyPublic;						// Public key of the contact (this key is used to encrypt messages)
-	/*
+    CStr m_strRoleName;
+    /*
 	enum
 		{
 		FCS_kfServiceDiscovery					= 0x00000001,

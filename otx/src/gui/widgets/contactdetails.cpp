@@ -193,6 +193,7 @@ void MTContactDetails::AddButtonClicked()
             //
             int nContact  = MTContactHandler::getInstance()->CreateContactBasedOnNym(nymID);
 
+
             if (nContact <= 0)
             {
                 QMessageBox::warning(this, tr("Failed creating contact"),
