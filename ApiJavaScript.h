@@ -181,7 +181,7 @@ public:
 	Q_PROPERTY(POJapiJurisdiction jurisdiction READ jurisdiction)
 
 public slots:
-    void destroy();
+    bool destroy();
 };
 #define POJapiProfile	POJapi
 

@@ -632,46 +632,41 @@ OJapiProfilesList::list()
 	return list;
 	}
 
-void
+bool
 OJapiProfile::destroy()
     {
     // Delete current m_pProfile in Sopro
-/*  bool canDeleteSopro=true;
-  bool canDeleteOtx=true;
 
+
+if (m_pProfile->m_arraypaAccountsXmpp.GetSize()|m_pProfile->m_arraypaApplications.GetSize())
+{     // The role cannot be moved because dependencies
+      return false;
+}
+else
+{
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+//first verify if is possible to delete in
+std::string nymId= m_pProfile->m_strNymID.ToQString().toStdString();
+
+if (OTAPI_Wrap::It()->Wallet_CanRemoveNym(nymId)
+{
+    if(OTAPI_Wrap::It()->Wallet_RemoveNym(m_pOwner->m_qstrCurrentID.toStdString()))
+    {return true;}
+    else
+    {return false;}
+}
+ else
+{
+   return false;
+}
+
+//now is possible to delete in Sopro db
 #endif
+ m_pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING m_pProfile);
+return true;
 
-  if (m_pProfile->m_arraypaAccountsXmpp.GetSize()|m_pProfile->m_arraypaApplications.GetSize())
-      canDeleteSopro=false;
-
-
-   std::string nymId= m_pProfile->m_strNymID.ToQString().toStdString();
-
-     if (deleteProfile != NULL)
-   {
-
-      if(deleteProfile->m_arraypaAccountsXmpp.GetSize()|deleteProfile->m_arraypaApplications.GetSize())
-                {
-
-                 std::string nymid_d=OTAPI_Wrap::CreateNym(1024,"","");
-                 OTAPI_Wrap::SetNym_Name(nymid_d,nymid_d,deleteProfile->m_strNameProfile.ToQString().toStdString());
-                 deleteProfile->m_strNymID.InitFromStringQ(QString::fromStdString(nymid_d));
-                 EMessageBoxInformation("Before deleting your " d_sza_profile " '$S', you must manually delete all its accounts.", &deleteProfile->m_strNameProfile);
-                } else
-                {
-                       deleteProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING deleteProfile);
-
-                }
-       //Save Changes
-       Assert(deleteProfile !=NULL);
-       //deleteProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
-       NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(NULL);	// After deleting a profile, display all the remaining profiles
-#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-    bool bCanRemove = OTAPI_Wrap::It()->Wallet_CanRemoveNym(nymId);
- #endif
-
-  }*/
+}
+return false;
 
 }
 
