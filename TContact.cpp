@@ -25,7 +25,8 @@ TContact::TContact(TAccountXmpp * pAccount) : ITreeItemChatLogEvents(pAccount)
 	m_tsTaskIdDownloadedLast = d_ts_zNA;
 	m_paoJapiContact = NULL;
 	#if 0
-	m_strKeyPublic = (PSZUC)"PubKeyTest";
+    m_strNymID = (PSZUC)"ContactNymID";
+    m_strKeyPublic = (PSZUC)"PubKeyTest";
 	#endif
 	}
 
@@ -81,6 +82,7 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeBin("Rec", INOUT &m_binXmlRecommendations);
 	pXmlExchanger->XmlExchangeStr("NymID", INOUT &m_strNymID);
 	pXmlExchanger->XmlExchangeStr("KeyPublic", INOUT &m_strKeyPublic);
+    pXmlExchanger->XmlExchangeStr("RoleName",&m_strRoleName);
 
 	m_listaTasksSendReceive.XmlExchange(INOUT pXmlExchanger);
 

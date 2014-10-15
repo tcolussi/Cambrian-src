@@ -558,7 +558,7 @@ OJapiProfile::OJapiProfile(TProfile *pProfile) : m_oBrowsersList(this) , m_oJuri
 QString
 OJapiProfile::id()
 	{
-	return m_pProfile->m_strKeyPublic;
+    return m_pProfile->m_strNymID;
 	}
 
 QString
@@ -579,11 +579,7 @@ OJapiProfile::jurisdiction()
 	return &m_oJurisdiction;
 	}
 
-void
-OJapiProfile::destroy()
-	{
-	// TODO
-	}
+
 
 
 
@@ -636,11 +632,86 @@ OJapiProfilesList::list()
 	return list;
 	}
 
+void
+OJapiProfile::destroy()
+    {
+    // Delete current m_pProfile in Sopro
+/*  bool canDeleteSopro=true;
+  bool canDeleteOtx=true;
+
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+#endif
+
+  if (m_pProfile->m_arraypaAccountsXmpp.GetSize()|m_pProfile->m_arraypaApplications.GetSize())
+      canDeleteSopro=false;
+
+
+   std::string nymId= m_pProfile->m_strNymID.ToQString().toStdString();
+
+     if (deleteProfile != NULL)
+   {
+
+      if(deleteProfile->m_arraypaAccountsXmpp.GetSize()|deleteProfile->m_arraypaApplications.GetSize())
+                {
+
+                 std::string nymid_d=OTAPI_Wrap::CreateNym(1024,"","");
+                 OTAPI_Wrap::SetNym_Name(nymid_d,nymid_d,deleteProfile->m_strNameProfile.ToQString().toStdString());
+                 deleteProfile->m_strNymID.InitFromStringQ(QString::fromStdString(nymid_d));
+                 EMessageBoxInformation("Before deleting your " d_sza_profile " '$S', you must manually delete all its accounts.", &deleteProfile->m_strNameProfile);
+                } else
+                {
+                       deleteProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING deleteProfile);
+
+                }
+       //Save Changes
+       Assert(deleteProfile !=NULL);
+       //deleteProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
+       NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(NULL);	// After deleting a profile, display all the remaining profiles
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    bool bCanRemove = OTAPI_Wrap::It()->Wallet_CanRemoveNym(nymId);
+ #endif
+
+  }*/
+
+}
+
+
 POJapiProfile
-OJapiProfilesList::create(const QString & /*name*/)
-	{
-	return NULL; // TODO
-	}
+OJapiProfilesList::create(const QString & name)
+{
+QVariantList profile;
+TProfile * pProfile = new TProfile(&g_oConfiguration);
+    //Create the new Role
+
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+//create the role inside OT
+    std::string nymId=OTAPI_Wrap::It()->CreateNym(1024, "","");
+
+ if (OTAPI_Wrap::It()->SetNym_Name(nymId,nymId,name.toStdString()))
+ { // Everything is ok with OT, now create the Role in TProfile
+#endif
+     // Create the new profile in Sopro db
+
+     g_oConfiguration.m_arraypaProfiles.Add(PA_CHILD pProfile);
+     //set the Role name
+     pProfile->m_strNameProfile.InitFromStringQ(name);
+
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    // if compiling with ot, load the nym and pk
+     pProfile->m_strNymID.InitFromStringQ(QString::fromStdString(nymId));
+     pProfile->m_strKeyPublic.InitFromStringQ(QString::fromStdString(OTAPI_Wrap::GetNym_SourceForID(nymId)));
+     //Save the new role in xml (force)
+     pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
+     NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfile);
+ }
+ else
+  {
+  //delete nymid created
+  OTAPI_Wrap::It()->Wallet_RemoveNym(nymId);
+    }
+#endif
+return pProfile->POJapiGet();
+}
 
 
 OCapiRootGUI::OCapiRootGUI() : m_oProfiles(this), m_oPeerMessagesList(this)

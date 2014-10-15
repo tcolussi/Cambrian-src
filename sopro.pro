@@ -33,7 +33,7 @@ unix: {
 ##  LIBS += -L$${OUT_PWD}/../curl
 ##  LIBS += -lcurl
 
-    LIBS       += -L"/usr/local/lib" -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -lcurl -ldl
+    LIBS       += -L$${PWD}/otx/libs/mac -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -lcurl -ldl
     LIBS += -L$${OUT_PWD}/bitcoin-api  -lbitcoin-api
     LIBS += -L$${OUT_PWD}/jsoncpp -ljsoncpp
     LIBS += -L$${OUT_PWD}/libidn -llibidn

@@ -308,7 +308,8 @@ TContact::XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza
 	MessageLog_AppendTextFormatCo(d_coGrayDark, "\t Fetching container $i\n", iContainer);
 
 	TProfile * pProfile = PGetProfile();
-	pbinXcpStanzaReply->BinAppendText_VE("<f n='^S' k='^S'/>", &pProfile->m_strNameProfile, &pProfile->m_strKeyPublic);
+   // Getting contact info to response with the /f request from peer CBinXcpStanza::XcpApi_ExecuteApiResponse will get this parameters in remote peer
+    pbinXcpStanzaReply->BinAppendText_VE("<f n='^S' k='^S' p='^S'/>", &pProfile->m_strNameProfile, &pProfile->m_strKeyPublic,&pProfile->m_strNymID);
 	}
 
 
@@ -367,15 +368,16 @@ CBinXcpStanza::XcpApi_ExecuteApiResponse(PSZUC pszApiName, const CXmlNode * pXml
 		if (chApiName == d_chXv_ApiName_ContainerFetch && pXmlNodeApiResponse != NULL)
 			{
 			PSZUC pszKeyPublic = pXmlNodeApiResponse->PszuFindAttributeValue('k');
-			if (m_pContact->m_strKeyPublic.FIsEmptyString())
-				{
-				MessageLog_AppendTextFormatSev(eSeverityComment, "Assigning public key to peer '$s': $s\n", m_pContact->TreeItem_PszGetNameDisplay(), pszKeyPublic);
+            PSZUC pszRoleName = pXmlNodeApiResponse->PszuFindAttributeValue('n');
+            PSZUC pszNymId = pXmlNodeApiResponse->PszuFindAttributeValue('p');
+
+                MessageLog_AppendTextFormatSev(eSeverityComment, "Assigning  public key to peer '$s': $s\n", m_pContact->TreeItem_PszGetNameDisplay(), pszKeyPublic);
 				m_pContact->m_strKeyPublic = pszKeyPublic;	// Set the public key
-				}
-			else
-				{
-				MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "You already have a public key for '$s', therefore ignoring received public key: $s\n", m_pContact->TreeItem_PszGetNameDisplay(), pszKeyPublic);
-				}
+                MessageLog_AppendTextFormatSev(eSeverityComment, "Assigning  Nym Id '$s': $s\n", m_pContact->TreeItem_PszGetNameDisplay(), pszNymId);
+                m_pContact->m_strNymID = pszNymId; //set the contactNymId
+                m_pContact->m_strRoleName = pszRoleName; // set the rolename
+
+
 			return;
 			}
 		}
