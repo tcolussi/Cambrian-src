@@ -199,6 +199,19 @@ IEventWalletTransaction::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	pXmlNodeElement->UpdateAttributeValueCStr(d_chAttribute_strComment, OUT_F_UNCH &m_strComment);
 	}
 
+#ifdef COMPILE_WITH_CHATLOG_HTML
+void
+IEventWalletTransaction::AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC
+	{
+	pbinHtml->BinAppendText_VE(
+		Event_FIsEventTypeSent() ?
+		"<img src='qrc:/ico/Bitcoin' valign='bottom' style='valign:bottom'/> You sent <b>{Am}</b> to <b>$s</b>" :
+		"<img src='qrc:/ico/Bitcoin' valign='bottom' style='valign:bottom'/> You received <b>{Am}</b> from <b>$s</b>",
+		-m_amtQuantity, ChatLog_PszGetNickNameOfContact());
+	if (!m_strComment.FIsEmptyString())
+		pbinHtml->BinAppendText_VE(": <i>$S</i>", &m_strComment);
+	}
+#else
 void
 IEventWalletTransaction::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
@@ -221,6 +234,7 @@ IEventWalletTransaction::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBloc
 	//poCursorTextBlock->block().setBorderBrush();
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(0xFFFF99));
 	}
+#endif
 
 BOOL
 IEventWalletTransaction::FuIsTransactionMatchingViewFlags(EWalletViewFlags eWalletViewFlags) const

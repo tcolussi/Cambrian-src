@@ -1965,6 +1965,7 @@ Timestamp_CchEncodeToBase64Url(TIMESTAMP ts, OUT CHU pszTimestamp[16])
 	{
 	Timestamp_DebugValidate_ML(ts);
 	Assert(pszTimestamp != NULL);
+	InitToGarbage(OUT pszTimestamp, 16);
 	CHU * pchTimestamp = pszTimestamp;
 	while (TRUE)
 		{
@@ -3469,6 +3470,7 @@ TEST_StringRoutines()
 	TEST_AutoHyperlink("xmlns='http://jabber.org/features/iq-register'/>", "xmlns=&#39;<a href='http://jabber.org/features/iq-register'>http://jabber.org/features/iq-register</a>&#39;/&gt;");
 	TEST_AutoHyperlink("xmlns=\"http://jabber.org/features/iq-register\"/>", "xmlns=&quot;<a href='http://jabber.org/features/iq-register'>http://jabber.org/features/iq-register</a>&quot;/&gt;");
 
+	//HKEY_CURRENT_USER\Software\Cambrian.org\Chat\Apps
 
 	USZU uszu = UszuFromPsz((PSZUC)"");
 	Assert(uszu == 0);

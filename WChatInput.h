@@ -4,8 +4,8 @@
 //	Class to display an edit text so the user may input text for chat.
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef WMESSAGEINPUT_H
-#define WMESSAGEINPUT_H
+#ifndef WCHATINPUT_H
+#define WCHATINPUT_H
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
@@ -33,4 +33,4 @@ public:
 	virtual void insertFromMimeData(const QMimeData * poMimeDataSource);
 }; // WChatInput
 
-#endif // WMESSAGEINPUT_H
+#endif // WCHATINPUT_H

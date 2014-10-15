@@ -306,7 +306,9 @@ class OCursorSelectBlock : public OCursor
 {
 public:
 	OCursorSelectBlock(const QTextBlock & oTextBlock);
+	#ifndef COMPILE_WITH_CHATLOG_HTML
 	OCursorSelectBlock(IEvent * pEvent, QTextEdit * pwEdit);
+	#endif
 };
 
 class OCursorMoveToEnd : public OCursor

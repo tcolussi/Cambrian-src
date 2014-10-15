@@ -269,12 +269,14 @@ IEvent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospR
 	return eGui_NoUpdate;
 	}
 
+#ifndef COMPILE_WITH_CHATLOG_HTML
 //	ChatLogUpdateTextBlock(), virtual
 void
 IEvent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
 	Assert(poCursorTextBlock != NULL);
 	}
+#endif
 
 void
 IEvent::HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText)
@@ -346,6 +348,15 @@ IEvent::Event_ESetCompletedTimestamp()
 	return eGui_zUpdate;
 	}
 
+#ifdef COMPILE_WITH_CHATLOG_HTML
+void
+IEvent::Event_SetCompletedAndUpdateChatLog(WChatLogHtml * pwChatLog_YZ)
+	{
+	if ((Event_ESetCompletedTimestamp() == eGui_zUpdate) && pwChatLog_YZ != NULL)
+		pwChatLog_YZ->ChatLog_EventUpdate(this);
+	}
+
+#else
 void
 IEvent::Event_SetCompletedAndUpdateChatLog(QTextEdit * pwEditChatLog)
 	{
@@ -353,13 +364,14 @@ IEvent::Event_SetCompletedAndUpdateChatLog(QTextEdit * pwEditChatLog)
 	if (Event_ESetCompletedTimestamp() == eGui_zUpdate)
 		ChatLog_UpdateEventWithinWidget(pwEditChatLog);
 	}
-
+#endif
 void
 IEvent::Event_SetCompletedAndUpdateWidgetWithinParentChatLog()
 	{
 	Assert(m_pVaultParent_NZ != NULL);
 	Event_SetCompletedAndUpdateChatLog(m_pVaultParent_NZ->m_pParent->ChatLog_PwGet_YZ());
 	}
+
 
 //	Return TRUE if the event completed.
 //	Return FALSE if the event requires a task in order to complete.
@@ -378,6 +390,7 @@ IEvent::Event_FIsEventRecentThanMinutes(int cMinutes) const
 	return ((L64)(Timestamp_GetCurrentDateTime() - m_tsEventID) < (L64)cMinutes * d_ts_cMinutes);
 	}
 
+#ifndef COMPILE_WITH_CHATLOG_HTML
 //	Return the text block matching the event.
 //	In the rare case where there is no text block matching the event, this method will return an invalid text block,
 //	however not a NULL text block which will crash the application if used by a QTextCursor.
@@ -418,6 +431,7 @@ IEvent::ChatLog_UpdateEventWithinWidget(QTextEdit * pwEditChatLog)
 		ChatLogUpdateTextBlock(INOUT &oCursor);
 		}
 	}
+#endif
 
 void
 IEvent::ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree()
@@ -425,13 +439,23 @@ IEvent::ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree()
 	ITreeItemChatLogEvents * pContactOrGroup = NavigationTree_PGetSelectedTreeItemMatchingContractOrGroup();
 	Assert(pContactOrGroup != NULL);
 	if (pContactOrGroup != NULL)
+		{
+		#ifdef COMPILE_WITH_CHATLOG_HTML
+		Event_UpdateWithinChatLogHtml(pContactOrGroup->ChatLog_PwGet_YZ());
+		#else
 		ChatLog_UpdateEventWithinWidget(pContactOrGroup->ChatLog_PwGet_YZ());
+		#endif
+		}
 	}
 
 void
 IEvent::Event_UpdateWidgetWithinParentChatLog()
 	{
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	Event_UpdateWithinChatLogHtml(m_pVaultParent_NZ->m_pParent->ChatLog_PwGet_YZ());
+	#else
 	ChatLog_UpdateEventWithinWidget(m_pVaultParent_NZ->m_pParent->ChatLog_PwGet_YZ());
+	#endif
 	}
 
 const QBrush &
@@ -732,6 +756,9 @@ CEventMessageXmlRawSent::XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttribute
 	return eXml_zAttributesOnly;
 	}
 
+#ifdef COMPILE_WITH_CHATLOG_HTML
+
+#else
 //	CEventMessageXmlRawSent::IEvent::ChatLogUpdateTextBlock()
 void
 CEventMessageXmlRawSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
@@ -739,6 +766,7 @@ CEventMessageXmlRawSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBloc
 	_BinHtmlInitWithTimeAndMessage(OUT &g_strScratchBufferStatusBar);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushDebugPurple);
 	}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CEventMessageTextSent::CEventMessageTextSent(const TIMESTAMP * ptsEventID) : IEventMessageText(ptsEventID)
@@ -766,6 +794,7 @@ CEventFileSent::EGetEventClassForXCP() const
 	return CEventFileReceived::c_eEventClass;
 	}
 
+#ifndef COMPILE_WITH_CHATLOG_HTML
 //	CEventMessageTextSent::IEvent::ChatLogUpdateTextBlock()
 void
 CEventMessageTextSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
@@ -773,12 +802,14 @@ CEventMessageTextSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock)
 	_BinHtmlInitWithTimeAndMessage(OUT &g_strScratchBufferStatusBar);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, QBrush(d_coWhite));
 	}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CEventMessageTextReceived::CEventMessageTextReceived(const TIMESTAMP * ptsEventID) : IEventMessageText(ptsEventID)
 	{
 	}
 
+#ifndef COMPILE_WITH_CHATLOG_HTML
 //	CEventMessageTextReceived::IEvent::ChatLogUpdateTextBlock()
 void
 CEventMessageTextReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
@@ -786,6 +817,7 @@ CEventMessageTextReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBl
 	_BinHtmlInitWithTimeAndMessage(OUT &g_strScratchBufferStatusBar);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, ChatLog_OGetBrushForEvent());
 	}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 IEventFile::IEventFile(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
@@ -998,9 +1030,12 @@ IEventFile::_BinAppendHtmlForEvent(INOUT CBin * pbinTextHtml, PSZAC pszTextHtmlT
 void
 IEventFile::_FileTransferCancelledByLocalUser(INOUT OCursor * poCursorTextBlock)
 	{
+	Assert(poCursorTextBlock != NULL);
 	m_cblDataTransferred = d_IEventFile_cblDataTransferred_CancelledByLocalUser;
 	m_pVaultParent_NZ->SetModified();
+	#ifndef COMPILE_WITH_CHATLOG_HTML
 	ChatLogUpdateTextBlock(poCursorTextBlock);
+	#endif
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1014,6 +1049,42 @@ CEventFileSent::~CEventFileSent()
 	{
 	}
 
+#ifdef COMPILE_WITH_CHATLOG_HTML
+void
+CEventFileSent::AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC
+	{
+	PSZAC pszTextHtmlTemplate;
+	if (m_cblDataTransferred <= 0)
+		{
+		// So far, no data was transferred
+		switch (m_cblDataTransferred)
+			{
+		default:
+			if (m_cblFileSize >= 0)
+				{
+				pszTextHtmlTemplate = "Offering file to <b>@C</b>: @L @Z @c @o";
+				}
+			else
+				{
+				Assert(m_cblFileSize == d_IEventFile_cblFileSize_FileNotFound);
+				pszTextHtmlTemplate = "Offering file to <b>@C</b>: @L @Z (file not found)";
+				}
+			break;
+		case d_IEventFile_cblDataTransferred_CancelledByLocalUser:
+			pszTextHtmlTemplate = "File offer revoked by you: @L @Z @o";
+			break;
+		case d_IEventFile_cblDataTransferred_CancelledByRemoteContact:
+			pszTextHtmlTemplate = "File offer declined by <b>@C</b>: @L @Z @o";
+			}
+		}
+	else
+		{
+		Assert(m_cblDataTransferred <= m_cblFileSize);
+		pszTextHtmlTemplate = (m_cblDataTransferred < m_cblFileSize) ? "Sending file @L: @% sent... @o @c" : "File sent to <b>@C</b>! @L @Z @o";
+		}
+	_BinAppendHtmlForEvent(INOUT pbinHtml, pszTextHtmlTemplate);
+	}
+#else
 //	CEventFileSent::IEvent::ChatLogUpdateTextBlock()
 void
 CEventFileSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
@@ -1052,6 +1123,7 @@ CEventFileSent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_
 	_BinAppendHtmlForEvent(INOUT &g_strScratchBufferStatusBar, pszTextHtmlTemplate);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushFileTransfer);
 	} // ChatLogUpdateTextBlock()
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CEventFileSentTo::CEventFileSentTo(PSZUC pszFileToSend, PSZAC pszJidTo) : CEventFileSent(pszFileToSend)
@@ -1059,11 +1131,13 @@ CEventFileSentTo::CEventFileSentTo(PSZUC pszFileToSend, PSZAC pszJidTo) : CEvent
 	m_strJidTo.InitFromStringU((PSZUC)pszJidTo);
 	}
 
+#ifndef COMPILE_WITH_CHATLOG_HTML
 void
 CEventFileSentTo::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
 	CEventFileSent::ChatLogUpdateTextBlock(poCursorTextBlock);
 	}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CEventFileReceived::CEventFileReceived(const TIMESTAMP * ptsEventID) : IEventFile(ptsEventID)
@@ -1115,6 +1189,42 @@ CEventFileReceived::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	}
 */
 
+#ifdef COMPILE_WITH_CHATLOG_HTML
+void
+CEventFileReceived::AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC
+	{
+	PSZAC pszTextHtmlTemplate;
+	if (m_cblDataTransferred <= 0)
+		{
+		// So far, no data was transferred
+		switch (m_cblDataTransferred)
+			{
+		default:
+			pszTextHtmlTemplate = "File to download: @L @Z @s @a @d";	// Display to the user the opportunity to download the file, or decline the offer
+			break;
+		case d_IEventFile_cblDataTransferred_WriteError:
+			// If unable to write to disk, then do not offer the 'save' option
+			pszTextHtmlTemplate = "File to download: @L @Z <b>(write error)</b> @a @d";
+			break;
+		case d_IEventFile_cblDataTransferred_CancelledByLocalUser:
+			pszTextHtmlTemplate = "You declined to download file @L @Z";
+			break;
+		case d_IEventFile_cblDataTransferred_CancelledByRemoteContact:
+			pszTextHtmlTemplate = "File offer revoked by <b>@C</b>: @L @Z";
+			} // switch
+		}
+	else
+		{
+		#ifdef DEBUG_WANT_ASSERT
+		if (m_cblDataTransferred > m_cblFileSize)
+			MessageLog_AppendTextFormatSev(eSeverityInfoTextBlueDark, "EventID $t ($T) has received more data ($L bytes extra) than the original file size of $L bytes\n", m_tsEventID, m_tsEventID, m_cblDataTransferred - m_cblFileSize, m_cblFileSize);
+		#endif
+		pszTextHtmlTemplate = (m_cblDataTransferred < m_cblFileSize) ? "Downloading file @L: @% received... @c" : "Download complete! @L @Z @o";
+		}
+	_BinAppendHtmlForEvent(INOUT pbinHtml, pszTextHtmlTemplate);
+	}
+
+#else
 //	CEventFileReceived::IEvent::ChatLogUpdateTextBlock()
 void
 CEventFileReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
@@ -1151,7 +1261,7 @@ CEventFileReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CO
 	_BinAppendHtmlForEvent(INOUT &g_strScratchBufferStatusBar, pszTextHtmlTemplate);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushFileTransfer);
 	} // ChatLogUpdateTextBlock()
-
+#endif
 
 // 	m_strXmlIqResultInitFileDownload = PGetSocket_YZ()->ScratchBuffer_WriteXmlIqResult_Gsb(d_szuXmlAlreadyEncoded "<si id='$S' profile='^*ft' ^:si><feature ^:fn><x ^:xd type='submit'><field var='stream-method'><value>^*ib</value></field></x></feature></si>", &m_strSessionIdentifier);
 //	CEventFileReceived::IEvent::HyperlinkClicked()
@@ -1236,7 +1346,11 @@ CEventMessageTextSent::EventUpdateMessageText(const CStr & strMessageUpdated, IN
 	paEventMessageUpdated->m_uFlagsEvent |= FE_kfReplacing;
 	paEventMessageUpdated->m_strMessageText = strMessageUpdated;
 	m_pVaultParent_NZ->EventAddAndDispatchToContacts(PA_CHILD paEventMessageUpdated, PA_CHILD paEventUpdater);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	pwLayoutChatLogUpdate->m_pwChatLog_NZ->ChatLog_EventAppend(IN paEventMessageUpdated);
+	#else
 	pwLayoutChatLogUpdate->m_pwChatLog_NZ->ChatLog_EventDisplay(IN paEventMessageUpdated);
+	#endif
 	}
 
 CEventMessageTextSent *
@@ -1257,7 +1371,7 @@ CEventMessageTextSent::PFindEventMostRecent_NZ() CONST_OBJECT
 	}
 
 void
-CEventMessageTextReceived::MessageUpdated(PSZUC pszMessageUpdated, INOUT WChatLog * pwChatLog)
+CEventMessageTextReceived::MessageUpdated(PSZUC pszMessageUpdated, INOUT HChatLog * pwChatLog)
 	{
 	Assert(pwChatLog != NULL);
 	m_strMessageText = pszMessageUpdated;
@@ -1772,6 +1886,27 @@ CEventPing::XospDataE(const CXmlNode * pXmlNodeData, CBinXcpStanza *)
 	return Event_ESetCompletedTimestamp();
 	}
 
+#ifdef COMPILE_WITH_CHATLOG_HTML
+void
+CEventPing::AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC
+	{
+	pbinHtml->BinAppendText_VE("Pinging <b>^s</b>...", ChatLog_PszGetNickNameOfContact());
+	const TIMESTAMP_DELTA dtsResponse = m_tsOther - m_tsEventID;
+	if (dtsResponse > 0)
+		{
+		pbinHtml->BinAppendText_VE("  response time: <b>$L</b> ms", dtsResponse);
+		if (dtsResponse <= d_ts_cMinutes)
+			{
+			// If the response is within a minute then display the clock difference. The longer the response time the less relevant is the clock difference because the clock difference is estimated from the the delay of the response.
+			const TIMESTAMP_DELTA dtsClockDifference = m_tsContact - (m_tsEventID + m_tsOther) / 2;
+			if (dtsClockDifference > -1000 * d_ts_cDays && dtsClockDifference < 1000 * d_ts_cDays)
+				pbinHtml->BinAppendText_VE(" (clock difference: $T)", dtsClockDifference);	// Display the clock difference only if it is less than 1000 days (about 3 years).  Typically the clock difference should be a few seconds for systems connected to the UTC server, otherwise it may be a few at most a few minutes
+			}
+		}
+	if (!m_strError.FIsEmptyString())
+		pbinHtml->BinAppendText_VE("  <b>(error: ^S)</b>", &m_strError);
+	}
+#else
 //	CEventPing::IEvent::ChatLogUpdateTextBlock()
 void
 CEventPing::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
@@ -1794,6 +1929,7 @@ CEventPing::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_
 		g_strScratchBufferStatusBar.BinAppendText_VE("  <b>(error: ^S)</b>", &m_strError);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushDebugPurple);
 	}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CEventVersion::CEventVersion()
@@ -1831,6 +1967,14 @@ CEventVersion::XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza)
 		}
 	}
 
+#ifdef COMPILE_WITH_CHATLOG_HTML
+void
+CEventVersion::AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC
+	{
+	pbinHtml->BinAppendText_VE(m_strVersion.FIsEmptyString() ? "Querying which version <b>^s</b> is using..." : "<b>^s</b> is running <b>^S</b> version <b>^S</b> on ^S", ChatLog_PszGetNickNameOfContact(), &m_strClient, &m_strVersion, &m_strOperatingSystem);
+	}
+
+#else
 //	CEventVersion::IEvent::ChatLogUpdateTextBlock()
 void
 CEventVersion::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
@@ -1839,6 +1983,8 @@ CEventVersion::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_M
 	g_strScratchBufferStatusBar.BinAppendText_VE(m_strVersion.FIsEmptyString() ? "Querying which version <b>^s</b> is using..." : "<b>^s</b> is running <b>^S</b> version <b>^S</b> on ^S", ChatLog_PszGetNickNameOfContact(), &m_strClient, &m_strVersion, &m_strOperatingSystem);
 	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushDebugPurple);
 	}
+#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DEBUG_WANT_ASSERT

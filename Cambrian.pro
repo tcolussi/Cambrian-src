@@ -95,6 +95,7 @@ SOURCES += \
     TChannel.cpp \
     WQmlToolbar.cpp \
 	MenuIcons.cpp \
+	WChatLogHtml.cpp \
     startupscreen.cpp
 
 
@@ -176,6 +177,7 @@ HEADERS += \
     TChannel.h \
     WQmlToolbar.h \
     MenuIcons.h \
+	WChatLogHtml.h \
     startupscreen.h
 
 

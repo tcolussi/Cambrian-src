@@ -771,10 +771,12 @@ OCursorSelectBlock::OCursorSelectBlock(const QTextBlock & oTextBlock) : OCursor(
 	movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 	}
 
+#ifndef COMPILE_WITH_CHATLOG_HTML
 OCursorSelectBlock::OCursorSelectBlock(IEvent * pEvent, QTextEdit * pwEdit) : OCursor(pEvent->ChatLog_GetTextBlockRelatedToWidget(pwEdit))
 	{
 	movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
 	}
+#endif
 
 OCursorMoveToEnd::OCursorMoveToEnd(const QTextCursor & oCursor) : OCursor(oCursor)
 	{

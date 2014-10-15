@@ -7,6 +7,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "WChatLog.h"
+#include "WChatLogHtml.h"
 #include "WChatInput.h"
 
 
@@ -17,7 +18,11 @@ public:
 	// Since the layout is used for contacts and groups, the pointers m_pContactParent_YZ and m_pGroupParent_YZ are mutually exclusive
 	ITreeItemChatLogEvents * m_pContactOrGroup_NZ;
 	TContact * m_pContactParent_YZ;
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	WChatLogHtml * m_pwChatLog_NZ;
+	#else
 	WChatLog * m_pwChatLog_NZ;	// Widget displaying the chat history between the user and the contact
+	#endif
 	WChatInput * m_pwChatInput;	// Widget for the user to enter text to send to the contact
 protected:
 	class WFindText * m_pwFindText;			// Widget to search text within the chat history.  Eventually this widget should be built-in to WChatLog

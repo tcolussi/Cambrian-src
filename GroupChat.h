@@ -18,7 +18,7 @@ public:
 	virtual EEventClass EGetEventClass() const { return eEventClass_eGroupMemberJoins; }
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
-	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	//virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,7 +31,7 @@ public:
 	virtual EEventClass EGetEventClass() const { return eEventClass_eGroupInfo; }
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
-	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	//virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 };
 
 #endif // GROUPCHAT_H

@@ -44,16 +44,6 @@ CEventGroupMemberJoin::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	_XmlUnserializeAttributeOfContactIdentifier(d_chAttribute_strMemberJID, OUT &m_pMember, pXmlNodeElement);
 	}
 
-//	CEventGroupMemberJoin::IEvent::ChatLogUpdateTextBlock()
-void
-CEventGroupMemberJoin::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
-	{
-	_BinHtmlInitWithTime(OUT &g_strScratchBufferStatusBar);
-	if (m_pMember != NULL)
-		g_strScratchBufferStatusBar.BinAppendText_VE("invited <b>$s</b> to join the group", m_pMember->TreeItem_PszGetNameDisplay());
-	poCursorTextBlock->InsertHtmlBin(g_strScratchBufferStatusBar, c_brushSilver);
-	}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	IMPLEMENTATION NOTES
