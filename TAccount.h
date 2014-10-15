@@ -98,6 +98,7 @@ public:
 	void TreeItemAccount_DisplayWithinNavigationTree();
 	void TreeItemAccount_DisplayWithinNavigationTreeInit(PSZUC pszServerName, UINT uServerPort);
 	void TreeItemAccount_DeleteFromNavigationTree_MB(PA_DELETING);
+    void TreeItemAccount_DeleteFromNavigationTree_NoAsk(PA_DELETING);
 	void TreeItemAccount_UpdateIcon();
 	void TreeItemAccount_UpdateIconOfAllContacts();
 	PSZUC TreeItemAccount_SetIconConnectingToServer_Gsb();

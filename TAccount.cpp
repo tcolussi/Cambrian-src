@@ -640,6 +640,12 @@ TAccountXmpp::TreeItemAccount_DeleteFromNavigationTree_MB(PA_DELETING)
 		}
 	m_pProfileParent->DeleteAccount(PA_DELETING this);
 	}
+void
+TAccountXmpp::TreeItemAccount_DeleteFromNavigationTree_NoAsk(PA_DELETING)
+    {
+
+    m_pProfileParent->DeleteAccount(PA_DELETING this);
+    }
 
 void
 TAccountXmpp::TreeItemAccount_UpdateIcon()
