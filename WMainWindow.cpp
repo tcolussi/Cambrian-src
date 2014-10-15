@@ -15,6 +15,7 @@
 #include "WDashboard.h"
 #include "WLayoutContainer.h"
 #include "WQmlToolbar.h"
+#include "ui_startupscreen.h"
 #include <QSound>
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 	#include <iostream>
@@ -210,11 +211,19 @@ WMenuDropdown::WMenuDropdown(PSZAC pszName) : WMenu(pszName)
 	addAction(c_sEmpty);
 	#endif
 	}
-
+void
+WMainWindow::maximizeStartup()
+{
+    int height=this->geometry().height();
+    int width=this->geometry().width();
+    ui->webView->resize(width,height);
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-WMainWindow::WMainWindow() : QMainWindow()
+WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	{
-	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+
+
+   #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 	//Define the OTX pointer to access to all objects
 	OTX_WRAP * otw=new OTX_WRAP(this); // <-- Here the wallet is opened and if does not exists create a new wallet given a passphrase
 	pOTX=otw;
@@ -317,6 +326,10 @@ WMainWindow::WMainWindow() : QMainWindow()
 	QString s = dt.toString();
 	MessageLog_AppendTextFormatCo(d_coBlack, "$t = $Q\n", dt.currentMSecsSinceEpoch(), &s);	// 3TSmc9t = Thu Feb 19 11:02:47 1970
 	*/
+
+  //    ui->setupUi(this);
+
+
 	}
 
 WMainWindow::~WMainWindow()

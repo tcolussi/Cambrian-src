@@ -16,6 +16,10 @@ extern UINT g_cMinutesIdleNetworkDataReceived;
 typedef UINT (* PFn_UGetIdleTimeInMinutes)();
 extern PFn_UGetIdleTimeInMinutes g_pfnUGetIdleTimeInMinutes;
 
+namespace Ui {
+class startupScreen;
+}
+
 singleton WMainWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -25,10 +29,11 @@ private:
 	BOOL m_fuAlternateDisplayIconNewMessage;
 	int m_tidReconnect;					// Timer identifier to reconnect in case of a disconnection
 	int m_ttiReconnect;
-
+    Ui::startupScreen *ui;
 public:
 	explicit WMainWindow();
 	~WMainWindow();
+     void maximizeStartup();
 
 	//virtual void closeEvent(QCloseEvent * pEvent);		// From QWidget
 	//virtual void changeEvent(QEvent * pEvent);			// From QWidget

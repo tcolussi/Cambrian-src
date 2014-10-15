@@ -157,7 +157,7 @@ HUNGARIAN PREFIX
 #endif
 #include <QApplication>
 #include <QSharedMemory>
-#include <startupscreen.h>
+
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 #include <iostream>
 // IMPORTS TO ACCESS TO OT API
@@ -227,10 +227,9 @@ main(int argc, char *argv[])
 	#endif // DEBUG
 
 	wMainWindow.ConfigurationLoadFromXml();
+    wMainWindow.showMaximized();
+   // wMainWindow.maximizeStartup();
 
-    startupScreen * startup = new startupScreen();
-    //startup->showMaximized();
-    wMainWindow.show();
 
 	return oApplication.exec();
 	} // main()
