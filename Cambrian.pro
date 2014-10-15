@@ -94,7 +94,8 @@ SOURCES += \
     DDialogChannels.cpp \
     TChannel.cpp \
     WQmlToolbar.cpp \
-	MenuIcons.cpp
+	MenuIcons.cpp \
+    startupscreen.cpp
 
 
 HEADERS += \
@@ -174,10 +175,12 @@ HEADERS += \
     DDialogChannels.h \
     TChannel.h \
     WQmlToolbar.h \
-    MenuIcons.h
+    MenuIcons.h \
+    startupscreen.h
 
 
-FORMS +=
+FORMS += \
+    startupscreen.ui
 
 RC_ICONS = Icons/HavenIcon.ico
 

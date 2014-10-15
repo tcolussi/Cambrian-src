@@ -638,9 +638,12 @@ OJapiProfile::destroy()
     // Delete current m_pProfile in Sopro
 
 
-if (m_pProfile->m_arraypaAccountsXmpp.GetSize()|m_pProfile->m_arraypaApplications.GetSize())
-{     // The role cannot be moved because dependencies
-      return false;
+
+
+ if (m_pProfile->m_arraypaAccountsXmpp.GetSize()|m_pProfile->m_arraypaApplications.GetSize())
+{
+     //Remove this return because the caller will handle this validation.  Maybe need to return a warning almost...
+   //   return false;
 }
 else
 {
@@ -662,6 +665,8 @@ if (OTAPI_Wrap::It()->Wallet_CanRemoveNym(nymId)
 
 //now is possible to delete in Sopro db
 #endif
+ m_pProfile->m_arraypaAccountsXmpp.DeleteTreeItem(PA_DELETING m_pProfile);
+ m_pProfile->m_arraypaApplications.DeleteTreeItem(PA_DELETING m_pProfile);
  m_pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING m_pProfile);
 return true;
 
