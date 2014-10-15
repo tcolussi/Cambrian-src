@@ -238,6 +238,8 @@ OJapiGroup::members()
 QString
 OJapiGroup::type()
 	{
+	if (m_pGroup->Group_FuIsChannel())
+		return "channel";
 	switch (m_pGroup->EGetGroupType())
 		{
 	case eGroupType_kzOpen:
@@ -247,6 +249,17 @@ OJapiGroup::type()
 	default:
 		return c_sEmpty;
 		}
+	}
+
+QString
+OJapiGroup::channelName() const
+	{
+	return m_pGroup->m_strNameChannel_YZ;
+	}
+void
+OJapiGroup::channelName(const QString & sNameChannel)
+	{
+	m_pGroup->GroupChannel_SetName(CStr(sNameChannel));
 	}
 
 void

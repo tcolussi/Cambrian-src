@@ -363,7 +363,11 @@ public:
 	virtual EGui XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply);
 	void XcpRequesExtraData();
 
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
@@ -374,7 +378,11 @@ public:
 	BOOL Event_FIsEventTypeSent() const;
 	BOOL Event_FIsEventTypeReceived() const;
 	EGui Event_ESetCompletedTimestamp();
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	void Event_SetCompletedAndUpdateChatLog(WChatLogHtml * pwChatLog_YZ);
+	#else
 	void Event_SetCompletedAndUpdateChatLog(QTextEdit * pwEditChatLog);
+	#endif
 	void Event_SetCompletedAndUpdateWidgetWithinParentChatLog();
 	void Event_UpdateWidgetWithinParentChatLog();
 	BOOL Event_FHasCompleted() const;
@@ -382,9 +390,13 @@ public:
 	inline void Event_SetFlagOutOfSync() { m_uFlagsEvent |= FE_kfEventOutOfSync; }
 	inline void Event_SetFlagErrorProtocol() { m_uFlagsEvent |= FE_kfEventProtocolError; }
 
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	void Event_UpdateWithinChatLogHtml(WChatLogHtml * pwChatLog_YZ);
+	#else
 	QTextBlock ChatLog_GetTextBlockRelatedToDocument(QTextDocument * poDocument) const;
 	QTextBlock ChatLog_GetTextBlockRelatedToWidget(QTextEdit * pwEditChatLog) const;
 	void ChatLog_UpdateEventWithinWidget(QTextEdit * pwEditChatLog);
+	#endif
 	void ChatLog_UpdateEventWithinSelectedChatLogFromNavigationTree();
 	const QBrush & ChatLog_OGetBrushForEvent() const;
 	PSZUC ChatLog_PszGetNickNameOfContact() const;
@@ -400,6 +412,7 @@ public:
 	void Socket_WriteXmlIqReplyAcknowledge();
 
 	const TIMESTAMP * PtsGetTimestampForChronology() const;
+	void ChatLogAppendHtmlDivider(IOUT CBin * pbinHtml) CONST_MCC;
 
 protected:
 	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const;
@@ -494,6 +507,9 @@ public:
 	IEventMessageText(const TIMESTAMP * ptsEventID);
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	#endif
 	void _BinHtmlInitWithTimeAndMessage(OUT CBin * pbinTextHtml) CONST_VIRTUAL;
 }; // IEventMessageText
 
@@ -503,7 +519,9 @@ public:
 	CEventMessageXmlRawSent(PSZUC pszXmlStanza);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eMessageXmlRaw_class; }
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
+	#ifndef COMPILE_WITH_CHATLOG_HTML
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 };
 
 class CEventMessageTextSent : public IEventMessageText
@@ -516,7 +534,9 @@ public:
 	virtual ~CEventMessageTextSent();
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const;
+	#ifndef COMPILE_WITH_CHATLOG_HTML
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 	void EventUpdateMessageText(const CStr & strMessageUpdated, INOUT WLayoutChatLog * pwLayoutChatLogUpdate);
 	CEventMessageTextSent * PFindEventMostRecent_NZ() CONST_OBJECT;
 };
@@ -529,9 +549,11 @@ public:
 	CEventMessageTextReceived(const TIMESTAMP * ptsEventID);
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const { return CEventMessageTextSent::c_eEventClass; }
+	#ifndef COMPILE_WITH_CHATLOG_HTML
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
-	void MessageUpdated(PSZUC pszMessageUpdated, INOUT WChatLog * pwChatLog);
+	void MessageUpdated(PSZUC pszMessageUpdated, INOUT HChatLog * pwChatLog);
 
 };
 
@@ -577,7 +599,11 @@ public:
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const;
 	virtual EGui XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 
 	void XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza, TContact * pContact);
 	void XmppProcessStanzaVerb(const CXmlNode * pXmlNodeStanza, PSZAC pszaVerbContext, const CXmlNode * pXmlNodeVerb);
@@ -595,7 +621,9 @@ public:
 	CEventFileSentTo(const TIMESTAMP * ptsEventID) : CEventFileSent(ptsEventID) { }
 	CEventFileSentTo(PSZUC pszFileToSend, PSZAC pszJidTo);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eFileSentTo; }
+	#ifndef COMPILE_WITH_CHATLOG_HTML
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 };
 
 //	The user received a file offer from the contact
@@ -609,7 +637,11 @@ public:
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EEventClass EGetEventClassForXCP() const { return CEventFileSent::c_eEventClass; }
 	virtual EGui XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 };
@@ -652,7 +684,11 @@ public:
 	IEventWalletTransaction(const TIMESTAMP * ptsEventID);
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 	BOOL FuIsTransactionMatchingViewFlags(EWalletViewFlags eWalletViewFlags) const;
 };
 
@@ -696,7 +732,11 @@ public:
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual EGui XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 }; // CEventPing
 
 //	Query the the version of the client and wait for the response
@@ -712,8 +752,11 @@ public:
 	virtual EEventClass EGetEventClass() const { return c_eEventClass; }
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual EGui XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
-
+	#endif
 	void XmppProcessStanzaFromContact(const CXmlNode * pXmlNodeStanza);
 };
 
@@ -726,7 +769,11 @@ public:
 public:
 	CEventHelp(PSZUC pszHtmlHelp);
 	virtual EEventClass EGetEventClass() const { return eEventClass_eHelp_class; }
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	#endif
 };
 
 

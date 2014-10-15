@@ -106,7 +106,7 @@ public:
 	virtual const QBrush & ChatLog_OGetBrushForNewMessageReceived();
 	virtual void Vault_GetHashFileName(OUT SHashSha1 * pHashFileNameVault) const;
 	virtual void Vault_GetEventsForChatLog(OUT CArrayPtrEvents * parraypEventsChatLog) CONST_MCC;
-	void Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, WChatLog * pwChatLog);
+	void Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, HChatLog * pwChatLog);
 	CEventFileReceived * Vault_PAllocateEventFileReceived(const CXmlNode * pXmlNodeStreamInitiation);
 
 	void XmppRosterSubscribe();

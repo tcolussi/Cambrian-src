@@ -8,13 +8,14 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.4.7"
-#define d_szwApplicationVersion		   L"0.1.4.7"
+#define d_szApplicationVersion			"0.1.5.0"
+#define d_szwApplicationVersion		   L"0.1.5.0"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
 //#define COMPILE_WITH_OPEN_TRANSACTIONS
 //#define DEBUG_IMPORT_OLD_CONFIG_XML
+#define COMPILE_WITH_CHATLOG_HTML
 
 #ifndef PRECOMPILEDHEADERS_H
 #define PRECOMPILEDHEADERS_H
@@ -36,6 +37,13 @@
 	#define d_szOS		"Linux"
 #else
 	#define d_szOS		"Unknown OS"
+#endif
+
+//	Define a handle of a Chat Log
+#ifdef COMPILE_WITH_CHATLOG_HTML
+	#define HChatLog		WChatLogHtml
+#else
+	#define HChatLog		WChatLog
 #endif
 
 #include "DataTypesAndMacros.h"
@@ -145,6 +153,7 @@ class WEdit;
 	class WEditReadOnly;
 class WTextBrowser;
 	class WChatLog;
+class WChatLogHtml;
 
 class WSplitter;
 	class WSplitterVertical;

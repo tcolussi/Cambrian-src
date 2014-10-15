@@ -124,7 +124,7 @@ CPainterCell::DrawNumberWithinCircle(int nNumber)
 		//DrawLineHorizontal(rc.left(), rc.right(), ptCenter.y());	// Draw a longer line for large numbers
 		setPen(g_oPenTextNotEmpty);
 		setFont(g_oFontBoldSmaller);
-		QRect rcText(xLeft - 3, yTop, 20, cyHeight);
+		QRect rcText(xLeft - 4, yTop, 20, cyHeight);
 		drawText(rcText, Qt::AlignVCenter | Qt::AlignCenter, QString::number(nNumber));
 		m_rcCell.setRight(xLeft);
 		return 16;
@@ -206,9 +206,9 @@ WDashboardSectionChannels::WDashboardSectionChannels() : WDashboardSection_TGrou
 	}
 WDashboardSectionGroups::WDashboardSectionGroups() : WDashboardSection_TGroup("PRIVATE GROUPS", eMenuIcon_ClassGroup)
 	{
-	m_strTextFooterIfItemsAvailableIsZero.InitFromStringA("New Group...");
+	//m_strTextFooterIfItemsAvailableIsZero.InitFromStringA("New Group...");
 	}
-WDashboardSectionCorporations::WDashboardSectionCorporations() : WDashboardSection_TGroup("CORPORATIONS & COALITIONS", eMenuIcon_ClassOrganization)
+WDashboardSectionCorporations::WDashboardSectionCorporations() : WDashboardSection_TGroup("CORPS and COALITIONS", eMenuIcon_ClassOrganization)
 	{
 	m_strTextFooterIfItemsAvailableIsZero.InitFromStringA("New Corporation...");
 	}
@@ -406,7 +406,7 @@ WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	setObjectName("Dashboard");
 
 	//g_oFontNormal = font();
-	g_oFontNormal.setFamily("Lato, sans-serif");
+	g_oFontNormal.setFamily("Lato [sans-serif]");
 	//g_oFontNormal.setFamily("Times New Roman");
 	g_oFontNormal.setPixelSize(d_cyFontHeightItem);
 	g_oFontNormal.setWeight(QFont::Bold);	// Make everything bold
@@ -608,6 +608,7 @@ WDashboardSection::WDashboardSection(PSZAC pszSectionName) : WWidget(NULL)
 	{
 	m_sName = pszSectionName;
 	m_oHitTestInfo.pItem = NULL;
+	m_cTotalItemsAvailable = d_zNA;
 	setMouseTracking(true);
 	}
 
@@ -637,9 +638,8 @@ WDashboardSection::Refresh()
 	}
 
 void
-WDashboardSection::Init(TProfile * pProfile_YZ)
+WDashboardSection::Init(TProfile * UNUSED_PARAMETER(pProfile_YZ))
 	{
-	Endorse(pProfile_YZ == NULL);
 	}
 
 void
@@ -689,11 +689,9 @@ WDashboardSection::OnMenuClicked(SHitTestInfo oHitTestInfo)
 QSize
 WDashboardSection::sizeHint() const
 	{
-	int cyHeight = d_cyHeightFooter + 14 + d_yPosFirstItem + (m_arraypaItems.GetSize() * d_cyHeightSectionItem);
-	#if 0
-	if (!m_strTextFooterIfItemsAvailableIsZero.FIsEmptyString())
+	int cyHeight = 14 + d_yPosFirstItem + (m_arraypaItems.GetSize() * d_cyHeightSectionItem);
+	if (m_cTotalItemsAvailable > m_arraypaItems.GetSize() || !m_strTextFooterIfItemsAvailableIsZero.FIsEmptyString())
 		cyHeight += d_cyHeightFooter;
-	#endif
 	return QSize(d_zNA, cyHeight);
 	}
 /*
@@ -719,7 +717,7 @@ WDashboardSection::paintEvent(QPaintEvent *)
 	{
 	CPainterCell oPainter(this);
 	QRect rcSection = rect();
-	//oPainter.fillRect(rcSection, d_coBackgroundSection);
+	//oPainter.drawRect(rcSection);
 
 	#if 1
 	oPainter.setRenderHint(QPainter::Antialiasing, true);

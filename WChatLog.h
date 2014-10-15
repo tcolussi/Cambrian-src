@@ -1,9 +1,10 @@
-#ifndef WMESSAGELOG_H
-#define WMESSAGELOG_H
+#ifndef WCHATLOG_H
+#define WCHATLOG_H
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
 
+#ifndef COMPILE_WITH_CHATLOG_HTML
 class WChatLog : public WTextBrowser
 {
 	Q_OBJECT
@@ -35,7 +36,7 @@ public slots:
 	void SL_HyperlinkMouseHovering(const QUrl & url);
 	void SL_HyperlinkClicked(const QUrl & url);
 }; // WChatLog
-
+#endif
 
 	#define d_coBluePastel			MAKE_QRGB(220, 220, 255)
 	#define d_coBluePastelLight		MAKE_QRGB(235, 235, 255)
@@ -63,4 +64,4 @@ public slots:
 
 	extern const QBrush c_brushSilver;
 
-#endif // WMESSAGELOG_H
+#endif // WCHATLOG_H

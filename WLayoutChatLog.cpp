@@ -85,7 +85,7 @@ ITreeItemChatLogEvents::ChatLog_FindText()
 	ChatLog_PwGetLayout_NZ()->WidgetFindText_Show();
 	}
 
-WChatLog *
+HChatLog *
 ITreeItemChatLogEvents::ChatLog_PwGet_YZ() const
 	{
 	return (m_pawLayoutChatLog != NULL) ? m_pawLayoutChatLog->m_pwChatLog_NZ : NULL;
@@ -457,13 +457,19 @@ public:
 };
 */
 
+
 WLayoutChatLog::WLayoutChatLog(ITreeItemChatLogEvents * pContactOrGroupParent)
 	{
 	Assert(pContactOrGroupParent != NULL);
 	m_pContactOrGroup_NZ = pContactOrGroupParent;
 	m_pContactParent_YZ = (pContactOrGroupParent->EGetRuntimeClass() == RTI(TContact)) ? (TContact *)pContactOrGroupParent : NULL;
 	m_pwFindText = NULL;
+
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	m_pwChatLog_NZ = new WChatLogHtml(this, pContactOrGroupParent);
+	#else
 	m_pwChatLog_NZ = new WChatLog(this, pContactOrGroupParent);
+	#endif
 	setStretchFactor(0, 5);
 	/*
 	if (pContactParent_YZ != NULL)
@@ -559,7 +565,7 @@ TContact::Contact_FIsInvitationRecommended()
 	}
 
 void
-TContact::Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, WChatLog * pwChatLog)
+TContact::Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNode * pXmlNodeMessageStanza, PSZUC pszuMessageBody, HChatLog * pwChatLog)
 	{
 	Assert(pXmlNodeMessageStanza != NULL);
 	Assert(pszuMessageBody != NULL);
@@ -618,7 +624,11 @@ TContact::Vault_XmppAllocateEventMessageReceivedAndDisplayToChatLog(const CXmlNo
 	//Vault_AddEventToChatLogAndSendToContacts(PA_CHILD pEvent);
 	//pEvent->EventAddToVault(PA_PARENT Vault_PGet_NZ());
 	Vault_PGet_NZ()->EventAdd(PA_CHILD pEvent);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	pwChatLog->ChatLog_EventAppend(IN pEvent);
+	#else
 	pwChatLog->ChatLog_EventDisplay(IN pEvent);
+	#endif
 	} // Event_AllocateEventMessageReceivedAndDisplayToChatLog()
 
 /*
@@ -696,12 +706,6 @@ WLayoutChatLog::ChatLog_DisplayStanzaToUser(const CXmlNode * pXmlNodeMessageStan
 	} // ChatLog_DisplayStanzaToUser()
 
 void
-WLayoutChatLog::ChatLog_EventAppend(IEvent * pEvent)
-	{
-	m_pwChatLog_NZ->ChatLog_EventDisplay(pEvent);
-	}
-
-void
 WLayoutChatLog::ChatLog_EventsRepopulateUpdateUI()
 	{
 	m_pwChatLog_NZ->ChatLog_EventsRepopulate();
@@ -711,12 +715,19 @@ WLayoutChatLog::ChatLog_EventsRepopulateUpdateUI()
 void
 WLayoutChatLog::ChatLog_ScrollToDisplayLastMessage()
 	{
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	m_pwChatLog_NZ->_ScrollToDisplayLastEvent();
+	#else
 	Widget_ScrollToEnd(m_pwChatLog_NZ);
+	#endif
 	}
 
 void
 WLayoutChatLog::WidgetFindText_Show()
 	{
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	// TODO: Write the code to search in an HTML document
+	#else
 	if (m_pwFindText == NULL)
 		{
 		m_pwFindText = new WFindText(m_pwChatLog_NZ->document(), m_pwChatInput);
@@ -730,6 +741,7 @@ WLayoutChatLog::WidgetFindText_Show()
 	m_pwChatLog->ensureCursorVisible();
 	*/
 	ChatLog_ScrollToDisplayLastMessage();
+	#endif
 	}
 
 void

@@ -159,7 +159,11 @@ CBinXcpStanza::XcpApi_ExecuteApiList(const CXmlNode * pXmlNodeApiList)
 						if (pEvent->XospDataE(pXmlNodeApiList->m_pElementsList, INOUT this) == eGui_zUpdate)
 							{
 							// The event has been modified and must be updated in the Chat Log
+							#ifdef COMPILE_WITH_CHATLOG_HTML
+							pEvent->Event_UpdateWithinChatLogHtml(pContactOrGroup->ChatLog_PwGet_YZ());
+							#else
 							pEvent->ChatLog_UpdateEventWithinWidget(pContactOrGroup->ChatLog_PwGet_YZ());
+							#endif
 							}
 						}
 					}
@@ -546,7 +550,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 
 	ITreeItemChatLogEvents * pContactOrGroup_NZ = m_pContact;
 	TIMESTAMP * ptsOtherLastSynchronized = &m_pContact->m_tsOtherLastSynchronized;	// When the data was last synchronized with the contact
-	WChatLog * pwChatLog = m_pContact->ChatLog_PwGet_YZ();
+	HChatLog * pwChatLog_YZ = m_pContact->ChatLog_PwGet_YZ();
 	CVaultEvents * pVault = m_pContact->Vault_PGet_NZ();	// Get the vault so we may append new events, or fetch the missing events
 	TGroup * pGroup = NULL;
 	TGroupMember * pMember = NULL;
@@ -568,7 +572,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 		Assert(pMember != NULL);
 		Assert(pMember->m_pContact == m_pContact);
 		ptsOtherLastSynchronized = &pMember->m_tsOtherLastSynchronized;
-		pwChatLog = pGroup->ChatLog_PwGet_YZ();
+		pwChatLog_YZ = pGroup->ChatLog_PwGet_YZ();
 		pVault = pGroup->Vault_PGet_NZ();
 		} // if (group)
 
@@ -692,7 +696,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 				else
 					{
 					MessageLog_AppendTextFormatSev(eSeverityNoise, "\t My Event ID $t is already present\n", tsEventID);
-					pEvent->Event_SetCompletedAndUpdateChatLog(pwChatLog);	// Mark the event as completed/delivered
+					pEvent->Event_SetCompletedAndUpdateChatLog(pwChatLog_YZ);	// Mark the event as completed/delivered
 					}
 				} // while
 			BinAppendXmlForSelfClosingElementQuoteTruncateAtOffset(IN &oOffsets);
@@ -871,7 +875,7 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 					break;
 				IEvent * pEvent = pVault->PFindEventByID(tsEventID);
 				if (pEvent != NULL)
-					pEvent->Event_SetCompletedAndUpdateChatLog(pwChatLog);
+					pEvent->Event_SetCompletedAndUpdateChatLog(pwChatLog_YZ);
 				else
 					MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Confirmed Event ID $t does not exist\n", tsEventID);
 				}
@@ -960,8 +964,12 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 	// Display the new events into the Chat Log (if present)
 	if (fNewMessage)
 		pContactOrGroup_NZ->ChatLog_ChatStateIconUpdate(eChatState_PausedNoUpdateChatLog, m_pContact);
-	if (pwChatLog != NULL)
-		pwChatLog->ChatLog_EventsDisplay(IN arraypaEvents);
+	if (pwChatLog_YZ != NULL)
+		#ifdef COMPILE_WITH_CHATLOG_HTML
+		pwChatLog_YZ->ChatLog_EventsAppend(IN arraypaEvents);
+		#else
+		pwChatLog_YZ->ChatLog_EventsDisplay(IN arraypaEvents);
+		#endif
 
 	// Update the GUI about the new event
 	Assert(pEvent != NULL);

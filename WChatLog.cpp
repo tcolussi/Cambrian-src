@@ -15,6 +15,8 @@ const QBrush c_brushGreenSuperSuperPale(d_coGreenSuperSuperPale);
 const QBrush c_brushFileTransfer(d_coBlueSky);
 const QBrush c_brushDebugPurple(d_coPurpleLight);
 
+#ifndef COMPILE_WITH_CHATLOG_HTML
+
 WChatLog::WChatLog(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup) : WTextBrowser(pwParent)
 	{
 	Assert(pContactOrGroup != NULL);
@@ -513,8 +515,10 @@ WChatLog::SL_HyperlinkClicked(const QUrl & url)
 			IEvent * pEvent = m_pContactOrGroup->Vault_PFindEventByID(tsEventID);
 			if (pEvent != NULL)
 				{
+				#ifndef COMPILE_WITH_CHATLOG_HTML
 				OCursorSelectBlock oCursor(pEvent, this);
 				pEvent->HyperlinkClicked(pszAction + 1, INOUT &oCursor);
+				#endif
 				return;
 				}
 			MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "WChatLog::SL_HyperlinkClicked() - Unable to find matching tsEventID $t from hyperlink $s\n", tsEventID, pszUrl);
@@ -536,17 +540,6 @@ WChatLog::SL_HyperlinkClicked(const QUrl & url)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-CEventHelp::CEventHelp(PSZUC pszHtmlHelp)
-	{
-	m_strHtmlHelp = pszHtmlHelp;
-	}
-
-void
-CEventHelp::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
-	{
-	poCursorTextBlock->InsertHtmlBin(m_strHtmlHelp, c_brushSilver);
-	}
-
 
 /*void WMainWindow::highlightErrors(int num) {
   QTextCursor tc = ui_.textEdit->textCursor();
@@ -890,3 +883,5 @@ QString validHtml(const QString &html, bool allowReplacement, QTextCursor *tc)
 		return oValidDocument.toHtml();
 	}
 }
+
+#endif // ~COMPILE_WITH_CHATLOG_HTML

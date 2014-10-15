@@ -193,9 +193,9 @@ protected:
 	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section.  To change the order of the sections, change their order in this structure.
 		{
 		WDashboardSectionChannels * pwSectionChannels;
-		WDashboardSectionContacts * pwSectionContacts;
-		WDashboardSectionGroups * pwSectionGroups;		// Private groups
+		WDashboardSectionContacts * pwSectionContacts;			// Peers
 		WDashboardSectionCorporations * pwSectionCorporations;	// Corporations & Coalitions
+		WDashboardSectionGroups * pwSectionGroups;		// Private groups
 		WDashboardSectionBallots * pwSectionBalots;
 		} m_sections;
 	CDashboardSectionItem * m_pItemSelected_YZ;		// Which item is selected (has the focus)

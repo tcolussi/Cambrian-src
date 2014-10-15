@@ -780,7 +780,7 @@ OJapiAppBallotmaster::OJapiAppBallotmaster(OJapiCambrian * poCambrian, const SAp
 
 OJapiAppBallotmaster::~OJapiAppBallotmaster()
 	{
-	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OJapiAppBallotmaster::~OJapiAppBallotmaster() 0x$p\n", this);	// For debugging, display in the Error Log when the object is destroyed (to make sure we have not missed it)
+	//MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OJapiAppBallotmaster::~OJapiAppBallotmaster() 0x$p\n", this);	// For debugging, display in the Error Log when the object is destroyed (to make sure we have not missed it)
 	// Remove the Ballotmaster from the list
 	OJapiAppBallotmaster ** ppBallotmasterRemove = &s_plistBallotmasters;
 	OJapiAppBallotmaster * pBallotmaster = s_plistBallotmasters;

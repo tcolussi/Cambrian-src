@@ -81,7 +81,7 @@ public:
 	void ChatLog_FindText();
 	void ChatLog_ChatStateIconUpdateComposingStopped(INOUT TContact * pContact);
 	void ChatLog_ChatStateIconUpdate(EChatState eChatState, TContact * pContact);
-	WChatLog * ChatLog_PwGet_YZ() const;
+	HChatLog * ChatLog_PwGet_YZ() const;
 
 	void TreeItemChatLog_UpdateTextToDisplayMessagesUnread();
 	void TreeItemChatLog_UpdateTextAndIcon();

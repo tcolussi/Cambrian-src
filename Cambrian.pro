@@ -94,7 +94,8 @@ SOURCES += \
     DDialogChannels.cpp \
     TChannel.cpp \
     WQmlToolbar.cpp \
-	MenuIcons.cpp
+	MenuIcons.cpp \
+    WChatLogHtml.cpp
 
 
 HEADERS += \
@@ -174,7 +175,8 @@ HEADERS += \
     DDialogChannels.h \
     TChannel.h \
     WQmlToolbar.h \
-    MenuIcons.h
+    MenuIcons.h \
+    WChatLogHtml.h
 
 
 FORMS +=

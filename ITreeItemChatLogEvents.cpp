@@ -211,10 +211,14 @@ ITreeItemChatLogEvents::Vault_AddEventToChatLogAndSendToContacts(PA_CHILD IEvent
 	{
 	AssertValidEvent(paEvent);
 	Vault_PGet_NZ()->EventAddAndDispatchToContacts(PA_CHILD paEvent);
-	//paEvent->EventAddToVault(PA_PARENT Vault_PGet_NZ());
 	if (m_pawLayoutChatLog != NULL)
-		//m_pawLayoutChatLog->ChatLog_EventAppend(IN paEvent);
+		{
+		#ifdef COMPILE_WITH_CHATLOG_HTML
+		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_EventAppend(IN paEvent);
+		#else
 		m_pawLayoutChatLog->m_pwChatLog_NZ->ChatLog_EventDisplay(IN paEvent);
+		#endif
+		}
 	}
 
 IEvent *
