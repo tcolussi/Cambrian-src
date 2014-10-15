@@ -95,7 +95,8 @@ SOURCES += \
     TChannel.cpp \
     WQmlToolbar.cpp \
 	MenuIcons.cpp \
-    WChatLogHtml.cpp
+	WChatLogHtml.cpp \
+    startupscreen.cpp
 
 
 HEADERS += \
@@ -176,10 +177,12 @@ HEADERS += \
     TChannel.h \
     WQmlToolbar.h \
     MenuIcons.h \
-    WChatLogHtml.h
+	WChatLogHtml.h \
+    startupscreen.h
 
 
-FORMS +=
+FORMS += \
+    startupscreen.ui
 
 RC_ICONS = Icons/HavenIcon.ico
 

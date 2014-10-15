@@ -4,7 +4,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "TApplicationBallotmaster.h"
-
+#include "qdebug.h"
 
 OJapiApps::OJapiApps(OJapiCambrian * poCambrian)
 	{
@@ -87,7 +87,8 @@ OJapiMe::peers()
 	CListVariants oList(m_poCambrian);
 	TAccountXmpp ** ppAccountStop;
 	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
-	while (ppAccount != ppAccountStop)
+
+    while (ppAccount != ppAccountStop)
 		{
 		TAccountXmpp * pAccount = *ppAccount++;
 		oList.AddContacts(IN pAccount->m_arraypaContacts);
@@ -635,6 +636,7 @@ OJapiProfilesList::list()
 
 	TProfile **ppProfilesStop;
 	TProfile **ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(&ppProfilesStop);
+
 	while(ppProfiles != ppProfilesStop)
 		{
 		TProfile *pProfile = *ppProfiles++;
@@ -650,10 +652,28 @@ OJapiProfile::destroy()
     {
     // Delete current m_pProfile in Sopro
 
+int xmppCount=m_pProfile->m_arraypaAccountsXmpp.GetSize();
 
-if (m_pProfile->m_arraypaAccountsXmpp.GetSize()|m_pProfile->m_arraypaApplications.GetSize())
-{     // The role cannot be moved because dependencies
-      return false;
+
+if (xmppCount | m_pProfile->m_arraypaApplications.GetSize())
+{     // Remove all accounts
+  if (xmppCount > 0)
+    {
+
+  qDebug() << "Deleting Accounts";
+      TAccountXmpp ** ppAccountStop;
+      TAccountXmpp ** ppAccount = m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+      while (ppAccount != ppAccountStop)
+      {
+      TAccountXmpp * pAccount = *ppAccount++;
+
+       pAccount->TreeItemAccount_DeleteFromNavigationTree_NoAsk(PA_DELETING);
+       }
+
+    }
+qDebug() << "delete profile";
+  m_pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING m_pProfile);
+
 }
 else
 {
@@ -675,11 +695,12 @@ if (OTAPI_Wrap::It()->Wallet_CanRemoveNym(nymId)
 
 //now is possible to delete in Sopro db
 #endif
+ qDebug() << "Delete profile without roles";
  m_pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING m_pProfile);
+NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(NULL);
 return true;
-
 }
-return false;
+return true;
 
 }
 
