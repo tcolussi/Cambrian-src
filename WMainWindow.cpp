@@ -15,7 +15,6 @@
 #include "WDashboard.h"
 #include "WLayoutContainer.h"
 #include "WLayoutBrowser.h"
-#include "ui_startupscreen.h"
 #include <QSound>
 #include <iostream>
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
@@ -216,12 +215,30 @@ WMenuDropdown::WMenuDropdown(PSZAC pszName) : WMenu(pszName)
 
 #ifdef COMPILE_WITH_SPLASH_SCREEN
 void
+WMainWindow::initRolePage()
+{
+     //Setup the rolepage Ui
+     ui->setupUi(this);
+     // get the web view
+     QWebView * startupRolepage = ui->webView;
+     QWebPage * poPage = startupRolepage->page();
+     poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true); //enable Inspect context menu
+     m_poFrame = poPage->mainFrame();
+
+     //Get the first profile loaded when sopro starts
+    TProfile * pProfile = new TProfile(&g_oConfiguration);
+    m_paCambrian=new OJapiCambrian(pProfile,startupRolepage);
+    SL_InitJavaScript();
+    connect(m_poFrame, SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(SL_InitJavaScript()));
+}
+
+void
 WMainWindow::maximizeApp(QString Url)
 	{
     QString rolePageStart =MainWindow_SGetUrlPathOfApplication(Url);
     //QString rolePageStart ="http://espndeportes.com";
     //QString rolePageStart =QUrl("qurc//Users/Rafa/repo/sopro-rolepage/index.html");
-
+    std::cout << Url.toStdString();
     int height=this->geometry().height();
     int width=this->geometry().width();
 
@@ -346,7 +363,7 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	MessageLog_AppendTextFormatCo(d_coBlack, "$t = $Q\n", dt.currentMSecsSinceEpoch(), &s);	// 3TSmc9t = Thu Feb 19 11:02:47 1970
 	*/
 	#ifdef COMPILE_WITH_SPLASH_SCREEN
-    ui->setupUi(this);
+    initRolePage();
 	#endif
 	}
 
@@ -373,6 +390,12 @@ WMainWindow::SL_showRolePage()
 	{
 	ui->webView->showMaximized();
 	}
+void
+WMainWindow::SL_InitJavaScript()
+ {
+    m_paCambrian->m_arraypaTemp.DeleteAllRuntimeObjects();// Delete any previous temporary object
+    m_poFrame->addToJavaScriptWindowObject("Cambrian", m_paCambrian); // , QWebFrame::ScriptOwnership);
+ }
 #endif
 
 // Save anything worth saving before the application quits. This method is called before the destructor of the Main Window and the Navigation Tree.

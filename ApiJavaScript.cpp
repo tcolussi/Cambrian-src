@@ -625,6 +625,7 @@ OJapiProfilesList::setCurrentProfile(POJapiProfile poJapiProfile)
 		{
 		NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfile->m_pProfile);
 		roleChanged();
+        g_pwMainWindow->hideRolePage();
 		}
 	}
 
@@ -650,61 +651,85 @@ OJapiProfilesList::list()
 bool
 OJapiProfile::destroy()
     {
-    // Delete current m_pProfile in Sopro
 
-int xmppCount=m_pProfile->m_arraypaAccountsXmpp.GetSize();
+    bool successDeletion=true;
 
+    // Get the current profile (it is need to work properly in mac)
+    int cProfiles=g_oConfiguration.m_arraypaProfiles.GetSize();
+    TProfile ** prgpProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfiles(OUT &cProfiles);
+    TProfile * pProfile;
+    for (int iProfile = 0; iProfile < cProfiles; iProfile++)
+        {
+         pProfile = prgpProfiles[iProfile];
 
-if (xmppCount | m_pProfile->m_arraypaApplications.GetSize())
-{     // Remove all accounts
-  if (xmppCount > 0)
-    {
+        if (m_pProfile==pProfile)
+            break;
+        }
 
-  qDebug() << "Deleting Accounts";
-      TAccountXmpp ** ppAccountStop;
-      TAccountXmpp ** ppAccount = m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
-      while (ppAccount != ppAccountStop)
-      {
-      TAccountXmpp * pAccount = *ppAccount++;
+if (pProfile != NULL)
+ {
 
-       pAccount->TreeItemAccount_DeleteFromNavigationTree_NoAsk(PA_DELETING);
-       }
-
-    }
-qDebug() << "delete profile";
-  m_pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING m_pProfile);
-  m_pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
-}
-else
-{
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-//first verify if is possible to delete in
-std::string nymId= m_pProfile->m_strNymID.ToQString().toStdString();
+//first verify if is possible to delete in OT
+std::string nymId= pProfile->m_strNymID.ToQString().toStdString();
 
 if (OTAPI_Wrap::It()->Wallet_CanRemoveNym(nymId)
 {
-    if(OTAPI_Wrap::It()->Wallet_RemoveNym(m_pOwner->m_qstrCurrentID.toStdString()))
-    {return true;}
+    if(OTAPI_Wrap::It()->Wallet_RemoveNym(nymId))
+    {successDeletion=true;}
     else
-    {return false;}
+    {successDeletion=false;}
 }
  else
 {
-   return false;
+   successDeletion=false;
 }
 
-//now is possible to delete in Sopro db
+if (successDeletion)
+ {
+        //now is possible to delete in Sopro db
 #endif
- qDebug() << "Delete profile without roles";
- m_pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING m_pProfile);
- m_pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
-NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(NULL);
-return true;
-}
-return true;
 
-}
+  int xmppCount= pProfile->m_arraypaAccountsXmpp.GetSize();
+   if (xmppCount | pProfile->m_arraypaApplications.GetSize())
+    {     // Remove all accounts
+      if (xmppCount > 0)
+        {
+            qDebug() << "Deleting Accounts";
+            TAccountXmpp ** ppAccountStop;
+            TAccountXmpp ** ppAccount = pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+            while (ppAccount != ppAccountStop)
+               {
+                TAccountXmpp * pAccount = *ppAccount++;
+                pAccount->TreeItemAccount_DeleteFromNavigationTree_NoAsk(PA_DELETING);
+                }
 
+        }
+        qDebug() << "delete profile";
+        pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING pProfile);
+         #ifndef Q_OS_MAC
+        m_pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
+        #endif
+        successDeletion=true;
+     }
+    else
+    {
+    qDebug() << "Delete profile without roles";
+    pProfile->m_pConfigurationParent->m_arraypaProfiles.DeleteTreeItem(PA_DELETING pProfile);
+      #ifndef Q_OS_MAC
+    m_pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
+     #endif
+    NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(NULL);
+    successDeletion=true;
+    }// if role has contacts
+    #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    }//if delete in OT was successfull
+    #endif
+
+}// if profile was selected
+
+return successDeletion;
+}
 
 POJapiProfile
 OJapiProfilesList::create(const QString & name)
@@ -740,7 +765,9 @@ TProfile * pProfile = new TProfile(&g_oConfiguration);
   OTAPI_Wrap::It()->Wallet_RemoveNym(nymId);
     }
 #endif
+
 return pProfile->POJapiGet();
+
 }
 
 
