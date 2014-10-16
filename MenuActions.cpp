@@ -182,7 +182,7 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 	"Lawyer" _ "i=Lawyer" _, // eMenuIconMarketplaceLawyers
 	"Jurisdiction" _ "i=Arbitration" _, // eMenuIconJurisdiction
 	"Corporations" _ "i=Corporation" _, // eMenuIconCorporations
-	"Identities" _ d_sza_IconProfile _, // eMenuIconIdentities
+	"Profile" _ d_sza_IconProfile _, // eMenuIconProfile
 
 	"Settings" _ "i=Settings" _, // eMenuIconSettings
 	"Communicate" _ "i=Chat" _, // eMenuIconCommunicate

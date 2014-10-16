@@ -35,11 +35,9 @@ public:
    // WQmlToolbar *p_QmlToolbar;
     explicit WMainWindow();
 	~WMainWindow();
-     void maximizeApp(QString Url);
-     void hideRolePage();
+	 void maximizeApp(QString Url);
+	 void hideRolePage();
 
-	//virtual void closeEvent(QCloseEvent * pEvent);		// From QWidget
-	//virtual void changeEvent(QEvent * pEvent);			// From QWidget
 	virtual void timerEvent(QTimerEvent * pTimerCallback);	// From QObject
 	virtual bool event(QEvent * pEvent);				// From QObject
 
@@ -51,7 +49,9 @@ public:
 	void TimerStartFlashIconNewMessage();
 
 public slots:
+	#ifdef COMPILE_WITH_SPLASH_SCREEN
     void SL_showRolePage();
+	#endif
 	void SL_Quitting();
 	void SL_MenuAboutToShow();
 	void SL_MenuActionTriggered(QAction * pAction);

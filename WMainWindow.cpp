@@ -213,10 +213,11 @@ WMenuDropdown::WMenuDropdown(PSZAC pszName) : WMenu(pszName)
 	addAction(c_sEmpty);
 	#endif
 	}
+
+#ifdef COMPILE_WITH_SPLASH_SCREEN
 void
 WMainWindow::maximizeApp(QString Url)
-{
-
+	{
     QString rolePageStart =MainWindow_SGetUrlPathOfApplication(Url);
     //QString rolePageStart ="http://espndeportes.com";
     //QString rolePageStart =QUrl("qurc//Users/Rafa/repo/sopro-rolepage/index.html");
@@ -229,21 +230,19 @@ WMainWindow::maximizeApp(QString Url)
     ui->webView->resize(width,height);
 
     std::cout << "MaximizeApp";
-}
-
+	}
 
 void
 WMainWindow::hideRolePage()
-{
-ui->webView->hide();
+	{
+	ui->webView->hide();
+	}
+#endif
 
-}
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	{
-
-
-   #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 	//Define the OTX pointer to access to all objects
 	OTX_WRAP * otw=new OTX_WRAP(this); // <-- Here the wallet is opened and if does not exists create a new wallet given a passphrase
 	pOTX=otw;
@@ -302,9 +301,7 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
 	#endif
 	#if 1
-
-   // addDockWidget(Qt::TopDockWidgetArea, PA_CHILD p_QmlToolbar);
-
+	addDockWidget(Qt::TopDockWidgetArea, PA_CHILD new WQmlToolbar);
 	#endif
 
 	g_pwChatLayoutContainer = new WLayoutContainer;
@@ -348,9 +345,9 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	QString s = dt.toString();
 	MessageLog_AppendTextFormatCo(d_coBlack, "$t = $Q\n", dt.currentMSecsSinceEpoch(), &s);	// 3TSmc9t = Thu Feb 19 11:02:47 1970
 	*/
-
+	#ifdef COMPILE_WITH_SPLASH_SCREEN
     ui->setupUi(this);
-
+	#endif
 	}
 
 WMainWindow::~WMainWindow()
@@ -370,12 +367,14 @@ WMainWindow::~WMainWindow()
 	#endif
 	}
 
+#ifdef COMPILE_WITH_SPLASH_SCREEN
 void
 WMainWindow::SL_showRolePage()
-{
+	{
+	ui->webView->showMaximized();
+	}
+#endif
 
-     ui->webView->showMaximized();
-}
 // Save anything worth saving before the application quits. This method is called before the destructor of the Main Window and the Navigation Tree.
 void
 WMainWindow::SL_Quitting()
@@ -636,6 +635,7 @@ WMainWindow::SL_SystemTrayActivated(QSystemTrayIcon::ActivationReason eActivatio
 		break;
 		} // switch
 	} // SL_SystemTrayActivated()
+
 #pragma GCC diagnostic warning "-Wswitch"
 
 void

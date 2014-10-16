@@ -111,10 +111,10 @@
         <file alias="MenuOverflowH">Icons/MenuOverflowHover.png</file>
         <file alias="CCircleGreen">Icons/CCircleGreen.png</file>
         <file alias="CCircleGray">Icons/CCircleGray.png</file>
-		<file alias="CSquare">Icons/CSquare.png</file>
-		<file alias="CTriangle">Icons/CTriangle.png</file>
+        <file alias="CSquare">Icons/CSquare.png</file>
+        <file alias="CTriangle">Icons/CTriangle.png</file>
         <file alias="CHexagon">Icons/CHexagon.png</file>
-		<file alias="CHash">Icons/CHash.png</file>
+        <file alias="CHash">Icons/CHash.png</file>
         <file alias="Avatar1">Icons/Avatar1.png</file>
         <file alias="Avatar2">Icons/Avatar2.png</file>
     </qresource>
@@ -193,5 +193,8 @@
         <file>ui/testThumbImage.png</file>
         <file>ui/toolsDarkTriangle.png</file>
         <file>ui/toolsTriangle.png</file>
+    </qresource>
+    <qresource prefix="/backgrounds">
+        <file alias="Space">Backgrounds/Space.jpg</file>
     </qresource>
 </RCC>

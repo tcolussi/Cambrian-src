@@ -152,7 +152,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuIconMarketplaceLawyers,
 	eMenuIconJurisdiction,
 	eMenuIconCorporations,
-	eMenuIconIdentities,
+	eMenuIconProfile,
 
 	eMenuIconSettings,
 	eMenuIconCommunicate,

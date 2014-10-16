@@ -15,7 +15,11 @@ extern CChatConfiguration g_oConfiguration;
 const QString c_sNavigation("Navigation");
 
 QToolButton * g_pwButtonStatusOfNavigationTree;
+#ifdef COMPILE_WITH_SPLASH_SCREEN
 WButtonTextWithIcon * g_pwButtonSwitchProfile;
+#else
+WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
+#endif
 WMenu * g_pwMenuSwitchProfile;
 
 WNavigationTreeCaption::WNavigationTreeCaption()
@@ -58,15 +62,22 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation Tree"))
 	setObjectName(c_sNavigation);
 	m_pTreeWidgetItemEditing = NULL;
 
+	#ifdef COMPILE_WITH_SPLASH_SCREEN
+
+	g_pwButtonSwitchProfile = new WButtonTextWithIcon("Switch Role |Open the Role Management screen", eMenuIcon_ClassProfile) ;
+	//added new Action to invoke the new rolepage
+	connect(g_pwButtonSwitchProfile, SIGNAL(clicked()), this, SLOT(SL_RolePageShow()));
+
+	#else
+
 	//setStyleSheet("border: 1px solid red;");
-    //g_pwButtonSwitchProfile = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIcon_ClassProfile, NULL);
-    g_pwButtonSwitchProfile = new WButtonTextWithIcon("Switch Role |Open the Role Management screen", eMenuIcon_ClassProfile) ;
-    g_pwButtonSwitchProfile->setCursor(Qt::ArrowCursor);	// We need to explicitly set the cursor to arrow because the caption uses the OpenHandCursor which every child inherits
-    //added new Action to invoke the new rolepage
-    connect(g_pwButtonSwitchProfile, SIGNAL(clicked()), this, SLOT(SL_RolePageShow()));
-    /*g_pwMenuSwitchProfile = g_pwButtonSwitchProfile->PwGetMenu();
+	g_pwButtonSwitchProfile = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIcon_ClassProfile, NULL);
+	g_pwMenuSwitchProfile = g_pwButtonSwitchProfile->PwGetMenu();
     connect(g_pwMenuSwitchProfile, SIGNAL(aboutToShow()), this, SLOT(SL_MenuProfilesShow()));
-    connect(g_pwMenuSwitchProfile, SIGNAL(triggered(QAction*)), this, SLOT(SL_MenuProfileSelected(QAction*)));*/
+	connect(g_pwMenuSwitchProfile, SIGNAL(triggered(QAction*)), this, SLOT(SL_MenuProfileSelected(QAction*)));
+	#endif
+
+	g_pwButtonSwitchProfile->setCursor(Qt::ArrowCursor);	// We need to explicitly set the cursor to arrow because the caption uses the OpenHandCursor which every child inherits
 
 #if 1
 	setTitleBarWidget(PA_CHILD new WNavigationTreeCaption);	// Customize the title bar of the navigation tree
@@ -281,11 +292,13 @@ WNavigationTree::SL_ContactNew()
 #define d_iProfile_DisplayAll		(-1)
 #define d_iProfile_CreateNew		(-2)
 
+#ifdef COMPILE_WITH_SPLASH_SCREEN
 void
 WNavigationTree::SL_RolePageShow()
-{
-g_pwMainWindow->SL_showRolePage();
-}
+	{
+	g_pwMainWindow->SL_showRolePage();
+	}
+#endif
 
 void
 WNavigationTree::SL_MenuProfilesShow()
@@ -297,30 +310,31 @@ WNavigationTree::SL_MenuProfilesShow()
 		{
 		TProfile * pProfile = prgpProfiles[iProfile];
 		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
-		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIconIdentities);
+		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIconProfile);
 		}
-    /*Disabled because the menu become a button Switch Role
-     * if (cProfiles > 1)
-		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All " d_sza_Profile "s>", d_iProfile_DisplayAll, eMenuIconIdentities);
-        g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Manage Roles...>", d_iProfile_CreateNew, eMenuIconIdentities);*/
+	#ifndef COMPILE_WITH_SPLASH_SCREEN
+	if (cProfiles > 1)
+		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All " d_sza_Profile "s>", d_iProfile_DisplayAll, eMenuIconProfile);
+	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<New Role...>", d_iProfile_CreateNew, eMenuIconProfile);
+	#else
+	// Code specific for the button Switch Role
+
+	#endif
 	}
 
 void
 WNavigationTree::SL_MenuProfileSelected(QAction * pAction)
 	{
 	const int iProfile = pAction->data().toInt();
+
 	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-
-
     std::cout << pAction->text().toStdString();
-
     // open only if Manage Role Screen is created
     if (pAction->text().toStdString().compare("<Manage Roles...>")==0)
       pOTX->openRoleCreationScreen();
-
-
     if (!pOTX->RCS_ACTION_CANCEL)
 	#endif
+
 	NavigationTree_PopulateTreeItemsAccordingToSelectedProfile((TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementAtSafe_YZ(iProfile), iProfile == d_iProfile_CreateNew);
 	}
 

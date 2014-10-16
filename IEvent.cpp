@@ -922,7 +922,7 @@ IEventFile::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	}
 
 
-#ifdef COMPILE_WITH_CHATLOG_HTML
+
 EGui
 IEventFile::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
 	{
@@ -940,8 +940,7 @@ IEventFile::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
 	return eGui_NoUpdate;
 	}
 
-#else
-
+#ifndef COMPILE_WITH_CHATLOG_HTML
 //	IEventFile::IEvent::HyperlinkClicked()
 void
 IEventFile::HyperlinkClicked(PSZUC pszActionOfHyperlink, OCursor * poCursorTextBlock)
@@ -1293,7 +1292,6 @@ CEventFileReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CO
 	} // ChatLogUpdateTextBlock()
 #endif
 
-#ifdef COMPILE_WITH_CHATLOG_HTML
 
 EGui
 CEventFileReceived::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
@@ -1331,8 +1329,7 @@ CEventFileReceived::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
 	return IEventFile::HyperlinkClickedE(pszActionOfHyperlink);
 	} // HyperlinkClickedE()
 
-#else
-
+#ifndef COMPILE_WITH_CHATLOG_HTML
 // 	m_strXmlIqResultInitFileDownload = PGetSocket_YZ()->ScratchBuffer_WriteXmlIqResult_Gsb(d_szuXmlAlreadyEncoded "<si id='$S' profile='^*ft' ^:si><feature ^:fn><x ^:xd type='submit'><field var='stream-method'><value>^*ib</value></field></x></feature></si>", &m_strSessionIdentifier);
 //	CEventFileReceived::IEvent::HyperlinkClicked()
 void
@@ -1340,8 +1337,7 @@ CEventFileReceived::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor *
 	{
 	Assert(poCursorTextBlock != NULL);
 	(void)HyperlinkClickedE(pszActionOfHyperlink);
-	} // HyperlinkClicked()
-
+	}
 #endif
 
 IEventUpdater::IEventUpdater(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)

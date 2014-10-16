@@ -7,28 +7,54 @@
 #include "WChatLogHtml.h"
 #ifdef COMPILE_WITH_CHATLOG_HTML
 
+#define COLOR_THEME_BLACK		// Use a black background instead of a white background
+
 WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup) : QWebView(pwParent)
 	{
 	Assert(pContactOrGroup != NULL);
 	m_pContactOrGroup = pContactOrGroup;
+	m_tsMidnightNext = d_ts_zNA;
 
 	setHtml(
 		"<html><head><style>"
-		//"div { background-color: red }"
 
 		// Style for each division
 		//".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 3rem; }"
 		".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 55px ; }"
-		".p {  }"
 
-		// Style for an icon
-		".i { float:left; position: absolute; left: 15; margin-top: 3; height: 36; width: 36; "
-		"border-radius: .2rem;"
-		"background-size: 100%;"
-		" }"
+		// Style for an icon/avatar
+		".i	 { float:left; position: absolute; left: 15; margin-top: 3; height: 36; width: 36; "
+			"border-radius: .2rem;"
+			"background-size: 100%;"
+			"}"
 
 		// Style for the sender of the message
 		".s { font-weight: bold;  } "
+
+		// Style for the day divider
+		"div.dd { "
+				"position: relative;"
+				"text-align: center;"
+				"}"
+		"div.ddd { "
+				"color: #555459; font-size: 16px; font-weight: 900;"			// day divider displaying the date
+				"background: #FFF;"
+				"padding: 1px .7rem;"
+				//"padding: 0 .7rem;"
+				//"margin-top: -1px;"
+				"display: inline-block;"
+				"position: relative;"
+				"text-align: center;"
+				"border-radius: 5px"
+				"}"
+		"hr.dd	{ "
+				"position: absolute;"
+				"border-top: 1px solid #DDD;"
+				"width: 100%;"
+				"top: .6rem;"
+				"margin: 0;"
+				"text-align: center;"
+				"}"
 
 		// Style for the timestamp
 		".t { color: #BABBBF; font-size: 12px; padding-left: 5 } "
@@ -36,14 +62,35 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		// Style for  the message itself
 		".m { display: block; }"
 
+		// Styles for different types of hyperlinks
+		"a." d_szClassForChatLog_ButtonHtml " { color: black; background-color: silver; text-decoration: none; font-weight: bold } "
+		"a." d_szClassForChatLog_HyperlinkDisabled " { color: gray; text-decoration: none; } "
+
+		#ifdef COLOR_THEME_BLACK
+		"a { color: yellow; }"			// Use a different than the default blue color for hyperlinks
+		"a { color: #EE82EE; }"
+		#endif
+
 		".i0 { background-image: url('qrc:/ico/Avatar1') }"
 		".i1 { background-image: url('qrc:/ico/Avatar2') }"
 
-		"</style></head><body style=\""
-		// Style for the body
-		"font-family: Lato, sans-serif; font-size: 15px; color: #3D3C40; "
-		"\"><div id='m'></div><div id='c'/></div></body></html>"
-		);
+		"</style></head>"
+		"<body style=\""
+
+			// Style for the body
+			"font-family: Lato, sans-serif; font-size: 15px; color: #3D3C40; "
+
+			#ifdef COLOR_THEME_BLACK // Black background style with a 'space' background image
+			"color: white; background-color: black; background-image: url('qrc:/backgrounds/Space'); background-attachment:fixed;"
+			#endif
+
+			"\">"
+			// Division for all the messages
+			"<div id='m'></div>"
+			// Division for the composing message
+			"<div id='c' style='font-size: 13px'/></div>"
+
+		"</body></html>");
 	QWebPage * poPage = page();
 	poPage->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
 	poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);	// Enable the context menu item named "Inspect".  This is useful for debugging web pages.
@@ -67,9 +114,20 @@ WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventSta
 		{
 		IEvent * pEvent = *ppEventStart++;
 		AssertValidEvent(pEvent);
+
+		if (pEvent->m_tsEventID >= m_tsMidnightNext)
+			{
+			QDateTime dtl = QDateTime::fromMSecsSinceEpoch(pEvent->m_tsEventID).toLocalTime();
+			QDate date = dtl.date();	// Strip the time of the day
+			m_tsMidnightNext = QDateTime(date).toMSecsSinceEpoch() + d_ts_cDays;	// I am sure there is a more elegant way to strip the time from a date, however at the moment I don't have time to investigate a better solution (and this code works)
+			QString sDate = date.toString("dddd MMMM d, yyyy");
+			pbinHtml->BinAppendText_VE("<div class='dd'><hr class='dd'/><div class='ddd'>$Q</div></div>", &sDate);
+			}
+
+		// Append the message
 		pbinHtml->BinAppendText_VE(
 			"<div class='d'>"
-				//"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()
+				//"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()	// This line is commented out until hyperlinks are enabled when clicking on the icon of a user
 				"<div class='i i$i'></div>", pEvent->Event_FIsEventTypeSent()
 			);
 		pEvent->ChatLogAppendHtmlDivider(IOUT pbinHtml);
