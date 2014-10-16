@@ -108,7 +108,7 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 	new TTreeItemDemo(NULL, "Finance", eMenuIconSell);
 	new TTreeItemDemo(NULL, "Registry", eMenuIconCorporations);
 	TTreeItemDemo * pIDs = new TTreeItemDemo(NULL, "My Profiles", eMenuIconSettings);
-	TTreeItemDemo * pID = new TTreeItemDemo(pIDs, "Jon Peters", eMenuIconIdentities);
+	TTreeItemDemo * pID = new TTreeItemDemo(pIDs, "Jon Peters", eMenuIconProfile);
 		TTreeItemDemo * pApplications = new TTreeItemDemo(pID, "Applications", eMenuIconComponent);
 			TTreeItemDemo * pCommunications = new TTreeItemDemo(pApplications, "Communications", eMenuIconCommunicate);
 				TTreeItemDemo * pAccount = new TTreeItemDemo(pCommunications, "jon", eMenuIconXmpp);
@@ -138,7 +138,7 @@ NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSe
 				new TTreeItemDemo(pRegistry, "Mediator", eMenuIconMarketplaceMediation);
 				new TTreeItemDemo(pRegistry, "Oracle", eMenuIconListen);
 			new TTreeItemDemo(pApplications, "Calendar", eMenuIconIssueFuture);
-		new TTreeItemDemo(pIDs, "SocietyPro Inc.", eMenuIconIdentities);
+		new TTreeItemDemo(pIDs, "SocietyPro", eMenuIconProfile);
 		*/
 #endif
 
