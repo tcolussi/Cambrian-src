@@ -9,6 +9,7 @@
 	extern  OTX_WRAP * pOTX;
 #endif
 #include <WQmlToolbar.h>
+#include "ui_startupscreen.h"
 extern bool g_fIsConnectedToInternet;
 extern TIMESTAMP_MINUTES g_tsmMinutesSinceApplicationStarted;
 extern UINT g_cMinutesIdleKeyboardOrMouse;
@@ -23,6 +24,11 @@ class startupScreen;
 singleton WMainWindow : public QMainWindow
 {
 	Q_OBJECT
+#ifdef COMPILE_WITH_SPLASH_SCREEN
+protected:
+    OJapiCambrian * m_paCambrian;
+    QWebFrame * m_poFrame;
+#endif
 private:
 	UINT m_cTimerEvents;				// Count how many timer events have been processed.  The motivation is some tasks may be performed at larger intervals than at every timer event.
 	int m_tidFlashIconNewMessage;		// Timer identifier to flash the icon a new message has arrived
@@ -31,13 +37,16 @@ private:
 	int m_ttiReconnect;
     Ui::startupScreen *ui;
 public:
+
     //Pointer to QML toolbar
-   // WQmlToolbar *p_QmlToolbar;
+    // WQmlToolbar *p_QmlToolbar;
     explicit WMainWindow();
 	~WMainWindow();
-	 void maximizeApp(QString Url);
-	 void hideRolePage();
-
+#ifdef COMPILE_WITH_SPLASH_SCREEN
+     void maximizeApp(QString Url);
+     void hideRolePage();
+     void initRolePage();
+#endif
 	virtual void timerEvent(QTimerEvent * pTimerCallback);	// From QObject
 	virtual bool event(QEvent * pEvent);				// From QObject
 
@@ -51,7 +60,8 @@ public:
 public slots:
 	#ifdef COMPILE_WITH_SPLASH_SCREEN
     void SL_showRolePage();
-	#endif
+    void SL_InitJavaScript();
+    #endif
 	void SL_Quitting();
 	void SL_MenuAboutToShow();
 	void SL_MenuActionTriggered(QAction * pAction);

@@ -11,10 +11,16 @@
    </rect>
   </property>
   <property name="contextMenuPolicy">
-   <enum>Qt::ActionsContextMenu</enum>
+   <enum>Qt::NoContextMenu</enum>
+  </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
   </property>
   <property name="windowTitle">
-   <string>Role Management</string>
+   <string>Society Pro Roles</string>
+  </property>
+  <property name="toolTip">
+   <string>Choose or create a role</string>
   </property>
   <widget class="QWebView" name="webView">
    <property name="geometry">
