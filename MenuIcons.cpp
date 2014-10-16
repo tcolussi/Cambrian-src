@@ -34,7 +34,7 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 	"CHash",			// eMenuIcon_ClassChannel
 	"CTriangle",		// eMenuIcon_ClassOrganization
 	"CHexagon",			// eMenuIcon_ClassJuristiction
-	"Role",				// eMenuIcon_ClassProfile
+    "Role",				// eMenuIcon_ClassProfile
 
 	"MenuOverflow",		// eMenuIcon_Overflow
 	"MenuOverflowH",	// eMenuIcon_OverflowHovered

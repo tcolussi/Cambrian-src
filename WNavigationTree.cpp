@@ -15,7 +15,7 @@ extern CChatConfiguration g_oConfiguration;
 const QString c_sNavigation("Navigation");
 
 QToolButton * g_pwButtonStatusOfNavigationTree;
-WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
+WButtonTextWithIcon * g_pwButtonSwitchProfile;
 WMenu * g_pwMenuSwitchProfile;
 
 WNavigationTreeCaption::WNavigationTreeCaption()
@@ -59,11 +59,14 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation Tree"))
 	m_pTreeWidgetItemEditing = NULL;
 
 	//setStyleSheet("border: 1px solid red;");
-	g_pwButtonSwitchProfile = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIcon_ClassProfile, NULL);
-	g_pwButtonSwitchProfile->setCursor(Qt::ArrowCursor);	// We need to explicitly set the cursor to arrow because the caption uses the OpenHandCursor which every child inherits
-	g_pwMenuSwitchProfile = g_pwButtonSwitchProfile->PwGetMenu();
-	connect(g_pwMenuSwitchProfile, SIGNAL(aboutToShow()), this, SLOT(SL_MenuProfilesShow()));
-	connect(g_pwMenuSwitchProfile, SIGNAL(triggered(QAction*)), this, SLOT(SL_MenuProfileSelected(QAction*)));
+    //g_pwButtonSwitchProfile = new WButtonIconForToolbarWithDropDownMenu(this, eMenuIcon_ClassProfile, NULL);
+    g_pwButtonSwitchProfile = new WButtonTextWithIcon("Switch Role |Open the Role Management screen", eMenuIcon_ClassProfile) ;
+    g_pwButtonSwitchProfile->setCursor(Qt::ArrowCursor);	// We need to explicitly set the cursor to arrow because the caption uses the OpenHandCursor which every child inherits
+    //added new Action to invoke the new rolepage
+    connect(g_pwButtonSwitchProfile, SIGNAL(clicked()), this, SLOT(SL_RolePageShow()));
+    /*g_pwMenuSwitchProfile = g_pwButtonSwitchProfile->PwGetMenu();
+    connect(g_pwMenuSwitchProfile, SIGNAL(aboutToShow()), this, SLOT(SL_MenuProfilesShow()));
+    connect(g_pwMenuSwitchProfile, SIGNAL(triggered(QAction*)), this, SLOT(SL_MenuProfileSelected(QAction*)));*/
 
 #if 1
 	setTitleBarWidget(PA_CHILD new WNavigationTreeCaption);	// Customize the title bar of the navigation tree
@@ -104,7 +107,7 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation Tree"))
 	Widget_SetIconButton(INOUT g_pwButtonStatusOfNavigationTree, eMenuIcon_Presence);
 	g_pwMenuStatus = (WMenu *)g_pwButtonStatusOfNavigationTree->menu();
 	g_pwMenuStatus->InitAsDymanicMenu();
-	/*
+    /*
 	g_pwMenuStatus = new WMenu;
 	g_pwMenuStatus->InitAsDymanicMenu();
 	g_pwButtonStatusOfNavigationTree->setMenu(g_pwMenuStatus);
@@ -275,6 +278,12 @@ WNavigationTree::SL_ContactNew()
 #define d_iProfile_CreateNew		(-2)
 
 void
+WNavigationTree::SL_RolePageShow()
+{
+g_pwMainWindow->SL_showRolePage();
+}
+
+void
 WNavigationTree::SL_MenuProfilesShow()
 	{
 	g_pwMenuSwitchProfile->clear();
@@ -286,9 +295,10 @@ WNavigationTree::SL_MenuProfilesShow()
 		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
 		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIconIdentities);
 		}
-	if (cProfiles > 1)
+    /*Disabled because the menu become a button Switch Role
+     * if (cProfiles > 1)
 		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All " d_sza_Profile "s>", d_iProfile_DisplayAll, eMenuIconIdentities);
-        g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Manage Roles...>", d_iProfile_CreateNew, eMenuIconIdentities);
+        g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<Manage Roles...>", d_iProfile_CreateNew, eMenuIconIdentities);*/
 	}
 
 void

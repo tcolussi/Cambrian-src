@@ -51,6 +51,7 @@ public slots:
 	void SL_ToggleDocking();
 	void SL_ContactNew();
 	void SL_MenuProfilesShow();
+    void SL_RolePageShow();
 	void SL_MenuProfileSelected(QAction * pAction);
 }; // WNavigationTree
 

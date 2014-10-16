@@ -21,7 +21,8 @@ WQmlToolbar::WQmlToolbar(QWidget *parent) :
 	pwWidgetLayout->setStyleSheet("background-color: yellow");
 	pwWidgetLayout->setLayout(pLayout);
 
-	QQuickView *pQmlView = new QQuickView();
+    QQuickView *pQmlView = new QQuickView();
+
 	//QQmlEngine *pQmlEngine = pQmlView->engine();
 	pQmlView->setResizeMode(QQuickView::SizeRootObjectToView);
 	pQmlView->setSource(QUrl(QStringLiteral("qrc:/ui/main.qml")));

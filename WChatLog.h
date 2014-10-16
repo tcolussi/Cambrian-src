@@ -36,6 +36,10 @@ public slots:
 	void SL_HyperlinkMouseHovering(const QUrl & url);
 	void SL_HyperlinkClicked(const QUrl & url);
 }; // WChatLog
+#else
+
+class DummynoChatLog;
+
 #endif
 
 	#define d_coBluePastel			MAKE_QRGB(220, 220, 255)

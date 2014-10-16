@@ -228,7 +228,9 @@ main(int argc, char *argv[])
 
 	wMainWindow.ConfigurationLoadFromXml();
     wMainWindow.showMaximized();
-   // wMainWindow.maximizeStartup();
+    wMainWindow.maximizeApp("sopro-rolepage/index.html");
+    wMainWindow.hideRolePage();
+
 
 
 	return oApplication.exec();

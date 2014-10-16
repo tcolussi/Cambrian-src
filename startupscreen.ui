@@ -10,8 +10,11 @@
     <height>480</height>
    </rect>
   </property>
+  <property name="contextMenuPolicy">
+   <enum>Qt::ActionsContextMenu</enum>
+  </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Role Management</string>
   </property>
   <widget class="QWebView" name="webView">
    <property name="geometry">
@@ -28,16 +31,23 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::WheelFocus</enum>
+   </property>
+   <property name="contextMenuPolicy">
+    <enum>Qt::ActionsContextMenu</enum>
+   </property>
+   <property name="acceptDrops">
+    <bool>true</bool>
+   </property>
    <property name="layoutDirection">
     <enum>Qt::LeftToRight</enum>
    </property>
    <property name="autoFillBackground">
     <bool>true</bool>
    </property>
-   <property name="url">
-    <url>
-     <string>file:///Users/Rafa/centraldev/societypro/repo/Cambrian-src/sopro-dist-root/sopro-rolepage/index.html</string>
-    </url>
+   <property name="renderHints">
+    <set>QPainter::HighQualityAntialiasing|QPainter::NonCosmeticDefaultPen|QPainter::Qt4CompatiblePainting|QPainter::SmoothPixmapTransform|QPainter::TextAntialiasing</set>
    </property>
   </widget>
  </widget>

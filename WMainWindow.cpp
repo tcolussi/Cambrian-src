@@ -14,11 +14,12 @@
 #include "WNavigationTree.h"
 #include "WDashboard.h"
 #include "WLayoutContainer.h"
-#include "WQmlToolbar.h"
+#include "WLayoutBrowser.h"
 #include "ui_startupscreen.h"
 #include <QSound>
+#include <iostream>
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-	#include <iostream>
+
 	#include <OTX_WRAP.h>
 	OTX_WRAP * pOTX;
 #endif
@@ -34,6 +35,7 @@ HWND g_hwndMainWindow;							// Win-32 handle of the main window.  This handle i
 WMainWindow * g_pwMainWindow;				// Pointer to the widget of the main window
 WNavigationTree * g_pwNavigationTree;		// Navigation tree (displayed on the left side of the window - unless the user changes the position)
 WLayoutContainer * g_pwChatLayoutContainer;	// Container to display a widget according to what item is selected in the navigation tree.
+//WQmlToolbar *p_QmlToolbar= new WQmlToolbar; // Pointer to QML bar
 QStatusBar * g_pwStatusBar;
 QSystemTrayIcon * g_poSystemTrayIcon;	// Object displaying the icon in the System Tray (under Windows, this icon is typically at the bottom right of the screen).
 int g_cMessagesSystemTray;				// Number of messages in the System Tray (this count is useful to determine when it is appropriate to destroy and re-create the System Tray)
@@ -212,11 +214,29 @@ WMenuDropdown::WMenuDropdown(PSZAC pszName) : WMenu(pszName)
 	#endif
 	}
 void
-WMainWindow::maximizeStartup()
+WMainWindow::maximizeApp(QString Url)
 {
+
+    QString rolePageStart =MainWindow_SGetUrlPathOfApplication(Url);
+    //QString rolePageStart ="http://espndeportes.com";
+    //QString rolePageStart =QUrl("qurc//Users/Rafa/repo/sopro-rolepage/index.html");
+
     int height=this->geometry().height();
     int width=this->geometry().width();
+
+    ui->webView->load(QUrl(rolePageStart));
+
     ui->webView->resize(width,height);
+
+    std::cout << "MaximizeApp";
+}
+
+
+void
+WMainWindow::hideRolePage()
+{
+ui->webView->hide();
+
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
@@ -282,7 +302,9 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
 	#endif
 	#if 1
-	addDockWidget(Qt::TopDockWidgetArea, PA_CHILD new WQmlToolbar);
+
+   // addDockWidget(Qt::TopDockWidgetArea, PA_CHILD p_QmlToolbar);
+
 	#endif
 
 	g_pwChatLayoutContainer = new WLayoutContainer;
@@ -327,8 +349,7 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	MessageLog_AppendTextFormatCo(d_coBlack, "$t = $Q\n", dt.currentMSecsSinceEpoch(), &s);	// 3TSmc9t = Thu Feb 19 11:02:47 1970
 	*/
 
-  //    ui->setupUi(this);
-
+    ui->setupUi(this);
 
 	}
 
@@ -349,7 +370,12 @@ WMainWindow::~WMainWindow()
 	#endif
 	}
 
+void
+WMainWindow::SL_showRolePage()
+{
 
+     ui->webView->showMaximized();
+}
 // Save anything worth saving before the application quits. This method is called before the destructor of the Main Window and the Navigation Tree.
 void
 WMainWindow::SL_Quitting()

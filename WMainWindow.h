@@ -8,7 +8,7 @@
 	#include <QPointer>
 	extern  OTX_WRAP * pOTX;
 #endif
-
+#include <WQmlToolbar.h>
 extern bool g_fIsConnectedToInternet;
 extern TIMESTAMP_MINUTES g_tsmMinutesSinceApplicationStarted;
 extern UINT g_cMinutesIdleKeyboardOrMouse;
@@ -31,9 +31,12 @@ private:
 	int m_ttiReconnect;
     Ui::startupScreen *ui;
 public:
-	explicit WMainWindow();
+    //Pointer to QML toolbar
+   // WQmlToolbar *p_QmlToolbar;
+    explicit WMainWindow();
 	~WMainWindow();
-     void maximizeStartup();
+     void maximizeApp(QString Url);
+     void hideRolePage();
 
 	//virtual void closeEvent(QCloseEvent * pEvent);		// From QWidget
 	//virtual void changeEvent(QEvent * pEvent);			// From QWidget
@@ -48,6 +51,7 @@ public:
 	void TimerStartFlashIconNewMessage();
 
 public slots:
+    void SL_showRolePage();
 	void SL_Quitting();
 	void SL_MenuAboutToShow();
 	void SL_MenuActionTriggered(QAction * pAction);
