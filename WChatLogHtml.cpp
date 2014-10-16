@@ -7,6 +7,8 @@
 #include "WChatLogHtml.h"
 #ifdef COMPILE_WITH_CHATLOG_HTML
 
+#define COLOR_THEME_BLACK		// Use a black background instead of a white background
+
 WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup) : QWebView(pwParent)
 	{
 	Assert(pContactOrGroup != NULL);
@@ -64,6 +66,10 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		"a." d_szClassForChatLog_ButtonHtml " { color: black; background-color: silver; text-decoration: none; font-weight: bold } "
 		"a." d_szClassForChatLog_HyperlinkDisabled " { color: gray; text-decoration: none; } "
 
+		#ifdef COLOR_THEME_BLACK
+		"a { color: yellow; }"			// Use a different than the default blue color for hyperlinks
+		"a { color: #EE82EE; }"
+		#endif
 
 		".i0 { background-image: url('qrc:/ico/Avatar1') }"
 		".i1 { background-image: url('qrc:/ico/Avatar2') }"
@@ -74,7 +80,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			// Style for the body
 			"font-family: Lato, sans-serif; font-size: 15px; color: #3D3C40; "
 
-			#if 1 // Black background style with a 'space' background image
+			#ifdef COLOR_THEME_BLACK // Black background style with a 'space' background image
 			"color: white; background-color: black; background-image: url('qrc:/backgrounds/Space'); background-attachment:fixed;"
 			#endif
 
@@ -121,7 +127,7 @@ WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventSta
 		// Append the message
 		pbinHtml->BinAppendText_VE(
 			"<div class='d'>"
-				//"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()
+				//"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()	// This line is commented out until hyperlinks are enabled when clicking on the icon of a user
 				"<div class='i i$i'></div>", pEvent->Event_FIsEventTypeSent()
 			);
 		pEvent->ChatLogAppendHtmlDivider(IOUT pbinHtml);
