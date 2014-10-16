@@ -233,11 +233,10 @@ main(int argc, char *argv[])
     wMainWindow.showMaximized();
     wMainWindow.maximizeApp("sopro-rolepage/index.html");
     wMainWindow.hideRolePage();
-  // startupScreen * startup = new startupScreen();
-    //startup->showMaximized();
 	#endif
 
     wMainWindow.show();
+
 
 	return oApplication.exec();
 	} // main()

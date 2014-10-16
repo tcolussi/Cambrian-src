@@ -35,7 +35,7 @@
     <enum>Qt::WheelFocus</enum>
    </property>
    <property name="contextMenuPolicy">
-    <enum>Qt::ActionsContextMenu</enum>
+    <enum>Qt::DefaultContextMenu</enum>
    </property>
    <property name="acceptDrops">
     <bool>true</bool>
