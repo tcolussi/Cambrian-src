@@ -76,6 +76,7 @@ HUNGARIAN PREFIX
 	paiw	Pointer to an allocated object of a widget interface
 	pv		Pointer to void
 	pav		Pointer to an allocated block of memory and/or object
+	pd		Dangling pointer.  This is a pointer for comparison only, and NEVER to be dereferenced. A typical use of such a pointer is to compare if a pointer changed.
 	sz		String zero-terminated
 	sza		String zero-terminated of Ansi strings.  Typically Ansi strings are hardcoded strings typed by the developer.
 	szu		String zero-terminated of UTF-8 characters. Typically UTF-8 strings contain data typed by the user, which may include the whole range of Unicode characters. (the prefix szu is used when there is a need to distinguish between other strings, such as sza and szw)

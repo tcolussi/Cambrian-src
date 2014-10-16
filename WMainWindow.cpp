@@ -306,7 +306,7 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 
 	g_pwChatLayoutContainer = new WLayoutContainer;
 	setCentralWidget(PA_CHILD g_pwChatLayoutContainer);
-	g_pIconCambrian = new QIcon(":/ico/IconHaven");
+	g_pIconCambrian = new QIcon(":/ico/SocietyPro");
 	Assert(!g_pIconCambrian->pixmap(QSize(16,16)).isNull() && "Unable to load icon");	// By the way, the QIcon is unable to load a .ico from the resource, so we have to create a .png of 16x16
 //	setWindowIcon(*g_pIconCambrian);	// This line is no longer necessary because the file Cambrian.pro contains the keyword RC_ICONS
 

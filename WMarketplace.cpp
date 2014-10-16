@@ -96,7 +96,6 @@ WMarketplaceArbitrators::WMarketplaceArbitrators()
 	WTable * pTable = new WTable(this);
 	pTable->SetColumns_VEZ("Arbitrator Name", "Speciality", "Website", "# References", "# Cases", "% Appeal", NULL);
 
-	pTable->AppendRow_VEZ("Haven", "", "www.haven.hn", "4563", "216", "1.2%", NULL);
 	pTable->AppendRow_VEZ("Judge Judy", "small claims", "www.judgejudy.com", "327", "22", "5%", NULL);
 	pTable->AppendRow_VEZ("Susanne", "immigration", "www.tarkowskitempelhof.com", "63", "8", "", NULL);
 	addWidget(new WButtonText(" Add Arbitrator... "));

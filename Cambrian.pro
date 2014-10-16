@@ -182,7 +182,7 @@ HEADERS += \
 FORMS += \
     startupscreen.ui
 
-RC_ICONS = Icons/HavenIcon.ico
+RC_ICONS = Icons/SocietyPro.ico
 
 OTHER_FILES += \
     FeatureList.txt

@@ -14,6 +14,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 	Assert(pContactOrGroup != NULL);
 	m_pContactOrGroup = pContactOrGroup;
 	m_tsMidnightNext = d_ts_zNA;
+	m_hSenderPreviousEvent = d_zNA;	// No previous sender yet
 
 	setHtml(
 		"<html><head><style>"
@@ -59,11 +60,59 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		// Style for the timestamp
 		".t { color: #BABBBF; font-size: 12px; padding-left: 5 } "
 
+		// Style for a timestamp on the left (this timestamp appears below the icon/avatar when the user types multiple consecutive messages)
+		".tl { color: #BABBBF; font-size: 12px;"
+			"position: absolute;"
+			"left:0;"
+			"text-align: right;"
+			"width: 50;"
+			"}"
+
 		// Style for  the message itself
 		".m { display: block; }"
 
 		// Styles for different types of hyperlinks
-		"a." d_szClassForChatLog_ButtonHtml " { color: black; background-color: silver; text-decoration: none; font-weight: bold } "
+		"a." d_szClassForChatLog_ButtonHtml // " { color: black; background-color: silver; text-decoration: none; font-weight: bold } "
+"	{"
+"   border-top: 1px solid #96d1f8;"
+"   background: #65a9d7;"
+"   background: -webkit-gradient(linear, left top, left bottom, from(#3e779d), to(#65a9d7));"
+"   background: -webkit-linear-gradient(top, #3e779d, #65a9d7);"
+"   background: -moz-linear-gradient(top, #3e779d, #65a9d7);"
+"   background: -ms-linear-gradient(top, #3e779d, #65a9d7);"
+"   background: -o-linear-gradient(top, #3e779d, #65a9d7);"
+"   padding: 5px 10px;"
+"   -webkit-border-radius: 8px;"
+"   -moz-border-radius: 8px;"
+"   border-radius: 8px;"
+"   -webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;"
+"   -moz-box-shadow: rgba(0,0,0,1) 0 1px 0;"
+"   box-shadow: rgba(0,0,0,1) 0 1px 0;"
+"   text-shadow: rgba(0,0,0,.4) 0 1px 0;"
+"   color: white;"
+"   font-size: 14px;"
+"   text-decoration: none;"
+"   vertical-align: middle;"
+"   }"
+
+"a." d_szClassForChatLog_ButtonHtml ":hover"
+	"{"
+	#if 0
+	"border-top-color: #28597a;"
+	"background: #28597a;"
+	"color: #ccc;"
+	#else
+	"background: white;"
+	"color: black;"
+	#endif
+	"}"
+/*
+.button:active {
+   border-top-color: #1b435e;
+   background: #1b435e;
+   }
+*/
+
 		"a." d_szClassForChatLog_HyperlinkDisabled " { color: gray; text-decoration: none; } "
 
 		#ifdef COLOR_THEME_BLACK
@@ -115,27 +164,103 @@ WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventSta
 		IEvent * pEvent = *ppEventStart++;
 		AssertValidEvent(pEvent);
 
+		if (pEvent->m_uFlagsEvent & IEvent::FE_kfEventHidden)
+			continue;
 		if (pEvent->m_tsEventID >= m_tsMidnightNext)
 			{
 			QDateTime dtl = QDateTime::fromMSecsSinceEpoch(pEvent->m_tsEventID).toLocalTime();
 			QDate date = dtl.date();	// Strip the time of the day
 			m_tsMidnightNext = QDateTime(date).toMSecsSinceEpoch() + d_ts_cDays;	// I am sure there is a more elegant way to strip the time from a date, however at the moment I don't have time to investigate a better solution (and this code works)
-			QString sDate = date.toString("dddd MMMM d, yyyy");
+			QString sDate = date.toString("dddd, MMMM d, yyyy");
 			pbinHtml->BinAppendText_VE("<div class='dd'><hr class='dd'/><div class='ddd'>$Q</div></div>", &sDate);
 			}
 
-		// Append the message
-		pbinHtml->BinAppendText_VE(
-			"<div class='d'>"
-				//"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()	// This line is commented out until hyperlinks are enabled when clicking on the icon of a user
-				"<div class='i i$i'></div>", pEvent->Event_FIsEventTypeSent()
-			);
-		pEvent->ChatLogAppendHtmlDivider(IOUT pbinHtml);
+		pbinHtml->BinAppendText("<div class='d'>");
+		m_hSenderPreviousEvent = pEvent->AppendHtmlForChatLog_HAppendHeader(IOUT pbinHtml, m_hSenderPreviousEvent);
 		pbinHtml->BinAppendText_VE("<span class='m' id='{t_}'>", pEvent->m_tsEventID);
 		pEvent->AppendHtmlForChatLog(IOUT pbinHtml);
 		pbinHtml->BinAppendText("</span></div>");
+		} // while
+	} // _BinAppendHtmlForEvents()
+
+const char c_szHtmlMessageDelivered[] = "<img src='qrc:/ico/Delivered' style='float:right'/>";
+
+//	Generate the HTML for the header of a message.  This is typically the icon of the contact who wrote the message, however it may be anything
+HOBJECT
+IEvent::AppendHtmlForChatLog_HAppendHeader(IOUT CBin * pbinHtml, HOBJECT hSenderPreviousEvent) CONST_MCC
+	{
+	Assert(pbinHtml != NULL);
+	Assert(m_pVaultParent_NZ != NULL);
+
+	const QDateTime dtlMessage = QDateTime::fromMSecsSinceEpoch(m_tsEventID).toLocalTime();
+	const QString sTime = dtlMessage.toString("hh:mm");
+	const QString sDateTime = dtlMessage.toString(Qt::SystemLocaleLongDate); // DefaultLocaleLongDate);
+//	TIMESTAMP_DELTA dts = m_tsOther - m_tsEventID;
+
+	// Determine who is the sender of the event
+	ITreeItemChatLog * pTreeItemNickname_NZ;		// This pointer should be a TContact, however if there is a 'bug' where a group message has m_pContactGroupSender_YZ == NULL, then this will point to a group (which is no big deal)
+	const EEventClass eEventClass = EGetEventClass();
+	const BOOL fuIsEventReceived = (eEventClass & eEventClass_kfReceivedByRemoteClient);
+	if (fuIsEventReceived)
+		pTreeItemNickname_NZ = (m_pContactGroupSender_YZ != NULL) ? m_pContactGroupSender_YZ : m_pVaultParent_NZ->m_pParent;	// Use the name of the group sender (if any, otherwise the name of the contact)
+	else
+		pTreeItemNickname_NZ = PGetAccount_NZ();	// Use the name of the user as the sender
+
+	if (pTreeItemNickname_NZ != hSenderPreviousEvent)
+		{
+		// Insert the image of the sender as well as its name
+		pbinHtml->BinAppendText_VE(
+			//"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()	// This line is commented out until hyperlinks are enabled when clicking on the icon of a user
+			"<div class='i i$i'></div>"
+			"<span class='s'>{sH}</span>"
+			 , !fuIsEventReceived, pTreeItemNickname_NZ->ChatLog_PszGetNickname());
+
+		pbinHtml->BinAppendText_VE("<span class='t' title='^Q'>^Q</span>", &sDateTime, &sTime);
 		}
-	}
+	else
+		{
+		// Just append the timestamp
+		pbinHtml->BinAppendText_VE("<span class='tl' title='^Q'>^Q", &sDateTime, &sTime);
+		pbinHtml->BinAppendText("</span>");
+		}
+
+	if (m_uFlagsEvent & FE_kfEventProtocolError)
+		{
+		pbinHtml->BinAppendText(" <img src='qrc:/ico/Error' title='XCP Protocol Error: One of your peer has an old version of SocietyPro and cannot process this event because its type is unknown'/> ");
+		}
+
+	#if 0
+		/*
+		// The event was received (typically a message typed by someone else)
+		if (dts < -10 * d_ts_cMinutes && dts > -15 * d_ts_cDays)
+			pbinHtml->BinAppendText_VE("[$T] ", dts);
+		#if 0
+		pbinHtml->BinAppendText_VE("<span title='Message was sent {T_} before you received it'>[{T-}] </span>", dts);
+		#endif
+		*/
+
+	if ((eEventClass & eEventClass_kfReceivedByRemoteClient) == 0)
+		{
+		// The message was sent by the user
+		if (dts > 5 * d_ts_cMinutes)
+			pbinHtml->BinAppendText_VE("[$T] ", dts);
+		if (Event_FHasCompleted())
+			pbinHtml->BinAppendBinaryData(c_szHtmlMessageDelivered, sizeof(c_szHtmlMessageDelivered) - 1);
+
+		}
+	#ifdef DEBUG_DISPLAY_TIMESTAMPS
+	pbinHtml->BinAppendText_VE("<code>[i=<b>$t</b> o=<b>$t</b>] </code>", m_tsEventID, m_tsOther);
+	#endif
+	if (m_uFlagsEvent & FE_kfEventOutOfSync)
+		pbinHtml->BinAppendText(" <img src='qrc:/ico/OutOfSync' title='Out of Sync' /> ");
+	pbinHtml->BinAppendText_VE(c_szHtmlTemplateNickname, pTreeItemNickname->ChatLog_PszGetNickname());
+	pbinHtml->BinAppendText_VE("<span class='t' title='^Q'>^Q</span>", &sDateTime, &sTime);
+
+	if (m_uFlagsEvent & (FE_kfReplaced | FE_kfReplacing))
+		pbinHtml->BinAppendText(" <img src=':/ico/Pencil' title='Edited' /> ");	// Any event replaced or replacing another one displays the 'edited' icon
+	#endif
+	return pTreeItemNickname_NZ;
+	} // AppendHtmlForChatLog_HAppendHeader()
 
 void
 WChatLogHtml::_ScrollToDisplayLastEvent()
@@ -346,54 +471,7 @@ WChatLogHtml::SL_HyperlinkClicked(const QUrl & url)
 	} // SL_HyperlinkClicked()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-const char c_szHtmlMessageDelivered[] = "<img src='qrc:/ico/Delivered' style='float:right'/>";
-const char c_szHtmlTemplateNickname[] = "<span class='s'>{sH}</span>";
 
-void
-IEvent::ChatLogAppendHtmlDivider(IOUT CBin * pbinHtml) CONST_MCC
-	{
-	Assert(m_pVaultParent_NZ != NULL);
-	ITreeItemChatLog * pTreeItemNickname = NULL;		// This pointer should be a TContact, however if there is a 'bug' where a group message has m_pContactGroupSender_YZ == NULL, then this will point to a group (which is no big deal)
-	const QDateTime dtlMessage = QDateTime::fromMSecsSinceEpoch(m_tsEventID).toLocalTime();
-	const QString sTime = dtlMessage.toString("hh:mm");
-	const QString sDateTime = dtlMessage.toString(Qt::SystemLocaleLongDate); // DefaultLocaleLongDate);
-	TIMESTAMP_DELTA dts = m_tsOther - m_tsEventID;
-	const EEventClass eEventClass = EGetEventClass();
-	if (eEventClass & eEventClass_kfReceivedByRemoteClient)
-		{
-		// The event was received (typically a message typed by someone else)
-		if (dts < -10 * d_ts_cMinutes && dts > -15 * d_ts_cDays)
-			pbinHtml->BinAppendText_VE("[$T] ", dts);
-		#if 0
-		pbinHtml->BinAppendText_VE("<span title='Message was sent {T_} before you received it'>[{T-}] </span>", dts);
-		#endif
-		pTreeItemNickname = (m_pContactGroupSender_YZ != NULL) ? m_pContactGroupSender_YZ : m_pVaultParent_NZ->m_pParent;	// Use the name of the group sender (if any, otherwise the name of the contact)
-		}
-
-	if (m_uFlagsEvent & FE_kfEventProtocolError)
-		{
-		pbinHtml->BinAppendText(" <img src='qrc:/ico/Error' title='XCP Protocol Error: One of the peers has an old version of SocietyPro and cannot process this event because its type is unknown'/> ");
-		}
-	if ((eEventClass & eEventClass_kfReceivedByRemoteClient) == 0)
-		{
-		// The message was sent by the user
-		if (dts > 5 * d_ts_cMinutes)
-			pbinHtml->BinAppendText_VE("[$T] ", dts);
-		if (Event_FHasCompleted())
-			pbinHtml->BinAppendBinaryData(c_szHtmlMessageDelivered, sizeof(c_szHtmlMessageDelivered) - 1);
-		pTreeItemNickname = PGetAccount_NZ();	// Use the name of the user
-		}
-	#ifdef DEBUG_DISPLAY_TIMESTAMPS
-	pbinHtml->BinAppendText_VE("<code>[i=<b>$t</b> o=<b>$t</b>] </code>", m_tsEventID, m_tsOther);
-	#endif
-	if (m_uFlagsEvent & FE_kfEventOutOfSync)
-		pbinHtml->BinAppendText(" <img src='qrc:/ico/OutOfSync' title='Out of Sync' /> ");
-	pbinHtml->BinAppendText_VE(c_szHtmlTemplateNickname, pTreeItemNickname->ChatLog_PszGetNickname());
-	pbinHtml->BinAppendText_VE("<span class='t' title='^Q'>^Q</span>", &sDateTime, &sTime);
-
-	if (m_uFlagsEvent & (FE_kfReplaced | FE_kfReplacing))
-		pbinHtml->BinAppendText(" <img src=':/ico/Pencil' title='Edited' /> ");	// Any event replaced or replacing another one displays the 'edited' icon
-	}
 
 void
 IEvent::AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC

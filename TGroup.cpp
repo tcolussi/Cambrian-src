@@ -380,6 +380,13 @@ TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeUIntHex("f", INOUT &m_uFlagsGroup);
 	pXmlExchanger->XmlExchangeStr("h", INOUT &m_strNameChannel_YZ);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Members, INOUT_F_UNCH_S &m_arraypaMembers, TGroupMember::S_PaAllocateGroupMember, this);
+
+	// Temporary fix for group identifiers which have been cleared during a file format upgrade
+	if (HashSha1_FIsEmpty(IN &m_hashGroupIdentifier))
+		{
+		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "INFO: Group '$s' does not have an identifier.  Generating one...\n", TreeItem_PszGetNameDisplay());
+		Group_InitNewIdentifier();
+		}
 	} // XmlExchange()
 
 

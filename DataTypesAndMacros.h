@@ -33,6 +33,7 @@
 #endif
 typedef PVOID PVPARAM;		// Similar as lParam, however points to a data structure (or object).  LPARAM may contain an integer value while PVPARAM is always a pointer to some data.
 typedef PVOID POBJECT;		// (po) Generic pointer to an object (rahter than just a void pointer).  This datatype is useful to better document an interface where the parameter is an object, however for technical reasons, the parameter is a a generic void *.
+typedef PVOID HOBJECT;		// (h) Handle to some object.  A handle is more opaque than a pointer.
 
 typedef long long L64;				// Hungarian prefix: l
 typedef unsigned long long LU64;	// Hungarian prefix: lu
@@ -190,11 +191,15 @@ typedef L64 AMOUNT;				// amt - An amount is a value to display in the context o
 #define PA_CAST_FROM_P	// Cast to a pointer allocated from a regular pointer.  Since the cast is not visible by the compiler, this keyword is there to explicitly show the allocation/ownership of the object is now in the pointer 'pa'.  Here is an example: PA_CAST_FROM_P pwWidget->setParent(NULL); delete pwWidget;
 #define PA_CAST_TO_P	// Cast an allocated pointer to a regular pointer.  This is to show a "pa" is now a regular pointer.
 
-#define IGNORED			// The output parameter is ignored because the caller does not care about its return value.  Sometimes a routine returns multiple values, and only a few of these parameters are of interest. Obviouslly this keyword is used by the caller with the OUT parameter.
-#define PARAM_NOT_USED	// The parameter is not used. This is typically when an interface has several parameters, however given the implementation of the routine, the parameter is not used.
-#define d_zNA		0	// Not Applicable.  The parameter has a value of zero because it does not apply to the context of the other parameters or variables.
-#define d_zDEFAULT	0	// Use the default value of zero
+#define IGNORED				// The output parameter is ignored because the caller does not care about its return value.  Sometimes a routine returns multiple values, and only a few of these parameters are of interest. Obviouslly this keyword is used by the caller with the OUT parameter.
+#define PARAM_NOT_USED		// The parameter is not used. This is typically when an interface has several parameters, however given the implementation of the routine, the parameter is not used.
 
+#define d_pzDEFAULT	NULL	// Use a NULL pointer to indicate a default value.
+#define d_pzNA		NULL	// Use a NULL pointer to indicate the parameter does not apply in the context of other parameter or variables, or has not been yet initialized with real data.
+//#define d_pdNIL		((void *)1)	// Dangling pointer having an invalid value.  Use with care!
+
+#define d_zDEFAULT	0	// Use the default value of zero
+#define d_zNA		0	// Not Applicable.  The parameter has a value of zero because it does not apply to the context of the other parameters or variables.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	CONST_TEMPORARY_MODIFIED

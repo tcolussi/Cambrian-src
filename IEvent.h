@@ -413,7 +413,7 @@ public:
 	void Socket_WriteXmlIqReplyAcknowledge();
 
 	const TIMESTAMP * PtsGetTimestampForChronology() const;
-	void ChatLogAppendHtmlDivider(IOUT CBin * pbinHtml) CONST_MCC;
+	HOBJECT AppendHtmlForChatLog_HAppendHeader(IOUT CBin * pbinHtml, HOBJECT hSenderPreviousEvent) CONST_MCC;
 
 protected:
 	void _BinHtmlInitWithTime(OUT CBin * pbinTextHtml) const;

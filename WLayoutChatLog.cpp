@@ -803,7 +803,6 @@ DDialogSendBitcoin::DDialogSendBitcoin() : DDialogOkCancelWithLayouts("Send Bitc
 	DialogBody_AddRowWidget_PA("Transaction Comment / Description", m_pwEditComment);
 
 	QComboBox * pwList = new QComboBox();
-	pwList->addItem("Haven");
 	pwList->addItem("Judge Judy");
 	pwList->addItem("Susanne");
 	OLayoutHorizontalAlignLeft * pLayoutArbiration = new OLayoutHorizontalAlignLeft(m_poLayoutBody);

@@ -703,7 +703,11 @@ IEvent::_BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfH
 void
 IEvent::_BinHtmlAppendHyperlinkAction(INOUT CBin * pbinTextHtml, CHS chActionOfHyperlink, PSZAC pszButtonName) const
 	{
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	pbinTextHtml->BinAppendText_VE(" " _nbsp " <a class=" d_szClassForChatLog_ButtonHtml " href='" d_szSchemeCambrian ":{t_},$b'>" _nbsp2 "$s" _nbsp2 "</a>", m_tsEventID, chActionOfHyperlink, pszButtonName);
+	#else
 	pbinTextHtml->BinAppendText_VE(" " _nbsp " <a class=" d_szClassForChatLog_ButtonHtml " href='" d_szSchemeCambrian ":{t_},$b'>[" _nbsp2 "$s" _nbsp2 "]</a>", m_tsEventID, chActionOfHyperlink, pszButtonName);
+	#endif
 	}
 
 void

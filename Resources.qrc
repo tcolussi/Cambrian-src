@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/ico">
-        <file alias="IconHaven">Icons/HavenIcon16x16.png</file>
+        <file alias="SocietyPro">Icons/SocietyPro_16x16.png</file>
         <file alias="XMPP">Icons/xmpp.png</file>
         <file alias="Contact">Icons/Contact.png</file>
         <file alias="ContactAdd">Icons/ContactAdd.png</file>
@@ -23,7 +23,6 @@
         <file alias="Quit">Icons/Quit.png</file>
         <file alias="Exit">Icons/Exit.png</file>
         <file alias="Close">Icons/Close.png</file>
-        <file alias="ChatMessage2">Icons/ChatMessage2.png</file>
         <file alias="ChatMessage3">Icons/ChatMessage-13x12.png</file>
         <file alias="Error">Icons/Error.png</file>
         <file alias="StatusDisconnected">Icons/Status/disconnected.png</file>

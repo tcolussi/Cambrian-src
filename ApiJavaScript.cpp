@@ -856,11 +856,11 @@ QPixmap OCapiImageProvider::requestPixmap(const QString &id, QSize * /*size*/, c
 
 	if ( sFirst.compare("roles") == 0 )
 		{
-		profilepic.load(":/ico/IconHaven");
+		profilepic.load(":/ico/SocietyPro");
 		}
 	else if ( sFirst.compare("appInfo") == 0 )
 		{
-		profilepic.load(":/ico/IconHaven");
+		profilepic.load(":/ico/SocietyPro");
 		}
 
 	return profilepic;

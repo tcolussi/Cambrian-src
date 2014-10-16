@@ -13,9 +13,10 @@ protected:
 	ITreeItemChatLogEvents * m_pContactOrGroup;
 	CArrayPtrContacts m_arraypContactsComposing;	// All the users currently composing text (typically there is only one, however for group chat, there may be several)
 	QWebFrame * m_poFrame;
-	QWebElement m_oElementMessages;		// Reference of the HTML node to append the HTML messages
-	QWebElement m_oElementComposing;	// Where to display the HTML text of the user(s) composing text
-	TIMESTAMP m_tsMidnightNext;			// Timestamp to determine when to display a cate change in the Chat Log.
+	QWebElement m_oElementMessages;			// Reference of the HTML node to append the HTML messages
+	QWebElement m_oElementComposing;		// Where to display the HTML text of the user(s) composing text
+	TIMESTAMP m_tsMidnightNext;				// Timestamp to determine when to display a cate change in the Chat Log.
+	HOBJECT m_hSenderPreviousEvent;			// Handle of the sender who wrote the last event.
 
 public:
 	explicit WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup);
