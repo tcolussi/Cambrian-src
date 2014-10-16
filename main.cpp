@@ -232,10 +232,6 @@ main(int argc, char *argv[])
     wMainWindow.hideRolePage();
 
 
-  // startupScreen * startup = new startupScreen();
-
-    //startup->showMaximized();
-    wMainWindow.show();
 
 	return oApplication.exec();
 	} // main()
