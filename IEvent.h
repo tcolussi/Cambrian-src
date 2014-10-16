@@ -365,11 +365,12 @@ public:
 
 	#ifdef COMPILE_WITH_CHATLOG_HTML
 	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	virtual EGui HyperlinkClickedE(PSZUC pszActionOfHyperlink);
 	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
+	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	#endif
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
-	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 	virtual void DetachFromObjectsAboutBeingDeleted();
 	virtual POJapiEvent POJapiGet_NZ() CONST_MCC;
@@ -579,9 +580,13 @@ public:
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual EGui HyperlinkClickedE(PSZUC pszActionOfHyperlink);
+	#else
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
+	#endif
 	void _BinAppendHtmlForEvent(INOUT CBin * pbinTextHtml, PSZAC pszTextHtmlTemplate) const;
-	void _FileTransferCancelledByLocalUser(OCursor * poCursorTextBlock);
+	void _FileTransferCancelledByLocalUser();
 	CFile * _PFileOpenReadOnly_NZ();
 	CFile * _PFileOpenWriteOnly_NZ();
 	void _FileClose();
@@ -639,10 +644,12 @@ public:
 	virtual EGui XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospReply);
 	#ifdef COMPILE_WITH_CHATLOG_HTML
 	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	virtual EGui HyperlinkClickedE(PSZUC pszActionOfHyperlink);
 	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
-	#endif
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
+	virtual EGui HyperlinkClickedE(PSZUC pszActionOfHyperlink);
+	#endif
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
 };
 

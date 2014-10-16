@@ -4,7 +4,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include <QWebElement>
+#ifdef COMPILE_WITH_CHATLOG_HTML
 
 class WChatLogHtml : public QWebView
 {
@@ -30,14 +30,14 @@ public:
 	void ChatLog_ChatStateTextRefresh();
 	void ChatLog_ChatStateTextUpdate(INOUT TContact * pContact, EChatState eChatState);
 	inline void ChatLog_ChatStateComposerRemovePointerOnly(TContact * pContact) { m_arraypContactsComposing.RemoveElementI(pContact); }
-	/*
+
 	virtual bool event(QEvent * pEvent);	// From QObject
 	virtual void contextMenuEvent(QContextMenuEvent * pEventContextMenu); // From QTextEdit
 
 public slots:
 	void SL_HyperlinkMouseHovering(const QUrl & url);
 	void SL_HyperlinkClicked(const QUrl & url);
-	*/
 };
+#endif
 
 #endif // WCHATLOGHTML_H

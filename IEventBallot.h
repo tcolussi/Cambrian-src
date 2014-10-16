@@ -106,11 +106,17 @@ public:
 	virtual ~IEventBallot();
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
+	#ifdef COMPILE_WITH_CHATLOG_HTML
+	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
+	virtual EGui HyperlinkClickedE(PSZUC pszActionOfHyperlink);
+	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
-	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
+	#endif
+	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
 	virtual void DetachFromObjectsAboutBeingDeleted();
 
+	void _AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
 	void DeleteChoicesAndVotes();
 	void SetChoices(const QVariantList & lsChoices);
 	QVariantList LsGetChoices() CONST_MCC;

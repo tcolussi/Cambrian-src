@@ -83,7 +83,11 @@ WNavigationTree::WNavigationTree() : QDockWidget(tr("Navigation Tree"))
 
 
 	//setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+	#if 0
 	setFeatures(/*DockWidgetClosable |*/ DockWidgetMovable | DockWidgetFloatable);	// Hide the close button in the title bar
+	#else
+	setFeatures(DockWidgetClosable | DockWidgetMovable | DockWidgetFloatable);	// Hide the close button in the title bar
+	#endif
 
 	m_pwTreeView = new WTreeWidget;
 	m_pwTreeView->header()->hide();

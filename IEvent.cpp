@@ -269,11 +269,28 @@ IEvent::XospDataE(const CXmlNode * pXmlNodeData, INOUT CBinXcpStanza * pbinXospR
 	return eGui_NoUpdate;
 	}
 
-#ifndef COMPILE_WITH_CHATLOG_HTML
+#ifdef COMPILE_WITH_CHATLOG_HTML
+
+EGui
+IEvent::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
+	{
+	Assert(pszActionOfHyperlink != NULL);
+	return eGui_NoUpdate;
+	}
+
+#else
+
 //	ChatLogUpdateTextBlock(), virtual
 void
 IEvent::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE
 	{
+	Assert(poCursorTextBlock != NULL);
+	}
+
+void
+IEvent::HyperlinkClicked(PSZUC pszActionOfHyperlink, OCursor * poCursorTextBlock)
+	{
+	Assert(pszActionOfHyperlink != NULL);
 	Assert(poCursorTextBlock != NULL);
 	}
 #endif
@@ -285,12 +302,6 @@ IEvent::HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTool
 	Assert(pstrTooltipText != NULL);
 	}
 
-void
-IEvent::HyperlinkClicked(PSZUC pszActionOfHyperlink, OCursor * poCursorTextBlock)
-	{
-	Assert(pszActionOfHyperlink != NULL);
-	Assert(poCursorTextBlock != NULL);
-	}
 
 //	This virtual method is called to get the text to display a balloon in the System Tray to notify the user when a new event arrives.
 //	Return a pointer to the text to display in the System Tray.
@@ -910,6 +921,27 @@ IEventFile::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	pXmlNodeElement->UpdateAttributeValueL64(d_chIEventFile_Attribute_cblDataTransferred, OUT_F_UNCH &m_cblDataTransferred);
 	}
 
+
+#ifdef COMPILE_WITH_CHATLOG_HTML
+EGui
+IEventFile::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
+	{
+	switch (pszActionOfHyperlink[0])
+		{
+	case d_chActionForEvent_HyperlinkFile:
+	case d_chActionForEvent_ButtonOpen:
+		FileShowInExplorer(m_strFileName, pszActionOfHyperlink[0] == d_chActionForEvent_ButtonOpen);
+		break;
+	case d_chActionForEvent_ButtonCancel:
+	case d_chActionForEvent_ButtonDecline:
+		_FileTransferCancelledByLocalUser();
+		return eGui_zUpdate;
+		} // switch
+	return eGui_NoUpdate;
+	}
+
+#else
+
 //	IEventFile::IEvent::HyperlinkClicked()
 void
 IEventFile::HyperlinkClicked(PSZUC pszActionOfHyperlink, OCursor * poCursorTextBlock)
@@ -922,10 +954,12 @@ IEventFile::HyperlinkClicked(PSZUC pszActionOfHyperlink, OCursor * poCursorTextB
 		return;
 	case d_chActionForEvent_ButtonCancel:
 	case d_chActionForEvent_ButtonDecline:
-		_FileTransferCancelledByLocalUser(poCursorTextBlock);
+		_FileTransferCancelledByLocalUser();
+		ChatLogUpdateTextBlock(poCursorTextBlock);
 		return;
 		} // switch
 	} // HyperlinkClicked()
+#endif
 
 //	IEventFile::IEvent::HyperlinkGetTooltipText()
 //
@@ -1028,14 +1062,10 @@ IEventFile::_BinAppendHtmlForEvent(INOUT CBin * pbinTextHtml, PSZAC pszTextHtmlT
 	} // _BinAppendHtmlForEvent()
 
 void
-IEventFile::_FileTransferCancelledByLocalUser(INOUT OCursor * poCursorTextBlock)
+IEventFile::_FileTransferCancelledByLocalUser()
 	{
-	Assert(poCursorTextBlock != NULL);
 	m_cblDataTransferred = d_IEventFile_cblDataTransferred_CancelledByLocalUser;
 	m_pVaultParent_NZ->SetModified();
-	#ifndef COMPILE_WITH_CHATLOG_HTML
-	ChatLogUpdateTextBlock(poCursorTextBlock);
-	#endif
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1263,10 +1293,10 @@ CEventFileReceived::ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CO
 	} // ChatLogUpdateTextBlock()
 #endif
 
-// 	m_strXmlIqResultInitFileDownload = PGetSocket_YZ()->ScratchBuffer_WriteXmlIqResult_Gsb(d_szuXmlAlreadyEncoded "<si id='$S' profile='^*ft' ^:si><feature ^:fn><x ^:xd type='submit'><field var='stream-method'><value>^*ib</value></field></x></feature></si>", &m_strSessionIdentifier);
-//	CEventFileReceived::IEvent::HyperlinkClicked()
-void
-CEventFileReceived::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock)
+#ifdef COMPILE_WITH_CHATLOG_HTML
+
+EGui
+CEventFileReceived::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
 	{
 	CString sPath = m_strFileName;
 	switch (pszActionOfHyperlink[0])
@@ -1280,7 +1310,7 @@ CEventFileReceived::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor *
 		// sPath = m_pContact->ChatLog_PszGetPathFolderDownload();
 		sPath = QFileDialog::getSaveFileName(g_pwMainWindow, "Save File As", IN sPath);
 		if (sPath.isEmpty())
-			return;
+			return eGui_NoUpdate;
 		m_strFileName = sPath;	// // We need to update the file name so the GUI can reflect the new value
 		goto SaveToFile;
 	case d_chActionForEvent_ButtonSave:
@@ -1290,17 +1320,29 @@ CEventFileReceived::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor *
 				{
 				EAnswer eAnswer = EMessageBoxQuestion("The file '$Q' already exists.\n\nDo you want to overwrite it?", &sPath);
 				if (eAnswer != eAnswerYes)
-					return;
+					return eGui_NoUpdate;
 				}
 			}
 		SaveToFile:
 		MessageLog_AppendTextFormatSev(eSeverityComment, "CEventFileReceived::HyperlinkClicked() - Saving event $t to file $S\n", m_tsOther, &m_strFileName);
 		XcpRequesExtraData();
-		return;
+		return eGui_NoUpdate;
 		} // switch
-	IEventFile::HyperlinkClicked(pszActionOfHyperlink, INOUT poCursorTextBlock);
+	return IEventFile::HyperlinkClickedE(pszActionOfHyperlink);
+	} // HyperlinkClickedE()
+
+#else
+
+// 	m_strXmlIqResultInitFileDownload = PGetSocket_YZ()->ScratchBuffer_WriteXmlIqResult_Gsb(d_szuXmlAlreadyEncoded "<si id='$S' profile='^*ft' ^:si><feature ^:fn><x ^:xd type='submit'><field var='stream-method'><value>^*ib</value></field></x></feature></si>", &m_strSessionIdentifier);
+//	CEventFileReceived::IEvent::HyperlinkClicked()
+void
+CEventFileReceived::HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock)
+	{
+	Assert(poCursorTextBlock != NULL);
+	(void)HyperlinkClickedE(pszActionOfHyperlink);
 	} // HyperlinkClicked()
 
+#endif
 
 IEventUpdater::IEventUpdater(const TIMESTAMP * ptsEventID) : IEvent(ptsEventID)
 	{

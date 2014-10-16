@@ -200,7 +200,7 @@ main(int argc, char *argv[])
 	#endif
 
 	
-	Assert(sizeof(UINT) == 4);
+
 	QApplication oApplication(argc, argv);
 	//oApplication.setQuitOnLastWindowClosed(false);
 
@@ -232,6 +232,10 @@ main(int argc, char *argv[])
     wMainWindow.hideRolePage();
 
 
+  // startupScreen * startup = new startupScreen();
+
+    //startup->showMaximized();
+    wMainWindow.show();
 
 	return oApplication.exec();
 	} // main()
