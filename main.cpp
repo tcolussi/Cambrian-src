@@ -227,14 +227,15 @@ main(int argc, char *argv[])
 	#endif // DEBUG
 
 	wMainWindow.ConfigurationLoadFromXml();
+
+	#ifdef COMPILE_WITH_SPLASH_SCREEN
     wMainWindow.showMaximized();
     wMainWindow.maximizeApp("sopro-rolepage/index.html");
     wMainWindow.hideRolePage();
-
-
   // startupScreen * startup = new startupScreen();
-
     //startup->showMaximized();
+	#endif
+
     wMainWindow.show();
 
 	return oApplication.exec();

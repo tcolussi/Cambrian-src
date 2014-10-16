@@ -352,7 +352,9 @@ NavigationTree_UpdateNameOfSelectedProfile()
 		g_strScratchBufferStatusBar.Format(d_sza_Profile": $S", &pProfileSelected->m_strNameProfile);
 	else
 		g_strScratchBufferStatusBar.Format("Switch " d_sza_Profile);
-    //g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
+	#ifndef COMPILE_WITH_SPLASH_SCREEN
+	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
+	#endif
 	Dashboard_RefreshAccordingToSelectedProfile(pProfileSelected);
 	}
 

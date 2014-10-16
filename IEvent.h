@@ -580,9 +580,8 @@ public:
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual void HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * pstrTooltipText);
-	#ifdef COMPILE_WITH_CHATLOG_HTML
 	virtual EGui HyperlinkClickedE(PSZUC pszActionOfHyperlink);
-	#else
+	#ifndef COMPILE_WITH_CHATLOG_HTML
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
 	#endif
 	void _BinAppendHtmlForEvent(INOUT CBin * pbinTextHtml, PSZAC pszTextHtmlTemplate) const;
