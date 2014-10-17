@@ -34,6 +34,7 @@ unix: {
 ##  LIBS += -lcurl
 
     LIBS       += -L$${PWD}/otx/libs/mac -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -lcurl -ldl
+    LIBS += -L"/usr/local/lib" -lcrypto -lssl
     LIBS += -L$${OUT_PWD}/bitcoin-api  -lbitcoin-api
     LIBS += -L$${OUT_PWD}/jsoncpp -ljsoncpp
     LIBS += -L$${OUT_PWD}/libidn -llibidn
@@ -178,7 +179,8 @@ SOURCES += \
     DDialogChannels.cpp \
     TChannel.cpp \
     WQmlToolbar.cpp \
-    MenuIcons.cpp
+    MenuIcons.cpp \
+    WChatLogHtml.cpp
 
 
 HEADERS += \
@@ -259,10 +261,13 @@ HEADERS += \
     DDialogChannels.h \
     TChannel.h \
     WQmlToolbar.h \
-    MenuIcons.h
+    MenuIcons.h \
+    WChatLogHtml.h
 
 
-FORMS +=
+
+FORMS += \
+    startupscreen.ui
 
 RC_ICONS = Icons/HavenIcon.ico
 

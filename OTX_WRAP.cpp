@@ -9,12 +9,14 @@
 #include <QMainWindow>
 #include <QComboBox>
 #include "passwordcallback.hpp"
-
+#include <OTLog.hpp>
 #include <../opentxs/OTAsymmetricKey.hpp>
+#include <../opentxs/OTSymmetricKey.hpp>
 #include <../opentxs/OTRecordList.hpp>
 #include <../opentxs/OTCaller.hpp>
 #include <QDebug>
 #include <opentxs/OTAPI.hpp>
+#include <OTCrypto.hpp>
 #include <opentxs/OTAPI_Exec.hpp>
 #include <opentxs/OT_ME.hpp>
 #include <opentxs/OpenTransactions.hpp>
@@ -31,18 +33,18 @@
 #include <qdebug>
 #include <string>
 
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <string.h>
+
 static OTCaller           passwordCaller;
 static MTPasswordCallback passwordCallback;
 
 OTX_WRAP::OTX_WRAP(QWidget *parent)
 {
     pParentWidget= parent;
-
-
-
-
     this->LoadWallewithPassprhase();
-
 }
 
 bool OTX_WRAP::SetupPasswordCallback(OTCaller & passwordCaller, OTCallback & passwordCallback)
@@ -76,6 +78,190 @@ bool OTX_WRAP::SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup
     return true;
 }
 
+// Symetric Encryption functions
+
+// symmetric encryption using standard strings
+
+std::string OTX_WRAP::symmetricEncStr(std::string plainText)
+{
+
+  unsigned char * plainTextUCH = (unsigned char *)plainText.c_str();
+  unsigned char theEncryptedText[255];
+  this->symmetricEncrypt(plainTextUCH,theEncryptedText);
+  std::string encStr = std::string(reinterpret_cast<const char*>(theEncryptedText));
+  return encStr;
+}
+std::string OTX_WRAP::symmetricDecStr(std::string encText)
+{
+   unsigned char * encTestUCH = (unsigned char *)encText.c_str();
+   unsigned char thePlainText[255];
+   this->symmetricDecrypt(encTestUCH,thePlainText);
+   std::string decStr = std::string(reinterpret_cast<const char*>(thePlainText));
+   return decStr;
+
+}
+
+void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[255])
+{
+
+   /* A 256 bit key */
+    /*std::string theKey ="$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
+    std::string theiv="01234567890123456";*/
+
+    unsigned char *key = (unsigned char*) "01234567890123456789012345678901";
+
+   /* A 128 bit IV */
+   unsigned char *iv =  (unsigned char*) "01234567890123456";
+
+
+
+  /* Buffer for ciphertext. Ensure the buffer is long enough for the
+   * ciphertext which may be longer than the plaintext, dependant on the
+   * algorithm and mode
+   */
+  unsigned char ciphertext[255];
+
+
+
+  int  ciphertext_len;
+
+  /* Initialise the library */
+  ERR_load_crypto_strings();
+  OpenSSL_add_all_algorithms();
+  OPENSSL_config(NULL);
+
+  /* Encrypt the plaintext */
+  ciphertext_len =  encrypt(plainText, strlen((char *)plainText), key, iv,ciphertext);
+    ciphertext[ciphertext_len] = '\0';
+  std::cout << "\n texto encriptado:\n";
+  std::cout << ciphertext;
+  std::cout << "\n longitud:\n";
+  std::cout << ciphertext_len;
+  encrypted[0]== '\0';
+  memcpy(encrypted,ciphertext,ciphertext_len);
+  encrypted[ciphertext_len]='\0';
+  }
+
+void OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&plainText)[255])
+{
+
+    /* Buffer for the decrypted text */
+    unsigned char decryptedtext[255];
+/* A 256 bit key */
+   /* std::string theKey ="$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
+    std::string theiv="01234567890123456";*/
+
+   unsigned char *key = (unsigned char*) "01234567890123456789012345678901";
+
+  /* A 128 bit IV */
+  unsigned char *iv =  (unsigned char*) "01234567890123456";
+  std::cout << "\n texto a desencriptar:\n";
+  std::cout << ciphertext;
+  std::cout << "\n longitud:\n";
+  std::cout << strlen((char *)ciphertext);
+  int decryptedtext_len = decrypt(ciphertext, strlen((char *)ciphertext), key, iv,
+    decryptedtext);
+
+  /* Add a NULL terminator. We are expecting printable text */
+  decryptedtext[decryptedtext_len] = '\0';
+  plainText[0]== '\0';
+  memcpy(plainText,decryptedtext,decryptedtext_len);
+  plainText[decryptedtext_len]='\0';
+
+   /* Clean up */
+  EVP_cleanup();
+  ERR_free_strings();
+
+
+}
+
+
+void OTX_WRAP::handleErrors(void)
+{
+  ERR_print_errors_fp(stderr);
+  abort();
+}
+int OTX_WRAP::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
+    unsigned char *iv, unsigned char *ciphertext)
+  {
+    EVP_CIPHER_CTX *ctx;
+
+    int len;
+
+    int ciphertext_len;
+
+    /* Create and initialise the context */
+    if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
+
+    /* Initialise the encryption operation. IMPORTANT - ensure you use a key
+     * and IV size appropriate for your cipher
+     * IV size for *most* modes is the same as the block size. For AES this
+     * is 128 bits */
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv))
+      handleErrors();
+
+    /* Provide the message to be encrypted, and obtain the encrypted output.
+     * EVP_EncryptUpdate can be called multiple times if necessary
+     */
+    if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len))
+      handleErrors();
+    ciphertext_len = len;
+
+    /* Finalise the encryption. Further ciphertext bytes may be written at
+     * this stage.
+     */
+    if(1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) handleErrors();
+    ciphertext_len += len;
+
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
+
+    return ciphertext_len;
+  }
+
+  int OTX_WRAP::decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
+    unsigned char *iv, unsigned char *plaintext)
+  {
+    EVP_CIPHER_CTX *ctx;
+
+    int len;
+
+    int plaintext_len;
+
+    /* Create and initialise the context */
+    if(!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
+
+    /* Initialise the decryption operation. IMPORTANT - ensure you use a key
+     * and IV size appropriate for your cipher
+     * IV size for *most* modes is the same as the block size. For AES this
+     * is 128 bits */
+    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key, iv))
+      handleErrors();
+
+    /* Provide the message to be decrypted, and obtain the plaintext output.
+     * EVP_DecryptUpdate can be called multiple times if necessary
+     */
+    if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len))
+      handleErrors();
+    plaintext_len = len;
+
+    /* Finalise the decryption. Further plaintext bytes may be written at
+     * this stage.
+     */
+    if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) handleErrors();
+    plaintext_len += len;
+
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
+
+    return plaintext_len;
+  }
+
+
+
+
+
+//Asymetric Encryption functions
 QString OTX_WRAP::signText(QString s_nymId,QString qstrText)
 {
 
@@ -144,6 +330,9 @@ QString OTX_WRAP::signText(QString s_nymId,QString qstrText)
 
 return signedText;
 }
+
+
+
 QString OTX_WRAP::encryptText(QString e_nymId, QString plainText)
 {
 QString encryptedText="Failed to encrypt : \n "+ plainText;// if encryption fails notify and return plain text

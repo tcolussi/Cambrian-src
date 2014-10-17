@@ -232,11 +232,9 @@ main(int argc, char *argv[])
     #ifdef COMPILE_WITH_SPLASH_SCREEN
     wMainWindow.showMaximized();
     wMainWindow.maximizeApp("sopro-rolepage/index.html");
-    //wMainWindow.hideRolePage();
     #else
 
     wMainWindow.show();
    #endif
-
-	return oApplication.exec();
+    return oApplication.exec();
 	} // main()
