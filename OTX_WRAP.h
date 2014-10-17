@@ -50,6 +50,19 @@ public:
     void openRoleCreationScreen();
 
     //Signin and Encryption
+
+    void handleErrors(void);
+     // OpenSSl calls with unsigned chars
+    int encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
+                unsigned char *iv, unsigned char *ciphertext);
+    int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
+                unsigned char *iv, unsigned char *plaintext);
+    void symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&plainText)[255]);
+    void symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[255]);
+
+    // symmetric encryption adapted to use std string
+    std::string symmetricDecStr(std::string encText);
+    std::string symmetricEncStr(std::string plainText);
     QString signText(QString s_nymId, QString qstrText);
     QString encryptText(QString e_nymId, QString plainText);
     QString signAndEncrypt(QString signerNymId, QString recipientNymId, QString plainText);

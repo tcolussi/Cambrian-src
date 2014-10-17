@@ -715,7 +715,7 @@ if (pProfile != NULL)
 //first verify if is possible to delete in OT
 std::string nymId= pProfile->m_strNymID.ToQString().toStdString();
 
-if (OTAPI_Wrap::It()->Wallet_CanRemoveNym(nymId)
+if (OTAPI_Wrap::It()->Wallet_CanRemoveNym(nymId))
 {
     if(OTAPI_Wrap::It()->Wallet_RemoveNym(nymId))
     {successDeletion=true;}

@@ -115,7 +115,7 @@ HEADERS += \
     DialogInvitations.h \
     EnumerationMap.h \
     ErrorCodes.h \
-	ApiJavaScript.h \
+    ApiJavaScript.h \
     ErrorMessages.h \
     FilePathUtilities.h \
     GroupChat.h \

@@ -385,8 +385,18 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		}
 
 	SendStanza:
-	PSZUC pszDataStanza = m_paData->rgbData;
-	const int cbDataStanza = m_paData->cbData;
+#ifdef COMPILE_WITH_CRYPTOMANIA
+ /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+    PSZUC pszDataStanzaIN = m_paData->rgbData;
+    std::string strDataStanza =  std::string(reinterpret_cast<const char*>(pszDataStanzaIN));
+    // encrypt ussing openssl symmetric (at the moment..)
+    std::string encryptedStanza=pOTX->symmetricEncStr(strDataStanza);
+    PSZUC pszDataStanza = (PSZUC) encryptedStanza.c_str();
+/*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+#else
+ PSZUC pszDataStanza = m_paData->rgbData;
+#endif
+    const int cbDataStanza = m_paData->cbData;
 	Assert(cbDataStanza >= 0);
 	if (cbDataStanza <= 0)
 		return;	// Nothing to do
@@ -407,8 +417,11 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 	// Format the XML envelope for the XMPP protocol.
 	g_strScratchBufferSocket.BinInitFromTextSzv_VE("<$s$s to='^J'><" d_szCambrianProtocol_xcp " " d_szCambrianProtocol_Attribute_hSignature "='{h|}'>", pszStanzaType, pszStanzaAttributesExtra, pContact, &hashSignature);
 	g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanza, cbDataStanza);
-	g_strScratchBufferSocket.BinAppendText_VE("</" d_szCambrianProtocol_xcp "></$s>", pszStanzaType);
-	CSocketXmpp * pSocket = pContact->Xmpp_PGetSocketOnlyIfReady();
+
+    // need convert the text to unsigned string...
+    g_strScratchBufferSocket.BinAppendText_VE("</" d_szCambrianProtocol_xcp "></$s>", pszStanzaType);
+
+    CSocketXmpp * pSocket = pContact->Xmpp_PGetSocketOnlyIfReady();
 	if (pSocket != NULL)
 		pSocket->Socket_WriteBin(g_strScratchBufferSocket);
 	m_paData->cbData = 0;
