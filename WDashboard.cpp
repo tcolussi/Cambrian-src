@@ -366,6 +366,49 @@ WDashboardSectionBallots::OnItemClicked(SHitTestInfo oHitTestInfo)
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+void
+WDashboard_TProfiles::IDashboard_AddSections(INOUT OLayoutVertical * poLayout)
+	{
+	hide();
+	}
+void
+WDashboard_TProfiles::IDashboard_Notify(UINT uFlagsDashboardNotify, POBJECT pObjectModified)
+	{
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+WDashboard_TProfile::WDashboard_TProfile(TProfile * pProfile)
+	{
+	Assert(pProfile != NULL);
+	m_pProfile_NZ = pProfile;
+
+	}
+
+QString
+WDashboard_TProfile::IDashboard_SGetCaption()
+	{
+	return c_sEmpty;
+	}
+
+void
+WDashboard_TProfile::IDashboard_AddSections(INOUT OLayoutVertical * poLayout)
+	{
+	InitToGarbage(OUT &m_sections, sizeof(m_sections));
+	m_sections.pwSectionChannels = new WDashboardSectionChannels;
+	m_sections.pwSectionGroups = new WDashboardSectionGroups();
+	m_sections.pwSectionCorporations = new WDashboardSectionCorporations();
+	m_sections.pwSectionContacts = new WDashboardSectionContacts("PEERS");
+	m_sections.pwSectionBalots = new WDashboardSectionBallots("BALLOTS");
+	poLayout->Layout_AddWidgets((QWidget **)&m_sections, sizeof(m_sections) / sizeof(QWidget *));	// Add each section to the vertical layout
+	}
+
+void
+WDashboard_TProfile::IDashboard_Notify(UINT uFlagsDashboardNotify, POBJECT pObjectModified)
+	{
+
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 singleton WDashboardCaption : public QWidget
 {
 public:
@@ -427,6 +470,7 @@ WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	pwScrollArea->setFrameShape(QFrame::NoFrame);
 	pwScrollArea->setWidgetResizable(true);
 	pwScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	pwWidgetDashboard->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);	// This is necessary, otherwise the layout will proportionally clip th ewidgets
 	pwScrollArea->setStyleSheet(
 	/*
 	" QScrollBar {"
@@ -436,9 +480,6 @@ WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	*/
 	"* { background-color:#4D5250; }"
 	);
-
-	//vertical box that contains all the checkboxes for the filters
-	pwWidgetDashboard->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
 	pwScrollArea->setWidget(pwWidgetDashboard);
 	setWidget(pwScrollArea);
 
@@ -449,6 +490,7 @@ WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	m_poLayoutVertial = new OLayoutVerticalAlignTop0(pwWidgetDashboard);
 	#endif
 
+	#ifdef SIMPLE_DASHBOARD
 	InitToGarbage(OUT &m_sections, sizeof(m_sections));
 	m_sections.pwSectionChannels = new WDashboardSectionChannels;
 	m_sections.pwSectionGroups = new WDashboardSectionGroups();
@@ -459,6 +501,7 @@ WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	// Add each section to the vertical layout
 	for (WDashboardSection ** ppwSection = (WDashboardSection **)&m_sections; (BYTE *)ppwSection < (BYTE *)&m_sections + sizeof(m_sections); ppwSection++)
 		m_poLayoutVertial->addWidget(*ppwSection);
+	#endif
 	}
 
 void
@@ -482,7 +525,6 @@ WDashboard::RefreshAll()
 		pwSection->Init(m_pProfile_YZ);
 		pwSection->updateGeometry();
 		}
-	//m_poLayoutVertial->invalidate();
 	//updateGeometry();
 	update();
 	}

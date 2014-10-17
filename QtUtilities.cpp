@@ -1299,6 +1299,17 @@ OLayoutVertical::Layout_PwAddRowHorizonalLine()
 	return pwFrame;
 	}
 
+//	Add an array of widgets
+void
+OLayoutVertical::Layout_AddWidgets(PA_CHILD QWidget * prgpawWidgets[], int cWidgets)
+	{
+	Assert(prgpawWidgets != NULL);
+	Assert(cWidgets >= 0);
+	QWidget ** ppwWidgetStop = prgpawWidgets + cWidgets;
+	while (prgpawWidgets < ppwWidgetStop)
+		addWidget(PA_CHILD *prgpawWidgets++);
+	}
+
 void
 OLayoutVertical::Layout_AddWidgetSpacer()
 	{

@@ -435,6 +435,7 @@ public:
 	WLabel * Layout_PwAddRowLabel_VE(PSZAC pszmFmtLabelTextAndToolTip, ...);
 	WLabel * Layout_PwAddRowLabelWrap(PSZAC pszmLabelTextAndToolTip);
 	QFrame * Layout_PwAddRowHorizonalLine();
+	void Layout_AddWidgets(QWidget * prgpWidgets[], int cWidgets);
 	void Layout_AddWidgetSpacer();
 };
 

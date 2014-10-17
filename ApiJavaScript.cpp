@@ -304,6 +304,17 @@ OJapiGroup::channelName(const QString & sNameChannel)
 	{
 	m_pGroup->GroupChannel_SetName(CStr(sNameChannel));
 	}
+QString
+OJapiGroup::purpose() const
+	{
+	return m_pGroup->m_strPurpose;
+	}
+
+void
+OJapiGroup::purpose(const QString & sPurpose)
+	{
+	m_pGroup->m_strPurpose = sPurpose;
+	}
 
 void
 OJapiGroup::addPeer(QObject *pContactAdd)

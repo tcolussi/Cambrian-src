@@ -796,12 +796,15 @@ public:
 	QString type();
 	QString channelName() const;
 	void channelName(const QString & sNameChannel);
+	QString purpose() const;
+	void purpose(const QString & sPurpose);
 
 	Q_OBJECT
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name WRITE name)
 	Q_PROPERTY(QString type READ type)
 	Q_PROPERTY(QString channelName READ channelName WRITE channelName)
+	Q_PROPERTY(QString purpose READ purpose WRITE purpose)
 	Q_PROPERTY(int count READ count)
 	Q_PROPERTY(OJapiList members READ members)
 
