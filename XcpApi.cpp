@@ -24,7 +24,7 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 #ifdef COMPILE_WITH_CRYPTOMANIA
 /*//////////////////////////////////CRYPTOMANIA DECRYPT////////////////////////////////////////////////*/
     PSZU pszDataEncryptedIN = pXmlNodeXmppXcp->m_pszuTagValue;
-    std::cout "\n ======Text about to Decrypt in XcpApi:===== \n";
+    std::cout << "\n ======Text about to Decrypt in XcpApi:===== \n";
     std::cout << pszDataEncryptedIN;
     std::string strDataEncrypted=std::string(reinterpret_cast<const char*>(pszDataEncryptedIN));
     std::string strDataPlain= pOTX->symmetricDecStr(strDataEncrypted);
