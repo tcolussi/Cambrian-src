@@ -625,7 +625,9 @@ OJapiProfilesList::setCurrentProfile(POJapiProfile poJapiProfile)
 		{
 		NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfile->m_pProfile);
 		roleChanged();
+		#ifdef COMPILE_WITH_SPLASH_SCREEN
         g_pwMainWindow->hideRolePage();
+		#endif
 		}
 	}
 
@@ -635,16 +637,14 @@ OJapiProfilesList::list()
 	QVariantList list;
 	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiProfilesList::list() \n");
 
-	TProfile **ppProfilesStop;
-	TProfile **ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(&ppProfilesStop);
-
-	while(ppProfiles != ppProfilesStop)
+	TProfile ** ppProfilesStop;
+	TProfile ** ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfilesStop);
+	while (ppProfiles != ppProfilesStop)
 		{
 		TProfile *pProfile = *ppProfiles++;
 		list.append( QVariant::fromValue(pProfile->POJapiGet()) );
 		//list.append( QVariant::fromValue(pProfile->m_strNameProfile.ToQString()) );
 		}
-
 	return list;
 	}
 
@@ -657,7 +657,7 @@ OJapiProfile::destroy()
     // Get the current profile (it is need to work properly in mac)
     int cProfiles=g_oConfiguration.m_arraypaProfiles.GetSize();
     TProfile ** prgpProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfiles(OUT &cProfiles);
-    TProfile * pProfile;
+	TProfile * pProfile = NULL;
     for (int iProfile = 0; iProfile < cProfiles; iProfile++)
         {
          pProfile = prgpProfiles[iProfile];
