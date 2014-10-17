@@ -105,10 +105,7 @@ void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encr
 {
 
    /* A 256 bit key */
-    /*std::string theKey ="$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
-    std::string theiv="01234567890123456";*/
-
-    unsigned char *key = (unsigned char*) "01234567890123456789012345678901";
+    unsigned char *key = (unsigned char*) "$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
 
    /* A 128 bit IV */
    unsigned char *iv =  (unsigned char*) "01234567890123456";
@@ -147,11 +144,8 @@ void OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&p
 
     /* Buffer for the decrypted text */
     unsigned char decryptedtext[255];
-/* A 256 bit key */
-   /* std::string theKey ="$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
-    std::string theiv="01234567890123456";*/
 
-   unsigned char *key = (unsigned char*) "01234567890123456789012345678901";
+   unsigned char *key = (unsigned char*) "$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
 
   /* A 128 bit IV */
   unsigned char *iv =  (unsigned char*) "01234567890123456";

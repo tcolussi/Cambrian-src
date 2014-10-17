@@ -236,5 +236,7 @@ main(int argc, char *argv[])
 
     wMainWindow.show();
    #endif
+
+
     return oApplication.exec();
 	} // main()
