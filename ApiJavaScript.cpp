@@ -775,7 +775,7 @@ SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 	{d_szNameApplicationHtml_Ballotmaster		, "html5-pollmaster/index.html"					, PaAllocateJapiGeneric, NULL },
 	{d_szNameApplicationHtml_Channels			, "html5-channels/index.html"					, PaAllocateJapiGeneric, NULL },
 	{d_szNameApplicationHtml_Corporations		, "html5-corporations/index.html"				, PaAllocateJapiGeneric, NULL },
-	{d_szNameApplicationHtml_PeerManager		, "html5-peer-manager/index.html"				, PaAllocateJapiGeneric, NULL },
+	{d_szNameApplicationHtml_PeerManager		, "html5-peers-manager/index.html"				, PaAllocateJapiGeneric, NULL },
 	{"Home"		         , "html5-static/home/index.html"				, PaAllocateJapiGeneric, NULL },
 	{"Default NewTab"	 , "html5-static/default-new-tab/index.html"	, PaAllocateJapiGeneric, NULL },
 	{"Underconstruction" , "html5-static/underconstruction/index.html"	, PaAllocateJapiGeneric, NULL },

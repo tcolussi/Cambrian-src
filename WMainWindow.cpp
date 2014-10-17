@@ -300,7 +300,7 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	#if 1
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
 	#endif
-	#if 1
+	#if 0
 	addDockWidget(Qt::TopDockWidgetArea, PA_CHILD new WQmlToolbar);
 	#endif
 

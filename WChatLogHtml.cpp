@@ -21,7 +21,8 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 
 		// Style for each division
 		//".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 3rem; }"
-		".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 55px ; }"
+		"div.d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 55px ; }"
+		"div.f { margin-top: 6; }"	// First message in a division, to add space between senders
 
 		// Style for an icon/avatar
 		".i	 { float:left; position: absolute; left: 15; margin-top: 3; height: 36; width: 36; "
@@ -62,14 +63,21 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 
 		// Style for a timestamp on the left (this timestamp appears below the icon/avatar when the user types multiple consecutive messages)
 		".tl { color: #BABBBF; font-size: 12px;"
+			"display: none;"
 			"position: absolute;"
-			"left:0;"
+			"left: 0;"
 			"text-align: right;"
 			"width: 50;"
 			"}"
+		".d:hover .tl { display: block; }"	// Display the timestamp on the left only if he mouse is over the division
 
 		// Style for  the message itself
-		".m { display: block; }"
+		".m {"
+			"display: block;"
+			"word-break: break-all;"	// Prevent any horizontal scrolling of messages
+			"}"
+
+
 
 		// Styles for different types of hyperlinks
 		"a." d_szClassForChatLog_ButtonHtml // " { color: black; background-color: silver; text-decoration: none; font-weight: bold } "
@@ -175,7 +183,6 @@ WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventSta
 			pbinHtml->BinAppendText_VE("<div class='dd'><hr class='dd'/><div class='ddd'>$Q</div></div>", &sDate);
 			}
 
-		pbinHtml->BinAppendText("<div class='d'>");
 		m_hSenderPreviousEvent = pEvent->AppendHtmlForChatLog_HAppendHeader(IOUT pbinHtml, m_hSenderPreviousEvent);
 		pbinHtml->BinAppendText_VE("<span class='m' id='{t_}'>", pEvent->m_tsEventID);
 		pEvent->AppendHtmlForChatLog(IOUT pbinHtml);
@@ -211,6 +218,7 @@ IEvent::AppendHtmlForChatLog_HAppendHeader(IOUT CBin * pbinHtml, HOBJECT hSender
 		// Insert the image of the sender as well as its name
 		pbinHtml->BinAppendText_VE(
 			//"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()	// This line is commented out until hyperlinks are enabled when clicking on the icon of a user
+			"<div class='d f'>"
 			"<div class='i i$i'></div>"
 			"<span class='s'>{sH}</span>"
 			 , !fuIsEventReceived, pTreeItemNickname_NZ->ChatLog_PszGetNickname());
@@ -220,7 +228,7 @@ IEvent::AppendHtmlForChatLog_HAppendHeader(IOUT CBin * pbinHtml, HOBJECT hSender
 	else
 		{
 		// Just append the timestamp
-		pbinHtml->BinAppendText_VE("<span class='tl' title='^Q'>^Q", &sDateTime, &sTime);
+		pbinHtml->BinAppendText_VE("<div class='d'><span class='tl' title='^Q'>^Q", &sDateTime, &sTime);
 		pbinHtml->BinAppendText("</span>");
 		}
 
