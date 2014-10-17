@@ -65,6 +65,48 @@ OJapiMe::groups()
 	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiMe::groups() (length = $i)\n", oList.length());
 	return oList;
 	}
+
+//	Return all channels objects
+OJapiList
+OJapiMe::channels()
+	{
+	CListVariants oList(m_poCambrian);
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		TGroup ** ppGroupStop;
+		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+		while (ppGroup != ppGroupStop)
+			{
+			TGroup * pGroup = *ppGroup++;
+			Assert(pGroup != NULL);
+			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+			if (pGroup->Group_FuIsChannelUsed())
+				oList.append(QVariant::fromValue(pGroup->POJapiGet(m_poCambrian)));
+			} // while
+		} // while
+	return oList;
+	}
+
+//	Return a list of all channel names availables
+OJapiList
+OJapiCambrian::channelsAvailable()
+	{
+	//MessageLog_AppendTextFormatCo(d_coRed, "channelsAvailable()\n");
+	QVariantList oList;
+	CChannelName ** ppChannelNameStop;
+	CChannelName ** ppChannelName = m_pProfile->m_arraypaChannelNamesAvailables.PrgpGetChannelsStop(OUT &ppChannelNameStop);
+	while (ppChannelName != ppChannelNameStop)
+		{
+		CChannelName * pChannelName = *ppChannelName++;
+		//MessageLog_AppendTextFormatCo(d_coRed, "Channel $S\n", &pChannelName->m_strName);
+		oList.append(pChannelName->m_strName.ToQString());
+		}
+	return oList;
+	}
+
 /*
 OJapiList
 OJapiMe::peerLists()
@@ -261,6 +303,17 @@ void
 OJapiGroup::channelName(const QString & sNameChannel)
 	{
 	m_pGroup->GroupChannel_SetName(CStr(sNameChannel));
+	}
+QString
+OJapiGroup::purpose() const
+	{
+	return m_pGroup->m_strPurpose;
+	}
+
+void
+OJapiGroup::purpose(const QString & sPurpose)
+	{
+	m_pGroup->m_strPurpose = sPurpose;
 	}
 
 void
@@ -625,7 +678,9 @@ OJapiProfilesList::setCurrentProfile(POJapiProfile poJapiProfile)
 		{
 		NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfile->m_pProfile);
 		roleChanged();
+		#ifdef COMPILE_WITH_SPLASH_SCREEN
         g_pwMainWindow->hideRolePage();
+		#endif
 		}
 	}
 
@@ -635,16 +690,14 @@ OJapiProfilesList::list()
 	QVariantList list;
 	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiProfilesList::list() \n");
 
-	TProfile **ppProfilesStop;
-	TProfile **ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(&ppProfilesStop);
-
-	while(ppProfiles != ppProfilesStop)
+	TProfile ** ppProfilesStop;
+	TProfile ** ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfilesStop);
+	while (ppProfiles != ppProfilesStop)
 		{
 		TProfile *pProfile = *ppProfiles++;
 		list.append( QVariant::fromValue(pProfile->POJapiGet()) );
 		//list.append( QVariant::fromValue(pProfile->m_strNameProfile.ToQString()) );
 		}
-
 	return list;
 	}
 
@@ -657,7 +710,7 @@ OJapiProfile::destroy()
     // Get the current profile (it is need to work properly in mac)
     int cProfiles=g_oConfiguration.m_arraypaProfiles.GetSize();
     TProfile ** prgpProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfiles(OUT &cProfiles);
-    TProfile * pProfile;
+	TProfile * pProfile = NULL;
     for (int iProfile = 0; iProfile < cProfiles; iProfile++)
         {
          pProfile = prgpProfiles[iProfile];
@@ -802,7 +855,7 @@ SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 	{d_szNameApplicationHtml_Ballotmaster		, "html5-pollmaster/index.html"					, PaAllocateJapiGeneric, NULL },
 	{d_szNameApplicationHtml_Channels			, "html5-channels/index.html"					, PaAllocateJapiGeneric, NULL },
 	{d_szNameApplicationHtml_Corporations		, "html5-corporations/index.html"				, PaAllocateJapiGeneric, NULL },
-	{d_szNameApplicationHtml_PeerManager		, "html5-peer-manager/index.html"				, PaAllocateJapiGeneric, NULL },
+	{d_szNameApplicationHtml_PeerManager		, "html5-peers-manager/index.html"				, PaAllocateJapiGeneric, NULL },
 	{"Home"		         , "html5-static/home/index.html"				, PaAllocateJapiGeneric, NULL },
 	{"Default NewTab"	 , "html5-static/default-new-tab/index.html"	, PaAllocateJapiGeneric, NULL },
 	{"Underconstruction" , "html5-static/underconstruction/index.html"	, PaAllocateJapiGeneric, NULL },

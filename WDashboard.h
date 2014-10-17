@@ -181,15 +181,40 @@ public:
 	virtual void OnItemClicked(SHitTestInfo oHitTestInfo);
 };
 
+enum
+	{
+	FDN_kfObject_TContact,
+	FDN_kfObject_TGroup,
+	FDN_kfObject_TGroupChannel,
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-//	The dashboard is a widget showing recent events related to a profile
-singleton WDashboard : public QDockWidget
+	FDN_kfRedrawSectionChannels,
+
+	};
+
+//	Plugin interface for the dashboard to adapt to a new interface (multiple profiles, single profile, corporations)
+class IDashboard : public WWidget
 {
-	Q_OBJECT
+public:
+	IDashboard() : WWidget(NULL) { }
+	virtual QString IDashboard_SGetCaption() = 0;
+	virtual void IDashboard_AddSections(INOUT OLayoutVertical * poLayout) = 0;
+	virtual void IDashboard_Notify(UINT uFlagsDashboardNotify, POBJECT pObjectModified) = 0;
+};
+
+//	Display multiple profiles
+class WDashboard_TProfiles : public IDashboard
+{
+public:
+	virtual QString IDashboard_SGetCaption() { return c_sEmpty; }
+	virtual void IDashboard_AddSections(INOUT OLayoutVertical * poLayout);
+	virtual void IDashboard_Notify(UINT uFlagsDashboardNotify, POBJECT pObjectModified);
+
+};
+
+class WDashboard_TProfile : public IDashboard
+{
 protected:
-	TProfile * m_pProfile_YZ;							// Pointer of the profile the dashboard is displaying
-	OLayoutVerticalAlignTop * m_poLayoutVertial;	// Stack the sections vertically
+	TProfile * m_pProfile_NZ;							// Pointer of the profile the dashboard is displaying
 	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section.  To change the order of the sections, change their order in this structure.
 		{
 		WDashboardSectionChannels * pwSectionChannels;
@@ -198,7 +223,37 @@ protected:
 		WDashboardSectionGroups * pwSectionGroups;		// Private groups
 		WDashboardSectionBallots * pwSectionBalots;
 		} m_sections;
+
+public:
+	WDashboard_TProfile(TProfile * pProfile);
+	virtual QString IDashboard_SGetCaption() = 0;
+	virtual void IDashboard_AddSections(INOUT OLayoutVertical * poLayout) = 0;
+	virtual void IDashboard_Notify(UINT uFlagsDashboardNotify, POBJECT pObjectModified) = 0;
+};
+
+#define SIMPLE_DASHBOARD
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//	The dashboard is a widget showing recent events related to a profile
+singleton WDashboard : public QDockWidget
+{
+protected:
+	OLayoutVerticalAlignTop * m_poLayoutVertial;	// Layout to stack the sections vertically
 	CDashboardSectionItem * m_pItemSelected_YZ;		// Which item is selected (has the focus)
+	IDashboard * m_paiwDashboard_NZ;				// Which dashboard interface to display
+
+	// Temporary to compile
+	#ifdef SIMPLE_DASHBOARD
+	TProfile * m_pProfile_YZ;							// Pointer of the profile the dashboard is displaying
+	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section.  To change the order of the sections, change their order in this structure.
+		{
+		WDashboardSectionChannels * pwSectionChannels;
+		WDashboardSectionContacts * pwSectionContacts;			// Peers
+		WDashboardSectionCorporations * pwSectionCorporations;	// Corporations & Coalitions
+		WDashboardSectionGroups * pwSectionGroups;		// Private groups
+		WDashboardSectionBallots * pwSectionBalots;
+		} m_sections;
+	#endif
 
 public:
 	WDashboard();

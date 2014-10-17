@@ -233,9 +233,8 @@ main(int argc, char *argv[])
     wMainWindow.showMaximized();
     wMainWindow.maximizeApp("sopro-rolepage/index.html");
     #else
-
     wMainWindow.show();
-   #endif
+	#endif
 
 
     return oApplication.exec();

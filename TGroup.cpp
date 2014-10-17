@@ -379,6 +379,7 @@ TGroup::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangePointer('y', PPX &m_pContactWhoRecommended_YZ, IN &m_pAccount->m_arraypaContacts);
 	pXmlExchanger->XmlExchangeUIntHex("f", INOUT &m_uFlagsGroup);
 	pXmlExchanger->XmlExchangeStr("h", INOUT &m_strNameChannel_YZ);
+	pXmlExchanger->XmlExchangeStr("p", INOUT &m_strPurpose);
 	pXmlExchanger->XmlExchangeObjects2(d_chElementName_Members, INOUT_F_UNCH_S &m_arraypaMembers, TGroupMember::S_PaAllocateGroupMember, this);
 
 	// Temporary fix for group identifiers which have been cleared during a file format upgrade
