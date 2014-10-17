@@ -130,9 +130,12 @@ void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encr
   /* Encrypt the plaintext */
   ciphertext_len =  encrypt(plainText, strlen((char *)plainText), key, iv,ciphertext);
     ciphertext[ciphertext_len] = '\0';
-  std::cout << "\n texto encriptado:\n";
+  std::cout << "\n ================ENCRYPT================ \n";
+  std::cout << "\n PLAIN TEXT: \n";
+  std::cout << plainText;
+  std::cout << "\n ENCRIPTED TEXT :\n";
   std::cout << ciphertext;
-  std::cout << "\n longitud:\n";
+  std::cout << "\n LENGTH ENCRYPTED:\n";
   std::cout << ciphertext_len;
   encrypted[0]== '\0';
   memcpy(encrypted,ciphertext,ciphertext_len);
@@ -149,10 +152,8 @@ void OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&p
 
   /* A 128 bit IV */
   unsigned char *iv =  (unsigned char*) "01234567890123456";
-  std::cout << "\n texto a desencriptar:\n";
-  std::cout << ciphertext;
-  std::cout << "\n longitud:\n";
-  std::cout << strlen((char *)ciphertext);
+
+
   int decryptedtext_len = decrypt(ciphertext, strlen((char *)ciphertext), key, iv,
     decryptedtext);
 
@@ -162,7 +163,15 @@ void OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&p
   memcpy(plainText,decryptedtext,decryptedtext_len);
   plainText[decryptedtext_len]='\0';
 
-   /* Clean up */
+  std::cout << "\n ================DECRYPT================ \n";
+  std::cout << "\n ENCRYPTED TEXT: \n";
+  std::cout << ciphertext;
+  std::cout << "\n DECRYPTED TEXT :\n";
+  std::cout << decryptedtext;
+  std::cout << "\n LENGTH ENCRYPTED:\n";
+  std::cout << decryptedtext_len;
+
+  /* Clean up */
   EVP_cleanup();
   ERR_free_strings();
 
