@@ -390,8 +390,12 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
     PSZUC pszDataStanzaIN = m_paData->rgbData;
     std::string strDataStanza =  std::string(reinterpret_cast<const char*>(pszDataStanzaIN));
     // encrypt ussing openssl symmetric (at the moment..)
+    std::cout "\n =====Text about to encrypt in Xcp:======== \n"
+    std::cout << pszDataStanzaIN;
     std::string encryptedStanza=pOTX->symmetricEncStr(strDataStanza);
     PSZUC pszDataStanza = (PSZUC) encryptedStanza.c_str();
+    std::cout "\n ======Decrypted Text in Xcp: ===== \n"
+    std::cout << pszDataStanza;
 /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
 #else
  PSZUC pszDataStanza = m_paData->rgbData;

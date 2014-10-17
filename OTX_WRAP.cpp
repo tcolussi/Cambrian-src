@@ -131,7 +131,7 @@ void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encr
   /* Encrypt the plaintext */
   ciphertext_len =  encrypt(plainText, strlen((char *)plainText), key, iv,ciphertext);
     ciphertext[ciphertext_len] = '\0';
-  std::cout << "\n ================ENCRYPT================ \n";
+  std::cout << "\n ================ENCRYPT OTX_WRAP================ \n";
   std::cout << "\n PLAIN TEXT: \n";
   std::cout << plainText;
   std::cout << "\n ENCRYPTED TEXT :\n";
@@ -164,7 +164,7 @@ void OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&p
   memcpy(plainText,decryptedtext,decryptedtext_len);
   plainText[decryptedtext_len]='\0';
 
-  std::cout << "\n ================DECRYPT================ \n";
+  std::cout << "\n ================DECRYPT OTX_WRAP================ \n";
   std::cout << "\n ENCRYPTED TEXT: \n";
   std::cout << ciphertext;
   std::cout << "\n DECRYPTED TEXT :\n";
