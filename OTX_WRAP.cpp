@@ -103,7 +103,8 @@ std::string OTX_WRAP::symmetricDecStr(std::string encText)
 
 void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[255])
 {
-
+    EVP_cleanup();
+    ERR_free_strings();
    /* A 256 bit key */
     unsigned char *key = (unsigned char*) "$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
 
@@ -133,7 +134,7 @@ void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encr
   std::cout << "\n ================ENCRYPT================ \n";
   std::cout << "\n PLAIN TEXT: \n";
   std::cout << plainText;
-  std::cout << "\n ENCRIPTED TEXT :\n";
+  std::cout << "\n ENCRYPTED TEXT :\n";
   std::cout << ciphertext;
   std::cout << "\n LENGTH ENCRYPTED:\n";
   std::cout << ciphertext_len;
