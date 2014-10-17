@@ -21,12 +21,16 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 	m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;
 
 	// Attempt to decrypt the data and verify the signature
+#ifdef COMPILE_WITH_CRYPTOMANIA
 /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
     PSZU pszDataEncryptedIN = pXmlNodeXmppXcp->m_pszuTagValue;
     std::string strDataEncrypted=std::string(reinterpret_cast<const char*>(pszDataEncryptedIN));
     std::string strDataPlain= pOTX->symmetricDecStr(strDataEncrypted);
     PSZU pszDataEncrypted=(PSZU) strDataPlain.c_str();
 /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+#else
+  PSZU pszDataEncrypted = pXmlNodeXmppXcp->m_pszuTagValue;
+#endif
     if (pszDataEncrypted != NULL)
 		{
 		CXmlTree oXmlTree;

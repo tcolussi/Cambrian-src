@@ -385,7 +385,7 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		}
 
 	SendStanza:
-
+#ifdef COMPILE_WITH_CRYPTOMANIA
  /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
     PSZUC pszDataStanzaIN = m_paData->rgbData;
     std::string strDataStanza =  std::string(reinterpret_cast<const char*>(pszDataStanzaIN));
@@ -393,6 +393,9 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
     std::string encryptedStanza=pOTX->symmetricEncStr(strDataStanza);
     PSZUC pszDataStanza = (PSZUC) encryptedStanza.c_str();
 /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+#else
+ PSZUC pszDataStanza = m_paData->rgbData;
+#endif
     const int cbDataStanza = m_paData->cbData;
 	Assert(cbDataStanza >= 0);
 	if (cbDataStanza <= 0)

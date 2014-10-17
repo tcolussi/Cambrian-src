@@ -14,6 +14,7 @@
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
 #define COMPILE_WITH_OPEN_TRANSACTIONS
+#define COMPILE_WITH_CRYPTOMANIA
 #define COMPILE_WITH_SPLASH_SCREEN
 #define COMPILE_WITH_CHATLOG_HTML
 
