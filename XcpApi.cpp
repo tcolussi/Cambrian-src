@@ -38,7 +38,11 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
     if (pszDataEncrypted != NULL)
 		{
 		CXmlTree oXmlTree;
-		oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
+#ifdef COMPILE_WITH_CRYPTOMANIA
+        oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pszDataEncrypted);
+#else
+        oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
+#endif
 		#if 1
 		MessageLog_AppendTextFormatCo(d_coGray, "XCP Received($S):\n", &m_strJidBare);
 		MessageLog_AppendTextFormatCo(d_coBlack, "{Bm}\n", &oXmlTree.m_binXmlFileData);
