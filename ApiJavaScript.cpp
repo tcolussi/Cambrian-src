@@ -65,6 +65,48 @@ OJapiMe::groups()
 	//MessageLog_AppendTextFormatCo(d_coRed, "OJapiMe::groups() (length = $i)\n", oList.length());
 	return oList;
 	}
+
+//	Return all channels objects
+OJapiList
+OJapiMe::channels()
+	{
+	CListVariants oList(m_poCambrian);
+	TAccountXmpp ** ppAccountStop;
+	TAccountXmpp ** ppAccount = m_poCambrian->m_pProfile->m_arraypaAccountsXmpp.PrgpGetAccountsStop(OUT &ppAccountStop);
+	while (ppAccount != ppAccountStop)
+		{
+		TAccountXmpp * pAccount = *ppAccount++;
+		TGroup ** ppGroupStop;
+		TGroup ** ppGroup = pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
+		while (ppGroup != ppGroupStop)
+			{
+			TGroup * pGroup = *ppGroup++;
+			Assert(pGroup != NULL);
+			Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
+			if (pGroup->Group_FuIsChannelUsed())
+				oList.append(QVariant::fromValue(pGroup->POJapiGet(m_poCambrian)));
+			} // while
+		} // while
+	return oList;
+	}
+
+//	Return a list of all channel names availables
+OJapiList
+OJapiCambrian::channelsAvailable()
+	{
+	//MessageLog_AppendTextFormatCo(d_coRed, "channelsAvailable()\n");
+	QVariantList oList;
+	CChannelName ** ppChannelNameStop;
+	CChannelName ** ppChannelName = m_pProfile->m_arraypaChannelNamesAvailables.PrgpGetChannelsStop(OUT &ppChannelNameStop);
+	while (ppChannelName != ppChannelNameStop)
+		{
+		CChannelName * pChannelName = *ppChannelName++;
+		//MessageLog_AppendTextFormatCo(d_coRed, "Channel $S\n", &pChannelName->m_strName);
+		oList.append(pChannelName->m_strName.ToQString());
+		}
+	return oList;
+	}
+
 /*
 OJapiList
 OJapiMe::peerLists()

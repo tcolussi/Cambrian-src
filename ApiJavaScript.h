@@ -710,11 +710,13 @@ class OJapiMe : public OJapi
 public:
 	OJapiMe(OJapiCambrian * poCambrian);
 	OJapiList groups();
+	OJapiList channels();
 	OJapiList peers();
 	//OJapiList peerLists();
 
 	Q_OBJECT
 	Q_PROPERTY(OJapiList groups READ groups)
+	Q_PROPERTY(OJapiList channels READ channels)
 	Q_PROPERTY(OJapiList peers READ peers)
 	//Q_PROPERTY(OJapiList peerLists READ peerLists)
 
@@ -839,6 +841,7 @@ public:
 	POJapiAppChat chatApp();
 	POJapiMe me();
 	POJapiGroupList groups();
+	OJapiList channelsAvailable();
 	POCapiRootGUI capi();
 	POJapiUtil util();
 
@@ -849,6 +852,7 @@ public:
 	Q_PROPERTY(POJapiApps apps READ apps)
 	Q_PROPERTY(POJapiMe me READ me)
 	Q_PROPERTY(POJapiGroupList groups READ groups)
+	Q_PROPERTY(OJapiList channelsAvailable READ channelsAvailable)
 	Q_PROPERTY(POCapiRootGUI capi READ capi)
 	Q_PROPERTY(POJapiUtil util READ util)
 
@@ -856,7 +860,7 @@ public:
 public slots:
 	void SendBitcoin(int n);
 	void MessageSendTo(const QString & sContactTo, const QString & sMessage);
-};
+}; // OJapiCambrian
 
 
 //	Application Names Identifiers.  Those values are not meant to be localized, but to offer a mechanism to select an application by name.
