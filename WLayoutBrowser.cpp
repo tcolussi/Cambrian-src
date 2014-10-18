@@ -434,7 +434,7 @@ LaunchApplication_BallotmasterVote(CEventBallotReceived * pEventBallotReceived_N
 	{
 	Assert(pEventBallotReceived_NZ != NULL);
 	CStr strQueryString;
-	LaunchApplication(d_szNameApplicationHtml_Ballotmaster, IN strQueryString.Format("?idBallot={t_}", pEventBallotReceived_NZ->m_tsEventID));
+	LaunchApplication(d_szNameApplicationHtml_Ballotmaster, IN strQueryString.Format("?idBallot={t%}", pEventBallotReceived_NZ->m_tsEventID));
 	}
 void
 LaunchApplication_Ballotmaster(TGroup * pGroupSelect_YZ)
