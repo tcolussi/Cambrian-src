@@ -385,21 +385,9 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		}
 
 	SendStanza:
-#ifdef COMPILE_WITH_CRYPTOMANIA
- /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
-    PSZUC pszDataStanzaIN = m_paData->rgbData;
-    std::string strDataStanza =  std::string(reinterpret_cast<const char*>(pszDataStanzaIN));
-    // encrypt ussing openssl symmetric (at the moment..)
-    std::cout << "\n =====Text about to encrypt in Xcp:======== \n";
-    std::cout << pszDataStanzaIN;
-    std::string encryptedStanza=pOTX->symmetricEncStr(strDataStanza);
-    PSZUC pszDataStanza = (PSZUC) encryptedStanza.c_str();
-    std::cout << "\n ======Encrypted Text in Xcp: ===== \n";
-    std::cout << pszDataStanza;
-/*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
-#else
+
  PSZUC pszDataStanza = m_paData->rgbData;
-#endif
+
     const int cbDataStanza = m_paData->cbData;
 	Assert(cbDataStanza >= 0);
 	if (cbDataStanza <= 0)
@@ -420,7 +408,21 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		}
 	// Format the XML envelope for the XMPP protocol.
 	g_strScratchBufferSocket.BinInitFromTextSzv_VE("<$s$s to='^J'><" d_szCambrianProtocol_xcp " " d_szCambrianProtocol_Attribute_hSignature "='{h|}'>", pszStanzaType, pszStanzaAttributesExtra, pContact, &hashSignature);
-	g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanza, cbDataStanza);
+#ifdef COMPILE_WITH_CRYPTOMANIA
+ /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+    PSZUC pszDataStanzaIN = pszDataStanza;
+    std::string strDataStanza =  std::string(reinterpret_cast<const char*>(pszDataStanzaIN));
+    // encrypt ussing openssl symmetric (at the moment..)
+    std::cout << "\n =====Text about to encrypt in Xcp:======== \n";
+    std::cout << pszDataStanzaIN;
+    std::string encryptedStanza=pOTX->symmetricEncStr(strDataStanza);
+     pszDataStanza = (PSZUC) encryptedStanza.c_str();
+    std::cout << "\n ======Encrypted Text in Xcp: ===== \n";
+    std::cout << pszDataStanza;
+/*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+#endif
+
+    g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanza, cbDataStanza);
 
     // need convert the text to unsigned string...
     g_strScratchBufferSocket.BinAppendText_VE("</" d_szCambrianProtocol_xcp "></$s>", pszStanzaType);

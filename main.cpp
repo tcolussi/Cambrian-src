@@ -227,10 +227,7 @@ main(int argc, char *argv[])
 	TEST_XmlEncodingAndDecoding();
 	#endif // DEBUG
 
-    std::cout << pOTX->symmetricDecStr("bGq3XpXyagf$|j!H[oK|LO5LSri-hs%js\R~-a}%LuA80BE400f{F%^B49");
-
-
-    wMainWindow.ConfigurationLoadFromXml();
+     wMainWindow.ConfigurationLoadFromXml();
 
     #ifdef COMPILE_WITH_SPLASH_SCREEN
     wMainWindow.showMaximized();
