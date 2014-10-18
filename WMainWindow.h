@@ -123,6 +123,7 @@ void TimerQueue_CallbackRemove(PVPARAM pvParam);
 void TimerQueue_ExecuteExpiredCallbacks();
 void TimerQueue_DisplayToMessageLog();
 
+void LaunchApplication_BallotmasterVote(CEventBallotReceived * pEventBallotReceived_NZ);
 void LaunchApplication_Ballotmaster(TGroup * pGroupToSelect_YZ);
 void LaunchApplication_Channels(TGroup * pChannelToSelect_YZ);
 void LaunchApplication_GroupManager(TGroup * pGroupToSelect_YZ);

@@ -166,6 +166,8 @@ TProfile::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) co
 	return PGetRuntimeInterfaceOf_(rti, m_arraypaAccountsXmpp.PGetObjectUnique_YZ());	// If there is only one account, then return the interface of this account
 	}
 
+//	Variables used: ("N" + "F")
+
 #define d_chElementName_Accounts			'A'
 #define d_chElementName_Applications		'X'	// User-defined applications
 #define d_chElementName_Services			'S'

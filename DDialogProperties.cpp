@@ -638,6 +638,8 @@ CEventBallotReceived::DisplayDialogBallotVote(BOOL fPreviewMode)
 #define SL_DDialogBallotVote(pfmSlot)		SL_DDialog(pfmSlot, DDialogBallotVote)
 DDialogBallotVote::DDialogBallotVote(CEventBallotReceived * pEventBallotVote, BOOL fPreviewMode) : DDialogOkCancelWithLayouts("Vote", eMenuIcon_Vote)
 	{
+	Assert(pEventBallotVote != NULL);
+	Assert(pEventBallotVote->EGetEventClass() == CEventBallotReceived::c_eEventClass);
 	m_pEventBallotVote = pEventBallotVote;
 	TContact * pContactSender = pEventBallotVote->PGetContactForReply_YZ();	// Get the contact who sent the ballot
 

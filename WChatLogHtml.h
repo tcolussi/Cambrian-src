@@ -17,9 +17,11 @@ protected:
 	QWebElement m_oElementComposing;		// Where to display the HTML text of the user(s) composing text
 	TIMESTAMP m_tsMidnightNext;				// Timestamp to determine when to display a cate change in the Chat Log.
 	HOBJECT m_hSenderPreviousEvent;			// Handle of the sender who wrote the last event.
+	int m_cEventsMax;						// Maximum number of events to display.  This variable is important for performance to quickly the Chat Log without the entire history.
 
 public:
 	explicit WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup);
+	virtual ~WChatLogHtml();
 
 	void _BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventStart, IEvent ** ppEventStop);
 	void _ScrollToDisplayLastEvent();
@@ -36,6 +38,8 @@ public:
 	virtual void contextMenuEvent(QContextMenuEvent * pEventContextMenu); // From QTextEdit
 
 public slots:
+	void SL_ScrollToDisplayLastEvent();
+	void SL_SizeChanged(const QSize & size);
 	void SL_HyperlinkMouseHovering(const QUrl & url);
 	void SL_HyperlinkClicked(const QUrl & url);
 };

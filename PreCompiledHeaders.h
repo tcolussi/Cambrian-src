@@ -80,6 +80,7 @@ enum RTI_ENUM	// rti
 	eRTI_IContactAlias,
 	eRTI_TGroup,
 	eRTI_TGroupMember,
+	eRTI_TCorporation,
 
 	eRTI_ICertificate,
 	eRTI_TCertificate,
@@ -335,6 +336,7 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "TContact.h"
 #include "TGroup.h"
 #include "TChannel.h"
+#include "TCorporation.h"
 #include "TAccount.h"
 #include "IApplication.h"
 #include "TProfile.h"

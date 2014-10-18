@@ -316,13 +316,6 @@ IEventBallot::HyperlinkGetTooltipText(PSZUC pszActionOfHyperlink, IOUT CStr * ps
 	pstrTooltipText->Format("Cast your vote on this ballot!");
 	}
 #ifdef COMPILE_WITH_CHATLOG_HTML
-EGui
-IEventBallot::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
-	{
-	Assert(pszActionOfHyperlink[0] == d_chActionForEventBallot_Vote);
-	((CEventBallotReceived *)this)->DisplayDialogBallotVote();
-	return eGui_NoUpdate;
-	}
 
 #else
 //	IEventBallot::IEvent::HyperlinkClicked()
@@ -532,6 +525,20 @@ CEventBallotReceived::XmlUnserializeCore(const CXmlNode * pXmlNodeElement)
 	pXmlNodeElement->UpdateAttributeValueTimestamp(d_chXMLa_CEventBallotReceived_tsConfirmationReceipt, OUT_F_UNCH &m_tsConfirmationReceipt);
 	pXmlNodeElement->UpdateAttributeValueCStr(d_chXMLa_CEventBallotReceived_strNote, OUT_F_UNCH &m_strComment);
 	IEventBallot::XmlUnserializeCore(pXmlNodeElement);
+	}
+
+EGui
+CEventBallotReceived::HyperlinkClickedE(PSZUC pszActionOfHyperlink)
+	{
+	Assert(pszActionOfHyperlink[0] == d_chActionForEventBallot_Vote);
+	#if 0
+	// Display a dialog for the user to vote
+	((CEventBallotReceived *)this)->DisplayDialogBallotVote();
+	#else
+	// Launch the ballotmaster wit the option to vote
+	LaunchApplication_BallotmasterVote(this);
+	#endif
+	return eGui_NoUpdate;
 	}
 
 PSZUC

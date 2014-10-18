@@ -432,19 +432,32 @@ WDashboardCaption::paintEvent(QPaintEvent *)
 	rcCaption.setLeft(d_cxMarginHeaderLeft);
 	//oPainter.drawText(rcCaption, Qt::AlignVCenter, parentWidget()->windowTitle());
 	WDashboard * pwParent = (WDashboard *)parentWidget();
+	Assert(pwParent != NULL);
+	#ifdef SIMPLE_DASHBOARD
 	TProfile * pProfile = pwParent->PGetProfile_YZ();
 	if (pProfile != NULL)
 		oPainter.drawText(rcCaption, Qt::AlignVCenter, pProfile->m_strNameProfile);
+	#else
+	if (pwParent->m_paiwDashboard_NZ != NULL)
+		oPainter.drawText(rcCaption, Qt::AlignVCenter, pwParent->m_paiwDashboard_NZ->IDashboard_SGetCaption());
+	#endif
 	}
 
 #include "WNavigationTree.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+IDashboard * WDashboard::s_paiwDashboard_NZ;
+
 WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	{
 	Assert(g_pwDashboard == NULL);
 	g_pwDashboard = this;
-	m_pProfile_YZ = NULL;
+	#ifdef SIMPLE_DASHBOARD
+	s_paiwDashboard_NZ = new WDashboard_TProfiles();	// Make sure the pointer is never NULL
+	#else
+	m_paiwDashboard_NZ = NULL;
+	#endif
 	m_pItemSelected_YZ = NULL;
 	setObjectName("Dashboard");
 
@@ -504,6 +517,7 @@ WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	#endif
 	}
 
+#ifdef SIMPLE_DASHBOARD
 void
 WDashboard::ProfileSelectedChanged(TProfile * pProfile)
 	{
@@ -642,6 +656,10 @@ WDashboard::NewEventRelatedToBallot(IEventBallot * /*pEventBallot*/)
 	// Search if the ballot is already there, and if not, add it
 	//m_sections.pwSectionBalots->m_arraypaItems
 	}
+
+#else
+
+#endif // ~SIMPLE_DASHBOARD
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WDashboardSection::SHitTestInfo WDashboardSection::c_oHitTestInfoEmpty;
@@ -929,7 +947,12 @@ Dashboard_RefreshAccordingToSelectedProfile(TProfile * pProfileSelected)
 	{
 	Endorse(pProfileSelected == NULL);
 	Assert(g_pwDashboard != NULL);
+	#ifdef SIMPLE_DASHBOARD
 	g_pwDashboard->ProfileSelectedChanged(pProfileSelected);
+	#else
+	Assert(WDashboard::s_paiwDashboard_NZ != NULL);
+	WDashboard::s_paiwDashboard_NZ->IDashboard_Notify();
+	#endif
 	}
 
 //	Refresh the entire dashboard, by repopulating everything

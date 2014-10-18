@@ -428,6 +428,14 @@ LaunchApplicationWithIdentifierGroup(PSZAC pszNameApplication, TGroup * pGroup)
 	LaunchApplicationWithIdentifier(pszNameApplication, szGroupIdentifier);
 	}
 
+//	Launch the Ballotmaster with the parameter to vote for a specific poll
+void
+LaunchApplication_BallotmasterVote(CEventBallotReceived * pEventBallotReceived_NZ)
+	{
+	Assert(pEventBallotReceived_NZ != NULL);
+	CStr strQueryString;
+	LaunchApplication(d_szNameApplicationHtml_Ballotmaster, IN strQueryString.Format("?idBallot={t_}", pEventBallotReceived_NZ->m_tsEventID));
+	}
 void
 LaunchApplication_Ballotmaster(TGroup * pGroupSelect_YZ)
 	{
