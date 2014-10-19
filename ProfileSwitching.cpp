@@ -340,6 +340,7 @@ CChatConfiguration::NavigationTree_DisplayAllCertificatesToggle()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
+extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonToolbarSwitchProfile;
 
 void
 NavigationTree_UpdateNameOfSelectedProfile()
@@ -349,7 +350,11 @@ NavigationTree_UpdateNameOfSelectedProfile()
 	if (pProfileSelected == NULL)
 		pProfileSelected = (TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementUnique_YZ();
 	if (pProfileSelected != NULL && g_pTreeItemProfiles == NULL)
+		{
 		g_strScratchBufferStatusBar.Format(d_sza_Profile": $S", &pProfileSelected->m_strNameProfile);
+		if (g_pwButtonToolbarSwitchProfile != NULL)
+			g_pwButtonToolbarSwitchProfile->setText(pProfileSelected->m_strNameProfile);
+		}
 	else
 		g_strScratchBufferStatusBar.Format("Switch " d_sza_Profile);
 	#ifndef COMPILE_WITH_SPLASH_SCREEN

@@ -75,6 +75,17 @@ enum EMenuIcon			// Must be in sync with c_mapepszIconResources[]
 	eMenuIcon_GoBack,
 	eMenuIcon_GoForward,
 
+	eMenuIcon_Toolbar_GoBack,
+	eMenuIcon_Toolbar_GoForward,
+	eMenuIcon_Toolbar_Reload,
+	eMenuIcon_Toolbar_Find,
+	eMenuIcon_Toolbar_SocietyPro,
+	eMenuIcon_Toolbar_Grid,
+	eMenuIcon_Toolbar_Friends,
+	eMenuIcon_Toolbar_Messages,
+	eMenuIcon_Toolbar_Notifications,
+	eMenuIcon_Toolbar_Overflow,
+
 	eMenuIcon_Close,
 	eMenuIcon_Quit,
 	eMenuIcon_Menu,

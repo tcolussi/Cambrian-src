@@ -183,7 +183,7 @@ WButtonIconForToolbar::WButtonIconForToolbar(PA_PARENT QWidget * pwParent, EMenu
 WButtonIconForToolbar::WButtonIconForToolbar(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon)
 	{
 	Assert(poParentLayout != NULL);
-	poParentLayout->addWidget(PA_CHILD this);;
+	poParentLayout->addWidget(PA_CHILD this);
 	_Init(eMenuIcon);
 	}
 
@@ -208,11 +208,36 @@ WButtonIconForToolbar::_Init(EMenuIcon eMenuIcon)
 WButtonIconForToolbarWithDropDownMenu::WButtonIconForToolbarWithDropDownMenu(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon, PSZAC pszmButtonTextAndToolTip) : WButtonIconForToolbar(pwParent, eMenuIcon)
 	{
 	setText(pszmButtonTextAndToolTip);
-	setStyleSheet("QToolButton { border: none; padding: 1 10 1 1; }");		// Add 10 pixels to the left for the drop down arrow
+	_InitStyleForDropdownMenu();
+	}
+
+WButtonIconForToolbarWithDropDownMenu::WButtonIconForToolbarWithDropDownMenu(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon, PSZAC pszmButtonTextAndToolTip)  : WButtonIconForToolbar(poParentLayout, eMenuIcon)
+	{
+	setText(pszmButtonTextAndToolTip);
+	_InitStyleForDropdownMenu();
+	}
+
+void
+WButtonIconForToolbarWithDropDownMenu::_InitStyleForDropdownMenu(BOOL fHideArrowOfDropDownMenu)
+	{
+	setStyleSheet(fHideArrowOfDropDownMenu ?
+		"QToolButton { border: none; } QToolButton::menu-indicator { image: none; }" :
+		"QToolButton { border: none; padding: 1 10 1 1; }");		// Add 10 pixels to the left for the drop down arrow
 	setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	setPopupMode(QToolButton::InstantPopup);
 	setMenu(PA_CHILD new WMenu);
 	}
+
+WButtonIconForToolbarWithDropDownMenuNoArrow::WButtonIconForToolbarWithDropDownMenuNoArrow(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon) : WButtonIconForToolbarWithDropDownMenu(pwParent, eMenuIcon, NULL)
+	{
+	_InitStyleForDropdownMenu(TRUE);
+	}
+
+WButtonIconForToolbarWithDropDownMenuNoArrow::WButtonIconForToolbarWithDropDownMenuNoArrow(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon) : WButtonIconForToolbarWithDropDownMenu(poParentLayout, eMenuIcon, NULL)
+	{
+	_InitStyleForDropdownMenu(TRUE);
+	}
+
 
 WButtonText::WButtonText(PSZAC pszmButtonTextAndToolTip)
 	{
@@ -497,6 +522,19 @@ WEditSearch::WEditSearch()
 	//setMinimumSize(40, 30);
 
 	// See http://aseigo.blogspot.com/2006/08/sweep-sweep-sweep-ui-floor.html for improvement of the search
+	}
+
+WEditSearch::WEditSearch(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon, PSZAC pszWatermark)
+	{
+	Assert(poParentLayout != NULL);
+	poParentLayout->addWidget(PA_CHILD this);
+	QToolButton * pwButtonSearch = new WButtonIconForToolbar(this, eMenuIcon);
+	pwButtonSearch->setCursor(Qt::ArrowCursor);
+	pwButtonSearch->setStyleSheet("QToolButton { border: none; padding: 3 1 1 3; }");	// Pad 3 pixels to the left
+	//pwButtonSearch->setFocusPolicy(Qt::NoFocus);
+
+	setStyleSheet("QLineEdit { padding: 2px 2px 2px 20px; } ");
+	Edit_SetWatermark(pszWatermark);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -103,6 +103,16 @@ class WButtonIconForToolbarWithDropDownMenu : public WButtonIconForToolbar
 {
 public:
 	WButtonIconForToolbarWithDropDownMenu(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon, PSZAC pszmButtonTextAndToolTip);
+	WButtonIconForToolbarWithDropDownMenu(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon, PSZAC pszmButtonTextAndToolTip);
+
+	void _InitStyleForDropdownMenu(BOOL fHideArrowOfDropDownMenu = FALSE);
+};
+
+class WButtonIconForToolbarWithDropDownMenuNoArrow : public WButtonIconForToolbarWithDropDownMenu
+{
+public:
+	WButtonIconForToolbarWithDropDownMenuNoArrow(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon);
+	WButtonIconForToolbarWithDropDownMenuNoArrow(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon);
 };
 
 class WButtonText : public QPushButton
@@ -213,6 +223,7 @@ protected:
 
 public:
 	WEditSearch();
+	WEditSearch(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon, PSZAC pszWatermark);
 };
 
 

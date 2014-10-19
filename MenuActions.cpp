@@ -947,3 +947,98 @@ ITreeItem::TreeItem_EDisplayContextMenu(const EMenuActionByte rgzeMenuActions[])
 	oMenu.ActionsAdd(rgzeMenuActions);
 	return TreeItem_EDoMenuAction(oMenu.EDisplayContextMenu());
 	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#define d_cxIndicatorWidth		10
+#define d_cyIndicatorHeight		10
+
+WMenuWithIndicator::WMenuWithIndicator(QToolButton * pwIndicator) : QMenu(NULL)
+	{
+	Assert(pwIndicator != NULL);
+	m_pwIndicator = pwIndicator;
+	QMargins oMargins = contentsMargins();
+	oMargins.setTop(d_cyIndicatorHeight);
+	setContentsMargins(oMargins);
+	pwIndicator->setMenu(this);
+	}
+
+const QPoint c_ptZero;
+
+int
+Widget_GetPositionAbsoluteX(QWidget * pwWidget)
+	{
+	Assert(pwWidget != NULL);
+	return pwWidget->mapToGlobal(c_ptZero).x();
+	}
+
+QSize
+WMenuWithIndicator::InitPolygon(BOOL fInitForPainting)
+	{
+	QSize size = QMenu::sizeHint();
+	int cxHeight = size.height(); // + d_cyIndicatorHeight + 2;
+	size.setHeight(cxHeight);
+
+	int cxWidth = size.width();
+	int xRight = cxWidth - fInitForPainting;
+
+	// Calculate the relative position of the indicator with respect to the menu
+	int xMenuLeft = Widget_GetPositionAbsoluteX(this);
+	//int xMenuRight = xMenuLeft + cxWidth;
+	int xParentLeft = Widget_GetPositionAbsoluteX(m_pwIndicator);
+	//int xParentRight = xParentLeft + m_pwIndicator->width();
+
+
+	//int xIndicator = (xParentLeft + m_pwIndicator->width() / 2) - (xMenuLeft + cxWidth / 2);
+	int cxHalfWidthIndicator = m_pwIndicator->width() / 2;
+	int xIndicator = (xParentLeft + cxHalfWidthIndicator) - xMenuLeft;
+	//MessageLog_AppendTextFormatCo(d_coRed, "xMenu = $i, xParent = $i, xIndicator = $i\n", xMenuLeft, xParentLeft, xIndicator);
+
+	int xIndicatorEnd = xIndicator + d_cxIndicatorWidth - fInitForPainting;
+	if (xIndicatorEnd > xRight)
+		xIndicatorEnd = xRight;
+
+	int xIndicatorBegin = xIndicator - d_cxIndicatorWidth + fInitForPainting;
+	if (xIndicatorBegin <= 0)
+		{
+		xIndicatorBegin = fInitForPainting;
+		xIndicator = cxHalfWidthIndicator;
+		}
+
+	//xIndicator = (xIndicatorBegin + xIndicatorEnd) / 2;
+
+	m_oPolygon.setPoints(8,
+		0, d_cyIndicatorHeight,
+		xIndicatorBegin, d_cyIndicatorHeight,
+		xIndicator, fInitForPainting,
+		xIndicatorEnd, d_cyIndicatorHeight,
+		xRight, d_cyIndicatorHeight,
+		xRight, cxHeight - fInitForPainting,
+		0, cxHeight - fInitForPainting,
+		0, d_cyIndicatorHeight
+		);
+	return size;
+	}
+
+QSize
+WMenuWithIndicator::sizeHint() const
+	{
+	WMenuWithIndicator * pwThis = (WMenuWithIndicator *)this;
+	QSize size = pwThis->InitPolygon();
+	QRegion oRegion(m_oPolygon, Qt::OddEvenFill);
+	pwThis->setMask(oRegion);
+	//pwThis->raise();
+	//pwThis->activateWindow();
+	//m_pwIndicator->repaint();
+	return size;
+	}
+
+void
+WMenuWithIndicator::paintEvent(QPaintEvent * pEventPaint)
+	{
+	QMenu::paintEvent(pEventPaint);	// Draw the menu as usual
+	QPainter oPainter(this);
+	oPainter.setPen(d_coGray);
+	//oPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+	InitPolygon(TRUE);
+	oPainter.drawPolyline(m_oPolygon);
+	}

@@ -237,6 +237,20 @@ public:
 	static QAction * s_pActionCurrentlyProcessedByMainWindow;	// Pointer to the action currently being processed by the WMainWindow
 }; // WMenu
 
+class WMenuWithIndicator : public QMenu
+{
+protected:
+	QToolButton * m_pwIndicator;		// Widget where the indicator should point to.  This is typically the 'parent' of the menu
+	QPolygon m_oPolygon;
+
+public:
+	WMenuWithIndicator(QToolButton * pwIndicator);
+	virtual QSize sizeHint() const;
+	virtual void paintEvent(QPaintEvent *);
+
+	QSize InitPolygon(BOOL fInitForPainting = FALSE);
+};
+
 extern QMenuBar * g_pwMenuBar;
 extern WMenu * g_pwMenuStatus;
 extern WMenu * g_pwMenuCambrian;

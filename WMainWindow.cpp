@@ -15,6 +15,7 @@
 #include "WDashboard.h"
 #include "WLayoutContainer.h"
 #include "WLayoutBrowser.h"
+#include "WToolbar.h"
 #include <QSound>
 #include <iostream>
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
@@ -270,6 +271,7 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	g_hwndMainWindow = (HWND)winId();
 	#endif
 	g_pwMenuBar = new QMenuBar;
+	g_pwMenuBar->hide();
 	g_pwStatusBar = new QStatusBar;
 	//g_pwStatusBar->setStyleSheet("border: 1px solid red;");
 	m_cTimerEvents = 0;
@@ -313,11 +315,13 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	void Menu_InitializeAllMenuActionsHavingAccelerators();
 	Menu_InitializeAllMenuActionsHavingAccelerators();
 
+	addToolBar(PA_CHILD new WToolbar);
+
 	addDockWidget(Qt::LeftDockWidgetArea, PA_CHILD new WNavigationTree);
 	#if 1
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
 	#endif
-	#if 1
+	#if 0
 	addDockWidget(Qt::TopDockWidgetArea, PA_CHILD new WQmlToolbar);
 	#endif
 
