@@ -222,9 +222,9 @@ public:
 	void ActionAddWithSeparator(EMenuAction eMenuAction);
 	void ActionsAdd(const EMenuActionByte rgzeMenuActions[]);
 	void ActionsAddSubMenu(EMenuAction eMenuActionSubMenuName, const EMenuActionByte rgzeActionsSubMenuItems[]);
-	void ActionAddFromText(PSZUC pszText, int idAction, EMenuAction eMenuIcon);
+	void ActionAddFromText(PSZUC pszText, int idAction, EMenuIcon eMenuIcon);
 	void ActionSetCheck(EMenuAction eMenuAction, BOOL fuChecked);
-	WMenu * PMenuAdd(PSZAC pszText, EMenuAction eMenuIcon);
+	WMenu * PMenuAdd(PSZAC pszText, EMenuIcon eMenuIcon);
 
 	void InitAsDymanicMenu();
 	void _ConnectActionsToMainWindow();

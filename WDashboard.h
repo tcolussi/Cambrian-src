@@ -6,25 +6,6 @@
 
 class WDashboard;
 
-//	Class having a 'boundary rectangle' where the painter is allowed to draw.
-//	A typical use of this class is to paint a cell in a grid.
-class CPainterCell : public OPainter
-{
-public:
-	QRect m_rcCell;
-
-public:
-	CPainterCell(QPaintDevice * poPaintDevice): OPainter(poPaintDevice) { }
-
-	void DrawTextWithinCell(const QString & sText);
-	void DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...);
-	void DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle);
-	int DrawNumberWithinCircle(int nNumber);
-	void DrawIconLeft(const QIcon & oIcon);
-	void DrawIconLeft(EMenuIcon eMenuIcon);
-	void FillRect0(QRGB coBackgroundFill);
-};
-
 //	Interface to draw one item on the dashboard
 class CDashboardSectionItem	// (item)
 {

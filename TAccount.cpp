@@ -434,7 +434,11 @@ TAccountXmpp::Socket_ConnectUI(ISocketUI * piSocketUI, BOOL fCreateAccount)
 	Endorse(piSocketUI == NULL);
 	PSZUC pszMessageConnecting = TreeItemAccount_SetIconConnectingToServer_Gsb();
 	if (piSocketUI == NULL)
+		{
+		#if 0
 		StatusBar_SetTextU(pszMessageConnecting);
+		#endif
+		}
 	else
 		piSocketUI->SocketUI_DisplayMessage(eSeverityInfoTextBlack, pszMessageConnecting);	// Display the message to the user before creating the socket (the creation of the socket is CPU intensive, and the 0.5 second delay will be noticeable by the user)
 	if (m_paSocket == NULL)

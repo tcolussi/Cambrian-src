@@ -516,16 +516,17 @@ WMenu::ActionsAddSubMenu(EMenuAction eMenuActionSubMenuName, const EMenuActionBy
 	}
 
 void
-WMenu::ActionAddFromText(PSZUC pszText, int idAction, EMenuAction eMenuIcon)
+WMenu::ActionAddFromText(PSZUC pszText, int idAction, EMenuIcon eMenuIcon)
 	{
-	QAction * pAction = addAction(GetMenuIcon(eMenuIcon), (CString)pszText);
+	QAction * pAction = addAction(OGetIcon(eMenuIcon), (CString)pszText);
 	pAction->setData(idAction);
 	}
 
 void
 WMenu::ActionAdd(EMenuAction eMenuAction, PSZAC pszText)
 	{
-	ActionAddFromText((PSZUC)pszText, eMenuAction, eMenuAction);
+	QAction * pAction = addAction(GetMenuIcon(eMenuAction), (CString)pszText);
+	pAction->setData(eMenuAction);
 	}
 
 void
@@ -557,9 +558,9 @@ WMenu::ActionSetCheck(EMenuAction eMenuAction, BOOL fuChecked)
 	}
 
 WMenu *
-WMenu::PMenuAdd(PSZAC pszText, EMenuAction eMenuIcon)
+WMenu::PMenuAdd(PSZAC pszText, EMenuIcon eMenuIcon)
 	{
-	return (WMenu *)addMenu(GetMenuIcon(eMenuIcon), pszText);
+	return (WMenu *)addMenu(OGetIcon(eMenuIcon), pszText);
 	}
 
 
@@ -758,7 +759,7 @@ MenuBarInitialize(WMenu * pMenu)
         if (prgzeActions == c_rgzeActionsMenuAdvanced)
             {
 			MessageLog_AppendTextFormatCo(d_coBlueDark, "MenuBarInitialize()\n");
-            pMenu = pMenu->PMenuAdd(c_mapepszmMenuActions[eMenuAction_WikiSubMenu], eMenuAction_WikiSubMenu);
+			pMenu = pMenu->PMenuAdd(c_mapepszmMenuActions[eMenuAction_WikiSubMenu], eMenuIcon_Browser);
             pMenu->ActionsAdd(c_rgzeActionsMenuWiki);
             }
         }
@@ -1026,9 +1027,12 @@ WMenuWithIndicator::sizeHint() const
 	QSize size = pwThis->InitPolygon();
 	QRegion oRegion(m_oPolygon, Qt::OddEvenFill);
 	pwThis->setMask(oRegion);
-	//pwThis->raise();
+	/*
+	ensurePolished();
+	pwThis->raise();
 	//pwThis->activateWindow();
-	//m_pwIndicator->repaint();
+	m_pwIndicator->repaint();
+	*/
 	return size;
 	}
 
@@ -1040,5 +1044,9 @@ WMenuWithIndicator::paintEvent(QPaintEvent * pEventPaint)
 	oPainter.setPen(d_coGray);
 	//oPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 	InitPolygon(TRUE);
+	#if 1
 	oPainter.drawPolyline(m_oPolygon);
+	#else
+	oPainter.drawConvexPolygon(m_oPolygon);
+	#endif
 	}

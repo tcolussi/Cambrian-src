@@ -213,11 +213,14 @@ void
 WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventStart, IEvent ** ppEventStop)
 	{
 	Assert(pbinHtml != NULL);
-	Assert(ppEventStart < ppEventStop);
+	Assert(ppEventStart <= ppEventStop);
 	Assert(m_cEventsMax > 0);
-	int cEvents = ppEventStop - ppEventStart;
+	#ifdef DEBUG
 	int cbStart = pbinHtml->CbGetData();
-
+	#endif
+	int cEvents = ppEventStop - ppEventStart;
+	if (cEvents <= 0)
+		return;	// Nothing to do (this is the typical case of an empty Chat Log
 	IEvent ** ppEventTemp = ppEventStop - m_cEventsMax;	// Limit the number of events to display
 	if (ppEventTemp > ppEventStart)
 		{
@@ -247,6 +250,7 @@ WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventSta
 			m_tsMidnightNext = QDateTime(date).toMSecsSinceEpoch() + d_ts_cDays;	// I am sure there is a more elegant way to strip the time from a date, however at the moment I don't have time to investigate a better solution (and this code works)
 			QString sDate = date.toString("dddd, MMMM d, yyyy");
 			pbinHtml->BinAppendText_VE("<div class='dd'><hr class='dd'/><div class='ddd'>$Q</div></div>", &sDate);
+			m_hSenderPreviousEvent = d_zNA;	// Force the sender to be re-displayed
 			}
 
 		m_hSenderPreviousEvent = pEvent->AppendHtmlForChatLog_HAppendHeader(IOUT pbinHtml, m_hSenderPreviousEvent);
@@ -255,11 +259,10 @@ WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventSta
 		pbinHtml->BinAppendText("</span></div>");
 		} // while
 
-	if (cEvents > 0)
-		{
-		int cbData = pbinHtml->CbGetData() - cbStart;
-		MessageLog_AppendTextFormatSev(eSeverityNoise, "$I events required $I bytes of HTML code ($I bytes per event)\n", cEvents, cbData, cbData / cEvents);
-		}
+	#ifdef DEBUG
+	int cbData = pbinHtml->CbGetData() - cbStart;
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "$I events required $I bytes of HTML code ($I bytes per event)\n", cEvents, cbData, cbData / cEvents);
+	#endif
 	} // _BinAppendHtmlForEvents()
 
 const char c_szHtmlMessageDelivered[] = "<img src='qrc:/ico/Delivered' style='float:right'/>";

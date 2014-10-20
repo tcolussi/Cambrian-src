@@ -57,12 +57,13 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 	"ContactAdd",		// eMenuIcon_ContactAdd
 	"Contact",			// eMenuIcon_Contact
 	"Group",			// eMenuIcon_Group
+	"GroupAdd",			// eMenuIcon_GroupAdd
 
 	"Deleted",			// eMenuIcon_RecycleBin
 	"Hashtag",			// eMenuIcon_HashtagBlack
 
 	"Copy",				// eMenuIcon_Copy
-	"Find",				// eMenuIcon_Find,
+	"Find",				// eMenuIcon_Find
 	"Forward",			// eMenuIcon_MessageEnvelopeForward (old: eMenuAction_ContactInvite)
 	"FileUpload",		// eMenuIcon_FileUpload
 	"Vote",				// eMenuIcon_Vote (old: eMenuAction_BallotSend)
@@ -80,11 +81,19 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 	":/images/ui/refreshPageIcon.png", // eMenuIcon_Toolbar_Reload
 	":/images/ui/magIcon.png", // eMenuIcon_Toolbar_Find
 	"SocietyPro", // eMenuIcon_Toolbar_SocietyPro
+	"Pantheon", // eMenuIcon_Toolbar_Pantheon
 	":/images/ui/applicationsIcon.png", // eMenuIcon_Toolbar_Grid
 	":/images/ui/peersIcon.png", // eMenuIcon_Toolbar_Friends
 	":/images/ui/messagesIcon.png", // eMenuIcon_Toolbar_Messages
 	":/images/ui/notificationsIcon.png", // eMenuIcon_Toolbar_Notifications
 	":/images/ui/moreIcon.png", // eMenuIcon_Toolbar_Overflow
+
+	":/images/ui/tabLeftBorder.png", // eMenuIcon_ToolbarTab_EdgeLeft
+	":/images/ui/tabRightBorder.png", // eMenuIcon_ToolbarTab_EdgeRight
+	":/images/ui/currentTabLeftBorder.png", // eMenuIcon_ToolbarTab_EdgeLeftSelected
+	":/images/ui/currentTabRightBorder.png", // eMenuIcon_ToolbarTab_EdgeRightSelected
+	":/images/ui/addTabButtonNormal.png", // eMenuIcon_ToolbarTab_New
+	":/images/ui/addTabButtonHovered.png", // eMenuIcon_ToolbarTab_NewHover
 
 	"Close",			// eMenuIcon_Close
 	"Quit",				// eMenuIcon_Quit

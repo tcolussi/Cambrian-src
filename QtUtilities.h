@@ -630,13 +630,39 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class OPainter : public QPainter
+class CPainter : public QPainter
 {
 public:
-	OPainter(QPaintDevice * poPaintDevice) : QPainter(poPaintDevice) { }
+	CPainter(QPaintDevice * pPaintDevice) : QPainter(pPaintDevice) { }
 	void DrawLineHorizontal(int xLeft, int xRight, int yPos);
 	void DrawLineVertical(int xPos, int yTop, int yBottom);
 	void FillRectWithGradientVertical(const QRect & rcFill, QRGB coTop, QRGB coBottom);
+};
+
+//	Class having a 'boundary rectangle' where the painter is allowed to draw.
+//	A typical use of this class is to paint a cell in a grid.
+class CPainterCell : public CPainter
+{
+public:
+	QRect m_rcCell;
+
+public:
+	CPainterCell(QWidget * pwWidget);
+	void DrawTextWithinCell(const QString & sText);
+	void DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...);
+
+	void DrawIconAdjustLeft(const QIcon & oIcon);
+	void DrawIconAdjustLeft(EMenuIcon eMenuIcon);
+
+	void DrawIconAlignment(const QIcon & oIcon, Qt::Alignment eAlignment);
+	void DrawIconAlignment(EMenuIcon eMenuIcon, Qt::Alignment eAlignment);
+	void DrawIconAlignmentLeftBottom(EMenuIcon eMenuIcon);
+	void DrawIconAlignmentRightBottom(EMenuIcon eMenuIcon);
+
+	// Specific methods
+	void DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle);
+	int DrawNumberWithinCircle(int nNumber);
+	void FillRect0(QRGB coBackgroundFill);
 };
 
 

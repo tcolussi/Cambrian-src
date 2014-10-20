@@ -310,12 +310,12 @@ WNavigationTree::SL_MenuProfilesShow()
 		{
 		TProfile * pProfile = prgpProfiles[iProfile];
 		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
-		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIconProfile);
+		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIcon_ClassProfile);
 		}
 	#ifndef COMPILE_WITH_SPLASH_SCREEN
 	if (cProfiles > 1)
-		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All " d_sza_Profile "s>", d_iProfile_DisplayAll, eMenuIconProfile);
-	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<New Role...>", d_iProfile_CreateNew, eMenuIconProfile);
+		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All " d_sza_Profile "s>", d_iProfile_DisplayAll, eMenuIcon_ClassProfile);
+	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<New Role...>", d_iProfile_CreateNew, eMenuIcon_ClassProfile);
 	#else
 	// Code specific for the button Switch Role
 

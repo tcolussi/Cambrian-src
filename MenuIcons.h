@@ -58,6 +58,7 @@ enum EMenuIcon			// Must be in sync with c_mapepszIconResources[]
 	eMenuIcon_ContactAdd,
 	eMenuIcon_Contact,
 	eMenuIcon_Group,
+	eMenuIcon_GroupAdd,
 
 	eMenuIcon_RecycleBin,
 	eMenuIcon_HashtagBlack,
@@ -80,11 +81,19 @@ enum EMenuIcon			// Must be in sync with c_mapepszIconResources[]
 	eMenuIcon_Toolbar_Reload,
 	eMenuIcon_Toolbar_Find,
 	eMenuIcon_Toolbar_SocietyPro,
+	eMenuIcon_Toolbar_Pantheon,
 	eMenuIcon_Toolbar_Grid,
 	eMenuIcon_Toolbar_Friends,
 	eMenuIcon_Toolbar_Messages,
 	eMenuIcon_Toolbar_Notifications,
 	eMenuIcon_Toolbar_Overflow,
+
+	eMenuIcon_ToolbarTab_EdgeLeft,
+	eMenuIcon_ToolbarTab_EdgeRight,
+	eMenuIcon_ToolbarTab_EdgeLeftSelected,
+	eMenuIcon_ToolbarTab_EdgeRightSelected,
+	eMenuIcon_ToolbarTab_New,
+	eMenuIcon_ToolbarTab_NewHover,
 
 	eMenuIcon_Close,
 	eMenuIcon_Quit,

@@ -73,7 +73,11 @@ ISocketUI::SocketUI_DisplayMessage(ESeverity eSeverity, PSZUC pszuTextMessage)
 		m_pwEditSocketMessageLog_YZ->repaint();		// Force the widget to redraw itself
 		}
 	else if (eSeverity > eSeverityNoise)
+		{
+		#if 0
 		StatusBar_DisplayFunctionDefault(eSeverity, pszuTextMessage);
+		#endif
+		}
 	if (eSeverity >= eSeverityErrorWarning)
 		{
 		SetCursorRestoreDefault();	// When there is an error, remove the wait cursor otherwise the user will be waiting for the UI to complete

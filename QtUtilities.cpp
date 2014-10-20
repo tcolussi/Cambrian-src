@@ -2312,10 +2312,82 @@ CFileOpenWrite::CFileOpenWrite(const CStr & strFileName) : CFile(strFileName)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void
-OPainter::FillRectWithGradientVertical(const QRect & rcFill, QRGB coTop, QRGB coBottom)
+CPainter::DrawLineHorizontal(int xLeft, int xRight, int yPos)
+	{
+	drawLine(xLeft, yPos, xRight, yPos);
+	}
+
+void
+CPainter::DrawLineVertical(int xPos, int yTop, int yBottom)
+	{
+	drawLine(xPos, yTop, xPos, yBottom);
+	}
+
+void
+CPainter::FillRectWithGradientVertical(const QRect & rcFill, QRGB coTop, QRGB coBottom)
 	{
 	QLinearGradient oGradient(0, 0, 0, rcFill.height());
 	oGradient.setColorAt(0, coTop);
 	oGradient.setColorAt(1, coBottom);
 	fillRect(rcFill, oGradient);
+	}
+
+CPainterCell::CPainterCell(QWidget * pwWidget) : CPainter(pwWidget)
+	{
+	Assert(pwWidget != NULL);
+	m_rcCell = pwWidget->rect();
+	}
+
+void
+CPainterCell::DrawTextWithinCell(const QString & sText)
+	{
+	drawText(IN m_rcCell, Qt::AlignVCenter, sText);
+	}
+
+void
+CPainterCell::DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...)
+	{
+	va_list vlArgs;
+	va_start(OUT vlArgs, pszFmtTemplate);
+	g_strScratchBufferStatusBar.Format_VL(pszFmtTemplate, vlArgs);
+	DrawTextWithinCell(g_strScratchBufferStatusBar);
+	}
+
+void
+CPainterCell::DrawIconAdjustLeft(const QIcon & oIcon)
+	{
+	QRect rcIcon = m_rcCell;
+	rcIcon.setWidth(16);		// This assumes icons are 16 pixels
+	oIcon.paint(this, rcIcon);
+	m_rcCell.setLeft(m_rcCell.left() + 19);
+	}
+
+void
+CPainterCell::DrawIconAdjustLeft(EMenuIcon eMenuIcon)
+	{
+	DrawIconAdjustLeft(OGetIcon(eMenuIcon));
+	}
+
+void
+CPainterCell::DrawIconAlignment(const QIcon & oIcon, Qt::Alignment eAlignment)
+	{
+	oIcon.paint(this, m_rcCell, eAlignment);
+	}
+
+void
+CPainterCell::DrawIconAlignment(EMenuIcon eMenuIcon, Qt::Alignment eAlignment)
+	{
+	DrawIconAlignment(OGetIcon(eMenuIcon), eAlignment);
+	}
+
+void
+CPainterCell::DrawIconAlignmentLeftBottom(EMenuIcon eMenuIcon)
+	{
+	DrawIconAlignment(eMenuIcon, Qt::AlignLeft | Qt::AlignBottom);
+	}
+
+void
+CPainterCell::DrawIconAlignmentRightBottom(EMenuIcon eMenuIcon)
+	{
+	DrawIconAlignment(eMenuIcon, Qt::AlignRight | Qt::AlignBottom);
 	}

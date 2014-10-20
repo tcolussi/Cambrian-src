@@ -4,7 +4,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-class OPainterGridCell : public OPainter
+class OPainterGridCell : public CPainter
 {
 public:
 	QRect m_rcCell;
