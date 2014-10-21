@@ -156,8 +156,10 @@ const PSZAC c_mapepszmMenuActions[eMenuActionMax] =
 
 	"Backup Configuration..." _ "i=FileSaveAs" _ "s=Save the current configuration into a backup file" _, // eMenuAction_ConfigurationSaveAsXmlFile
 	"Restore Configuration..." _ "i=FileOpen" _ "s=Restore a previously saved backup" _, // eMenuAction_ConfigurationOpenFromXmlFile
-
-	"Close" _ "i=Close" _ "s=Close the window" _, // eMenuAction_Close
+    #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    "Select default OT Server" _ "i=contractOtServer" _ "s= OT Server contracts management screen" _, // eMenuAction_OpenOTServerContrat
+    #endif
+    "Close" _ "i=Close" _ "s=Close the window" _, // eMenuAction_Close
 	"Quit" _ "a=Ctrl+Q" _ "i=Quit" _ "s=Logout and Exit" _, // eMenuAction_Quit
 
 	///////////////////////////////////
@@ -707,11 +709,14 @@ const EMenuActionByte c_rgzeActionsMenuAdvanced[] =
 	eMenuAction_ConfigurationOpenFromXmlFile,
 	eMenuActionSeparator,
 	eMenuAction_DisplayProfileInfo,
-	eMenuAction_DisplayCertificates,
-
+	eMenuAction_DisplayCertificates,    
 	eMenuActionSeparator,
-	//eMenuAction_WikiSubMenu, // added manually c_rgzeActionsMenuWiki[]
-	ezMenuActionNone
+    //eMenuAction_WikiSubMenu, // added manually c_rgzeActionsMenuWiki[]
+
+    #ifdef COMPILE_WITH_CRYPTOMANIA
+    eMenuAction_OpenOTServerContrat,
+    #endif
+    ezMenuActionNone,
 	};
 
 const EMenuActionByte c_rgzeActionsMenuWiki[] =
@@ -872,13 +877,15 @@ MainWindow_MenuActionExecute(QAction * pAction)
 		NavigationTree_DisplayProfilesToogle();
 		return;
 	case eMenuAction_DisplayCertificates:
-		g_oConfiguration.NavigationTree_DisplayAllCertificatesToggle();
-		return;
-	case eMenuAction_DisplayWallet:
+        g_oConfiguration.NavigationTree_DisplayAllCertificatesToggle();
+        return;
+    case eMenuAction_OpenOTServerContrat:
+        pOTX->openContractOTServerScreen();
+    case eMenuAction_DisplayWallet:
 		g_oConfiguration.NavigationTree_DisplayWallet();
 		return;
 	case eMenuAction_DisplaySecureWebBrowsing:
-		//void NavigationTree_NewBrowser();
+        //void NavigationTree_NewBrowser();
 		//NavigationTree_NewBrowser();
 		void NavigationTree_NewTabbedBrowser();
 		NavigationTree_NewTabbedBrowser();

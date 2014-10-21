@@ -16,7 +16,7 @@ OJapiApps::ballotmaster()
 	{
 	//MessageLog_AppendTextFormatCo(d_coGreen, "apps()");
 	return m_poCambrian->polls();
-	}
+    }
 
 POJapiAppChat
 OJapiApps::chat()

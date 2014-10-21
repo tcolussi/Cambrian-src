@@ -32,11 +32,11 @@
 #include <QClipboard>
 #include <qdebug>
 #include <string>
-
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <string.h>
+#include <zlib.h>
 
 static OTCaller           passwordCaller;
 static MTPasswordCallback passwordCallback;
@@ -78,6 +78,94 @@ bool OTX_WRAP::SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup
     return true;
 }
 
+// private compression and decompression functions to support encoded strings
+/** Compress a STL string using zlib with given compression level and return
+  * the binary data. */
+
+std::string OTX_WRAP::compress_string(const std::string& str,
+                            int compressionlevel)
+{
+    z_stream zs;                        // z_stream is zlib's control structure
+    memset(&zs, 0, sizeof(zs));
+
+    if (deflateInit(&zs, compressionlevel) != Z_OK)
+        throw(std::runtime_error("deflateInit failed while compressing."));
+
+    zs.next_in = (Bytef*)str.data();
+    zs.avail_in = str.size();           // set the z_stream's input
+
+    int ret;
+    char outbuffer[32768];
+    std::string outstring;
+
+    // retrieve the compressed bytes blockwise
+    do {
+        zs.next_out = reinterpret_cast<Bytef*>(outbuffer);
+        zs.avail_out = sizeof(outbuffer);
+
+        ret = deflate(&zs, Z_FINISH);
+
+        if (outstring.size() < zs.total_out) {
+            // append the block to the output string
+            outstring.append(outbuffer,
+                             zs.total_out - outstring.size());
+        }
+    } while (ret == Z_OK);
+
+    deflateEnd(&zs);
+
+    if (ret != Z_STREAM_END) {          // an error occurred that was not EOF
+        std::ostringstream oss;
+        oss << "Exception during zlib compression: (" << ret << ") " << zs.msg;
+        throw(std::runtime_error(oss.str()));
+    }
+
+    return outstring;
+}
+
+/** Decompress an STL string using zlib and return the original data. */
+std::string OTX_WRAP::decompress_string(const std::string& str)
+{
+    z_stream zs;                        // z_stream is zlib's control structure
+    memset(&zs, 0, sizeof(zs));
+
+    if (inflateInit(&zs) != Z_OK)
+        throw(std::runtime_error("inflateInit failed while decompressing."));
+
+    zs.next_in = (Bytef*)str.data();
+    zs.avail_in = str.size();
+
+    int ret;
+    char outbuffer[32768];
+    std::string outstring;
+
+    // get the decompressed bytes blockwise using repeated calls to inflate
+    do {
+        zs.next_out = reinterpret_cast<Bytef*>(outbuffer);
+        zs.avail_out = sizeof(outbuffer);
+
+        ret = inflate(&zs, 0);
+
+        if (outstring.size() < zs.total_out) {
+            outstring.append(outbuffer,
+                             zs.total_out - outstring.size());
+        }
+
+    } while (ret == Z_OK);
+
+    inflateEnd(&zs);
+
+    if (ret != Z_STREAM_END) {          // an error occurred that was not EOF
+        std::ostringstream oss;
+        oss << "Exception during zlib decompression: (" << ret << ") "
+            << zs.msg;
+        throw(std::runtime_error(oss.str()));
+    }
+
+    return outstring;
+}
+
+
 // Symetric Encryption functions
 
 // symmetric encryption using standard strings
@@ -86,22 +174,98 @@ std::string OTX_WRAP::symmetricEncStr(std::string plainText)
 {
 
   unsigned char * plainTextUCH = (unsigned char *)plainText.c_str();
-  unsigned char theEncryptedText[255];
-  this->symmetricEncrypt(plainTextUCH,theEncryptedText);
-  std::string encStr = std::string(reinterpret_cast<const char*>(theEncryptedText));
-  return encStr;
+  unsigned char theEncryptedText[1024];
+  int encrypted_len=this->symmetricEncrypt(plainTextUCH,theEncryptedText);
+  //std::string encStr = std::string(reinterpret_cast<const char*>(theEncryptedText));
+  // Encode with ascii ints the just encrypted text in order to made it compatible with Xmpp base85 requirements
+  std::string encodedEncStr="";
+  std::string tmpStr="";
+  int ch;
+  for (int i=0; i < encrypted_len; i++)
+  {
+   ch= theEncryptedText[i];
+   tmpStr= to_string(ch);
+   encodedEncStr=encodedEncStr+tmpStr;
+   encodedEncStr+="-";
+  }
+ std::cout << "\n Compression stats:\n Original:";
+ std::cout << encodedEncStr.length();
+
+ /*std::string compressed=compress_string(encodedEncStr,1);
+ std::cout << "\n Compressed:>>>>" +  compressed + "<<<<<<";
+
+  return compressed;*/
+ return encodedEncStr;
 }
 std::string OTX_WRAP::symmetricDecStr(std::string encText)
 {
-   unsigned char * encTestUCH = (unsigned char *)encText.c_str();
-   unsigned char thePlainText[255];
-   this->symmetricDecrypt(encTestUCH,thePlainText);
+   //decode the ascii ints
+  /*  std::cout << "\nAbout to decompress...\n>>>>" +encText+"<<<<";
+    std::string decompressed= this->decompress_string(encText);*/
+    std::string decompressed= encText;
+
+   std::cout << "decompressed...\n";
+   std::cout << decompressed;
+
+   unsigned char * encTextUCH = (unsigned char *) decompressed.c_str();
+   std::cout << "About to decrypt:";
+   std::cout << encTextUCH;
+   std::cout << "\n Lenght: ";
+
+   // Get all asciis and convert it to string
+   int encTextLen= strlen((char *)encTextUCH);
+
+   int ch;
+   char chr;
+   std::string buff;
+   unsigned char  encBuffText[1024];
+   //initialize buffer
+   for(int i=0; i < 1024; i++)
+     {  encBuffText[i]='\0';}
+
+   std::cout << "BUFFER INITILIZED";
+   int c=0; //buffer counter
+   int ascii;
+   // Rebuild the origninal string
+   for (int i = 0; i < encTextLen; i++)
+   {
+      ch=encTextUCH[i];
+      chr=(char)ch;
+
+      // 45 is - in ASCII
+      buff="";
+
+      while (ch != 45)
+       {
+
+        buff=buff+chr;
+        ch=encTextUCH[++i];
+        chr=(char)ch;
+
+       }
+       //std::cout << "\n buff:"+buff + "\n";
+      ascii=std::stoi(buff);
+
+       encBuffText[c]=ascii;
+       c++;
+
+   }
+   std::cout << "\n===== Buffer out: \n";
+   std::cout << encBuffText;
+   std::cout << "\n===== lenght:\n";
+   unsigned char thePlainText[1024];
+   std::cout << strlen((const char *) encBuffText);
+   std::cout << encTextUCH;
+      std::cout << "\n";
+
+   int decrypted_len=this->symmetricDecrypt(encBuffText,thePlainText);
    std::string decStr = std::string(reinterpret_cast<const char*>(thePlainText));
-   return decStr;
+
+  return decStr;
 
 }
 
-void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[255])
+int  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[1024])
 {
     EVP_cleanup();
     ERR_free_strings();
@@ -117,7 +281,7 @@ void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encr
    * ciphertext which may be longer than the plaintext, dependant on the
    * algorithm and mode
    */
-  unsigned char ciphertext[255];
+  unsigned char ciphertext[1024];
 
 
 
@@ -141,21 +305,23 @@ void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encr
   encrypted[0]== '\0';
   memcpy(encrypted,ciphertext,ciphertext_len);
   encrypted[ciphertext_len]='\0';
-  }
+  return ciphertext_len;
+}
 
-void OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&plainText)[255])
+int OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[1024], unsigned char (&plainText)[1024])
 {
 
     /* Buffer for the decrypted text */
-    unsigned char decryptedtext[255];
+    unsigned char decryptedtext[1024];
 
    unsigned char *key = (unsigned char*) "$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
 
   /* A 128 bit IV */
   unsigned char *iv =  (unsigned char*) "01234567890123456";
-
-
-  int decryptedtext_len = decrypt(ciphertext, strlen((char *)ciphertext), key, iv,
+  int ciphertext_len = strlen((char *)ciphertext);
+  std::cout << "\n SYMETRIC DECRYPT ENCRIPTED LEN\n";
+  std::cout << ciphertext_len;
+  int decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv,
     decryptedtext);
 
   /* Add a NULL terminator. We are expecting printable text */
@@ -175,7 +341,7 @@ void OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&p
   /* Clean up */
   EVP_cleanup();
   ERR_free_strings();
-
+  return decryptedtext_len;
 
 }
 
@@ -596,6 +762,10 @@ std::string OTX_WRAP::getNymPublicKey(std::string nymid)
 return OTAPI_Wrap::GetNym_SourceForID(nymid);
 }
 
+void OTX_WRAP::openContractOTServerScreen()
+{
+ OTX::It(pParentWidget)->mc_defaultserver_slot();
+}
 void OTX_WRAP::openRoleCreationScreen()
 {
     // Get the current profile in Cambrian
@@ -655,12 +825,8 @@ void OTX_WRAP::openRoleCreationScreen()
                break; // finish the loop when found  nymID
            }
 
-
-
       if (deleteProfile != NULL)
        {
-
-
 
           if(deleteProfile->m_arraypaAccountsXmpp.GetSize()|deleteProfile->m_arraypaApplications.GetSize())
                     {

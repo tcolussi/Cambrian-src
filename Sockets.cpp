@@ -97,15 +97,17 @@ CSocketXmpp::Socket_WriteBin(const CBin & binData)
 void
 CSocketXmpp::Socket_WriteData(PCVOID pvData, int cbData)
 	{
-	Assert(pvData != NULL);
+
+    Assert(pvData != NULL);
 	Assert(cbData > 0);
 	if (((BYTE *)pvData)[cbData - 1] == '\0')
 		cbData--;	// Just as a safety measure, remove the tailing null-terminator, otherwise the XMPP server will reject the data as invalid XML and close the stream.
 	MessageLog_AppendTextFormatCo(d_coSocketWriteHeader, "[$@] Socket_WriteData() - Sending $I bytes of data to socket 0x$p (uState=0x$x, $s):\n", cbData, this, m_uFlagsSocketState, PszaGetSocketState(state()));
 	//MessageLog_AppendTextFormatCo(d_coSocketWriteContent, "{pn}\n", pvData, cbData);
-	DebugDisplayDataToWriteMessageLog(pvData, cbData);
+    DebugDisplayDataToWriteMessageLog(pvData, cbData);
 	if (write(IN (const char *)pvData, cbData) != cbData)
-		MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to write data to socket! (number of bytes written does not match number of bytes to write)\n");
+
+        MessageLog_AppendTextFormatSev(eSeverityErrorWarning, "Unable to write data to socket! (number of bytes written does not match number of bytes to write)\n");
 	}
 
 //	Reformat a raw XML message
@@ -1270,7 +1272,9 @@ CSocketXmpp::DisplayErrorMessageToUser(EDisplayExtraError eDisplayExtraError, PS
 void
 CSocketXmpp::OnEventXmppStanzaArrived()
 	{
-	Assert(m_pXmlNodeStanzaCurrent_YZ != NULL);
+
+
+    Assert(m_pXmlNodeStanzaCurrent_YZ != NULL);
 	MessageLog_AppendTextFormatCo(d_coGoldenRod, "CSocketXmpp::OnEventXmppStanzaArrived(0x$p)  md5={Nf}\n", m_pXmlNodeStanzaCurrent_YZ, m_pXmlNodeStanzaCurrent_YZ);
 	DebugDisplayStanzaToMessageLog();
 	//m_pAccount->DebugDumpContacts();
@@ -1301,7 +1305,8 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 		{
 		if (m_pXmlNodeStanzaCurrent_YZ->PszFindAttributeValueTypeNoError() != NULL)
 			{
-			m_pAccount->Contact_PresenceUpdate(m_pXmlNodeStanzaCurrent_YZ);
+
+            m_pAccount->Contact_PresenceUpdate(m_pXmlNodeStanzaCurrent_YZ);
 			return;
 			}
 		DisplayErrorMessageToUser(eDisplayExtraError_DescriptionAndText, "Stanza Presence Error: ");
@@ -1311,7 +1316,9 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 		{
 		if (m_pXmlNodeStanzaCurrent_YZ->PszFindAttributeValueTypeNoError() != NULL)
 			{
-			m_pAccount->ChatLog_DisplayStanza(m_pXmlNodeStanzaCurrent_YZ);
+
+             m_pAccount->ChatLog_DisplayStanza(m_pXmlNodeStanzaCurrent_YZ);
+             std::cout << m_pXmlNodeStanzaCurrent_YZ->m_pszuTagValue;
 			return;
 			}
 		// We have an error with the message
@@ -1361,14 +1368,16 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 
 	if (memcmp(pszuNameStanza, "stream:", 7) == 0)
 		{
-		// We just initiated a stream
+
+        // We just initiated a stream
 		OnEventXmppStanzaStream();
 		return;
 		}
 	if (FCompareStrings(pszuNameStanza, "proceed"))
 		{
 		// MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "Stanza <proceed> received ... what is next?\n");
-		startClientEncryption();
+
+        startClientEncryption();
 		DoXmppStreamOpen();
 		return;
 		}

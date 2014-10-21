@@ -296,9 +296,11 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	#else
 	#ifdef Q_OS_MAC
 	g_pwMenuAdvanced = new WMenuDropdown("Advanced");	// This is necessary because on Mac OSX the 'hamburger menu' does not show up unless there is text
-	#else
+   #else
 	g_pwMenuAdvanced = new WMenuDropdown(NULL);
 	#endif
+
+
 	g_pwMenuAdvanced->InitAsDymanicMenu();
 	WButtonIconForToolbar * pwButtonTest = new WButtonIconForToolbar(eMenuIcon_Menu);
 	pwButtonTest->setStyleSheet("QToolButton { border: none;  padding-top:3px; padding-right:5px; padding-bottom:3px } QToolButton::menu-indicator { image: none; }");

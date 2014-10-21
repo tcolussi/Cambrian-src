@@ -116,6 +116,7 @@
         <file alias="CHash">Icons/CHash.png</file>
         <file alias="Avatar1">Icons/Avatar1.png</file>
         <file alias="Avatar2">Icons/Avatar2.png</file>
+        <file alias="contractOTserver">Icons/contractOTserver.png</file>
     </qresource>
     <qresource prefix="/snd">
         <file alias="NewMessage">Sounds/msg.wav</file>

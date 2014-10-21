@@ -28,7 +28,11 @@ class OTX_WRAP
 
 
 
+
 public:
+    std::string decompress_string(const std::string& str);
+    std::string compress_string(const std::string& str,
+                                int compressionlevel);
 
     enum Constants{
      RCS_NO_ACTION_REQUIRED = -1,
@@ -57,8 +61,8 @@ public:
                 unsigned char *iv, unsigned char *ciphertext);
     int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key,
                 unsigned char *iv, unsigned char *plaintext);
-    void symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&plainText)[255]);
-    void symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[255]);
+    int symmetricDecrypt(unsigned char ciphertext[1024], unsigned char (&plainText)[1024]);
+    int symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[1024]);
 
     // symmetric encryption adapted to use std string
     std::string symmetricDecStr(std::string encText);
@@ -71,7 +75,8 @@ public:
      bool verifySignature(QString s_nymId, QString signedPlainText, QString &messagePayload);
      QString decryptText(QString nymId,QString encryptedText);//decrypt using current NYM
      bool decryptAndVerify(QString signerNymId,QString recipientNymId,QString signedEncryptedText,QString &decryptedText);
-
+    // Contract handle
+     void openContractOTServerScreen();
 
  ~OTX_WRAP();
  private:

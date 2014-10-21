@@ -227,7 +227,7 @@ main(int argc, char *argv[])
 	TEST_XmlEncodingAndDecoding();
 	#endif // DEBUG
 
-     wMainWindow.ConfigurationLoadFromXml();
+    wMainWindow.ConfigurationLoadFromXml();
 
     #ifdef COMPILE_WITH_SPLASH_SCREEN
     wMainWindow.showMaximized();
@@ -235,8 +235,6 @@ main(int argc, char *argv[])
     #else
     wMainWindow.show();
 	#endif
-
-
 
 
     return oApplication.exec();

@@ -23,14 +23,46 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 	// Attempt to decrypt the data and verify the signature
 #ifdef COMPILE_WITH_CRYPTOMANIA
 /*//////////////////////////////////CRYPTOMANIA DECRYPT////////////////////////////////////////////////*/
-    PSZU pszDataEncryptedIN = pXmlNodeXmppXcp->m_pszuTagValue;
-    std::cout << "\n ======Text about to Decrypt in XcpApi:===== \n";
-    std::cout << pszDataEncryptedIN;
-    std::string strDataEncrypted=std::string(reinterpret_cast<const char*>(pszDataEncryptedIN));
-    std::string strDataPlain= pOTX->symmetricDecStr(strDataEncrypted);
-    PSZU pszDataEncrypted=(PSZU) strDataPlain.c_str();
-    std::cout << "\n ==== Decrypted text: =====\n";
-    std::cout << pszDataEncrypted;
+
+    PSZU pszDataEncrypted = pXmlNodeXmppXcp->m_pszuTagValue;
+    TContact* pContact = new TContact(m_pAccount);
+    //Get the sender public NymId
+    QString signerNymId = pContact->m_strNymID.ToQString();
+    QString receiverNymId= m_strNymID.ToQString();
+    std::string strDataEncrypted=std::string(reinterpret_cast<const char*>(pszDataEncrypted));
+    QString signedEncryptedText =QString::fromStdString(strDataEncrypted);
+     // Asign the contents of the Stanza
+    QString decryptedText;
+    signedEncryptedText="Modified text in wire";
+
+    if (!signerNymId.isEmpty())
+    {
+        if (!receiverNymId.isEmpty())
+        {
+
+            bool decryptSuccefull=pOTX->decryptAndVerify(signerNymId,receiverNymId,signedEncryptedText,decryptedText);
+
+             if (decryptSuccefull)
+              {
+                 //succesfull Decryption
+                  std::cout << "\n Decrypted Text in XcpApi: ";
+                  std::cout << decryptedText.toStdString();
+              }
+             else
+              {
+                // decryption fail handle it
+                 decryptedText= QString::fromUtf8("The decription fails with the next message: ") + decryptedText;
+                std::cout << "\n Decryption FAILED in XcpApi: \n";
+                 std::cout << decryptedText.toStdString();
+                }
+        }
+        else { std::cout << "Nym Id Empty (Contact >> XcpApi Decryption)";}
+
+     } else { std::cout << "Nym Id Empty (Signer >> XcApi Decryption)";}
+
+  // pszDataEncrypted must be assigned with decryptedText
+   pszDataEncrypted = pXmlNodeXmppXcp->m_pszuTagValue;
+
 /*//////////////////////////////////CRYPTOMANIA///////////////////////////////////////////////////////*/
 #else
   PSZU pszDataEncrypted = pXmlNodeXmppXcp->m_pszuTagValue;
@@ -43,7 +75,9 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 #else
         oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
 #endif
-		#if 1
+
+
+#if 1
 		MessageLog_AppendTextFormatCo(d_coGray, "XCP Received($S):\n", &m_strJidBare);
 		MessageLog_AppendTextFormatCo(d_coBlack, "{Bm}\n", &oXmlTree.m_binXmlFileData);
 		#endif
