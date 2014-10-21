@@ -28,7 +28,7 @@
 #define d_ToolbarButtons_coGradientBottom		0xDADADA
 
 #define d_Tab_coSeparator			d_ToolbarButtons_coBorderBottom	// To draw the separators (dividers between the toolbar buttons), use the same color as the bottom of the toolbar
-#define d_Tab_cxWidthDefault		100
+#define d_Tab_cxWidthDefault		160
 #define d_Tab_cxWidthIconClose		10		// Allow 10 pixels to draw the X icon on the right of the text
 #define d_Tab_cxWidthIconNewTab		30		// Special icon to create a new tab
 
@@ -119,6 +119,20 @@ void
 WTabs::TabRemove(PVPARAM pvParamTabToRemove)
 	{
 	TabDelete(_PFindTabByParam(pvParamTabToRemove));
+	}
+
+void
+WTabs::TabsRemmoveAll()
+	{
+	CTab ** ppTabStop;
+	CTab ** ppTab = m_arraypaTabs.PrgpGetTabsStop(OUT &ppTabStop);
+	while (ppTab != ppTabStop)
+		{
+		delete *ppTab++;
+		}
+	m_arraypaTabs.Empty();
+	m_pTabSelected = NULL;
+	_Redraw();
 	}
 
 QSize
@@ -316,11 +330,9 @@ WToolbarTabs::WToolbarTabs()
 	pwMenuJurisdiction->ActionAddFromText((PSZUC)"Pantheon", eMenuIcon_Toolbar_Pantheon, eMenuIcon_Toolbar_Pantheon);
 	pwMenuJurisdiction->ActionAddFromText((PSZUC)"Central Services", eMenuIcon_Toolbar_Pantheon, eMenuIcon_ClassJuristiction);
 
-	WTabs * pwTabs = new WTabs;
-	pwTabs->TabAddP("New Tab", (PVPARAM)1);
-	pwTabs->TabAddP("New Tab", (PVPARAM)2);
-	pwTabs->TabAddP("New Tab", (PVPARAM)3);
-	poLayout->addWidget(pwTabs);
+	Assert(g_pwTabs == NULL);
+	g_pwTabs = new WTabs;
+	poLayout->addWidget(g_pwTabs);
 
 //	poLayout->addWidget(new QLabel("this is a label"));
 	}

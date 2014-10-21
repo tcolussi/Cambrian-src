@@ -59,6 +59,7 @@ public:
 	CTab * TabAddP(PSZAC pszName, PVPARAM pvParam = NULL);
 	void TabAddAndSelect(PSZAC pszName, PVPARAM pvParam = NULL);
 	void TabRemove(PVPARAM pvParamTabToRemove);
+	void TabsRemmoveAll();
 	void TabSelect(PVPARAM pvParamTabToSelect);
 	void OnTabNew();
 	void OnTabSelected(PVPARAM pvParamTabSelected);

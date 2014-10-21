@@ -600,6 +600,10 @@ void
 WMainWindow::ConfigurationLoadFromXml()
 	{
 	g_oConfiguration.XmlConfigurationLoadFromFile();
+
+	void Toolbar_PopulateTabs();
+	Toolbar_PopulateTabs();
+
 	// After loading the configuration, check if there is an invitation stored at the time of installation
 	const QString sPathInvitation = SGetFullPathInvitation();
 	CStr strInvitation;

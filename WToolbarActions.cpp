@@ -4,26 +4,24 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "WToolbarActions.h"
 #include "WToolbar.h"
+#include "WToolbarActions.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void
 WTabs::OnTabNew()
 	{
-	QWidget * pawParam = new QWidget;	// This will cause a memory leak, but it is for the demo to test the pvParam
-	#if 0
-	TabAddAndSelect("New Tab", pawParam);
-	#else
-	TabAddP("New Tab", pawParam);
-	TabSelect(pawParam);
-	#endif
+	const PSZAC c_szNamesProfiles[] = { "The Real Plato", "The Fake Plato", "NYC OTC Dealer", "Superman", "Spiderman" };
+	TProfile * paProfile = new TProfile(&g_oConfiguration);	// This will cause a memory leak, but it is for the demo to test the pvParam
+	paProfile->m_strNameProfile.InitFromStringA(c_szNamesProfiles[qrand() % LENGTH(c_szNamesProfiles)]);
+	TabAddAndSelect(paProfile->m_strNameProfile, paProfile);
 	}
 
 void
 WTabs::OnTabSelected(PVPARAM pvParamTabSelected)
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "OnTabSelected(0x$p)\n", pvParamTabSelected);
+	NavigationTree_PopulateTreeItemsAccordingToSelectedProfile((TProfile *)pvParamTabSelected);
 	}
 
 void
@@ -33,7 +31,29 @@ WTabs::OnTabClosing(PVPARAM pvParamTabClosing)
 	TabRemove(pvParamTabClosing);
 	}
 
+WTabs * g_pwTabs;
 
+void
+Toolbar_PopulateTabs()
+	{
+	Assert(g_pwTabs != NULL);
+	g_pwTabs->TabsRemmoveAll();	// Remove any previous tab
+	TProfile ** ppProfilesStop;
+	TProfile ** ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfilesStop);
+	while (ppProfiles != ppProfilesStop)
+		{
+		TProfile * pProfile = *ppProfiles++;
+		g_pwTabs->TabAddP(pProfile->m_strNameProfile, pProfile);
+		}
+	g_pwTabs->TabSelect(g_oConfiguration.m_pProfileSelected);
+	}
+
+void
+Toolbar_SelectTab(PVOID pvParam)
+	{
+	Assert(g_pwTabs != NULL);
+	g_pwTabs->TabSelect(pvParam);
+	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WButtonIconForToolbarWithDropDownMenu * g_pwButtonToolbarSwitchProfile;

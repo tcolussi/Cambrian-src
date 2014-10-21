@@ -30,6 +30,7 @@ void
 NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSelected, BOOL fCreateNewProfile)
 	{
 	Endorse(pProfileSelected == NULL);	// Display all profiles
+	Assert(pProfileSelected == NULL || pProfileSelected->EGetRuntimeClass() == RTI(TProfile));
 	Assert(g_pwNavigationTree != NULL);
 	g_oConfiguration.m_pProfileSelected = pProfileSelected;
 
@@ -361,6 +362,8 @@ NavigationTree_UpdateNameOfSelectedProfile()
 	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
 	#endif
 	Dashboard_RefreshAccordingToSelectedProfile(pProfileSelected);
+	void Toolbar_SelectTab(PVOID pvParam);
+	Toolbar_SelectTab(pProfileSelected);
 	}
 
 

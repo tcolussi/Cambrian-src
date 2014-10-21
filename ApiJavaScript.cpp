@@ -694,8 +694,8 @@ OJapiProfilesList::list()
 	TProfile ** ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfilesStop);
 	while (ppProfiles != ppProfilesStop)
 		{
-		TProfile *pProfile = *ppProfiles++;
-		list.append( QVariant::fromValue(pProfile->POJapiGet()) );
+		TProfile * pProfile = *ppProfiles++;
+		list.append(QVariant::fromValue(pProfile->POJapiGet()));
 		//list.append( QVariant::fromValue(pProfile->m_strNameProfile.ToQString()) );
 		}
 	return list;
