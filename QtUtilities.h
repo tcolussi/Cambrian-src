@@ -635,8 +635,12 @@ class CPainter : public QPainter
 public:
 	CPainter(QPaintDevice * pPaintDevice) : QPainter(pPaintDevice) { }
 	void DrawLineHorizontal(int xLeft, int xRight, int yPos);
+	void DrawLineHorizontalCo(int xLeft, int xRight, int yPos, QRGB coLine);
 	void DrawLineVertical(int xPos, int yTop, int yBottom);
 	void FillRectWithGradientVertical(const QRect & rcFill, QRGB coTop, QRGB coBottom);
+
+	void DrawIconAlignmentRect(EMenuIcon eMenuIcon, Qt::Alignment eAlignment, const QRect & rcIcon);
+	void DrawIconAlignmentRect(const QIcon & oIcon, Qt::Alignment eAlignment, const QRect & rcIcon);
 };
 
 //	Class having a 'boundary rectangle' where the painter is allowed to draw.
@@ -654,10 +658,10 @@ public:
 	void DrawIconAdjustLeft(const QIcon & oIcon);
 	void DrawIconAdjustLeft(EMenuIcon eMenuIcon);
 
-	void DrawIconAlignment(const QIcon & oIcon, Qt::Alignment eAlignment);
-	void DrawIconAlignment(EMenuIcon eMenuIcon, Qt::Alignment eAlignment);
-	void DrawIconAlignmentLeftBottom(EMenuIcon eMenuIcon);
-	void DrawIconAlignmentRightBottom(EMenuIcon eMenuIcon);
+	void DrawIconAlignment(const QIcon & oIcon, Qt::Alignment eAlignment) CONST_MCC;
+	void DrawIconAlignment(EMenuIcon eMenuIcon, Qt::Alignment eAlignment) CONST_MCC;
+	void DrawIconAlignmentLeftBottom(EMenuIcon eMenuIcon) CONST_MCC;
+	void DrawIconAlignmentRightBottom(EMenuIcon eMenuIcon) CONST_MCC;
 
 	// Specific methods
 	void DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle);

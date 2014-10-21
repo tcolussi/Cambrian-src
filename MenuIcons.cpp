@@ -94,11 +94,11 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 	":/images/ui/currentTabRightBorder.png", // eMenuIcon_ToolbarTab_EdgeRightSelected
 	":/images/ui/addTabButtonNormal.png", // eMenuIcon_ToolbarTab_New
 	":/images/ui/addTabButtonHovered.png", // eMenuIcon_ToolbarTab_NewHover
+	":/images/ui/closeTabIcon.png", // eMenuIcon_ToolbarTab_Close
 
 	"Close",			// eMenuIcon_Close
 	"Quit",				// eMenuIcon_Quit
 	"Menu",				// eMenuIcon_Menu
-
 	};
 
 //	Array of all icons

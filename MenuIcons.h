@@ -94,6 +94,7 @@ enum EMenuIcon			// Must be in sync with c_mapepszIconResources[]
 	eMenuIcon_ToolbarTab_EdgeRightSelected,
 	eMenuIcon_ToolbarTab_New,
 	eMenuIcon_ToolbarTab_NewHover,
+	eMenuIcon_ToolbarTab_Close,
 
 	eMenuIcon_Close,
 	eMenuIcon_Quit,

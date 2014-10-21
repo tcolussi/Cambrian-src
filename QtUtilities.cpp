@@ -2318,6 +2318,13 @@ CPainter::DrawLineHorizontal(int xLeft, int xRight, int yPos)
 	}
 
 void
+CPainter::DrawLineHorizontalCo(int xLeft, int xRight, int yPos, QRGB coLine)
+	{
+	setPen(coLine);
+	drawLine(xLeft, yPos, xRight, yPos);
+	}
+
+void
 CPainter::DrawLineVertical(int xPos, int yTop, int yBottom)
 	{
 	drawLine(xPos, yTop, xPos, yBottom);
@@ -2368,26 +2375,38 @@ CPainterCell::DrawIconAdjustLeft(EMenuIcon eMenuIcon)
 	DrawIconAdjustLeft(OGetIcon(eMenuIcon));
 	}
 
+
 void
-CPainterCell::DrawIconAlignment(const QIcon & oIcon, Qt::Alignment eAlignment)
+CPainter::DrawIconAlignmentRect(EMenuIcon eMenuIcon, Qt::Alignment eAlignment, const QRect & rcIcon) CONST_MCC
+	{
+	OGetIcon(eMenuIcon).paint(this, rcIcon, eAlignment);
+	}
+void
+CPainter::DrawIconAlignmentRect(const QIcon & oIcon, Qt::Alignment eAlignment, const QRect & rcIcon) CONST_MCC
+	{
+	oIcon.paint(this, rcIcon, eAlignment);
+	}
+
+void
+CPainterCell::DrawIconAlignment(const QIcon & oIcon, Qt::Alignment eAlignment) CONST_MCC
 	{
 	oIcon.paint(this, m_rcCell, eAlignment);
 	}
 
 void
-CPainterCell::DrawIconAlignment(EMenuIcon eMenuIcon, Qt::Alignment eAlignment)
+CPainterCell::DrawIconAlignment(EMenuIcon eMenuIcon, Qt::Alignment eAlignment) CONST_MCC
 	{
 	DrawIconAlignment(OGetIcon(eMenuIcon), eAlignment);
 	}
 
 void
-CPainterCell::DrawIconAlignmentLeftBottom(EMenuIcon eMenuIcon)
+CPainterCell::DrawIconAlignmentLeftBottom(EMenuIcon eMenuIcon) CONST_MCC
 	{
 	DrawIconAlignment(eMenuIcon, Qt::AlignLeft | Qt::AlignBottom);
 	}
 
 void
-CPainterCell::DrawIconAlignmentRightBottom(EMenuIcon eMenuIcon)
+CPainterCell::DrawIconAlignmentRightBottom(EMenuIcon eMenuIcon) CONST_MCC
 	{
 	DrawIconAlignment(eMenuIcon, Qt::AlignRight | Qt::AlignBottom);
 	}

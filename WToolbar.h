@@ -1,9 +1,18 @@
+//	WToolbar.h
+//
+//	Classes to draw the main toolbar of SocietyPro.
+//	The toolbar is divided into two sections: tabs and buttons.
+//
 #ifndef WTOOLBAR_H
 #define WTOOLBAR_H
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
 #include <QToolBar>
+
+//	The total height of the toolbar is the sum of the following value
+#define d_cyHeightToolbarTabs		(25+2)			// Height of the widget containing the tabs
+#define d_cyHeightToolbarButtons	(40+1)			// Height of the widget containing the toolbar buttons
 
 class CTab
 {
@@ -25,22 +34,35 @@ public:
 
 class WTabs : public QWidget
 {
-	Q_OBJECT
+protected:
 	CArrayPtrTabs m_arraypaTabs;
 	CTab * m_pTabSelected;	// Tab which is selected
 	CTab * m_pTabHover;		// Tab where the mouse is
 	enum EHitTest
 		{
-		eHitTest_zNone,
-		eHitTest_ButtonNewTab
+		eHitTest_zNone				= 0x0000,
+		eHitTest_kfButtonClose		= 0x0001,	// The close button (to remove the tab)
+		eHitTest_kfButtonNewTab		= 0x0010,	// The button to add a new tab
+
+		// These are used only with m_uFlagsHitTest
+		eHitTest_kfMouseHovering	= 0x0020,
+		eHitTest_kfMousePressed		= 0x0040,
+
+		eHitTest_kmButtonNewTabHovering = eHitTest_kfButtonNewTab | eHitTest_kfMouseHovering,
+
 		};
-	EHitTest m_eHitTest;
+	UINT m_uFlagsHitTest;			// Various combination of EHitTest
 
 public:
 	WTabs();
 	~WTabs();
-	void TabAdd(PSZAC pszName, PVPARAM pvParam = NULL);
-	void TabDelete(PA_DELETING CTab * paTab);
+	CTab * TabAddP(PSZAC pszName, PVPARAM pvParam = NULL);
+	void TabAddAndSelect(PSZAC pszName, PVPARAM pvParam = NULL);
+	void TabRemove(PVPARAM pvParamTabToRemove);
+	void TabSelect(PVPARAM pvParamTabToSelect);
+	void OnTabNew();
+	void OnTabSelected(PVPARAM pvParamTabSelected);
+	void OnTabClosing(PVPARAM pvParamTabClosing);
 
 protected:
 	virtual QSize sizeHint() const;
@@ -49,8 +71,13 @@ protected:
 	virtual void mouseReleaseEvent(QMouseEvent * pEventMouse);
 	virtual void leaveEvent(QEvent *);
 
-	CTab * _PUpdateHitTest(QMouseEvent * pEventMouse);
-	CTab * _PUpdateHitTest(int xPos);
+	void TabDelete(PA_DELETING CTab * paTab);
+	CTab * _PFindTabByParam(PVPARAM pvParamTab) const;
+
+	void _SetSelectedTab(CTab * pTab);
+	void _SetFlagsHitTest(UINT uFlagsHitTest);
+	CTab * _PGetHitTestInfo(QMouseEvent * pEventMouse, OUT EHitTest * peHitTest) const;
+	CTab * _PGetHitTestInfo(int xPos, int yPos, OUT EHitTest * peHitTest) const;
 
 	void _DrawTab(CPainterCell * pPainter, CTab * pTab);
 	void _Redraw() { update(); }
@@ -59,11 +86,9 @@ protected:
 //	Display tabs a the top of the toolbar
 class WToolbarTabs : public QWidget
 {
-	Q_OBJECT
 public:
 	WToolbarTabs();
 	virtual void paintEvent(QPaintEvent *);
-
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
