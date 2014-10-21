@@ -320,23 +320,6 @@ WTabs::_DrawTab(CPainterCell * pPainter, CTab * pTab)
 	pPainter->DrawLineHorizontalCo(pPainter->m_rcCell.left() + 1, pPainter->m_rcCell.right() - 1, d_cyHeightToolbarTabs - 1, fuIsTabSelected ? d_ToolbarButtons_coGradientTop : d_ToolbarTabs_Tab_coBorder);
 	}
 
-WToolbarTabs::WToolbarTabs()
-	{
-	//setFixedHeight(d_cyHeightToolbarTabs);
-	OLayoutHorizontalAlignLeft * poLayout = new OLayoutHorizontalAlignLeft0(this);
-	WButtonIconForToolbarWithDropDownMenu * pwButtonJurisdiction = new WButtonIconForToolbarWithDropDownMenu(poLayout, eMenuIcon_Toolbar_Pantheon, "Pantheon");
-	pwButtonJurisdiction->setFixedHeight(d_cyHeightToolbarTabs);	// This will set the height for the entire widget
-	WMenu * pwMenuJurisdiction = pwButtonJurisdiction->PwGetMenu();
-	pwMenuJurisdiction->ActionAddFromText((PSZUC)"Pantheon", eMenuIcon_Toolbar_Pantheon, eMenuIcon_Toolbar_Pantheon);
-	pwMenuJurisdiction->ActionAddFromText((PSZUC)"Central Services", eMenuIcon_Toolbar_Pantheon, eMenuIcon_ClassJuristiction);
-
-	Assert(g_pwTabs == NULL);
-	g_pwTabs = new WTabs;
-	poLayout->addWidget(g_pwTabs);
-
-//	poLayout->addWidget(new QLabel("this is a label"));
-	}
-
 void
 WToolbarTabs::paintEvent(QPaintEvent *)
 	{

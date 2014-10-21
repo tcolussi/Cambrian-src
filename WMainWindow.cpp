@@ -277,6 +277,9 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	m_cTimerEvents = 0;
 	m_tidFlashIconNewMessage = d_zNA;
 
+	#if 0
+	setWindowFlags(Qt::CustomizeWindowHint);	// Remove the caption of the entire application
+	#endif
 	setWindowTitle(d_szApplicationName " v" d_szApplicationVersion);
 //	setCentralWidget(new QWidget);
 

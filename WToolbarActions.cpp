@@ -60,6 +60,25 @@ WButtonIconForToolbarWithDropDownMenu * g_pwButtonToolbarSwitchProfile;
 WMenu * g_pwMenuToolbarSwitchProfile;
 
 
+WToolbarTabs::WToolbarTabs()
+	{
+	//setFixedHeight(d_cyHeightToolbarTabs);
+	OLayoutHorizontalAlignLeft * poLayout = new OLayoutHorizontalAlignLeft0(this);
+
+	g_pwButtonToolbarSwitchProfile = new WButtonIconForToolbarWithDropDownMenu(poLayout, eMenuIcon_ClassProfile, NULL);
+	g_pwButtonToolbarSwitchProfile->setFixedHeight(d_cyHeightToolbarTabs);	// This will set the height for the entire widget
+	g_pwMenuToolbarSwitchProfile = g_pwButtonToolbarSwitchProfile->PwGetMenu();
+	connect(g_pwMenuToolbarSwitchProfile, SIGNAL(aboutToShow()), this, SLOT(SL_MenuProfilesShow()));
+	connect(g_pwMenuToolbarSwitchProfile, SIGNAL(triggered(QAction*)), this, SLOT(SL_MenuProfileSelected(QAction*)));
+
+	Assert(g_pwTabs == NULL);
+	g_pwTabs = new WTabs;
+	poLayout->addWidget(g_pwTabs);
+
+//	poLayout->addWidget(new QLabel("this is a label"));
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 const EMenuActionByte c_rgzeActionsMenuOverflow[] =
 	{
 	eMenuAction_PlaySound,
@@ -111,14 +130,17 @@ WToolbarButtons::WToolbarButtons()
 	/*WEdit * pwEditSearch =*/ new WEditSearch(poLayout, eMenuIcon_Toolbar_Find, "Search apps, websites, files and chats...");
 	poLayout->addWidget(new WButtonToolbarSeparator);
 
-	g_pwButtonToolbarSwitchProfile = new WButtonIconForToolbarWithDropDownMenu(poLayout, eMenuIcon_ClassProfile, NULL);
-	g_pwMenuToolbarSwitchProfile = g_pwButtonToolbarSwitchProfile->PwGetMenu();
-	connect(g_pwMenuToolbarSwitchProfile, SIGNAL(aboutToShow()), this, SLOT(SL_MenuProfilesShow()));
-	connect(g_pwMenuToolbarSwitchProfile, SIGNAL(triggered(QAction*)), this, SLOT(SL_MenuProfileSelected(QAction*)));
+	WButtonIconForToolbarWithDropDownMenu * pwButtonJurisdiction = new WButtonIconForToolbarWithDropDownMenu(poLayout, eMenuIcon_Toolbar_Pantheon, "Pantheon");
+	pwButtonJurisdiction->setFixedHeight(d_cyHeightToolbarTabs);	// This will set the height for the entire widget
+	WMenu * pwMenuJurisdiction = pwButtonJurisdiction->PwGetMenu();
+	pwMenuJurisdiction->ActionAddFromText((PSZUC)"Pantheon", eMenuIcon_Toolbar_Pantheon, eMenuIcon_Toolbar_Pantheon);
+	pwMenuJurisdiction->ActionAddFromText((PSZUC)"Central Services", eMenuIcon_Toolbar_Pantheon, eMenuIcon_ClassJuristiction);
 
+	#if 0
 	QLabel * pwLabelPicture = new QLabel;
 	pwLabelPicture->setPixmap(QPixmap(":/images/ui/testThumbImage.png"));
 	poLayout->addWidget(pwLabelPicture);
+	#endif
 	poLayout->addWidget(new WButtonToolbarSeparator);
 	poLayout->addWidget(new QLabel("Home"));
 	poLayout->addWidget(new WButtonToolbarSeparator);
@@ -146,7 +168,7 @@ WToolbarButtons::WToolbarButtons()
 	}
 
 void
-WToolbarButtons::SL_MenuProfilesShow()
+WToolbarTabs::SL_MenuProfilesShow()
 	{
 	g_pwMenuToolbarSwitchProfile->clear();
 	int cProfiles;
@@ -162,7 +184,7 @@ WToolbarButtons::SL_MenuProfilesShow()
 	}
 
 void
-WToolbarButtons::SL_MenuProfileSelected(QAction * pAction)
+WToolbarTabs::SL_MenuProfileSelected(QAction * pAction)
 	{
 	const int iProfile = pAction->data().toInt();
 	NavigationTree_PopulateTreeItemsAccordingToSelectedProfile((TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementAtSafe_YZ(iProfile));

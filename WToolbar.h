@@ -87,9 +87,14 @@ protected:
 //	Display tabs a the top of the toolbar
 class WToolbarTabs : public QWidget
 {
+	Q_OBJECT
 public:
 	WToolbarTabs();
 	virtual void paintEvent(QPaintEvent *);
+
+public slots:
+	void SL_MenuProfilesShow();
+	void SL_MenuProfileSelected(QAction * pAction);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -116,10 +121,6 @@ class WToolbarButtons : public QWidget
 public:
 	WToolbarButtons();
 	virtual void paintEvent(QPaintEvent *);
-
-public slots:
-	void SL_MenuProfilesShow();
-	void SL_MenuProfileSelected(QAction * pAction);
 };
 
 
