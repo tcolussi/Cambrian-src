@@ -7,7 +7,7 @@
 #ifdef COMPILE_WITH_CHATLOG_HTML
 
 //	JavaScript APIs available for the HTML Chat Log
-class OJapiChatLog : public OJapi
+class OJapiChatLog : public QObject
 {
 	Q_OBJECT
 protected:
@@ -18,6 +18,7 @@ public:
 
 public slots:
 	void pin();
+	void typingStarted();
 	void sendMessage(const QString & sMessage);
 };
 
