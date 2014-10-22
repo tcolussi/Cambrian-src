@@ -32,11 +32,11 @@
 #include <QClipboard>
 #include <qdebug>
 #include <string>
-
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <string.h>
+#include <zlib.h>
 
 static OTCaller           passwordCaller;
 static MTPasswordCallback passwordCallback;
@@ -78,6 +78,94 @@ bool OTX_WRAP::SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup
     return true;
 }
 
+// private compression and decompression functions to support encoded strings
+/** Compress a STL string using zlib with given compression level and return
+  * the binary data. */
+
+std::string OTX_WRAP::compress_string(const std::string& str,
+                            int compressionlevel)
+{
+    z_stream zs;                        // z_stream is zlib's control structure
+    memset(&zs, 0, sizeof(zs));
+
+    if (deflateInit(&zs, compressionlevel) != Z_OK)
+        throw(std::runtime_error("deflateInit failed while compressing."));
+
+    zs.next_in = (Bytef*)str.data();
+    zs.avail_in = str.size();           // set the z_stream's input
+
+    int ret;
+    char outbuffer[32768];
+    std::string outstring;
+
+    // retrieve the compressed bytes blockwise
+    do {
+        zs.next_out = reinterpret_cast<Bytef*>(outbuffer);
+        zs.avail_out = sizeof(outbuffer);
+
+        ret = deflate(&zs, Z_FINISH);
+
+        if (outstring.size() < zs.total_out) {
+            // append the block to the output string
+            outstring.append(outbuffer,
+                             zs.total_out - outstring.size());
+        }
+    } while (ret == Z_OK);
+
+    deflateEnd(&zs);
+
+    if (ret != Z_STREAM_END) {          // an error occurred that was not EOF
+        std::ostringstream oss;
+        oss << "Exception during zlib compression: (" << ret << ") " << zs.msg;
+        throw(std::runtime_error(oss.str()));
+    }
+
+    return outstring;
+}
+
+/** Decompress an STL string using zlib and return the original data. */
+std::string OTX_WRAP::decompress_string(const std::string& str)
+{
+    z_stream zs;                        // z_stream is zlib's control structure
+    memset(&zs, 0, sizeof(zs));
+
+    if (inflateInit(&zs) != Z_OK)
+        throw(std::runtime_error("inflateInit failed while decompressing."));
+
+    zs.next_in = (Bytef*)str.data();
+    zs.avail_in = str.size();
+
+    int ret;
+    char outbuffer[32768];
+    std::string outstring;
+
+    // get the decompressed bytes blockwise using repeated calls to inflate
+    do {
+        zs.next_out = reinterpret_cast<Bytef*>(outbuffer);
+        zs.avail_out = sizeof(outbuffer);
+
+        ret = inflate(&zs, 0);
+
+        if (outstring.size() < zs.total_out) {
+            outstring.append(outbuffer,
+                             zs.total_out - outstring.size());
+        }
+
+    } while (ret == Z_OK);
+
+    inflateEnd(&zs);
+
+    if (ret != Z_STREAM_END) {          // an error occurred that was not EOF
+        std::ostringstream oss;
+        oss << "Exception during zlib decompression: (" << ret << ") "
+            << zs.msg;
+        throw(std::runtime_error(oss.str()));
+    }
+
+    return outstring;
+}
+
+
 // Symetric Encryption functions
 
 // symmetric encryption using standard strings
@@ -86,24 +174,101 @@ std::string OTX_WRAP::symmetricEncStr(std::string plainText)
 {
 
   unsigned char * plainTextUCH = (unsigned char *)plainText.c_str();
-  unsigned char theEncryptedText[255];
-  this->symmetricEncrypt(plainTextUCH,theEncryptedText);
-  std::string encStr = std::string(reinterpret_cast<const char*>(theEncryptedText));
-  return encStr;
+  unsigned char theEncryptedText[1024];
+  int encrypted_len=this->symmetricEncrypt(plainTextUCH,theEncryptedText);
+  //std::string encStr = std::string(reinterpret_cast<const char*>(theEncryptedText));
+  // Encode with ascii ints the just encrypted text in order to made it compatible with Xmpp base85 requirements
+  std::string encodedEncStr="";
+  std::string tmpStr="";
+  int ch;
+  for (int i=0; i < encrypted_len; i++)
+  {
+   ch= theEncryptedText[i];
+   tmpStr= to_string(ch);
+   encodedEncStr=encodedEncStr+tmpStr;
+   encodedEncStr+="-";
+  }
+ std::cout << "\n Compression stats:\n Original:";
+ std::cout << encodedEncStr.length();
+
+ /*std::string compressed=compress_string(encodedEncStr,1);
+ std::cout << "\n Compressed:>>>>" +  compressed + "<<<<<<";
+
+  return compressed;*/
+ return encodedEncStr;
 }
 std::string OTX_WRAP::symmetricDecStr(std::string encText)
 {
-   unsigned char * encTestUCH = (unsigned char *)encText.c_str();
-   unsigned char thePlainText[255];
-   this->symmetricDecrypt(encTestUCH,thePlainText);
+   //decode the ascii ints
+  /*  std::cout << "\nAbout to decompress...\n>>>>" +encText+"<<<<";
+    std::string decompressed= this->decompress_string(encText);*/
+    std::string decompressed= encText;
+
+   std::cout << "decompressed...\n";
+   std::cout << decompressed;
+
+   unsigned char * encTextUCH = (unsigned char *) decompressed.c_str();
+   std::cout << "About to decrypt:";
+   std::cout << encTextUCH;
+   std::cout << "\n Lenght: ";
+
+   // Get all asciis and convert it to string
+   int encTextLen= strlen((char *)encTextUCH);
+
+   int ch;
+   char chr;
+   std::string buff;
+   unsigned char  encBuffText[1024];
+   //initialize buffer
+   for(int i=0; i < 1024; i++)
+     {  encBuffText[i]='\0';}
+
+   std::cout << "BUFFER INITILIZED";
+   int c=0; //buffer counter
+   int ascii;
+   // Rebuild the origninal string
+   for (int i = 0; i < encTextLen; i++)
+   {
+      ch=encTextUCH[i];
+      chr=(char)ch;
+
+      // 45 is - in ASCII
+      buff="";
+
+      while (ch != 45)
+       {
+
+        buff=buff+chr;
+        ch=encTextUCH[++i];
+        chr=(char)ch;
+
+       }
+       //std::cout << "\n buff:"+buff + "\n";
+      ascii=std::stoi(buff);
+
+       encBuffText[c]=ascii;
+       c++;
+
+   }
+   std::cout << "\n===== Buffer out: \n";
+   std::cout << encBuffText;
+   std::cout << "\n===== lenght:\n";
+   unsigned char thePlainText[1024];
+   std::cout << strlen((const char *) encBuffText);
+   std::cout << encTextUCH;
+      std::cout << "\n";
+
+   int decrypted_len=this->symmetricDecrypt(encBuffText,thePlainText);
    std::string decStr = std::string(reinterpret_cast<const char*>(thePlainText));
-   return decStr;
+
+  return decStr;
 
 }
 
-void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[255])
+int  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[1024])
 {
-
+    EVP_cleanup();
+    ERR_free_strings();
    /* A 256 bit key */
     unsigned char *key = (unsigned char*) "$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
 
@@ -116,7 +281,7 @@ void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encr
    * ciphertext which may be longer than the plaintext, dependant on the
    * algorithm and mode
    */
-  unsigned char ciphertext[255];
+  unsigned char ciphertext[1024];
 
 
 
@@ -130,30 +295,33 @@ void  OTX_WRAP::symmetricEncrypt(unsigned char * plainText, unsigned char (&encr
   /* Encrypt the plaintext */
   ciphertext_len =  encrypt(plainText, strlen((char *)plainText), key, iv,ciphertext);
     ciphertext[ciphertext_len] = '\0';
-  std::cout << "\n texto encriptado:\n";
+  std::cout << "\n ================ENCRYPT OTX_WRAP================ \n";
+  std::cout << "\n PLAIN TEXT: \n";
+  std::cout << plainText;
+  std::cout << "\n ENCRYPTED TEXT :\n";
   std::cout << ciphertext;
-  std::cout << "\n longitud:\n";
+  std::cout << "\n LENGTH ENCRYPTED:\n";
   std::cout << ciphertext_len;
   encrypted[0]== '\0';
   memcpy(encrypted,ciphertext,ciphertext_len);
   encrypted[ciphertext_len]='\0';
-  }
+  return ciphertext_len;
+}
 
-void OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&plainText)[255])
+int OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[1024], unsigned char (&plainText)[1024])
 {
 
     /* Buffer for the decrypted text */
-    unsigned char decryptedtext[255];
+    unsigned char decryptedtext[1024];
 
    unsigned char *key = (unsigned char*) "$!C3NT@LS3rv1c3sW3lc0m3t0P@nt30n!$";
 
   /* A 128 bit IV */
   unsigned char *iv =  (unsigned char*) "01234567890123456";
-  std::cout << "\n texto a desencriptar:\n";
-  std::cout << ciphertext;
-  std::cout << "\n longitud:\n";
-  std::cout << strlen((char *)ciphertext);
-  int decryptedtext_len = decrypt(ciphertext, strlen((char *)ciphertext), key, iv,
+  int ciphertext_len = strlen((char *)ciphertext);
+  std::cout << "\n SYMETRIC DECRYPT ENCRIPTED LEN\n";
+  std::cout << ciphertext_len;
+  int decryptedtext_len = decrypt(ciphertext, ciphertext_len, key, iv,
     decryptedtext);
 
   /* Add a NULL terminator. We are expecting printable text */
@@ -162,10 +330,18 @@ void OTX_WRAP::symmetricDecrypt(unsigned char ciphertext[255], unsigned char (&p
   memcpy(plainText,decryptedtext,decryptedtext_len);
   plainText[decryptedtext_len]='\0';
 
-   /* Clean up */
+  std::cout << "\n ================DECRYPT OTX_WRAP================ \n";
+  std::cout << "\n ENCRYPTED TEXT: \n";
+  std::cout << ciphertext;
+  std::cout << "\n DECRYPTED TEXT :\n";
+  std::cout << decryptedtext;
+  std::cout << "\n LENGTH ENCRYPTED:\n";
+  std::cout << decryptedtext_len;
+
+  /* Clean up */
   EVP_cleanup();
   ERR_free_strings();
-
+  return decryptedtext_len;
 
 }
 
@@ -279,8 +455,8 @@ QString OTX_WRAP::signText(QString s_nymId,QString qstrText)
 
     if (NULL == pNym) //signer not loaded
     {
-        QString qstrErrorMsg = QString("%1: %2").arg("Failed loading the signer; unable to continue. NymID").arg(s_nymId);
-        QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);
+       /* QString qstrErrorMsg = QString("%1: %2").arg("Failed loading the signer; unable to continue. NymID").arg(s_nymId);
+        QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);*/
         return "Failed to load signer";
     }
     else //signer loaded
@@ -330,23 +506,21 @@ return signedText;
 QString OTX_WRAP::encryptText(QString e_nymId, QString plainText)
 {
 QString encryptedText="Failed to encrypt : \n "+ plainText;// if encryption fails notify and return plain text
-OTString strSignerNymID(e_nymId.toStdString().c_str());
-OTIdentifier signer_nym_id(strSignerNymID);
+OTString strContactNymID(e_nymId.toStdString().c_str());
+OTIdentifier contact_nym_id(strContactNymID);
 setOfNyms setRecipients;
 
-if (!signer_nym_id.IsEmpty())
+if (!contact_nym_id.IsEmpty())
 {
-    OTPasswordData thePWData("Load Credentials");
+   // OTPasswordData thePWData("Load Credentials");
 
-    OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadNym(signer_nym_id,
-                                                           false, //bChecking=false
-                                                           "DlgEncrypt::on_pushButtonEncrypt_clicked",
-                                                           &thePWData);
+    OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(contact_nym_id);
     if (NULL == pNym)
     {
-        QString qstrErrorMsg = QString("%1: %2").
-                arg("Failed trying to load the signer ").arg(e_nymId);
-        QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);
+    std::cout  << "\n Failed to load Public Nym: " +e_nymId.toStdString() +". Check if exists in this OT server. \n";
+        //QString qstrErrorMsg = QString("%1: %2").
+        //        arg("Failed trying to load the signer ").arg(e_nymId);
+        //QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);
     }
     else
     {
@@ -357,8 +531,8 @@ if (!signer_nym_id.IsEmpty())
 
         if (!theEnvelope.Seal(setRecipients, strInput))
         {
-            QMessageBox::warning(pParentWidget, "Encryption Failed",
-                                 "Failed trying to encrypt message.");
+            //QMessageBox::warning(pParentWidget, "Encryption Failed",
+            //                     "Failed trying to encrypt message.");
             return encryptedText;//return plain text with failure message
         }
         else
@@ -378,7 +552,8 @@ if (!signer_nym_id.IsEmpty())
     }
 
 
-}
+} else {std::cout  << "\n Failed to load Contact Nym! Check if the contact has a valid nym.  Try /f inside chat window \n";}
+
 
 return encryptedText;
 }
@@ -412,10 +587,7 @@ bool OTX_WRAP::verifySignature(QString s_nymId, QString signedPlainText,QString 
         {
             OTPasswordData thePWData("load credentials");
 
-            OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadNym(nym_id,
-                                                                   false, //bChecking=false
-                                                                   "DlgEncrypt::on_pushButtonDecrypt_clicked",
-                                                                   &thePWData);
+            OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(nym_id);
             if (NULL != pNym)
             {
                 if (theSignedFile.VerifySignature(*pNym, &thePWData))
@@ -513,6 +685,9 @@ return decryptedText;
 bool OTX_WRAP::decryptAndVerify(QString signerNymId, QString recipientNymId,
                                   QString signedEncryptedText, QString &decryptedText)
 {
+  std::cout << "\nOTX_WRAP: decryptAndVerify: \n";
+  std::cout << signedEncryptedText.toStdString()+"\n recipientNymId:";
+  std::cout << recipientNymId.toStdString();
 
   QString signedDecrypted=decryptText(recipientNymId,signedEncryptedText);
   QString messagePayload;
@@ -586,6 +761,11 @@ std::string OTX_WRAP::getNymPublicKey(std::string nymid)
 return OTAPI_Wrap::GetNym_SourceForID(nymid);
 }
 
+void OTX_WRAP::openContractOTServerScreen()
+{
+ OTX::It(pParentWidget)->mc_defaultserver_slot();
+
+}
 void OTX_WRAP::openRoleCreationScreen()
 {
     // Get the current profile in Cambrian
@@ -645,12 +825,8 @@ void OTX_WRAP::openRoleCreationScreen()
                break; // finish the loop when found  nymID
            }
 
-
-
       if (deleteProfile != NULL)
        {
-
-
 
           if(deleteProfile->m_arraypaAccountsXmpp.GetSize()|deleteProfile->m_arraypaApplications.GetSize())
                     {
@@ -675,6 +851,64 @@ void OTX_WRAP::openRoleCreationScreen()
 
 
 }
+
+void OTX_WRAP::addOTServerContract(QString Url)
+{
+
+
+    QVariant varDefault(Url);
+    QString qstrURL = theWizard.field("URL").toString();
+                // --------------------------------
+                if (qstrURL.isEmpty())
+                {
+                    QMessageBox::warning(this, tr("URL is Empty"),
+                        tr("No URL was provided to dowload the contract."));
+
+                    return;
+                }
+
+                QUrl theURL(qstrURL);
+                // --------------------------------
+                if (m_pDownloader)
+                {
+                    m_pDownloader->setParent(NULL);
+                    m_pDownloader->disconnect();
+                    m_pDownloader->deleteLater();
+
+                    m_pDownloader = NULL;
+                }
+                // --------------------------------
+                m_pDownloader = new FileDownloader(theURL, this);
+
+                connect(m_pDownloader, SIGNAL(downloaded()), SLOT(DownloadedURL()));
+            }
+            // --------------------------------
+
+                               ImportContract(qstrContents);
+
+            // --------------------------------
+        if (bIsContents)
+            {
+                QString qstrContents = theWizard.getContents();
+
+                if (qstrContents.isEmpty())
+                {
+                    QMessageBox::warning(this, tr("Empty Contract"),
+                        tr("Failure Importing: Contract is Empty."));
+                    return;
+                }
+                // -------------------------
+                ImportContract(qstrContents);
+            }
+        }
+        // --------------------------------
+        else if (bIsCreating)
+        {
+
+        }
+    }
+}
+
 
 OTX_WRAP::~OTX_WRAP()
 {   //std::cout << "Destroying otx wrap";

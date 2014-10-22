@@ -34,7 +34,7 @@ unix: {
 ##  LIBS += -lcurl
 
     LIBS       += -L$${PWD}/otx/libs/mac -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -lcurl -ldl
-    LIBS += -L"/usr/local/lib" -lcrypto -lssl
+    LIBS += -L"/usr/local/lib" -lcrypto -lssl -lz
     LIBS += -L$${OUT_PWD}/bitcoin-api  -lbitcoin-api
     LIBS += -L$${OUT_PWD}/jsoncpp -ljsoncpp
     LIBS += -L$${OUT_PWD}/libidn -llibidn
@@ -180,8 +180,10 @@ SOURCES += \
     TChannel.cpp \
     WQmlToolbar.cpp \
     MenuIcons.cpp \
-    WChatLogHtml.cpp
-
+ 	WChatLogHtml.cpp \
+    TCorporation.cpp \
+    WToolbar.cpp \
+    WToolbarActions.cpp
 
 HEADERS += \
     CArray.h \
@@ -262,8 +264,10 @@ HEADERS += \
     TChannel.h \
     WQmlToolbar.h \
     MenuIcons.h \
-    WChatLogHtml.h
-
+	WChatLogHtml.h \
+    TCorporation.h \
+    WToolbar.h \
+    WToolbarActions.h
 
 
 FORMS += \

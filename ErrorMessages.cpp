@@ -856,17 +856,21 @@ void
 MessageLog_AppendTextFormatCo(QRGBX coxTextColor, PSZAC pszFmtTemplate, ...)
 	{
 	va_list vlArgs;
-	va_start(OUT vlArgs, pszFmtTemplate);
+
+    va_start(OUT vlArgs, pszFmtTemplate);
 	g_oMessageLog.AppendTextFormat_VL(coxTextColor, pszFmtTemplate, vlArgs);
-	}
+
+}
 
 void
 MessageLog_AppendTextFormatSev(ESeverity eSeverity, PSZAC pszFmtTemplate, ...)
 	{
-	va_list vlArgs;
+
+    va_list vlArgs;
 	va_start(OUT vlArgs, pszFmtTemplate);
 	g_oMessageLog.AppendTextFormat_VL(CoxFromSeverity(eSeverity), pszFmtTemplate, vlArgs);
-	if (eSeverity >= eSeverityWarningToErrorLog)
+
+    if (eSeverity >= eSeverityWarningToErrorLog)
 		{
 		#ifdef DEBUG
 		MessageLog_Show();		// Any error automatically shows the Message Log

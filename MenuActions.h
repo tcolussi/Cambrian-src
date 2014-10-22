@@ -94,8 +94,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 	eMenuAction_DisplayProfileInfo,		// Show the node displaying the profile(s) info
 	eMenuAction_DisplayCertificates,	// Display the certificates securing (encrypting) the communication
 	eMenuAction_DisplayBallotMaster,	// Manage ballots to create polls
-	eMenuAction_DisplayGroupManager,	// Manage groups
-
+	eMenuAction_DisplayGroupManager,	// Manage groups   
     eMenuAction_WikiSubMenu,
 	//eMenuAction_WikiNavShellContacts,
 	//eMenuAction_WikiNavShellSideBar,
@@ -130,8 +129,10 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 
 	eMenuAction_ConfigurationSaveAsXmlFile,	// The user may save the configuration under a different file name.  Useful to perform a backup.
 	eMenuAction_ConfigurationOpenFromXmlFile,	// Open a configuration file
-
-	eMenuAction_Close,					// Close the window
+     #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    eMenuAction_OpenOTServerContrat,    // OT Server Contract management
+    #endif
+    eMenuAction_Close,					// Close the window
 	eMenuAction_Quit,					// Quit the chat application
 
 	///////////////////////////////////

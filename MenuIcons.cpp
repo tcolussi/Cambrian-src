@@ -22,7 +22,6 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 	"StatusConnecting",		// eMenuIcon_PresenceAccountConnecting
 	"StatusDisconnected",	// eMenuIcon_PresenceAccountDisconnected
 	"ServerConnect",		// eMenuIcon_AccountReconnect
-
 	"Chat",				// eMenuIcon_Chat
 	"ChatMessage3",		// eMenuIcon_MessageNew
 	"Pencil",			// eMenuIcon_Pencil_10x10
@@ -75,7 +74,10 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 	"Browser",			// eMenuIcon_Browser (old: eMenuAction_DisplaySecureWebBrowsing)
 	"GoBack",			// eMenuIcon_GoBack
 	"GoForward",		// eMenuIcon_GoForward
-
+   #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    "contractOTserver", // eMenuIcon_contractOTserver
+   #endif
+    //"Close",			// eMenuIcon_Close
 	":/images/ui/prevPageIcon.png", // eMenuIcon_Toolbar_GoBack
 	":/images/ui/nextPageIcon.png", // eMenuIcon_Toolbar_GoForward
 	":/images/ui/refreshPageIcon.png", // eMenuIcon_Toolbar_Reload

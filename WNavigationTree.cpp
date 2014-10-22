@@ -170,7 +170,9 @@ WNavigationTree::NavigationTree_SelectTreeItemWidget(CTreeItemW * poTreeItem)
 		Assert(PGetRuntimeInterfaceOf_ITreeItem(poTreeItem->m_piTreeItem) != NULL);
 		poTreeItem->setVisible(true);			// Any selected Tree Item should be visible within the Navigation Tree
 		m_pwTreeView->setCurrentItem(poTreeItem);
-		Toolbar_TabSelect(poTreeItem->m_piTreeItem);
+     #ifdef COMPILE_WITH_TOOLBAR
+        Toolbar_TabSelect(poTreeItem->m_piTreeItem);
+     #endif
 		}
 	}
 
@@ -384,8 +386,11 @@ WNavigationTree::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int UNUSED_P
 		{
 		Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItem) == pTreeItem);
 		pTreeItem->TreeItem_IconUpdateOnMessagesRead();	// If the user click on a Tree Item (typically a contact or group), assume all messages related to this Tree Item have been read
-		Toolbar_TabSelect(pTreeItem);
-		}
+        #ifdef COMPILE_WITH_TOOLBAR
+        Toolbar_TabSelect(pTreeItem);
+        #endif
+
+    }
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

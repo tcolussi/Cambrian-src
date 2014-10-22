@@ -24,8 +24,10 @@ void
 OJapiChatLog::pin()
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiChatLog::pin()\n");
-	Toolbar_TabAddAndSelect(m_pwChatLog->m_pContactOrGroup);
-	}
+    #ifdef COMPILE_WITH_TOOLBAR
+    Toolbar_TabAddAndSelect(m_pwChatLog->m_pContactOrGroup);
+    #endif
+    }
 
 //	typingStarted(), slot
 //	Call this method to indicate the use started typing something.
