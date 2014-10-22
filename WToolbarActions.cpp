@@ -20,7 +20,7 @@ WTabs::OnTabNew()
 void
 WTabs::OnTabSelected(ITreeItem * pTreeItemSelected)
 	{
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "OnTabSelected(0x$p)\n", pTreeItemSelected);
+	//MessageLog_AppendTextFormatSev(eSeverityNoise, "OnTabSelected(0x$p)\n", pTreeItemSelected);
 	if (pTreeItemSelected == NULL)
 		return;
 	RTI_ENUM rti = pTreeItemSelected->EGetRuntimeClass();
@@ -64,7 +64,16 @@ Toolbar_PopulateTabs()
 	}
 
 void
-Toolbar_TabAdd(ITreeItem * pTreeItem)
+Toolbar_TabAddWithoutSelecting(ITreeItem * pTreeItem)
+	{
+	Assert(pTreeItem != NULL);
+	if (g_pwTabs == NULL)
+		return;	// Temporary: if the toolbar is not compiled
+	g_pwTabs->TabAddUniqueP((PSZAC)pTreeItem->TreeItem_PszGetNameDisplay(), pTreeItem);
+	}
+
+void
+Toolbar_TabAddAndSelect(ITreeItem * pTreeItem)
 	{
 	Assert(pTreeItem != NULL);
 	if (g_pwTabs == NULL)
@@ -75,7 +84,7 @@ Toolbar_TabAdd(ITreeItem * pTreeItem)
 void
 Toolbar_TabSelect(ITreeItem * pTreeItem)
 	{
-	MessageLog_AppendTextFormatCo(d_coRed, "Toolbar_TabSelect($s)\n", (pTreeItem != NULL) ? pTreeItem->TreeItem_PszGetNameDisplay() : NULL);
+	//MessageLog_AppendTextFormatCo(d_coRed, "Toolbar_TabSelect($s)\n", (pTreeItem != NULL) ? pTreeItem->TreeItem_PszGetNameDisplay() : NULL);
 	if (g_pwTabs == NULL)
 		return;	// Temporary: if the toolbar is not compiled
 	Assert(g_pwTabs != NULL);

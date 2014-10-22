@@ -131,7 +131,8 @@ void LaunchApplication_GroupManager(TGroup * pGroupToSelect_YZ);
 void LaunchApplication_Corporations(TGroup * pCorporationToSelect_YZ);
 void LaunchApplication_PeerManager(TContact * pContactToSelect_YZ);
 
-void Toolbar_TabAdd(ITreeItem * pTreeItem);
+void Toolbar_TabAddWithoutSelecting(ITreeItem * pTreeItem);
+void Toolbar_TabAddAndSelect(ITreeItem * pTreeItem);
 void Toolbar_TabSelect(ITreeItem * pTreeItem);
 void Toolbar_TabRedraw(ITreeItem * pTreeItem);
 
