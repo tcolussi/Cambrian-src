@@ -78,9 +78,11 @@ public:
     // Contract handle
      void openContractOTServerScreen();
 
+void OTX_WRAP::addOTServerContract(QString Url)
  ~OTX_WRAP();
- private:
+   private:
  // It will be invoked only once per run in the constructor of this class.
+    QPointer<FileDownloader> m_pDownloader;
     bool SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup & theCallback);
     bool SetupPasswordCallback(OTCaller & passwordCaller, OTCallback & passwordCallback);
     void LoadWallewithPassprhase();
