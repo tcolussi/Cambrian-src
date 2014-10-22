@@ -1,8 +1,15 @@
 #ifndef SAMPLENETMESSAGES_H
 #define SAMPLENETMESSAGES_H
 
+#ifdef __MINGW32__
+  #include <stdint-gcc.h>
+  typedef uint64_t u_int64_t;
+#endif
+
 #include <map>
 #include <opentxs/TR1_Wrapper.hpp>
+
+
 
 
 enum NetMessageType

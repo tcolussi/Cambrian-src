@@ -10,9 +10,9 @@
 #-------------------------------------------------
 # Global
 
-TEMPLATE    = lib
-CONFIG     += precompile_header
-CONFIG += staticlib
+TEMPLATE     = lib
+CONFIG       += precompile_header
+CONFIG       += staticlib
 win32:CONFIG += console
 
 TARGET      = OTX
@@ -22,10 +22,10 @@ QT         += core gui sql network widgets
 DEFINES    += "OT_ZMQ_MODE=1"
 
 unix:{
-LIBS       += -L"/usr/local/lib" -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
+	LIBS       += -L"/usr/local/lib" -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
 }
 else: {
-LIBS       +=  -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
+	LIBS       +=  -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
 }
 
 #-------------------------------------------------

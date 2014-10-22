@@ -1,5 +1,5 @@
 
-CONFIG     += debug_and_release silent
+CONFIG     += debug_and_release C++11
 
 SOLUTION_DIR=$${PWD}/
 
@@ -12,7 +12,7 @@ INCLUDEPATH += $${SOLUTION_DIR}../src/jsoncpp
 win32:{
     INCLUDEPATH += $${SOLUTION_DIR}../src/curl/include
     INCLUDEPATH += $${SOLUTION_DIR}../src/libidn/libidn
-    INCLUDEPATH += $${SOLUTION_DIR}../src/libidn/windows/include
+
 
     equals(TEMPLATE,vcapp)|equals(TEMPLATE,vclib):{
         DESTDIR     = $${SOLUTION_DIR}../lib/$(PlatformName)/$(Configuration)
@@ -20,6 +20,8 @@ win32:{
         OBJECTS_DIR = $${SOLUTION_DIR}../obj/$${TARGET}
         RCC_DIR     = $${SOLUTION_DIR}../out/$${TARGET}/resources
         UI_DIR      = $${SOLUTION_DIR}../out/$${TARGET}/ui/
+
+		INCLUDEPATH += $${SOLUTION_DIR}../src/libidn/windows/include
     }
     else:{
         !contains(QMAKE_HOST.arch, x86_64):{
@@ -51,7 +53,10 @@ QMAKE_CXXFLAGS_WARN_ON -= -Wall -Wextra -Wunused-parameter -Wunused-function -Wu
 win32:{
     DEFINES     += "_UNICODE" "NOMINMAX"
     CharacterSet = 1
-    QMAKE_CXXFLAGS += /bigobj /Zm480 /wd4512 /wd4100
+
+	equals(TEMPLATE,vcapp)|equals(TEMPLATE,vclib):{
+		QMAKE_CXXFLAGS += /bigobj /Zm480 /wd4512 /wd4100
+	}
 }
 
 

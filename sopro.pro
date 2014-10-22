@@ -22,32 +22,28 @@ INCLUDEPATH += otx/src/jsoncpp
 INCLUDEPATH += otx/src/core
 INCLUDEPATH += otx/src/opentxs
 INCLUDEPATH += otx/src
-PRECOMPILED_HEADER = otx/src/core/stable.hpp
 
 #-------------------------------------------------
 # Linked Libs
 DEFINES    += "OT_ZMQ_MODE=1"
 # MAC AND LINUX:
 unix: {
+	LIBS += -L$${PWD}/otx/libs/mac
+	libs += -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -lcurl -ldl
 
-##  LIBS += -L$${OUT_PWD}/../curl
-##  LIBS += -lcurl
+	LIBS += -L"/usr/local/lib" -lcrypto -lssl -lz
 
-    LIBS       += -L$${PWD}/otx/libs/mac -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -lcurl -ldl
-    LIBS += -L"/usr/local/lib" -lcrypto -lssl -lz
-    LIBS += -L$${OUT_PWD}/bitcoin-api  -lbitcoin-api
+	LIBS += -L$${OUT_PWD}/bitcoin-api  -lbitcoin-api
     LIBS += -L$${OUT_PWD}/jsoncpp -ljsoncpp
     LIBS += -L$${OUT_PWD}/libidn -llibidn
     LIBS += -L$${OUT_PWD}/nmcrpc -lnmcrpc
     LIBS += -L$${OUT_PWD}/otx -lOTX
-
-
-
-
 }
 #windows
 else:  {
-LIBS       +=  -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
+	LIBS += -L$${PWD}/otx/libs/mac
+	LIBS +=  -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
+
 }
 
 win32: {
@@ -95,7 +91,7 @@ QMAKE_CXXFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -W
 QMAKE_CXXFLAGS += -std=c++11 -DCXX_11
 CONFIG += c++11
 
-PRECOMPILED_HEADER = PreCompiledHeaders.h
+#PRECOMPILED_HEADER = PreCompiledHeaders.h
 
 
 SOURCES += \
