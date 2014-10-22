@@ -74,8 +74,11 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 	"Browser",			// eMenuIcon_Browser (old: eMenuAction_DisplaySecureWebBrowsing)
 	"GoBack",			// eMenuIcon_GoBack
 	"GoForward",		// eMenuIcon_GoForward
+   #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    "contractOTserver", // eMenuIcon_contractOTserver
+   #endif
 
-	"Close",			// eMenuIcon_Close
+    "Close",			// eMenuIcon_Close
 	"Quit",				// eMenuIcon_Quit
 	"Menu",				// eMenuIcon_Menu
 

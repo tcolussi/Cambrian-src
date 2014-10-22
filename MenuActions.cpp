@@ -713,7 +713,7 @@ const EMenuActionByte c_rgzeActionsMenuAdvanced[] =
 	eMenuActionSeparator,
     //eMenuAction_WikiSubMenu, // added manually c_rgzeActionsMenuWiki[]
 
-    #ifdef COMPILE_WITH_CRYPTOMANIA
+    #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
     eMenuAction_OpenOTServerContrat,
     #endif
     ezMenuActionNone,
@@ -879,8 +879,10 @@ MainWindow_MenuActionExecute(QAction * pAction)
 	case eMenuAction_DisplayCertificates:
         g_oConfiguration.NavigationTree_DisplayAllCertificatesToggle();
         return;
+    #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
     case eMenuAction_OpenOTServerContrat:
         pOTX->openContractOTServerScreen();
+    #endif
     case eMenuAction_DisplayWallet:
 		g_oConfiguration.NavigationTree_DisplayWallet();
 		return;

@@ -74,7 +74,9 @@ enum EMenuIcon			// Must be in sync with c_mapepszIconResources[]
 	eMenuIcon_Browser,
 	eMenuIcon_GoBack,
 	eMenuIcon_GoForward,
-
+    #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    eMenuIcon_contractOTserver, // eMenuIcon_contractOTserver
+    #endif
 	eMenuIcon_Close,
 	eMenuIcon_Quit,
 	eMenuIcon_Menu,

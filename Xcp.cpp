@@ -8,7 +8,7 @@
 #endif
 #include "Xcp.h"
 #include "XcpApi.h"
-
+#include <iostream>
 void
 CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData)
 	{
@@ -29,7 +29,12 @@ CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXc
 void
 ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, PSZUC pszXmlApiParameters)
 	{
-	Assert(pszApiName != NULL);
+    std::cout <<"\n  XCPAPI_INVOKE pszApiName: ";
+    std::cout << pszApiName;
+    std::cout << "\n pszXmlApiParameters: ";
+    std::cout << pszXmlApiParameters;
+    std::cout << "\n";
+    Assert(pszApiName != NULL);
 	Assert(pszApiName[0] != '\0');
 	//MessageLog_AppendTextFormatSev(eSeverityComment, "XcpApi_Invoke($s, $s)\n", pszApiName, pszXmlApiParameters);
 	CBinXcpStanza binXcpStanza;
@@ -371,7 +376,9 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 
 	if (m_paData->cbData >= m_cbStanzaThresholdBeforeSplittingIntoTasks)
 		{
-		// The data is too big to fit into one XMPP stanza, therefore allocate a new task to send it by smaller chunks
+        std::cout << "\n !!!!!!Xcp:  The stanza data is too big to fin in ONE XMPP stanza : m_cbStanzaThresholdBeforeSplittingIntoTasks =";
+        std::cout << m_cbStanzaThresholdBeforeSplittingIntoTasks;
+        // The data is too big to fit into one XMPP stanza, therefore allocate a new task to send it by smaller chunks
 		CTaskSendReceive * pTaskSend = pContact->m_listaTasksSendReceive.PAllocateTaskSend_YZ(m_uFlags & F_kfContainsSyncData);
 		if (pTaskSend == NULL)
 			{
@@ -411,11 +418,12 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 #ifdef COMPILE_WITH_CRYPTOMANIA
  /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
     // Get Signer and Remote Nym
-    TProfile * pProfile = new TProfile(&g_oConfiguration);
 
-    QString signerNymId = pProfile->m_strNymID.ToQString();
+    std::cout << "\n Profile count:";
+
+    QString signerNymId = g_oConfiguration.m_pProfileSelected->m_strNymID;//pProfile->m_strNymID.ToQString();
     QString receiverNymId = pContact->m_strNymID.ToQString();
-
+    std::string strEncryptedText;
 
     std::string strDataStanza = std::string(reinterpret_cast<const char *>(pszDataStanza));
     QString qDataStanza = QString::fromStdString(strDataStanza);
@@ -432,15 +440,15 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
             // Begin the Sign and Encrypt process..
             //The public Nym is retrieved from an OT server if is not stored locally as a "Public Nym"
             //At the moment test the encryption...
+            strEncryptedText = pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza).toStdString();
 
-            std::cout << pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza).toStdString();
         }
-        else { std::cout << "Nym Id Empty (Contact >> Xcp Encryption)";}
+        else { std::cout << "\n!!!!Nym Id Empty (Contact >> Xcp Encryption)!!!!\n";}
 
-    } else { std::cout << "Nym Id Empty (Signer >> Xcp Encryption)";}
+    } else { std::cout << "\n!!!!!Nym Id Empty (Signer >> Xcp Encryption)!!!!\n";}
 
     // pszDataStanzaEnc must be asigned with the return value of above  function
-    PSZUC pszDataStanzaEnc = pszDataStanza;
+    PSZUC pszDataStanzaEnc = (PSZUC) strEncryptedText.c_str() ;
     int cbDataStanzaEnc = strlen ((const char*) pszDataStanzaEnc);
     g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanzaEnc, cbDataStanzaEnc);
 #else

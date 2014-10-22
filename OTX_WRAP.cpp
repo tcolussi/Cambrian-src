@@ -455,8 +455,8 @@ QString OTX_WRAP::signText(QString s_nymId,QString qstrText)
 
     if (NULL == pNym) //signer not loaded
     {
-        QString qstrErrorMsg = QString("%1: %2").arg("Failed loading the signer; unable to continue. NymID").arg(s_nymId);
-        QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);
+       /* QString qstrErrorMsg = QString("%1: %2").arg("Failed loading the signer; unable to continue. NymID").arg(s_nymId);
+        QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);*/
         return "Failed to load signer";
     }
     else //signer loaded
@@ -506,23 +506,21 @@ return signedText;
 QString OTX_WRAP::encryptText(QString e_nymId, QString plainText)
 {
 QString encryptedText="Failed to encrypt : \n "+ plainText;// if encryption fails notify and return plain text
-OTString strSignerNymID(e_nymId.toStdString().c_str());
-OTIdentifier signer_nym_id(strSignerNymID);
+OTString strContactNymID(e_nymId.toStdString().c_str());
+OTIdentifier contact_nym_id(strContactNymID);
 setOfNyms setRecipients;
 
-if (!signer_nym_id.IsEmpty())
+if (!contact_nym_id.IsEmpty())
 {
-    OTPasswordData thePWData("Load Credentials");
+   // OTPasswordData thePWData("Load Credentials");
 
-    OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadNym(signer_nym_id,
-                                                           false, //bChecking=false
-                                                           "DlgEncrypt::on_pushButtonEncrypt_clicked",
-                                                           &thePWData);
+    OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(contact_nym_id);
     if (NULL == pNym)
     {
-        QString qstrErrorMsg = QString("%1: %2").
-                arg("Failed trying to load the signer ").arg(e_nymId);
-        QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);
+    std::cout  << "\n Failed to load Public Nym: " +e_nymId.toStdString() +". Check if exists in this OT server. \n";
+        //QString qstrErrorMsg = QString("%1: %2").
+        //        arg("Failed trying to load the signer ").arg(e_nymId);
+        //QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);
     }
     else
     {
@@ -533,8 +531,8 @@ if (!signer_nym_id.IsEmpty())
 
         if (!theEnvelope.Seal(setRecipients, strInput))
         {
-            QMessageBox::warning(pParentWidget, "Encryption Failed",
-                                 "Failed trying to encrypt message.");
+            //QMessageBox::warning(pParentWidget, "Encryption Failed",
+            //                     "Failed trying to encrypt message.");
             return encryptedText;//return plain text with failure message
         }
         else
@@ -554,7 +552,8 @@ if (!signer_nym_id.IsEmpty())
     }
 
 
-}
+} else {std::cout  << "\n Failed to load Contact Nym! Check if the contact has a valid nym.  Try /f inside chat window \n";}
+
 
 return encryptedText;
 }
@@ -588,10 +587,7 @@ bool OTX_WRAP::verifySignature(QString s_nymId, QString signedPlainText,QString 
         {
             OTPasswordData thePWData("load credentials");
 
-            OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadNym(nym_id,
-                                                                   false, //bChecking=false
-                                                                   "DlgEncrypt::on_pushButtonDecrypt_clicked",
-                                                                   &thePWData);
+            OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(nym_id);
             if (NULL != pNym)
             {
                 if (theSignedFile.VerifySignature(*pNym, &thePWData))
@@ -689,6 +685,9 @@ return decryptedText;
 bool OTX_WRAP::decryptAndVerify(QString signerNymId, QString recipientNymId,
                                   QString signedEncryptedText, QString &decryptedText)
 {
+  std::cout << "\nOTX_WRAP: decryptAndVerify: \n";
+  std::cout << signedEncryptedText.toStdString()+"\n recipientNymId:";
+  std::cout << recipientNymId.toStdString();
 
   QString signedDecrypted=decryptText(recipientNymId,signedEncryptedText);
   QString messagePayload;
@@ -765,6 +764,7 @@ return OTAPI_Wrap::GetNym_SourceForID(nymid);
 void OTX_WRAP::openContractOTServerScreen()
 {
  OTX::It(pParentWidget)->mc_defaultserver_slot();
+
 }
 void OTX_WRAP::openRoleCreationScreen()
 {

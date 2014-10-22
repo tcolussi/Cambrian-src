@@ -5,7 +5,11 @@
 #endif
 #include "TApplicationBallotmaster.h"
 #include "qdebug.h"
+#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+#include <opentxs/OpenTransactions.hpp>
+#include <opentxs/OTPseudonym.hpp>
 
+#endif
 OJapiApps::OJapiApps(OJapiCambrian * poCambrian)
 	{
     m_poCambrian = poCambrian;
@@ -792,8 +796,17 @@ TProfile * pProfile = new TProfile(&g_oConfiguration);
     //Create the new Role
 
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-//create the role inside OT
+
+if (OTAPI_Wrap::It()->GetServerCount() >0)
+{
+    //create the role inside OT
     std::string nymId=OTAPI_Wrap::It()->CreateNym(1024, "","");
+// Load the the nym in OTServer to be visible to other nyms
+    OTString     strNym     (nymId.c_str());
+    OTIdentifier pub_nym_id     (strNym);
+    //Publish the nym
+
+   // OTAPI_Wrap::OTAPI()->LoadPublicNym(pub_nym_id);
 
  if (OTAPI_Wrap::It()->SetNym_Name(nymId,nymId,name.toStdString()))
  { // Everything is ok with OT, now create the Role in TProfile
@@ -817,6 +830,16 @@ TProfile * pProfile = new TProfile(&g_oConfiguration);
   //delete nymid created
   OTAPI_Wrap::It()->Wallet_RemoveNym(nymId);
     }
+
+}// if there is a OT server contract
+else
+{
+ QMessageBox msg;
+ msg.warning(g_pwMainWindow,"Action Required","Please asociate valid OT server.","OK");
+
+ pOTX->openContractOTServerScreen();
+
+}
 #endif
 
 return pProfile->POJapiGet();

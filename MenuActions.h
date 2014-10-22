@@ -129,7 +129,7 @@ enum EMenuAction	// Must be in sync with c_mapepszmMenuActions[]
 
 	eMenuAction_ConfigurationSaveAsXmlFile,	// The user may save the configuration under a different file name.  Useful to perform a backup.
 	eMenuAction_ConfigurationOpenFromXmlFile,	// Open a configuration file
-    #ifdef COMPILE_WITH_CRYPTOMANIA
+     #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
     eMenuAction_OpenOTServerContrat,    // OT Server Contract management
     #endif
     eMenuAction_Close,					// Close the window

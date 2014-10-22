@@ -1318,7 +1318,7 @@ CSocketXmpp::OnEventXmppStanzaArrived()
 			{
 
              m_pAccount->ChatLog_DisplayStanza(m_pXmlNodeStanzaCurrent_YZ);
-             std::cout << m_pXmlNodeStanzaCurrent_YZ->m_pszuTagValue;
+
 			return;
 			}
 		// We have an error with the message

@@ -230,8 +230,22 @@ main(int argc, char *argv[])
     wMainWindow.ConfigurationLoadFromXml();
 
     #ifdef COMPILE_WITH_SPLASH_SCREEN
+
+    if (OTAPI_Wrap::GetServerCount() > 0) // if at least one OT server is selected
+    {
     wMainWindow.showMaximized();
     wMainWindow.maximizeApp("sopro-rolepage/index.html");
+    }
+    else{
+        QMessageBox msg;
+        msg.warning(g_pwMainWindow,"Welcome to Society Pro","A valid digital contract is need in order to securing comunications. \nPlease add a contract server.  \nFor more info please visit www.societypro.org","OK");
+        msg.showNormal();
+        //OTAPI_Wrap::It()->Sleep(5000);
+        pOTX->openContractOTServerScreen();
+        //wMainWindow.showMaximized();
+        wMainWindow.maximizeApp("sopro-rolepage/index.html");}
+
+
     #else
     wMainWindow.show();
 	#endif
