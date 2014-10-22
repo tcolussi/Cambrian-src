@@ -134,7 +134,8 @@ TContact::TreeItemContact_UpdateIconComposingStarted(ITreeItemChatLogEvents * pC
 		{
 		Assert(pContactOrGroup->EGetRuntimeClass() == RTI(TContact));
 		Assert(pContactOrGroup == this);
-		TreeItemW_SetIcon(eMenuIcon_Pencil_10x10);	// Use a smaller icon for a contact
+		TreeItemW_SetIconComposingText();
+		//TreeItemW_SetIcon(eMenuIcon_Pencil_10x10);	// Use a smaller icon for a contact
 		}
 
 	/*
@@ -159,6 +160,8 @@ TContact::TreeItemContact_UpdateIconComposingStopped(ITreeItemChatLogEvents * pC
 		//pMember->TreeItem_IconUpdate();
 		pMember->TreeItemGroupMember_SetIconComposingStopped();
 		}
+	else
+		pContactOrGroup->m_uFlagsTreeItem &= ~FTI_keIcon_mComposingText;
 	pContactOrGroup->TreeItem_IconUpdate();
 	}
 

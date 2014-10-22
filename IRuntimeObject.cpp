@@ -22,7 +22,11 @@ PGetRuntimeInterfaceOf_ITreeItem(const IRuntimeObject * piObject)
 	{
 	return (ITreeItem *)PGetRuntimeInterfaceOf_(RTI(ITreeItem), piObject);
 	}
-
+ITreeItemChatLogEvents *
+PGetRuntimeInterfaceOf_ITreeItemChatLogEvents(const IRuntimeObject * piObject)
+	{
+	return (ITreeItemChatLogEvents *)PGetRuntimeInterfaceOf_(RTI(ITreeItemChatLogEvents), piObject);
+	}
 TAccountXmpp *
 PGetRuntimeInterfaceOf_TAccountXmpp(const IRuntimeObject * piObject)
 	{

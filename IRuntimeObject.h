@@ -15,6 +15,7 @@ inline RTI_ENUM ERuntimeClassFromPsz(PSZUC pszRuntimeClass) { return (RTI_ENUM)U
 
 POBJECT PGetRuntimeInterfaceOf_(RTI_ENUM rti, const IRuntimeObject * piObject);
 ITreeItem * PGetRuntimeInterfaceOf_ITreeItem(const IRuntimeObject * piObject);
+ITreeItemChatLogEvents * PGetRuntimeInterfaceOf_ITreeItemChatLogEvents(const IRuntimeObject * piObject);
 TAccountXmpp * PGetRuntimeInterfaceOf_TAccountXmpp(const IRuntimeObject * piObject);
 TCertificate * PGetRuntimeInterfaceOf_TCertificate(const IRuntimeObject * piObject);
 

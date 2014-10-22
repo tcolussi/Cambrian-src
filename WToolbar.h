@@ -17,11 +17,11 @@
 class CTab
 {
 public:
-	CStr m_strName;		// Name of the tab
-	PVPARAM m_pvParam;	// User-defined data
-	int m_cxWidth;		// Width of the tab
+	CStr m_strName;				// Name of the tab
+	ITreeItem * m_pTreeItem;	// Tree Item associated with the tab (typically a TProfile or TContact, but it can be any ITreeItem)
+	int m_cxWidth;				// Width of the tab
 public:
-	CTab(PSZUC pszName, PVPARAM pvParam);
+	CTab(PSZUC pszName, ITreeItem * pTreeItem);
 };
 
 class CArrayPtrTabs : public CArray
@@ -36,8 +36,8 @@ class WTabs : public QWidget
 {
 protected:
 	CArrayPtrTabs m_arraypaTabs;
-	CTab * m_pTabSelected;	// Tab which is selected
-	CTab * m_pTabHover;		// Tab where the mouse is
+	CTab * m_pdTabSelected;	// Tab which is selected
+	CTab * m_pdTabHover;		// Tab where the mouse is
 	enum EHitTest
 		{
 		eHitTest_zNone				= 0x0000,
@@ -56,14 +56,17 @@ protected:
 public:
 	WTabs();
 	~WTabs();
-	CTab * TabAddP(PSZAC pszName, PVPARAM pvParam = NULL);
-	void TabAddAndSelect(PSZAC pszName, PVPARAM pvParam = NULL);
-	void TabRemove(PVPARAM pvParamTabToRemove);
+	CTab * TabAddP(PSZAC pszName, ITreeItem * pTreeItem = NULL);
+	CTab * TabAddUniqueP(PSZAC pszName, ITreeItem * pTreeItem);
+	void TabAddAndSelect(PSZAC pszName, ITreeItem * pTreeItem = NULL);
+	void TabAddUniqueAndSelect(PSZAC pszName, ITreeItem * pTreeItem);
+	void TabRemove(ITreeItem * pTreeItem);
 	void TabsRemmoveAll();
-	void TabSelect(PVPARAM pvParamTabToSelect);
+	void TabSelect(ITreeItem * pTreeItem);
+	void TabRepaint(ITreeItem * pTreeItem);
 	void OnTabNew();
-	void OnTabSelected(PVPARAM pvParamTabSelected);
-	void OnTabClosing(PVPARAM pvParamTabClosing);
+	void OnTabSelected(ITreeItem * pTreeItemSelected);
+	void OnTabClosing(ITreeItem * pTreeItemClosing);
 
 protected:
 	virtual QSize sizeHint() const;
@@ -73,7 +76,7 @@ protected:
 	virtual void leaveEvent(QEvent *);
 
 	void TabDelete(PA_DELETING CTab * paTab);
-	CTab * _PFindTabByParam(PVPARAM pvParamTab) const;
+	CTab * _PFindTabMatchingTreeItem(ITreeItem * pTreeItem) const;
 
 	void _SetSelectedTab(CTab * pTab);
 	void _SetFlagsHitTest(UINT uFlagsHitTest);
@@ -82,7 +85,7 @@ protected:
 
 	void _DrawTab(CPainterCell * pPainter, CTab * pTab);
 	void _Redraw() { update(); }
-};
+}; // WTabs
 
 //	Display tabs a the top of the toolbar
 class WToolbarTabs : public QWidget

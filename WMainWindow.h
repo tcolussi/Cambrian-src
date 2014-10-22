@@ -100,6 +100,7 @@ void NavigationTree_RenameSelectedItem();
 
 void NavigationTree_UpdatePresenceIcon(EMenuAction eMenuAction_Presence);
 void NavigationTree_UpdateNameOfSelectedProfile();
+void NavigationTree_SelectProfile(TProfile * pProfileToSelect);
 void NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(TProfile * pProfileSelected, BOOL fCreateNewProfile = FALSE);
 void NavigationTree_DisplayProfilesToogle();
 void NavigationTree_DisplayCertificatesToogle();
@@ -129,5 +130,9 @@ void LaunchApplication_Channels(TGroup * pChannelToSelect_YZ);
 void LaunchApplication_GroupManager(TGroup * pGroupToSelect_YZ);
 void LaunchApplication_Corporations(TGroup * pCorporationToSelect_YZ);
 void LaunchApplication_PeerManager(TContact * pContactToSelect_YZ);
+
+void Toolbar_TabAdd(ITreeItem * pTreeItem);
+void Toolbar_TabSelect(ITreeItem * pTreeItem);
+void Toolbar_TabRedraw(ITreeItem * pTreeItem);
 
 #endif // MAINWINDOW_H

@@ -950,6 +950,7 @@ ITreeItem::TreeItem_EDisplayContextMenu(const EMenuActionByte rgzeMenuActions[])
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+#define d_cyIndicatorPaddingTop	0
 #define d_cxIndicatorWidth		10
 #define d_cyIndicatorHeight		10
 
@@ -958,8 +959,21 @@ WMenuWithIndicator::WMenuWithIndicator(QToolButton * pwIndicator) : QMenu(NULL)
 	Assert(pwIndicator != NULL);
 	m_pwIndicator = pwIndicator;
 	QMargins oMargins = contentsMargins();
-	oMargins.setTop(d_cyIndicatorHeight);
+	oMargins.setTop(d_cyIndicatorHeight + d_cyIndicatorPaddingTop);
 	setContentsMargins(oMargins);
+
+//	setAttribute(Qt::WA_TranslucentBackground); // Enable the widget to be transparent
+	#if 0
+	QWidget * pwButton = new QPushButton("abc", this); // new QLabel("this is a label");
+	pwButton->move(50, 50);
+	QGraphicsDropShadowEffect * paShadow = new QGraphicsDropShadowEffect;
+	paShadow->setOffset(2);
+	paShadow->setBlurRadius(4);
+	paShadow->setColor(QColor(63, 63, 63, 180));
+	pwButton->setGraphicsEffect(paShadow);
+	#endif
+
+	//setStyleSheet("QMenu::indicator {  background-color: red; }");
 	pwIndicator->setMenu(this);
 	}
 
@@ -976,7 +990,7 @@ QSize
 WMenuWithIndicator::InitPolygon(BOOL fInitForPainting)
 	{
 	QSize size = QMenu::sizeHint();
-	int cxHeight = size.height(); // + d_cyIndicatorHeight + 2;
+	int cxHeight = size.height() + d_cyIndicatorPaddingTop;
 	size.setHeight(cxHeight);
 
 	int cxWidth = size.width();
@@ -984,10 +998,7 @@ WMenuWithIndicator::InitPolygon(BOOL fInitForPainting)
 
 	// Calculate the relative position of the indicator with respect to the menu
 	int xMenuLeft = Widget_GetPositionAbsoluteX(this);
-	//int xMenuRight = xMenuLeft + cxWidth;
 	int xParentLeft = Widget_GetPositionAbsoluteX(m_pwIndicator);
-	//int xParentRight = xParentLeft + m_pwIndicator->width();
-
 
 	//int xIndicator = (xParentLeft + m_pwIndicator->width() / 2) - (xMenuLeft + cxWidth / 2);
 	int cxHalfWidthIndicator = m_pwIndicator->width() / 2;
@@ -1002,17 +1013,17 @@ WMenuWithIndicator::InitPolygon(BOOL fInitForPainting)
 	if (xIndicatorBegin <= 0)
 		{
 		xIndicatorBegin = fInitForPainting;
-		xIndicator = cxHalfWidthIndicator;
+		xIndicator = d_cxIndicatorWidth;
+		xIndicatorEnd = d_cxIndicatorWidth * 2 - fInitForPainting;
 		}
-
-	//xIndicator = (xIndicatorBegin + xIndicatorEnd) / 2;
+	//MessageLog_AppendTextFormatCo(d_coRed, "WMenuWithIndicator::InitPolygon(xIndicatorBegin=$I, xIndicator=$I, xIndicatorEnd=$I)\n", xIndicatorBegin, xIndicator, xIndicatorEnd);
 
 	m_oPolygon.setPoints(8,
-		0, d_cyIndicatorHeight,
-		xIndicatorBegin, d_cyIndicatorHeight,
-		xIndicator, fInitForPainting,
-		xIndicatorEnd, d_cyIndicatorHeight,
-		xRight, d_cyIndicatorHeight,
+		0, d_cyIndicatorHeight + d_cyIndicatorPaddingTop,
+		xIndicatorBegin, d_cyIndicatorHeight + d_cyIndicatorPaddingTop,
+		xIndicator, fInitForPainting + d_cyIndicatorPaddingTop,
+		xIndicatorEnd, d_cyIndicatorHeight + d_cyIndicatorPaddingTop,
+		xRight, d_cyIndicatorHeight + d_cyIndicatorPaddingTop,
 		xRight, cxHeight - fInitForPainting,
 		0, cxHeight - fInitForPainting,
 		0, d_cyIndicatorHeight
@@ -1023,24 +1034,35 @@ WMenuWithIndicator::InitPolygon(BOOL fInitForPainting)
 QSize
 WMenuWithIndicator::sizeHint() const
 	{
-	WMenuWithIndicator * pwThis = (WMenuWithIndicator *)this;
+	WMenuWithIndicator * pwThis = const_cast<WMenuWithIndicator *>(this);	// sizeHint() is const, however InitPolygon() modifies the object
 	QSize size = pwThis->InitPolygon();
-	QRegion oRegion(m_oPolygon, Qt::OddEvenFill);
-	pwThis->setMask(oRegion);
-	/*
-	ensurePolished();
-	pwThis->raise();
-	//pwThis->activateWindow();
-	m_pwIndicator->repaint();
-	*/
+	pwThis->setMask(m_oPolygon);
 	return size;
+	}
+
+void
+WMenuWithIndicator::moveEvent(QMoveEvent *)
+	{
+	//MessageLog_AppendTextFormatCo(d_coRed, "WMenuWithIndicator::moveEvent()\n");
+	InitPolygon();
+	setMask(m_oPolygon);
 	}
 
 void
 WMenuWithIndicator::paintEvent(QPaintEvent * pEventPaint)
 	{
 	QMenu::paintEvent(pEventPaint);	// Draw the menu as usual
+
 	QPainter oPainter(this);
+
+	#if 0
+	QRect rc = rect();
+	rc.adjust(10, 10, 10, 10);
+	oPainter.fillRect(rc, d_coYellowPure);
+	QIcon oIcon = OGetIcon(eMenuIcon_Add);
+	oPainter.drawPixmap(16, 16, 16, 16, oIcon.pixmap(QSize(16,16)));
+	#endif
+
 	oPainter.setPen(d_coGray);
 	//oPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 	InitPolygon(TRUE);

@@ -18,17 +18,30 @@ WTabs::OnTabNew()
 	}
 
 void
-WTabs::OnTabSelected(PVPARAM pvParamTabSelected)
+WTabs::OnTabSelected(ITreeItem * pTreeItemSelected)
 	{
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "OnTabSelected(0x$p)\n", pvParamTabSelected);
-	NavigationTree_PopulateTreeItemsAccordingToSelectedProfile((TProfile *)pvParamTabSelected);
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "OnTabSelected(0x$p)\n", pTreeItemSelected);
+	if (pTreeItemSelected == NULL)
+		return;
+	RTI_ENUM rti = pTreeItemSelected->EGetRuntimeClass();
+	if (rti == RTI(TProfile))
+		{
+		NavigationTree_SelectProfile((TProfile *)pTreeItemSelected);
+		return;
+		}
+	ITreeItemChatLogEvents * pContactOrGroup = PGetRuntimeInterfaceOf_ITreeItemChatLogEvents(pTreeItemSelected);
+	if (pContactOrGroup != NULL)
+		{
+		NavigationTree_SelectProfile(pContactOrGroup->PGetProfile());
+		NavigationTree_SelectTreeItem(pContactOrGroup);
+		}
 	}
 
 void
-WTabs::OnTabClosing(PVPARAM pvParamTabClosing)
+WTabs::OnTabClosing(ITreeItem * pTreeItemClosing)
 	{
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "OnTabClosing(0x$p)\n", pvParamTabClosing);
-	TabRemove(pvParamTabClosing);
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "OnTabClosing(0x$p)\n", pTreeItemClosing);
+	TabRemove(pTreeItemClosing);
 	}
 
 WTabs * g_pwTabs;
@@ -36,6 +49,8 @@ WTabs * g_pwTabs;
 void
 Toolbar_PopulateTabs()
 	{
+	if (g_pwTabs == NULL)
+		return;	// Temporary: if the toolbar is not compiled
 	Assert(g_pwTabs != NULL);
 	g_pwTabs->TabsRemmoveAll();	// Remove any previous tab
 	TProfile ** ppProfilesStop;
@@ -49,10 +64,31 @@ Toolbar_PopulateTabs()
 	}
 
 void
-Toolbar_SelectTab(PVOID pvParam)
+Toolbar_TabAdd(ITreeItem * pTreeItem)
 	{
+	Assert(pTreeItem != NULL);
+	if (g_pwTabs == NULL)
+		return;	// Temporary: if the toolbar is not compiled
+	g_pwTabs->TabAddUniqueAndSelect((PSZAC)pTreeItem->TreeItem_PszGetNameDisplay(), pTreeItem);
+	}
+
+void
+Toolbar_TabSelect(ITreeItem * pTreeItem)
+	{
+	MessageLog_AppendTextFormatCo(d_coRed, "Toolbar_TabSelect($s)\n", (pTreeItem != NULL) ? pTreeItem->TreeItem_PszGetNameDisplay() : NULL);
+	if (g_pwTabs == NULL)
+		return;	// Temporary: if the toolbar is not compiled
 	Assert(g_pwTabs != NULL);
-	g_pwTabs->TabSelect(pvParam);
+	g_pwTabs->TabSelect(pTreeItem);
+	}
+
+void
+Toolbar_TabRedraw(ITreeItem * pTreeItem)
+	{
+	if (g_pwTabs == NULL)
+		return;	// Temporary: if the toolbar is not compiled
+	Assert(g_pwTabs != NULL);
+	g_pwTabs->TabRepaint(pTreeItem);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +111,15 @@ WToolbarTabs::WToolbarTabs()
 	g_pwTabs = new WTabs;
 	poLayout->addWidget(g_pwTabs);
 
-//	poLayout->addWidget(new QLabel("this is a label"));
+	#if 0
+	QWidget * pwButton = new WButtonText("abc");
+	poLayout->addWidget(pwButton);
+	QGraphicsDropShadowEffect * paShadow = new QGraphicsDropShadowEffect;
+	paShadow->setOffset(2);
+	paShadow->setBlurRadius(4);
+	paShadow->setColor(QColor(63, 63, 63, 180));
+	pwButton->setGraphicsEffect(paShadow);
+	#endif
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +167,7 @@ WToolbarButtons::WToolbarButtons()
 	{
 	setFixedHeight(d_cyHeightToolbarButtons);
 	OLayoutHorizontal * poLayout = new OLayoutHorizontalAlignLeft(this);
-	poLayout->setSpacing(10);
+	poLayout->setSpacing(15);
 	/*WButtonToolbarIcon * pwButtonBack =*/ new WButtonToolbarIcon(poLayout, eMenuIcon_Toolbar_GoBack, ":/images/ui/prevPageHoveredIcon.png");
 	/*WButtonToolbarIcon * pwButtonForward =*/ new WButtonToolbarIcon(poLayout, eMenuIcon_Toolbar_GoForward, ":/images/ui/nextPageHoveredIcon.png");
 	/*WButtonToolbarIcon * pwButtonReload =*/ new WButtonToolbarIcon(poLayout, eMenuIcon_Toolbar_Reload, ":/images/ui/refreshPageHoveredIcon.png");

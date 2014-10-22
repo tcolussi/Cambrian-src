@@ -84,6 +84,7 @@ public:
 		FTI_keIcon_mComposingText					= 0x00300000,	// The user is typing something, and therefore display the pencil icon next to the Tree Item.  Originally, this flag was related to a contact, however was used later when a user was typing something in a group chat, and now used for almost any object where the user is typing something.  Also, this flag is propagated to its parent if the Tree Item is not visible in the Navigation Tree.
 		FTI_kmIconMask								= 0x00300000,
 		FTI_kfTreeItem_fBit							= 0x01000000,	// Generic bit to store a boolean value (this bit is used to efficiently merge or delete arrays)
+		FTI_kfTreeItemInToolbarTabs					= 0x02000000,	// The Tree Item is visible in the toolbar tabs and therefore should be updated there as well
 
 		// The following flags FTI_kfChatLog* are used by ITreeItemChatLog and ITreeItemChatLogEvents.  The motivation for storing those flags in m_uFlagsTreeItem is avoiding another member variable.
 		FTI_kfChatLog_BrushColor					= 0x10000000,	// Which brush color to use when displaying events in the Chat Log.  Since there are only two brushes of similar color, a single bit is sufficient to remember which one.
@@ -96,6 +97,7 @@ public:
 	ITreeItem();
 	virtual ~ITreeItem();
 
+	inline UINT TreeItemFlags_FIsComposingText() const { return ((m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_mComposingText); }
 	inline UINT TreeItemFlags_FuIsRecommended() const { return (m_uFlagsTreeItem & FTI_kfRecommended); }
 	inline UINT TreeItemFlags_FuIsInvisible() const { return (m_uFlagsTreeItem & FTI_kfObjectInvisible); }
 	inline BOOL TreeItemFlags_FCanDisplayWithinNavigationTree() const { return (m_uFlagsTreeItem & (FTI_kfObjectInvisible | FTI_kfTreeItem_DoNotSerializeToDisk)) == 0; }	// Any invisible or deleted item should not be displayed within the Navigation Tree

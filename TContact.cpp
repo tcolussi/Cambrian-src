@@ -195,7 +195,6 @@ TContact::TreeItem_IconUpdate()
 	if (m_uFlagsContact & FC_kfContactUnsolicited)
 		coText = d_coGray;
 	*/
-	TreeItemW_SetTextColorAndIcon(coText, eMenuIconDisplay);
 
 	// Update the icon for every alias
 	IContactAlias * pAlias = m_plistAliases;
@@ -204,6 +203,11 @@ TContact::TreeItem_IconUpdate()
 		pAlias->ContactAlias_IconChanged(eMenuIconDisplay, eMenuIconPresence);
 		pAlias = pAlias->m_pNextAlias;
 		}
+
+	if ((m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_mComposingText)
+		eMenuIconDisplay = eMenuIcon_Pencil_10x10;
+	TreeItemW_SetTextColorAndIcon(coText, eMenuIconDisplay);
+
 	Dashboard_RedrawContact(this);
 	} // TreeItem_IconUpdate()
 

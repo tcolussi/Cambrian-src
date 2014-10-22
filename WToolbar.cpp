@@ -32,10 +32,15 @@
 #define d_Tab_cxWidthIconClose		10		// Allow 10 pixels to draw the X icon on the right of the text
 #define d_Tab_cxWidthIconNewTab		30		// Special icon to create a new tab
 
-CTab::CTab(PSZUC pszName, PVPARAM pvParam)
+QPen g_oPenToolbar_Dot;
+QFont g_oFontToolbar_Dot;
+
+CTab::CTab(PSZUC pszName, ITreeItem * pTreeItem)
 	{
 	m_strName = pszName;
-	m_pvParam = pvParam;
+	m_pTreeItem = pTreeItem;
+	if (pTreeItem != NULL)
+		pTreeItem->m_uFlagsTreeItem |= ITreeItem::FTI_kfTreeItemInToolbarTabs;
 	m_cxWidth = d_Tab_cxWidthDefault;
 	}
 
@@ -52,10 +57,13 @@ CArrayPtrTabs::DeleteAllTabs()
 
 WTabs::WTabs()
 	{
-	m_pTabSelected = NULL;
-	m_pTabHover = NULL;
+	m_pdTabSelected = NULL;
+	m_pdTabHover = NULL;
 	m_uFlagsHitTest = eHitTest_zNone;	// So far, nothing living under the mouse
 	setMouseTracking(true);
+	g_oPenToolbar_Dot.setColor(0xEB4D5C);	// Orange color
+	g_oPenToolbar_Dot.setWidth(14);
+	g_oPenToolbar_Dot.setCapStyle(Qt::RoundCap);
 	}
 
 WTabs::~WTabs()
@@ -64,27 +72,53 @@ WTabs::~WTabs()
 	}
 
 CTab *
-WTabs::TabAddP(PSZAC pszName, PVPARAM pvParam)
+WTabs::TabAddP(PSZAC pszName, ITreeItem * pTreeItem)
 	{
-	CTab * paTab = new CTab((PSZUC)pszName, pvParam);
-	if (m_pTabSelected == NULL)
-		m_pTabSelected = paTab;
+	CTab * paTab = new CTab((PSZUC)pszName, pTreeItem);
+	if (m_pdTabSelected == NULL)
+		m_pdTabSelected = paTab;
 	m_arraypaTabs.Add(PA_CHILD paTab);
 	updateGeometry();
 	_Redraw();
 	return paTab;
 	}
 
-void
-WTabs::TabAddAndSelect(PSZAC pszName, PVPARAM pvParam)
+#if 1
+//	Add the tab only if not already present.
+//	Return NULL of no tab was added
+CTab *
+WTabs::TabAddUniqueP(PSZAC pszName, ITreeItem * pTreeItem)
 	{
-	m_pTabSelected = TabAddP(pszName, pvParam);
+	if (_PFindTabMatchingTreeItem(pTreeItem) == NULL)
+		return TabAddP(pszName, pTreeItem);
+	return NULL;
+	}
+#endif
+
+void
+WTabs::TabAddAndSelect(PSZAC pszName, ITreeItem * pTreeItem)
+	{
+	m_pdTabSelected = TabAddP(pszName, pTreeItem);
 	}
 
 void
-WTabs::TabSelect(PVPARAM pvParamTabToSelect)
+WTabs::TabAddUniqueAndSelect(PSZAC pszName, ITreeItem * pTreeItem)
 	{
-	_SetSelectedTab(_PFindTabByParam(pvParamTabToSelect));
+	if (_PFindTabMatchingTreeItem(pTreeItem) == NULL)
+		m_pdTabSelected = TabAddP(pszName, pTreeItem);
+	}
+
+void
+WTabs::TabSelect(ITreeItem * pTreeItem)
+	{
+	_SetSelectedTab(_PFindTabMatchingTreeItem(pTreeItem));
+	}
+
+void
+WTabs::TabRepaint(ITreeItem * pTreeItem)
+	{
+	if (_PFindTabMatchingTreeItem(pTreeItem) != NULL)
+		_Redraw();	// This could be optimized to redraw only the portion of the tab rather than all tabs
 	}
 
 //	Private method to delete a tab
@@ -93,32 +127,33 @@ WTabs::TabDelete(PA_DELETING CTab * paTab)
 	{
 	if (paTab == NULL)
 		return;
-	if (paTab == m_pTabSelected)
-		m_pTabSelected = NULL;
+	if (paTab == m_pdTabSelected)
+		m_pdTabSelected = NULL;
 	m_arraypaTabs.RemoveElementAssertI(paTab);
 	delete paTab;
 	_Redraw();
 	}
 
 CTab *
-WTabs::_PFindTabByParam(PVPARAM pvParamTab) const
+WTabs::_PFindTabMatchingTreeItem(ITreeItem * pTreeItem) const
 	{
 	CTab ** ppTabStop;
 	CTab ** ppTab = m_arraypaTabs.PrgpGetTabsStop(OUT &ppTabStop);
 	while (ppTab != ppTabStop)
 		{
 		CTab * pTab = *ppTab++;
-		if (pTab->m_pvParam == pvParamTab)
+		if (pTab->m_pTreeItem == pTreeItem)
 			return pTab;
 		}
 	return NULL;
 	}
+
 //	Method to use to remove a tab.
 //	This method will remove the first tab matching pvParam of TabAdd()
 void
-WTabs::TabRemove(PVPARAM pvParamTabToRemove)
+WTabs::TabRemove(ITreeItem * pTreeItem)
 	{
-	TabDelete(_PFindTabByParam(pvParamTabToRemove));
+	TabDelete(_PFindTabMatchingTreeItem(pTreeItem));
 	}
 
 void
@@ -131,7 +166,7 @@ WTabs::TabsRemmoveAll()
 		delete *ppTab++;
 		}
 	m_arraypaTabs.Empty();
-	m_pTabSelected = NULL;
+	m_pdTabSelected = NULL;
 	_Redraw();
 	}
 
@@ -154,6 +189,10 @@ void
 WTabs::paintEvent(QPaintEvent *)
 	{
 	CPainterCell oPainter(this);
+	g_oFontToolbar_Dot = oPainter.font();
+	g_oFontToolbar_Dot.setPixelSize(g_oFontToolbar_Dot.pixelSize() - 2);	// Make the font a bit smaller
+	g_oFontToolbar_Dot.setBold(true);
+
 	QRect rcCellTabSelected;
 	//oPainter.m_rcCell.setBottom(oPainter.m_rcCell.bottom() - 1);	// Don't draw the divider
 	int xTab = 0;
@@ -164,7 +203,7 @@ WTabs::paintEvent(QPaintEvent *)
 		CTab * pTab = *ppTab++;
 		oPainter.m_rcCell.setLeft(xTab);
 		oPainter.m_rcCell.setWidth(pTab->m_cxWidth);
-		if (pTab == m_pTabSelected)
+		if (pTab == m_pdTabSelected)
 			rcCellTabSelected = oPainter.m_rcCell;	// Make copy of the rectangle, so we can draw it later
 		else
 			_DrawTab(&oPainter, pTab);
@@ -178,12 +217,12 @@ WTabs::paintEvent(QPaintEvent *)
 		((m_uFlagsHitTest & eHitTest_kmButtonNewTabHovering) == eHitTest_kmButtonNewTabHovering) ?
 		eMenuIcon_ToolbarTab_NewHover :
 		eMenuIcon_ToolbarTab_New, Qt::AlignLeft | Qt::AlignVCenter);
-	if (m_pTabSelected != NULL)
+	if (m_pdTabSelected != NULL)
 		{
 		// Always draw the selected tab last, so it appears on top of the others
 		oPainter.m_rcCell = rcCellTabSelected;
 		oPainter.m_rcCell.adjust(0, -1, 0, -1);	// Draw the selected tab just one pixel above
-		_DrawTab(&oPainter, m_pTabSelected);
+		_DrawTab(&oPainter, m_pdTabSelected);
 		}
 	} // paintEvent()
 
@@ -193,9 +232,9 @@ WTabs::mouseMoveEvent(QMouseEvent * pEventMouse)
 	EHitTest eHitTest;
 	CTab * pTab = _PGetHitTestInfo(pEventMouse, OUT &eHitTest);
 	_SetFlagsHitTest(eHitTest | eHitTest_kfMouseHovering);
-	if (m_pTabHover != pTab)
+	if (m_pdTabHover != pTab)
 		{
-		m_pTabHover = pTab;
+		m_pdTabHover = pTab;
 		_Redraw();
 		}
 	}
@@ -214,15 +253,15 @@ WTabs::mouseReleaseEvent(QMouseEvent * pEventMouse)
 	if (eHitTest & eHitTest_kfButtonClose)
 		{
 		Assert(pTab != NULL);
-		OnTabClosing(pTab->m_pvParam);
+		OnTabClosing(pTab->m_pTreeItem);
 		return;
 		}
-	if (m_pTabSelected != pTab)
+	if (m_pdTabSelected != pTab)
 		{
-		m_pTabSelected = pTab;
+		m_pdTabSelected = pTab;
 		_Redraw();
 		if (pTab != NULL)
-			OnTabSelected(pTab->m_pvParam);
+			OnTabSelected(pTab->m_pTreeItem);
 		}
 	}
 
@@ -236,9 +275,9 @@ void
 WTabs::_SetSelectedTab(CTab * pTab)
 	{
 	Endorse(pTab == NULL);	// Don't select anything
-	if (m_pTabSelected != pTab)
+	if (m_pdTabSelected != pTab)
 		{
-		m_pTabSelected = pTab;
+		m_pdTabSelected = pTab;
 		_Redraw();
 		}
 	}
@@ -290,35 +329,67 @@ WTabs::_PGetHitTestInfo(int xPos, int yPos, OUT EHitTest * peHitTest) const
 	return NULL;
 	}
 
-
 void
 WTabs::_DrawTab(CPainterCell * pPainter, CTab * pTab)
 	{
 	Assert(pPainter != NULL);
 	Assert(pTab != NULL);
-	BOOL fuIsTabSelected = (pTab == m_pTabSelected);
+	BOOL fuIsTabSelected = (pTab == m_pdTabSelected);
 
 	QRect rcGradient = pPainter->m_rcCell;
 	rcGradient.adjust(+d_ToolbarTabs_Tab_cxWidthGradient, d_ToolbarTabs_Tab_cyHeightTop, -d_ToolbarTabs_Tab_cxWidthGradient, +3);	// Remove 15 pixels from each side to draw the gradient (this is because we are already drawing the icons on both edges)
 	pPainter->FillRectWithGradientVertical(rcGradient, fuIsTabSelected ? d_ToolbarTabs_Tab_coGradientTopSelected : d_ToolbarTabs_Tab_coGradientTop, fuIsTabSelected ? d_ToolbarTabs_Tab_coGradientBottomSelected : d_ToolbarTabs_Tab_coGradientBottom);
 	pPainter->DrawIconAlignmentLeftBottom(fuIsTabSelected ? eMenuIcon_ToolbarTab_EdgeLeftSelected : eMenuIcon_ToolbarTab_EdgeLeft);
 	pPainter->DrawIconAlignmentRightBottom(fuIsTabSelected ? eMenuIcon_ToolbarTab_EdgeRightSelected : eMenuIcon_ToolbarTab_EdgeRight);
-	/*
-	pPainter->DrawLineHorizontal(pPainter->m_rcCell.left(), pPainter->m_rcCell.right(), d_cyHeightToolbarTabs - 1); //d_ToolbarpPainter->m_rcCell.bottom());
-	if (fuIsTabSelected)
-		{
-		pPainter->setPen(d_ToolbarButtons_coGradientTop);
-		pPainter->DrawLineHorizontal(pPainter->m_rcCell.left() + 1, pPainter->m_rcCell.right() - 1, d_cyHeightToolbarTabs - 1); // pPainter->m_rcCell.bottom());
-		}
-	*/
 	QRect rcText = rcGradient;
-	OGetIcon(eMenuIcon_ToolbarTab_Close).paint(pPainter, rcText, Qt::AlignRight | Qt::AlignVCenter, (pTab == m_pTabHover) && (m_uFlagsHitTest & eHitTest_kfButtonClose) ? QIcon::Normal : QIcon::Disabled);
-	rcText.adjust(0, -2, -d_Tab_cxWidthIconClose, 0);	// Allow 10 pixels for the close icon
+	OGetIcon(eMenuIcon_ToolbarTab_Close).paint(pPainter, rcText, Qt::AlignRight | Qt::AlignVCenter, (pTab == m_pdTabHover) && (m_uFlagsHitTest & eHitTest_kfButtonClose) ? QIcon::Normal : QIcon::Disabled);
+	rcText.adjust(0, -2, -d_Tab_cxWidthIconClose, 0);	// Adjust the rectangle to exclude the close (X) icon
+	int cMessagesUnread = 0;
+	TContact * pContact = (TContact *)pTab->m_pTreeItem;
+	if (pContact != NULL)
+		{
+		EMenuIcon eMenuIcon = pContact->TreeItemFlags_FIsComposingText() ? eMenuIcon_Pencil_10x10 : eMenuIcon_zNull;
+		RTI_ENUM rti = pContact->EGetRuntimeClass();
+		if (rti == RTI(TContact))
+			{
+			// Draw the online status of the contact
+			cMessagesUnread = pContact->m_cMessagesUnread;
+			if (eMenuIcon == eMenuIcon_zNull)
+				eMenuIcon = pContact->Contact_EGetMenuIconPresence();
+			}
+		else if (rti == RTI(TGroup))
+			{
+			cMessagesUnread = pContact->m_cMessagesUnread;
+			}
+		if (eMenuIcon != eMenuIcon_zNull)
+			OGetIcon(eMenuIcon).paint(pPainter, rcText, Qt::AlignLeft | Qt::AlignVCenter);
+		}
+
+//	cMessagesUnread = qrand() % 99;
+	if (cMessagesUnread > 0)
+		{
+		QFont oFontPrevious = pPainter->font();
+		QRect rcBoundary = pPainter->boundingRect(IN rcText, Qt::AlignCenter, pTab->m_strName);
+		int xLeft = rcBoundary.right() + 8;
+		int xRight = xLeft + 15;
+		rcBoundary.setLeft(xLeft);
+		rcBoundary.setRight(xRight);
+		pPainter->setRenderHint(QPainter::Antialiasing, true);
+		pPainter->setPen(g_oPenToolbar_Dot);
+		pPainter->setFont(g_oFontToolbar_Dot);
+		pPainter->DrawLineHorizontal(xLeft + 5, xRight - 5, 2 + (rcBoundary.top() + rcBoundary.bottom()) / 2);
+
+		pPainter->setPen(d_coWhite);
+		pPainter->drawText(rcBoundary, Qt::AlignVCenter | Qt::AlignCenter, QString::number(cMessagesUnread));
+		pPainter->setFont(oFontPrevious);
+		pPainter->setRenderHint(QPainter::Antialiasing, false);
+		}
+
 	pPainter->setPen(d_Toolbar_coText);
 	pPainter->drawText(IN rcText, Qt::AlignCenter, pTab->m_strName);
 	pPainter->DrawLineHorizontalCo(rcGradient.left(), rcGradient.right(), d_ToolbarTabs_Tab_cyHeightTop - fuIsTabSelected, d_ToolbarTabs_Tab_coBorder);
 	pPainter->DrawLineHorizontalCo(pPainter->m_rcCell.left() + 1, pPainter->m_rcCell.right() - 1, d_cyHeightToolbarTabs - 1, fuIsTabSelected ? d_ToolbarButtons_coGradientTop : d_ToolbarTabs_Tab_coBorder);
-	}
+	} // _DrawTab()
 
 void
 WToolbarTabs::paintEvent(QPaintEvent *)

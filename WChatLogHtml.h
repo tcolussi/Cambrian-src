@@ -6,6 +6,21 @@
 #endif
 #ifdef COMPILE_WITH_CHATLOG_HTML
 
+//	JavaScript APIs available for the HTML Chat Log
+class OJapiChatLog : public OJapi
+{
+	Q_OBJECT
+protected:
+	WChatLogHtml * m_pwChatLog;
+
+public:
+	OJapiChatLog(WChatLogHtml * pwChatLog);
+
+public slots:
+	void pin();
+	void sendMessage(const QString & sMessage);
+};
+
 class WChatLogHtml : public QWebView
 {
 	Q_OBJECT
@@ -18,6 +33,7 @@ protected:
 	TIMESTAMP m_tsMidnightNext;				// Timestamp to determine when to display a cate change in the Chat Log.
 	HOBJECT m_hSenderPreviousEvent;			// Handle of the sender who wrote the last event.
 	int m_cEventsMax;						// Maximum number of events to display.  This variable is important for performance to quickly the Chat Log without the entire history.
+	OJapiChatLog m_oJapi;
 
 public:
 	explicit WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup);
@@ -42,7 +58,11 @@ public slots:
 	void SL_SizeChanged(const QSize & size);
 	void SL_HyperlinkMouseHovering(const QUrl & url);
 	void SL_HyperlinkClicked(const QUrl & url);
-};
+	void SL_InitJavaScript();
+
+	friend class OJapiChatLog;
+}; // WChatLogHtml
+
 #endif
 
 #endif // WCHATLOGHTML_H

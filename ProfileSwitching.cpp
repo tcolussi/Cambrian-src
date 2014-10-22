@@ -21,6 +21,14 @@ const CHU c_szContacts[]	= "Peers";	// Display name fo rthe 'Inbox' node
 TTreeItemInbox * g_pTreeItemInbox;
 TProfiles * g_pTreeItemProfiles;
 
+//	Select a profile.  If the profile is already selected, then do nothing
+void
+NavigationTree_SelectProfile(TProfile * pProfileToSelect)
+	{
+	if (pProfileToSelect == g_oConfiguration.m_pProfileSelected)
+		return;
+	NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfileToSelect);
+	}
 
 //	Core routine to populate the Navigation Tree.
 //
@@ -362,8 +370,7 @@ NavigationTree_UpdateNameOfSelectedProfile()
 	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
 	#endif
 	Dashboard_RefreshAccordingToSelectedProfile(pProfileSelected);
-	void Toolbar_SelectTab(PVOID pvParam);
-	Toolbar_SelectTab(pProfileSelected);
+	Toolbar_TabSelect(pProfileSelected);
 	}
 
 

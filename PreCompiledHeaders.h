@@ -8,8 +8,8 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.6.2"
-#define d_szwApplicationVersion		   L"0.1.6.2"
+#define d_szApplicationVersion			"0.1.6.3"
+#define d_szwApplicationVersion		   L"0.1.6.3"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -345,10 +345,13 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "TWallet.h"
 #include "CChatConfiguration.h"
 
-#include "WLayoutChatLog.h"
-
 #include "ApiJavaScript.h"
 #include "IEventBallot.h"
+
+#include "WChatLog.h"
+#include "WChatLogHtml.h"
+#include "WChatInput.h"
+#include "WLayoutChatLog.h"
 
 //	The word 'Profile' was renamed to 'Role'
 #define d_sza_Profile	"Role"

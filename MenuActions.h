@@ -246,6 +246,7 @@ protected:
 public:
 	WMenuWithIndicator(QToolButton * pwIndicator);
 	virtual QSize sizeHint() const;
+	virtual void moveEvent(QMoveEvent *);
 	virtual void paintEvent(QPaintEvent *);
 
 	QSize InitPolygon(BOOL fInitForPainting = FALSE);

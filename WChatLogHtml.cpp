@@ -4,7 +4,6 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "WChatLogHtml.h"
 #ifdef COMPILE_WITH_CHATLOG_HTML
 
 #define d_cEventsMaxDefault		500	// By default, display the first 500 events
@@ -13,7 +12,26 @@
 #define COLOR_THEME_BLACK				// Use a black background instead of a white background
 //#define BIG_SPACING_BETWEEN_MESSAGES		// Use big spacing between lines
 
-WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup) : QWebView(pwParent)
+OJapiChatLog::OJapiChatLog(WChatLogHtml * pwChatLog)
+	{
+	m_pwChatLog = pwChatLog;
+	}
+
+void
+OJapiChatLog::pin()
+	{
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiChatLog::pin()\n");
+	Toolbar_TabAdd(m_pwChatLog->m_pContactOrGroup);
+	}
+
+void
+OJapiChatLog::sendMessage(const QString & sMessage)
+	{
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiChatLog::sendMessage($Q)\n", &sMessage);
+	}
+
+
+WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup) : QWebView(pwParent), m_oJapi(this)
 	{
 	Assert(pContactOrGroup != NULL);
 	m_pContactOrGroup = pContactOrGroup;
@@ -164,11 +182,11 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			"font-family: Lato, sans-serif; font-size: 15px; color: #3D3C40; "
 
 			#ifdef COLOR_THEME_BLACK // Black background style with a 'space' background image
-			"color: white; background-color: black; background-image: url('qrc:/backgrounds/Space'); background-attachment:fixed;"
+			"color: white; background-color: black; background-image: url('qrc:/backgrounds/Space'); background-attachment: fixed;"
 			#endif
 
 			"\">" // Close the <body>
-
+			"<img src='qrc:/ico/Pin' style='position: fixed; top: 7; right: 8; z-index:1' title='Pin to tab' onClick='SocietyPro.pin();' />"
 			// Division for all the messages
 			"<div id='m'>");
 
@@ -202,6 +220,9 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 
 	//connect(this, SIGNAL(highlighted(QUrl)), this, SLOT(SL_HyperlinkMouseHovering(QUrl)));
 	connect(this, SIGNAL(linkClicked(QUrl)), this, SLOT(SL_HyperlinkClicked(QUrl)));
+
+	SL_InitJavaScript();
+	connect(m_poFrame, SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(SL_InitJavaScript()));
 	}
 
 WChatLogHtml::~WChatLogHtml()
@@ -575,9 +596,13 @@ WChatLogHtml::SL_HyperlinkClicked(const QUrl & url)
 		QDesktopServices::openUrl(url);
 	} // SL_HyperlinkClicked()
 
+void
+WChatLogHtml::SL_InitJavaScript()
+	{
+	m_poFrame->addToJavaScriptWindowObject("SocietyPro", &m_oJapi);
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 void
 IEvent::AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC
 	{
