@@ -4,25 +4,65 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "WChatLogHtml.h"
 #ifdef COMPILE_WITH_CHATLOG_HTML
 
-#define COLOR_THEME_BLACK		// Use a black background instead of a white background
+#define d_cEventsMaxDefault		500	// By default, display the first 500 events
+#define d_nEventsMultiplyBy		3	// Triple the number of events (this gives the illusion of doubling the number of events to fetch)
 
-WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup) : QWebView(pwParent)
+#define COLOR_THEME_BLACK				// Use a black background instead of a white background
+//#define BIG_SPACING_BETWEEN_MESSAGES		// Use big spacing between lines
+
+OJapiChatLog::OJapiChatLog(WChatLogHtml * pwChatLog)
+	{
+	m_pwChatLog = pwChatLog;
+	}
+
+void
+OJapiChatLog::pin()
+	{
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiChatLog::pin()\n");
+	Toolbar_TabAddAndSelect(m_pwChatLog->m_pContactOrGroup);
+	}
+
+void
+OJapiChatLog::sendMessage(const QString & sMessage)
+	{
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiChatLog::sendMessage($Q)\n", &sMessage);
+	}
+
+
+WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup) : QWebView(pwParent), m_oJapi(this)
 	{
 	Assert(pContactOrGroup != NULL);
 	m_pContactOrGroup = pContactOrGroup;
 	m_tsMidnightNext = d_ts_zNA;
 	m_hSenderPreviousEvent = d_zNA;	// No previous sender yet
+	m_cEventsMax = d_cEventsMaxDefault;
 
-	setHtml(
+	QWebPage * poPage = page();
+	poPage->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+	poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);	// Enable the context menu item named "Inspect".  This is useful for debugging web pages.
+	m_poFrame = poPage->mainFrame();
+	m_poFrame->setScrollBarPolicy(Qt::Horizontal, Qt::ScrollBarAlwaysOff);
+
+//	connect(m_poFrame, SIGNAL(initialLayoutCompleted()),this, SLOT(SL_ScrollToDisplayLastEvent()));
+	connect(m_poFrame, SIGNAL(contentsSizeChanged(QSize)),this, SLOT(SL_SizeChanged(QSize)));
+
+	CBin binHtml;
+	binHtml.PbbAllocateMemoryAndEmpty_YZ(8*1024);	// Pre-allocate 8 KiB
+	binHtml.BinAppendText(
 		"<html><head><style>"
 
 		// Style for each division
 		//".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 3rem; }"
+		#ifdef BIG_SPACING_BETWEEN_MESSAGES
 		"div.d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 55px ; }"
-		"div.f { margin-top: 6; }"	// First message in a division, to add space between senders
+		#else
+		"div.d { min-height: 1rem; padding: 1 1 1 55; }"
+		#endif
+
+		"div.a { margin-top: 6; }"	// Spacing above a sender
+		"div.b { height: 4; }"		// Spacing below the sender
 
 		// Style for an icon/avatar
 		".i	 { float:left; position: absolute; left: 15; margin-top: 3; height: 36; width: 36; "
@@ -31,12 +71,14 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			"}"
 
 		// Style for the sender of the message
-		".s { font-weight: bold;  } "
+		".s { font-weight: bold; } "
 
 		// Style for the day divider
 		"div.dd { "
 				"position: relative;"
 				"text-align: center;"
+				"margin-top: 10;"
+				//"height: 50;"
 				"}"
 		"div.ddd { "
 				"color: #555459; font-size: 16px; font-weight: 900;"			// day divider displaying the date
@@ -66,6 +108,9 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			"display: none;"
 			"position: absolute;"
 			"left: 0;"
+			#ifndef BIG_SPACING_BETWEEN_MESSAGES
+			"padding-top: 2;"
+			#endif
 			"text-align: right;"
 			"width: 50;"
 			"}"
@@ -74,10 +119,9 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		// Style for  the message itself
 		".m {"
 			"display: block;"
-			"word-break: break-all;"	// Prevent any horizontal scrolling of messages
+			//"word-break: break-all;"	// Prevent any horizontal scrolling of messages
+			"word-break: break-word;"
 			"}"
-
-
 
 		// Styles for different types of hyperlinks
 		"a." d_szClassForChatLog_ButtonHtml // " { color: black; background-color: silver; text-decoration: none; font-weight: bold } "
@@ -138,36 +182,82 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			"font-family: Lato, sans-serif; font-size: 15px; color: #3D3C40; "
 
 			#ifdef COLOR_THEME_BLACK // Black background style with a 'space' background image
-			"color: white; background-color: black; background-image: url('qrc:/backgrounds/Space'); background-attachment:fixed;"
+			"color: white; background-color: black; background-image: url('qrc:/backgrounds/Space'); background-attachment: fixed;"
 			#endif
 
-			"\">"
+			"\">" // Close the <body>
+			"<img src='qrc:/ico/Pin' style='position: fixed; top: 7; right: 8; z-index:1' title='Pin to tab' onClick='SocietyPro.pin();' />"
 			// Division for all the messages
-			"<div id='m'></div>"
-			// Division for the composing message
-			"<div id='c' style='font-size: 13px'/></div>"
+			"<div id='m'>");
 
-		"</body></html>");
-	QWebPage * poPage = page();
-	poPage->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
-	poPage->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);	// Enable the context menu item named "Inspect".  This is useful for debugging web pages.
-	m_poFrame = poPage->mainFrame();
-	m_poFrame->setScrollBarPolicy(Qt::Horizontal, Qt::ScrollBarAlwaysOff);
-	m_oElementMessages = m_poFrame->findFirstElement("#m");
-	m_oElementComposing = m_poFrame->findFirstElement("#c");
-
+	//	Append the events
 	CArrayPtrEvents arraypEvents;
 	m_pContactOrGroup->Vault_GetEventsForChatLog(OUT &arraypEvents);
-	ChatLog_EventsAppend(IN arraypEvents);
+	IEvent ** ppEventStop;
+	IEvent ** ppEventFirst = arraypEvents.PrgpGetEventsStop(OUT &ppEventStop);
+	_BinAppendHtmlForEvents(IOUT &binHtml, ppEventFirst, ppEventStop);
+
+	binHtml.BinAppendText(
+			"</div>"
+
+			// Division for the composing message
+			"<div id='-c-' style='font-size: 13px'/></div>"
+
+		"</body></html>");
+
+	setContent(binHtml.ToQByteArrayShared(), "text/html; charset=utf-8");	// Should work, but produces artifacts for special HTML characters
+//	_ScrollToDisplayLastEvent();		// This line is necessary in case the setContent() is synchronous
+
+	m_oElementMessages = m_poFrame->findFirstElement("#m");
+	m_oElementComposing = m_poFrame->findFirstElement("#-c-");
+
+	//m_oElementMessages.setPlainText(c_sEmpty);
+	/*
+	m_oElementComposing.setPlainText(c_sEmpty);
+	QWebElement oElementBody = m_poFrame->findFirstElement("body");
+	oElementBody.setPlainText(c_sEmpty);
+	*/
 
 	//connect(this, SIGNAL(highlighted(QUrl)), this, SLOT(SL_HyperlinkMouseHovering(QUrl)));
 	connect(this, SIGNAL(linkClicked(QUrl)), this, SLOT(SL_HyperlinkClicked(QUrl)));
+
+	SL_InitJavaScript();
+	connect(m_poFrame, SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(SL_InitJavaScript()));
+	}
+
+WChatLogHtml::~WChatLogHtml()
+	{
+	//m_oElementMessages.setPlainText(c_sEmpty);	// This reduces 99% of the memory leaks from QWebView, however too late.  I need to find a way to clear the HTML before its destructor.
 	}
 
 void
 WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventStart, IEvent ** ppEventStop)
 	{
-	while (ppEventStart < ppEventStop)
+	Assert(pbinHtml != NULL);
+	Assert(ppEventStart <= ppEventStop);
+	Assert(m_cEventsMax > 0);
+	#ifdef DEBUG
+	int cbStart = pbinHtml->CbGetData();
+	#endif
+	int cEvents = ppEventStop - ppEventStart;
+	if (cEvents <= 0)
+		return;	// Nothing to do (this is the typical case of an empty Chat Log
+	IEvent ** ppEventTemp = ppEventStop - m_cEventsMax;	// Limit the number of events to display
+	if (ppEventTemp > ppEventStart)
+		{
+		ppEventStart = ppEventTemp;
+		pbinHtml->BinAppendText("<div style='text-align: center; height: 25; margin-top: 20;'><a class='" d_szClassForChatLog_ButtonHtml "' href='" d_SzMakeCambrianAction(d_szCambrianAction_DisplayAllHistory) "'>");
+		int cEventsMaxNext = m_cEventsMax * d_nEventsMultiplyBy;
+		if (cEventsMaxNext > cEvents)
+			pbinHtml->BinAppendText_VE("Display complete chat history of $I messages", cEvents);
+		else
+			pbinHtml->BinAppendText_VE("Display $I more messages (total $I)", cEventsMaxNext - m_cEventsMax, cEvents);
+		pbinHtml->BinAppendText("</a></div>");
+		cEvents = m_cEventsMax;
+		}
+
+	(void)pbinHtml->PbbAllocateMemoryToGrowBy_NZ(cEvents * 256);	// Pre-allocate some memory, assuming each event will require about 256 bytes
+	while (ppEventStart != ppEventStop)
 		{
 		IEvent * pEvent = *ppEventStart++;
 		AssertValidEvent(pEvent);
@@ -181,6 +271,7 @@ WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventSta
 			m_tsMidnightNext = QDateTime(date).toMSecsSinceEpoch() + d_ts_cDays;	// I am sure there is a more elegant way to strip the time from a date, however at the moment I don't have time to investigate a better solution (and this code works)
 			QString sDate = date.toString("dddd, MMMM d, yyyy");
 			pbinHtml->BinAppendText_VE("<div class='dd'><hr class='dd'/><div class='ddd'>$Q</div></div>", &sDate);
+			m_hSenderPreviousEvent = d_zNA;	// Force the sender to be re-displayed
 			}
 
 		m_hSenderPreviousEvent = pEvent->AppendHtmlForChatLog_HAppendHeader(IOUT pbinHtml, m_hSenderPreviousEvent);
@@ -188,6 +279,11 @@ WChatLogHtml::_BinAppendHtmlForEvents(IOUT CBin * pbinHtml, IEvent ** ppEventSta
 		pEvent->AppendHtmlForChatLog(IOUT pbinHtml);
 		pbinHtml->BinAppendText("</span></div>");
 		} // while
+
+	#ifdef DEBUG
+	int cbData = pbinHtml->CbGetData() - cbStart;
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "$I events required $I bytes of HTML code ($I bytes per event)\n", cEvents, cbData, cbData / cEvents);
+	#endif
 	} // _BinAppendHtmlForEvents()
 
 const char c_szHtmlMessageDelivered[] = "<img src='qrc:/ico/Delivered' style='float:right'/>";
@@ -218,12 +314,11 @@ IEvent::AppendHtmlForChatLog_HAppendHeader(IOUT CBin * pbinHtml, HOBJECT hSender
 		// Insert the image of the sender as well as its name
 		pbinHtml->BinAppendText_VE(
 			//"<a href='#' class='i i$i'></a>", pEvent->Event_FIsEventTypeSent()	// This line is commented out until hyperlinks are enabled when clicking on the icon of a user
-			"<div class='d f'>"
+			"<div class='d a'>"
 			"<div class='i i$i'></div>"
 			"<span class='s'>{sH}</span>"
 			 , !fuIsEventReceived, pTreeItemNickname_NZ->ChatLog_PszGetNickname());
-
-		pbinHtml->BinAppendText_VE("<span class='t' title='^Q'>^Q</span>", &sDateTime, &sTime);
+		pbinHtml->BinAppendText_VE("<span class='t' title='^Q'>^Q</span><div class='b'></div>", &sDateTime, &sTime);
 		}
 	else
 		{
@@ -275,15 +370,27 @@ WChatLogHtml::_ScrollToDisplayLastEvent()
 	{
 	//triggerPageAction(QWebPage::MoveToEndOfDocument);
 	//m_poFrame->setScrollPosition(QPoint(0, m_poFrame->scrollBarMaximum(Qt::Vertical) + 1000 ));
-	m_poFrame->scrollToAnchor("c");
+	m_poFrame->scrollToAnchor("-c-");
+	}
+
+void
+WChatLogHtml::SL_ScrollToDisplayLastEvent()
+	{
+	MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "SL_ScrollToDisplayLastEvent()\n");
+	_ScrollToDisplayLastEvent();
+	}
+
+void
+WChatLogHtml::SL_SizeChanged(const QSize & /*size*/)
+	{
+	//MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "SL_SizeChanged()\n");
+	_ScrollToDisplayLastEvent();
 	}
 
 void
 WChatLogHtml::ChatLog_EventsAppend(const CArrayPtrEvents & arraypEvents)
 	{
 	CBin binHtml;
-	binHtml.PbbAllocateMemoryAndEmpty_YZ(10000);
-
 	IEvent ** ppEventStop;
 	IEvent ** ppEventFirst = arraypEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	_BinAppendHtmlForEvents(IOUT &binHtml, ppEventFirst, ppEventStop);
@@ -298,8 +405,18 @@ WChatLogHtml::ChatLog_EventAppend(IEvent * pEvent)
 	Assert(pEvent != NULL);
 	CArrayPtrEvents arraypEvents;
 	arraypEvents.EventAdd(pEvent);
-	ChatLog_EventsAppend(arraypEvents);
+	ChatLog_EventsAppend(IN arraypEvents);
 	}
+
+void
+WChatLogHtml::ChatLog_EventsRepopulate()
+	{
+	m_oElementMessages.setPlainText(c_sEmpty);	// Clear the previous messages
+	CArrayPtrEvents arraypEvents;
+	m_pContactOrGroup->Vault_GetEventsForChatLog(OUT &arraypEvents);
+	ChatLog_EventsAppend(IN arraypEvents);
+	}
+
 
 void
 WChatLogHtml::ChatLog_EventUpdate(IEvent * pEvent)
@@ -335,12 +452,6 @@ IEvent::Event_UpdateWithinChatLogHtml(WChatLogHtml * pwChatLog_YZ)
 	}
 
 void
-WChatLogHtml::ChatLog_EventsRepopulate()
-	{
-
-	}
-
-void
 WChatLogHtml::ChatLog_ChatStateTextRefresh()
 	{
 	CBin binComposers;
@@ -370,8 +481,6 @@ WChatLogHtml::ChatLog_ChatStateTextRefresh()
 		((TContact *)m_pContactOrGroup)->ChatLogContact_AppendExtraTextToChatState(INOUT oTextCursor);
 	*/
 	m_oElementComposing.setInnerXml(binComposers.ToQString());
-	if (!binComposers.FIsEmptyBinary())
-		_ScrollToDisplayLastEvent();
 	}
 
 void
@@ -412,6 +521,15 @@ WChatLogHtml::contextMenuEvent(QContextMenuEvent * pEventContextMenu)
 	{
 	QWebView::contextMenuEvent(pEventContextMenu);
 	} // contextMenuEvent()
+
+/*
+void
+WChatLogHtml::SL_PageLoadFinished(bool)
+	{
+	//MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "SL_PageLoadFinished()\n");
+	_ScrollToDisplayLastEvent();
+	}
+*/
 
 void
 WChatLogHtml::SL_HyperlinkMouseHovering(const QUrl & url)
@@ -468,7 +586,7 @@ WChatLogHtml::SL_HyperlinkClicked(const QUrl & url)
 			{
 			if (chCambrianAction == d_chCambrianAction_DisplayAllHistory)
 				{
-				CWaitCursor wait;
+				m_cEventsMax *= d_nEventsMultiplyBy;
 				ChatLog_EventsRepopulate();
 				}
 			} // if...else
@@ -478,9 +596,13 @@ WChatLogHtml::SL_HyperlinkClicked(const QUrl & url)
 		QDesktopServices::openUrl(url);
 	} // SL_HyperlinkClicked()
 
+void
+WChatLogHtml::SL_InitJavaScript()
+	{
+	m_poFrame->addToJavaScriptWindowObject("SocietyPro", &m_oJapi);
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 void
 IEvent::AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC
 	{

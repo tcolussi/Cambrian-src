@@ -125,18 +125,6 @@ WGrid::RowsAdd(const CArray & arraypData)
 	} // RowsAdd()
 
 void
-OPainter::DrawLineHorizontal(int xLeft, int xRight, int yPos)
-	{
-	drawLine(xLeft, yPos, xRight, yPos);
-	}
-
-void
-OPainter::DrawLineVertical(int xPos, int yTop, int yBottom)
-	{
-	drawLine(xPos, yTop, xPos, yBottom);
-	}
-
-void
 WGrid::paintEvent(QPaintEvent * pEvent)
 	{
 	QRect rcPaint = pEvent->rect();
@@ -147,7 +135,7 @@ WGrid::paintEvent(QPaintEvent * pEvent)
 	Assert(xPaintRight >= 0 && xPaintRight <= m_cxDisplay);
 	Assert(yPaintBottom >= 0 && yPaintBottom <= m_cyDisplay);
 
-	OPainter oPainter(viewport());
+	CPainter oPainter(viewport());
 
 	if (m_cxWidthColumns == 0)
 		_ColumnsRecalculateWidths();

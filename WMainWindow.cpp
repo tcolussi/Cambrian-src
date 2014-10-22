@@ -15,6 +15,7 @@
 #include "WDashboard.h"
 #include "WLayoutContainer.h"
 #include "WLayoutBrowser.h"
+#include "WToolbar.h"
 #include <QSound>
 #include <iostream>
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
@@ -270,11 +271,15 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	g_hwndMainWindow = (HWND)winId();
 	#endif
 	g_pwMenuBar = new QMenuBar;
+	g_pwMenuBar->hide();
 	g_pwStatusBar = new QStatusBar;
 	//g_pwStatusBar->setStyleSheet("border: 1px solid red;");
 	m_cTimerEvents = 0;
 	m_tidFlashIconNewMessage = d_zNA;
 
+	#if 0
+	setWindowFlags(Qt::CustomizeWindowHint);	// Remove the caption of the entire application
+	#endif
 	setWindowTitle(d_szApplicationName " v" d_szApplicationVersion);
 //	setCentralWidget(new QWidget);
 
@@ -315,11 +320,13 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	void Menu_InitializeAllMenuActionsHavingAccelerators();
 	Menu_InitializeAllMenuActionsHavingAccelerators();
 
+	addToolBar(PA_CHILD new WToolbar);
+
 	addDockWidget(Qt::LeftDockWidgetArea, PA_CHILD new WNavigationTree);
 	#if 1
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
 	#endif
-	#if 1
+	#if 0
 	addDockWidget(Qt::TopDockWidgetArea, PA_CHILD new WQmlToolbar);
 	#endif
 
@@ -598,6 +605,10 @@ void
 WMainWindow::ConfigurationLoadFromXml()
 	{
 	g_oConfiguration.XmlConfigurationLoadFromFile();
+
+	void Toolbar_PopulateTabs();
+	Toolbar_PopulateTabs();
+
 	// After loading the configuration, check if there is an invitation stored at the time of installation
 	const QString sPathInvitation = SGetFullPathInvitation();
 	CStr strInvitation;

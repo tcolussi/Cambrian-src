@@ -1823,7 +1823,7 @@ Timestamp_CchToString(TIMESTAMP ts, OUT CHU pszTimestamp[16])
 		}
 	const int cchTimestamp = pchTimestamp - pszTimestamp;
 	*pchTimestamp-- = '\0';	// Append the null-terminator
-	// We are done parsing, but the digits are in reverse order
+	// We are done building the string, but the digits are in reverse order
 	Assert(pszTimestamp <= pchTimestamp);
 	for ( ; pszTimestamp < pchTimestamp; pszTimestamp++, pchTimestamp--)
 		{
@@ -1976,7 +1976,7 @@ Timestamp_CchEncodeToBase64Url(TIMESTAMP ts, OUT CHU pszTimestamp[16])
 		}
 	const int cchTimestamp = pchTimestamp - pszTimestamp;
 	*pchTimestamp-- = '\0';	// Append the null-terminator
-	// We are done parsing, but the digits are in reverse order
+	// We are done building the string, but the digits are in reverse order
 	Assert(pszTimestamp <= pchTimestamp);
 	for ( ; pszTimestamp < pchTimestamp; pszTimestamp++, pchTimestamp--)
 		{

@@ -6,25 +6,6 @@
 
 class WDashboard;
 
-//	Class having a 'boundary rectangle' where the painter is allowed to draw.
-//	A typical use of this class is to paint a cell in a grid.
-class CPainterCell : public OPainter
-{
-public:
-	QRect m_rcCell;
-
-public:
-	CPainterCell(QPaintDevice * poPaintDevice): OPainter(poPaintDevice) { }
-
-	void DrawTextWithinCell(const QString & sText);
-	void DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...);
-	void DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle);
-	int DrawNumberWithinCircle(int nNumber);
-	void DrawIconLeft(const QIcon & oIcon);
-	void DrawIconLeft(EMenuIcon eMenuIcon);
-	void FillRect0(QRGB coBackgroundFill);
-};
-
 //	Interface to draw one item on the dashboard
 class CDashboardSectionItem	// (item)
 {
@@ -238,12 +219,12 @@ public:
 singleton WDashboard : public QDockWidget
 {
 protected:
+	WDashboard_TProfiles m_wProfiles;				// Keep an instance so m_paiwDashboard_NZ is never NULL
+	//IDashboard * m_paiwDashboard_NZ;				// Which dashboard interface to display
 	OLayoutVerticalAlignTop * m_poLayoutVertial;	// Layout to stack the sections vertically
 	CDashboardSectionItem * m_pItemSelected_YZ;		// Which item is selected (has the focus)
-	IDashboard * m_paiwDashboard_NZ;				// Which dashboard interface to display
 
-	// Temporary to compile
-	#ifdef SIMPLE_DASHBOARD
+	#ifdef SIMPLE_DASHBOARD		// Temporary code to compile
 	TProfile * m_pProfile_YZ;							// Pointer of the profile the dashboard is displaying
 	struct	// Contain one pointer per section.  Those pointers are for a quick access to a section.  To change the order of the sections, change their order in this structure.
 		{
@@ -257,6 +238,7 @@ protected:
 
 public:
 	WDashboard();
+	#ifdef SIMPLE_DASHBOARD
 	inline TProfile * PGetProfile_YZ() const { return m_pProfile_YZ; }
 	void ProfileSelectedChanged(TProfile * pProfile);
 	void RefreshAll();
@@ -272,10 +254,17 @@ public:
 	void BumpTreeItem(ITreeItem * pTreeItem);
 	void NewEventsFromContactOrGroup(ITreeItemChatLogEvents * pContactOrGroup_NZ);
 	void NewEventRelatedToBallot(IEventBallot * pEventBallot);
+	#else
+
+	#endif
 
 	BOOL FSelectItem(CDashboardSectionItem * pItem);
 
 	//virtual QSize sizeHint() const { return QSize(300, 0); }
+	friend class WDashboardCaption;
+
+public:
+	static IDashboard * s_paiwDashboard_NZ;	// Which interface is currently visible
 }; // WDashboard
 
 #endif // WDASHBOARD_H

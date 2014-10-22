@@ -518,16 +518,17 @@ WMenu::ActionsAddSubMenu(EMenuAction eMenuActionSubMenuName, const EMenuActionBy
 	}
 
 void
-WMenu::ActionAddFromText(PSZUC pszText, int idAction, EMenuAction eMenuIcon)
+WMenu::ActionAddFromText(PSZUC pszText, int idAction, EMenuIcon eMenuIcon)
 	{
-	QAction * pAction = addAction(GetMenuIcon(eMenuIcon), (CString)pszText);
+	QAction * pAction = addAction(OGetIcon(eMenuIcon), (CString)pszText);
 	pAction->setData(idAction);
 	}
 
 void
 WMenu::ActionAdd(EMenuAction eMenuAction, PSZAC pszText)
 	{
-	ActionAddFromText((PSZUC)pszText, eMenuAction, eMenuAction);
+	QAction * pAction = addAction(GetMenuIcon(eMenuAction), (CString)pszText);
+	pAction->setData(eMenuAction);
 	}
 
 void
@@ -559,9 +560,9 @@ WMenu::ActionSetCheck(EMenuAction eMenuAction, BOOL fuChecked)
 	}
 
 WMenu *
-WMenu::PMenuAdd(PSZAC pszText, EMenuAction eMenuIcon)
+WMenu::PMenuAdd(PSZAC pszText, EMenuIcon eMenuIcon)
 	{
-	return (WMenu *)addMenu(GetMenuIcon(eMenuIcon), pszText);
+	return (WMenu *)addMenu(OGetIcon(eMenuIcon), pszText);
 	}
 
 
@@ -763,7 +764,7 @@ MenuBarInitialize(WMenu * pMenu)
         if (prgzeActions == c_rgzeActionsMenuAdvanced)
             {
 			MessageLog_AppendTextFormatCo(d_coBlueDark, "MenuBarInitialize()\n");
-            pMenu = pMenu->PMenuAdd(c_mapepszmMenuActions[eMenuAction_WikiSubMenu], eMenuAction_WikiSubMenu);
+			pMenu = pMenu->PMenuAdd(c_mapepszmMenuActions[eMenuAction_WikiSubMenu], eMenuIcon_Browser);
             pMenu->ActionsAdd(c_rgzeActionsMenuWiki);
             }
         }
@@ -955,4 +956,128 @@ ITreeItem::TreeItem_EDisplayContextMenu(const EMenuActionByte rgzeMenuActions[])
 	WMenu oMenu;
 	oMenu.ActionsAdd(rgzeMenuActions);
 	return TreeItem_EDoMenuAction(oMenu.EDisplayContextMenu());
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#define d_cyIndicatorPaddingTop	0
+#define d_cxIndicatorWidth		10
+#define d_cyIndicatorHeight		10
+
+WMenuWithIndicator::WMenuWithIndicator(QToolButton * pwIndicator) : QMenu(NULL)
+	{
+	Assert(pwIndicator != NULL);
+	m_pwIndicator = pwIndicator;
+	QMargins oMargins = contentsMargins();
+	oMargins.setTop(d_cyIndicatorHeight + d_cyIndicatorPaddingTop);
+	setContentsMargins(oMargins);
+
+//	setAttribute(Qt::WA_TranslucentBackground); // Enable the widget to be transparent
+	#if 0
+	QWidget * pwButton = new QPushButton("abc", this); // new QLabel("this is a label");
+	pwButton->move(50, 50);
+	QGraphicsDropShadowEffect * paShadow = new QGraphicsDropShadowEffect;
+	paShadow->setOffset(2);
+	paShadow->setBlurRadius(4);
+	paShadow->setColor(QColor(63, 63, 63, 180));
+	pwButton->setGraphicsEffect(paShadow);
+	#endif
+
+	//setStyleSheet("QMenu::indicator {  background-color: red; }");
+	pwIndicator->setMenu(this);
+	}
+
+const QPoint c_ptZero;
+
+int
+Widget_GetPositionAbsoluteX(QWidget * pwWidget)
+	{
+	Assert(pwWidget != NULL);
+	return pwWidget->mapToGlobal(c_ptZero).x();
+	}
+
+QSize
+WMenuWithIndicator::InitPolygon(BOOL fInitForPainting)
+	{
+	QSize size = QMenu::sizeHint();
+	int cxHeight = size.height() + d_cyIndicatorPaddingTop;
+	size.setHeight(cxHeight);
+
+	int cxWidth = size.width();
+	int xRight = cxWidth - fInitForPainting;
+
+	// Calculate the relative position of the indicator with respect to the menu
+	int xMenuLeft = Widget_GetPositionAbsoluteX(this);
+	int xParentLeft = Widget_GetPositionAbsoluteX(m_pwIndicator);
+
+	//int xIndicator = (xParentLeft + m_pwIndicator->width() / 2) - (xMenuLeft + cxWidth / 2);
+	int cxHalfWidthIndicator = m_pwIndicator->width() / 2;
+	int xIndicator = (xParentLeft + cxHalfWidthIndicator) - xMenuLeft;
+	//MessageLog_AppendTextFormatCo(d_coRed, "xMenu = $i, xParent = $i, xIndicator = $i\n", xMenuLeft, xParentLeft, xIndicator);
+
+	int xIndicatorEnd = xIndicator + d_cxIndicatorWidth - fInitForPainting;
+	if (xIndicatorEnd > xRight)
+		xIndicatorEnd = xRight;
+
+	int xIndicatorBegin = xIndicator - d_cxIndicatorWidth + fInitForPainting;
+	if (xIndicatorBegin <= 0)
+		{
+		xIndicatorBegin = fInitForPainting;
+		xIndicator = d_cxIndicatorWidth;
+		xIndicatorEnd = d_cxIndicatorWidth * 2 - fInitForPainting;
+		}
+	//MessageLog_AppendTextFormatCo(d_coRed, "WMenuWithIndicator::InitPolygon(xIndicatorBegin=$I, xIndicator=$I, xIndicatorEnd=$I)\n", xIndicatorBegin, xIndicator, xIndicatorEnd);
+
+	m_oPolygon.setPoints(8,
+		0, d_cyIndicatorHeight + d_cyIndicatorPaddingTop,
+		xIndicatorBegin, d_cyIndicatorHeight + d_cyIndicatorPaddingTop,
+		xIndicator, fInitForPainting + d_cyIndicatorPaddingTop,
+		xIndicatorEnd, d_cyIndicatorHeight + d_cyIndicatorPaddingTop,
+		xRight, d_cyIndicatorHeight + d_cyIndicatorPaddingTop,
+		xRight, cxHeight - fInitForPainting,
+		0, cxHeight - fInitForPainting,
+		0, d_cyIndicatorHeight
+		);
+	return size;
+	}
+
+QSize
+WMenuWithIndicator::sizeHint() const
+	{
+	WMenuWithIndicator * pwThis = const_cast<WMenuWithIndicator *>(this);	// sizeHint() is const, however InitPolygon() modifies the object
+	QSize size = pwThis->InitPolygon();
+	pwThis->setMask(m_oPolygon);
+	return size;
+	}
+
+void
+WMenuWithIndicator::moveEvent(QMoveEvent *)
+	{
+	//MessageLog_AppendTextFormatCo(d_coRed, "WMenuWithIndicator::moveEvent()\n");
+	InitPolygon();
+	setMask(m_oPolygon);
+	}
+
+void
+WMenuWithIndicator::paintEvent(QPaintEvent * pEventPaint)
+	{
+	QMenu::paintEvent(pEventPaint);	// Draw the menu as usual
+
+	QPainter oPainter(this);
+
+	#if 0
+	QRect rc = rect();
+	rc.adjust(10, 10, 10, 10);
+	oPainter.fillRect(rc, d_coYellowPure);
+	QIcon oIcon = OGetIcon(eMenuIcon_Add);
+	oPainter.drawPixmap(16, 16, 16, 16, oIcon.pixmap(QSize(16,16)));
+	#endif
+
+	oPainter.setPen(d_coGray);
+	//oPainter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+	InitPolygon(TRUE);
+	#if 1
+	oPainter.drawPolyline(m_oPolygon);
+	#else
+	oPainter.drawConvexPolygon(m_oPolygon);
+	#endif
 	}

@@ -49,21 +49,6 @@ QPen g_oPenTextEmpty;
 QPen g_oPenTextNotEmpty;
 
 void
-CPainterCell::DrawTextWithinCell(const QString & sText)
-	{
-	drawText(IN m_rcCell, Qt::AlignVCenter, sText);
-	}
-
-void
-CPainterCell::DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...)
-	{
-	va_list vlArgs;
-	va_start(OUT vlArgs, pszFmtTemplate);
-	g_strScratchBufferStatusBar.Format_VL(pszFmtTemplate, vlArgs);
-	DrawTextWithinCell(g_strScratchBufferStatusBar);
-	}
-
-void
 CPainterCell::DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle)
 	{
 	drawText(m_rcCell, Qt::AlignVCenter, sText);
@@ -79,21 +64,6 @@ CPainterCell::DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle
 	setRenderHint(Antialiasing, false);	// Remove the antialiasing to draw a sharp horizontal line
 	DrawLineHorizontal(m_rcCell.left(), rcBounds.right() + 1, rcBounds.bottom() + 1);
 	setPen(oPenOld);
-	}
-
-void
-CPainterCell::DrawIconLeft(const QIcon & oIcon)
-	{
-	QRect rcIcon = m_rcCell;
-	rcIcon.setWidth(16);
-	oIcon.paint(this, rcIcon);
-	m_rcCell.setLeft(m_rcCell.left() + 19);
-	}
-
-void
-CPainterCell::DrawIconLeft(EMenuIcon eMenuIcon)
-	{
-	DrawIconLeft(OGetIcon(eMenuIcon));
 	}
 
 void
@@ -191,7 +161,7 @@ WDashboardSection_TGroup::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/,
 	TGroup * pGroup = (TGroup *)pvGroup;
 	Assert(pGroup != NULL);
 	Assert(pGroup->EGetRuntimeClass() == RTI(TGroup));
-	pPainter->DrawIconLeft(m_eMenuIcon);
+	pPainter->DrawIconAdjustLeft(m_eMenuIcon);
 	pPainter->DrawNumberWithinCircle(pGroup->m_cMessagesUnread);
 	pPainter->setFont((pGroup->m_cMessagesUnread > 0) ? g_oFontBoldThick : g_oFontNormal);
 	g_strScratchBufferStatusBar = pGroup->TreeItem_PszGetNameDisplay();
@@ -268,7 +238,7 @@ WDashboardSectionContacts::DrawItem(CPainterCell * pPainter, UINT /*uFlagsItem*/
 	{
 	TContact * pContact = (TContact *)pvContact;
 	//EMenuAction eMenuIconPresence = pContact->Contact_EGetMenuActionPresence();
-	pPainter->DrawIconLeft(pContact->Contact_FuIsOnline() ? eMenuIcon_ClassContactOnline : eMenuIcon_ClassContactOffline);
+	pPainter->DrawIconAdjustLeft(pContact->Contact_FuIsOnline() ? eMenuIcon_ClassContactOnline : eMenuIcon_ClassContactOffline);
 	pPainter->DrawNumberWithinCircle(pContact->m_cMessagesUnread);
 	QFont oFont = (pContact->m_cMessagesUnread > 0) ? g_oFontBoldThick : g_oFontNormal;
 	if (!pContact->Contact_FuIsOnline())
@@ -367,12 +337,12 @@ WDashboardSectionBallots::OnItemClicked(SHitTestInfo oHitTestInfo)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 void
-WDashboard_TProfiles::IDashboard_AddSections(INOUT OLayoutVertical * poLayout)
+WDashboard_TProfiles::IDashboard_AddSections(INOUT OLayoutVertical * /*poLayout*/)
 	{
 	hide();
 	}
 void
-WDashboard_TProfiles::IDashboard_Notify(UINT uFlagsDashboardNotify, POBJECT pObjectModified)
+WDashboard_TProfiles::IDashboard_Notify(UINT /*uFlagsDashboardNotify*/, POBJECT /*pObjectModified*/)
 	{
 	}
 
@@ -403,7 +373,7 @@ WDashboard_TProfile::IDashboard_AddSections(INOUT OLayoutVertical * poLayout)
 	}
 
 void
-WDashboard_TProfile::IDashboard_Notify(UINT uFlagsDashboardNotify, POBJECT pObjectModified)
+WDashboard_TProfile::IDashboard_Notify(UINT /*uFlagsDashboardNotify*/, POBJECT /*pObjectModified*/)
 	{
 
 	}
@@ -426,25 +396,38 @@ WDashboardCaption::WDashboardCaption()
 void
 WDashboardCaption::paintEvent(QPaintEvent *)
 	{
-	OPainter oPainter(this);
+	CPainter oPainter(this);
 	oPainter.setFont(g_oFontBoldThick);
 	QRect rcCaption = rect();
 	rcCaption.setLeft(d_cxMarginHeaderLeft);
 	//oPainter.drawText(rcCaption, Qt::AlignVCenter, parentWidget()->windowTitle());
 	WDashboard * pwParent = (WDashboard *)parentWidget();
+	Assert(pwParent != NULL);
+	#ifdef SIMPLE_DASHBOARD
 	TProfile * pProfile = pwParent->PGetProfile_YZ();
 	if (pProfile != NULL)
 		oPainter.drawText(rcCaption, Qt::AlignVCenter, pProfile->m_strNameProfile);
+	#else
+	if (pwParent->m_paiwDashboard_NZ != NULL)
+		oPainter.drawText(rcCaption, Qt::AlignVCenter, pwParent->m_paiwDashboard_NZ->IDashboard_SGetCaption());
+	#endif
 	}
 
 #include "WNavigationTree.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+IDashboard * WDashboard::s_paiwDashboard_NZ;
+
 WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	{
 	Assert(g_pwDashboard == NULL);
 	g_pwDashboard = this;
-	m_pProfile_YZ = NULL;
+	#ifdef SIMPLE_DASHBOARD
+	s_paiwDashboard_NZ = new WDashboard_TProfiles();	// Make sure the pointer is never NULL
+	#else
+	m_paiwDashboard_NZ = NULL;
+	#endif
 	m_pItemSelected_YZ = NULL;
 	setObjectName("Dashboard");
 
@@ -504,6 +487,7 @@ WDashboard::WDashboard() : QDockWidget("Comm Panel")
 	#endif
 	}
 
+#ifdef SIMPLE_DASHBOARD
 void
 WDashboard::ProfileSelectedChanged(TProfile * pProfile)
 	{
@@ -642,6 +626,10 @@ WDashboard::NewEventRelatedToBallot(IEventBallot * /*pEventBallot*/)
 	// Search if the ballot is already there, and if not, add it
 	//m_sections.pwSectionBalots->m_arraypaItems
 	}
+
+#else
+
+#endif // ~SIMPLE_DASHBOARD
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 WDashboardSection::SHitTestInfo WDashboardSection::c_oHitTestInfoEmpty;
@@ -929,7 +917,12 @@ Dashboard_RefreshAccordingToSelectedProfile(TProfile * pProfileSelected)
 	{
 	Endorse(pProfileSelected == NULL);
 	Assert(g_pwDashboard != NULL);
+	#ifdef SIMPLE_DASHBOARD
 	g_pwDashboard->ProfileSelectedChanged(pProfileSelected);
+	#else
+	Assert(WDashboard::s_paiwDashboard_NZ != NULL);
+	WDashboard::s_paiwDashboard_NZ->IDashboard_Notify();
+	#endif
 	}
 
 //	Refresh the entire dashboard, by repopulating everything

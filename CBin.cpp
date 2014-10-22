@@ -1855,7 +1855,7 @@ CBin::BinFileWriteE(const QString & sFileName, QIODevice::OpenModeFlag uFlagsExt
 #define d_chSourceJidBare				'j'
 #define d_chSourceJidFull				'J'
 #define d_chSourcePQDateTime			'D'	// Could be removed, not really used
-#define d_chSourceTIMESTAMP				't'	// {t_} {tL} {tU}
+#define d_chSourceTIMESTAMP				't'	// {tL} {tU} {t_} {t%}
 #define d_chSourceTIMESTAMP_DELTA		'T'	// {T-} {T_}
 #define d_chSourceAmount				'A' // {AB} {Am} {A$} {A*}
 #define d_chSourceKiB_32				'k'	// {kT} {kK}
@@ -2240,6 +2240,13 @@ CBin::BinAppendTextSzv_VL(PSZAC pszFmtTemplate, va_list vlArgs)
 				case d_chSourceTIMESTAMP:
 					{
 					TIMESTAMP ts = va_arg(vlArgs, TIMESTAMP);
+					if (chEncoding == d_chEncodingPercentURL)			// {t%} - Percent encode a timestamp or a 64-bit identifier for a URL (typically for a QueryString value)
+						{
+						CHU szTimestamp[16];
+						Timestamp_CchToString(IN ts, OUT szTimestamp);
+						BinAppendUrlPercentEncode(IN szTimestamp);
+						break;
+						}
 					if (chEncoding == d_chEncodingBase64Url)			// {t_}
 						{
 						m_paData->cbData += Timestamp_CchEncodeToBase64Url(ts, OUT PbeAllocateExtraMemory(16));

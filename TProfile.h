@@ -18,6 +18,7 @@ public:
 	CStr m_strKeyPublic;
 	CStr m_strComment;			// Description of the profile (this is useful for a user having multiple profiles)
 	CArrayPtrAccountsXmpp m_arraypaAccountsXmpp;	// Accounts using the profile
+	CArrayPtrCorporations m_arraypaCorporations;
 	CArrayPtrApplications m_arraypaApplications;	// Applications using the profile
 	CArrayPtrServices m_arraypaServices;			// Running services for the profile
 	CArrayPtrBrowsers m_arraypaBrowsers;			// This is a bit of a hack, however at the moment, it will work

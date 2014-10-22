@@ -6,10 +6,6 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#include "WChatLog.h"
-#include "WChatLogHtml.h"
-#include "WChatInput.h"
-
 
 class WLayoutChatLog : public WLayout
 {

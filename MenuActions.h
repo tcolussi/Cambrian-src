@@ -223,9 +223,9 @@ public:
 	void ActionAddWithSeparator(EMenuAction eMenuAction);
 	void ActionsAdd(const EMenuActionByte rgzeMenuActions[]);
 	void ActionsAddSubMenu(EMenuAction eMenuActionSubMenuName, const EMenuActionByte rgzeActionsSubMenuItems[]);
-	void ActionAddFromText(PSZUC pszText, int idAction, EMenuAction eMenuIcon);
+	void ActionAddFromText(PSZUC pszText, int idAction, EMenuIcon eMenuIcon);
 	void ActionSetCheck(EMenuAction eMenuAction, BOOL fuChecked);
-	WMenu * PMenuAdd(PSZAC pszText, EMenuAction eMenuIcon);
+	WMenu * PMenuAdd(PSZAC pszText, EMenuIcon eMenuIcon);
 
 	void InitAsDymanicMenu();
 	void _ConnectActionsToMainWindow();
@@ -237,6 +237,21 @@ public:
 	static BOOL s_fActionReservedForContextMenu;				// TRUE => Do not let the WMainWindow process the menu action because the action is reserved by the context menu and will be returned by EDisplayContextMenu(). FALSE => The action shall be processed by the WMainWindow.
 	static QAction * s_pActionCurrentlyProcessedByMainWindow;	// Pointer to the action currently being processed by the WMainWindow
 }; // WMenu
+
+class WMenuWithIndicator : public QMenu
+{
+protected:
+	QToolButton * m_pwIndicator;		// Widget where the indicator should point to.  This is typically the 'parent' of the menu
+	QPolygon m_oPolygon;
+
+public:
+	WMenuWithIndicator(QToolButton * pwIndicator);
+	virtual QSize sizeHint() const;
+	virtual void moveEvent(QMoveEvent *);
+	virtual void paintEvent(QPaintEvent *);
+
+	QSize InitPolygon(BOOL fInitForPainting = FALSE);
+};
 
 extern QMenuBar * g_pwMenuBar;
 extern WMenu * g_pwMenuStatus;

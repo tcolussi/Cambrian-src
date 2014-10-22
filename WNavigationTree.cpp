@@ -170,6 +170,7 @@ WNavigationTree::NavigationTree_SelectTreeItemWidget(CTreeItemW * poTreeItem)
 		Assert(PGetRuntimeInterfaceOf_ITreeItem(poTreeItem->m_piTreeItem) != NULL);
 		poTreeItem->setVisible(true);			// Any selected Tree Item should be visible within the Navigation Tree
 		m_pwTreeView->setCurrentItem(poTreeItem);
+		Toolbar_TabSelect(poTreeItem->m_piTreeItem);
 		}
 	}
 
@@ -310,12 +311,12 @@ WNavigationTree::SL_MenuProfilesShow()
 		{
 		TProfile * pProfile = prgpProfiles[iProfile];
 		Assert(pProfile->EGetRuntimeClass() == RTI(TProfile));
-		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIconProfile);
+		g_pwMenuSwitchProfile->ActionAddFromText(pProfile->m_strNameProfile, iProfile, eMenuIcon_ClassProfile);
 		}
 	#ifndef COMPILE_WITH_SPLASH_SCREEN
 	if (cProfiles > 1)
-		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All " d_sza_Profile "s>", d_iProfile_DisplayAll, eMenuIconProfile);
-	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<New Role...>", d_iProfile_CreateNew, eMenuIconProfile);
+		g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<View All " d_sza_Profile "s>", d_iProfile_DisplayAll, eMenuIcon_ClassProfile);
+	g_pwMenuSwitchProfile->ActionAddFromText((PSZUC)"<New Role...>", d_iProfile_CreateNew, eMenuIcon_ClassProfile);
 	#else
 	// Code specific for the button Switch Role
 
@@ -383,6 +384,7 @@ WNavigationTree::SL_TreeItemClicked(QTreeWidgetItem * pItemClicked, int UNUSED_P
 		{
 		Assert(PGetRuntimeInterfaceOf_ITreeItem(pTreeItem) == pTreeItem);
 		pTreeItem->TreeItem_IconUpdateOnMessagesRead();	// If the user click on a Tree Item (typically a contact or group), assume all messages related to this Tree Item have been read
+		Toolbar_TabSelect(pTreeItem);
 		}
 	}
 

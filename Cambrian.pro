@@ -95,7 +95,10 @@ SOURCES += \
     TChannel.cpp \
     WQmlToolbar.cpp \
 	MenuIcons.cpp \
-	WChatLogHtml.cpp
+	WChatLogHtml.cpp \
+    TCorporation.cpp \
+    WToolbar.cpp \
+    WToolbarActions.cpp
 
 
 HEADERS += \
@@ -176,7 +179,10 @@ HEADERS += \
     TChannel.h \
     WQmlToolbar.h \
     MenuIcons.h \
-	WChatLogHtml.h
+	WChatLogHtml.h \
+    TCorporation.h \
+    WToolbar.h \
+    WToolbarActions.h
 
 
 FORMS += \

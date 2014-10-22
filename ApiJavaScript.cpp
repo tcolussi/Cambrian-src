@@ -698,8 +698,8 @@ OJapiProfilesList::list()
 	TProfile ** ppProfiles = g_oConfiguration.m_arraypaProfiles.PrgpGetProfilesStop(OUT &ppProfilesStop);
 	while (ppProfiles != ppProfilesStop)
 		{
-		TProfile *pProfile = *ppProfiles++;
-		list.append( QVariant::fromValue(pProfile->POJapiGet()) );
+		TProfile * pProfile = *ppProfiles++;
+		list.append(QVariant::fromValue(pProfile->POJapiGet()));
 		//list.append( QVariant::fromValue(pProfile->m_strNameProfile.ToQString()) );
 		}
 	return list;
@@ -874,10 +874,10 @@ SApplicationHtmlInfo g_rgApplicationHtmlInfo[] =
 	{"JAPI Tests"        , "japi/test/test.html"				, PaAllocateJapiGeneric, NULL },
 	{"Scratch"           , "html5-scratch/index.html"			, PaAllocateJapiGeneric, NULL },
 	{"HTML5 xik"         , "html5-xik/index.html"						, PaAllocateJapiGeneric, NULL },
-	{d_szNameApplicationHtml_GroupManager		, "html5-group-manager/index.html"				, PaAllocateJapiGeneric, NULL },
+    {d_szNameApplicationHtml_GroupManager		, "html5-group-manager/index.html#/groups"				, PaAllocateJapiGeneric, NULL },
 	{d_szNameApplicationHtml_Ballotmaster		, "html5-pollmaster/index.html"					, PaAllocateJapiGeneric, NULL },
 	{d_szNameApplicationHtml_Channels			, "html5-channels/index.html"					, PaAllocateJapiGeneric, NULL },
-	{d_szNameApplicationHtml_Corporations		, "html5-corporations/index.html"				, PaAllocateJapiGeneric, NULL },
+    {d_szNameApplicationHtml_Corporations		, "html5-group-manager/index.html#/corps"				, PaAllocateJapiGeneric, NULL },
 	{d_szNameApplicationHtml_PeerManager		, "html5-peers-manager/index.html"				, PaAllocateJapiGeneric, NULL },
 	{"Home"		         , "html5-static/home/index.html"				, PaAllocateJapiGeneric, NULL },
 	{"Default NewTab"	 , "html5-static/default-new-tab/index.html"	, PaAllocateJapiGeneric, NULL },

@@ -195,7 +195,6 @@ TContact::TreeItem_IconUpdate()
 	if (m_uFlagsContact & FC_kfContactUnsolicited)
 		coText = d_coGray;
 	*/
-	TreeItemW_SetTextColorAndIcon(coText, eMenuIconDisplay);
 
 	// Update the icon for every alias
 	IContactAlias * pAlias = m_plistAliases;
@@ -204,6 +203,11 @@ TContact::TreeItem_IconUpdate()
 		pAlias->ContactAlias_IconChanged(eMenuIconDisplay, eMenuIconPresence);
 		pAlias = pAlias->m_pNextAlias;
 		}
+
+	if ((m_uFlagsTreeItem & FTI_kmIconMask) == FTI_keIcon_mComposingText)
+		eMenuIconDisplay = eMenuIcon_Pencil_10x10;
+	TreeItemW_SetTextColorAndIcon(coText, eMenuIconDisplay);
+
 	Dashboard_RedrawContact(this);
 	} // TreeItem_IconUpdate()
 
@@ -253,10 +257,10 @@ TContact::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 	pMenu->ActionAdd(eMenuAction_ContactUnsubscribe);
 	*/
 
-	WMenu * pMenuView = pMenu->PMenuAdd("View", eMenuAction_Contact_SubMenuView);
+	WMenu * pMenuView = pMenu->PMenuAdd("View", eMenuIcon_Find);
 	pMenuView->ActionsAdd(c_rgzeActionsMenuContactView);
 
-	WMenu * pMenuGroup = pMenu->PMenuAdd("Add Peer to Group", eMenuAction_ContactAddToGroup);
+	WMenu * pMenuGroup = pMenu->PMenuAdd("Add Peer to Group", eMenuIcon_ContactAdd);
 	int eMenuActionGroup = eMenuSpecialAction_GroupFirst;
 	TGroup ** ppGroupStop;
 	TGroup ** ppGroup = m_pAccount->m_arraypaGroups.PrgpGetGroupsStop(OUT &ppGroupStop);
@@ -264,9 +268,9 @@ TContact::TreeItem_MenuAppendActions(IOUT WMenu * pMenu)
 		{
 		TGroup * pGroup = *ppGroup++;
 		if (pGroup->TreeItemGroup_FCanDisplayWithinNavigationTree())
-			pMenuGroup->ActionAddFromText(pGroup->TreeItem_PszGetNameDisplay(), eMenuActionGroup++, eMenuAction_Group);
+			pMenuGroup->ActionAddFromText(pGroup->TreeItem_PszGetNameDisplay(), eMenuActionGroup++, eMenuIcon_Group);
 		}
-	pMenuGroup->ActionAddFromText((PSZUC)"<New Group...>", eMenuAction_GroupNew, eMenuAction_GroupNew);
+	pMenuGroup->ActionAddFromText((PSZUC)"<New Group...>", eMenuAction_GroupNew, eMenuIcon_GroupAdd);
 
 	pMenu->ActionsAdd(c_rgzeActionsMenuContact);
 	pMenu->ActionSetCheck(eMenuAction_TreeItemRecommended, m_uFlagsTreeItem & FTI_kfRecommended);

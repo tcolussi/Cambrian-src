@@ -103,6 +103,16 @@ class WButtonIconForToolbarWithDropDownMenu : public WButtonIconForToolbar
 {
 public:
 	WButtonIconForToolbarWithDropDownMenu(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon, PSZAC pszmButtonTextAndToolTip);
+	WButtonIconForToolbarWithDropDownMenu(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon, PSZAC pszmButtonTextAndToolTip);
+
+	void _InitStyleForDropdownMenu(BOOL fHideArrowOfDropDownMenu = FALSE);
+};
+
+class WButtonIconForToolbarWithDropDownMenuNoArrow : public WButtonIconForToolbarWithDropDownMenu
+{
+public:
+	WButtonIconForToolbarWithDropDownMenuNoArrow(PA_PARENT QWidget * pwParent, EMenuIcon eMenuIcon);
+	WButtonIconForToolbarWithDropDownMenuNoArrow(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon);
 };
 
 class WButtonText : public QPushButton
@@ -213,6 +223,7 @@ protected:
 
 public:
 	WEditSearch();
+	WEditSearch(PA_PARENT QBoxLayout * poParentLayout, EMenuIcon eMenuIcon, PSZAC pszWatermark);
 };
 
 
@@ -619,13 +630,43 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class OPainter : public QPainter
+class CPainter : public QPainter
 {
 public:
-	OPainter(QPaintDevice * poPaintDevice) : QPainter(poPaintDevice) { }
+	CPainter(QPaintDevice * pPaintDevice) : QPainter(pPaintDevice) { }
 	void DrawLineHorizontal(int xLeft, int xRight, int yPos);
+	void DrawLineHorizontalCo(int xLeft, int xRight, int yPos, QRGB coLine);
 	void DrawLineVertical(int xPos, int yTop, int yBottom);
 	void FillRectWithGradientVertical(const QRect & rcFill, QRGB coTop, QRGB coBottom);
+
+	void DrawIconAlignmentRect(EMenuIcon eMenuIcon, Qt::Alignment eAlignment, const QRect & rcIcon);
+	void DrawIconAlignmentRect(const QIcon & oIcon, Qt::Alignment eAlignment, const QRect & rcIcon);
+};
+
+//	Class having a 'boundary rectangle' where the painter is allowed to draw.
+//	A typical use of this class is to paint a cell in a grid.
+class CPainterCell : public CPainter
+{
+public:
+	QRect m_rcCell;
+
+public:
+	CPainterCell(QWidget * pwWidget);
+	void DrawTextWithinCell(const QString & sText);
+	void DrawTextWithinCell_VE(PSZAC pszFmtTemplate, ...);
+
+	void DrawIconAdjustLeft(const QIcon & oIcon);
+	void DrawIconAdjustLeft(EMenuIcon eMenuIcon);
+
+	void DrawIconAlignment(const QIcon & oIcon, Qt::Alignment eAlignment) CONST_MCC;
+	void DrawIconAlignment(EMenuIcon eMenuIcon, Qt::Alignment eAlignment) CONST_MCC;
+	void DrawIconAlignmentLeftBottom(EMenuIcon eMenuIcon) CONST_MCC;
+	void DrawIconAlignmentRightBottom(EMenuIcon eMenuIcon) CONST_MCC;
+
+	// Specific methods
+	void DrawTextUnderlinedStyle(const QString & sText, Qt::PenStyle eStyle);
+	int DrawNumberWithinCircle(int nNumber);
+	void FillRect0(QRGB coBackgroundFill);
 };
 
 

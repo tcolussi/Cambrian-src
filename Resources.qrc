@@ -117,6 +117,8 @@
         <file alias="Avatar1">Icons/Avatar1.png</file>
         <file alias="Avatar2">Icons/Avatar2.png</file>
         <file alias="contractOTserver">Icons/contractOTserver.png</file>
+        <file alias="Pantheon">Icons/Pantheon.png</file>
+        <file alias="Pin">Icons/Pin.png</file>
     </qresource>
     <qresource prefix="/snd">
         <file alias="NewMessage">Sounds/msg.wav</file>

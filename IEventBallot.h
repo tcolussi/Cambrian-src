@@ -108,7 +108,6 @@ public:
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	#ifdef COMPILE_WITH_CHATLOG_HTML
 	virtual void AppendHtmlForChatLog(IOUT CBin * pbinHtml) CONST_MCC;
-	virtual EGui HyperlinkClickedE(PSZUC pszActionOfHyperlink);
 	#else
 	virtual void ChatLogUpdateTextBlock(INOUT OCursor * poCursorTextBlock) CONST_MAY_CREATE_CACHE;
 	virtual void HyperlinkClicked(PSZUC pszActionOfHyperlink, INOUT OCursor * poCursorTextBlock);
@@ -161,6 +160,7 @@ public:
 	virtual EXml XmlSerializeCoreE(IOUT CBinXcpStanza * pbinXmlAttributes) const;
 	virtual void XmlUnserializeCore(const CXmlNode * pXmlNodeElement);
 	virtual PSZUC PszGetTextOfEventForSystemTray(OUT_IGNORE CStr * pstrScratchBuffer) const;
+	virtual EGui HyperlinkClickedE(PSZUC pszActionOfHyperlink);
 
 	void DisplayDialogBallotVote(BOOL fPreviewMode = FALSE);
 	void UpdateBallotChoices(UINT_BALLOT_CHOICES ukmChoices, WEditTextArea * pwEditComments);
