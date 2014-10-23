@@ -101,8 +101,8 @@ OJapiCambrian::channelsAvailable()
 	//MessageLog_AppendTextFormatCo(d_coRed, "channelsAvailable()\n");
 	QVariantList oList;
 	CChannelName ** ppChannelNameStop;
-	CChannelName ** ppChannelName = m_pProfile->m_arraypaChannelNamesAvailables.PrgpGetChannelsStop(OUT &ppChannelNameStop);
-	while (ppChannelName != ppChannelNameStop)
+    CChannelName ** ppChannelName = m_pProfile->m_arraypaChannelNamesAvailables.PrgpGetChannelsStop(OUT &ppChannelNameStop);
+    while (ppChannelName != ppChannelNameStop)
 		{
 		CChannelName * pChannelName = *ppChannelName++;
 		//MessageLog_AppendTextFormatCo(d_coRed, "Channel $S\n", &pChannelName->m_strName);
@@ -174,7 +174,7 @@ OJapiMe::newGroup(const QString &type)
 	if ( pAccount == NULL)
 		return NULL;
 
-	EGroupType eGroupType = eGroupType_kzOpen;
+    EGroupType eGroupType = eGroupType_kzOpen;
 	if ( type.compare("Open", Qt::CaseInsensitive) == 0)
 		eGroupType = eGroupType_kzOpen;
 	else if ( type.compare("Broadcast", Qt::CaseInsensitive) == 0 )
@@ -221,8 +221,58 @@ OJapiMe::getGroup(const QString & sId)
 			} // while
 
 		} // while
-	return NULL;
-	}
+    return NULL;
+}
+
+POJapiContact
+OJapiMe::newPeer(const QString &sUsername)
+    {
+    TContact * pContactSelect = NULL;
+    TContact * pContactDuplicate = NULL;
+    CStr strContactsDuplicate;
+    TAccountXmpp * pAccount =  Configuration_PGetAccountSelectedOrFirstAccount();
+    CStr strUsername(sUsername);
+    PSZUC pszUsername = strUsername.PszuGetDataNZ();
+    if (pszUsername != NULL)
+        {
+        if (pAccount->m_strJID.FCompareStringsJIDs(pszUsername))
+            return NULL;	// Skip the contact, since its JID is the same as its parent account JID
+
+        // We have an invitation, so create the contact
+        TContact * pContactInvitation = pAccount->Contact_PFindByJID(pszUsername, eFindContact_zDefault);
+        if (pContactInvitation == NULL)
+            {
+            pContactSelect = pAccount->TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszUsername);
+            //pContactInvitation->TreeItemW_SelectWithinNavigationTree();
+            }
+        else
+            {
+            if (pContactInvitation->TreeItemFlags_FuIsInvisible())
+                {
+                pContactInvitation->TreeItemContact_DisplayWithinNavigationTreeAndClearInvisibleFlag();
+                pContactSelect = pContactInvitation;
+                }
+            else
+                {
+                pContactDuplicate = pContactInvitation;
+                strContactsDuplicate.AppendSeparatorAndTextU("\n", pszUsername);
+                }
+            }
+        if (pContactSelect == NULL)
+            {
+            // No peer were added, so select one of the duplicate contact.  This dialog "Add Peers" can be used to search for a contact.
+            pContactSelect = pContactDuplicate;
+            }
+        POJapiContact poContact = pContactSelect->POJapiGet();
+        //pAccount->TreeItemW_Expand();
+        return poContact;
+        }
+    else
+        {
+        //pAccount->TreeItemW_Expand();
+         return NULL;
+        }
+    }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 POJapiGroup
@@ -285,7 +335,7 @@ OJapiGroup::members()
 QString
 OJapiGroup::type()
 	{
-	if (m_pGroup->Group_FuIsChannel())
+    if (m_pGroup->Group_FuIsChannel())
 		return "channel";
 	switch (m_pGroup->EGetGroupType())
 		{
@@ -306,7 +356,7 @@ OJapiGroup::channelName() const
 void
 OJapiGroup::channelName(const QString & sNameChannel)
 	{
-	m_pGroup->GroupChannel_SetName(CStr(sNameChannel));
+    m_pGroup->GroupChannel_SetName(CStr(sNameChannel));
 	}
 QString
 OJapiGroup::purpose() const
@@ -651,10 +701,6 @@ OJapiProfile::jurisdiction()
 	}
 
 
-
-
-
-
 OJapiProfilesList::OJapiProfilesList(OCapiRootGUI *pRootGui)
 	{
 	m_pRootGui = pRootGui;
@@ -791,25 +837,16 @@ return successDeletion;
 POJapiProfile
 OJapiProfilesList::create(const QString & name)
 {
-QVariantList profile;
-TProfile * pProfile = new TProfile(&g_oConfiguration);
+    QVariantList profile;
+    TProfile * pProfile = new TProfile(&g_oConfiguration);
     //Create the new Role
 
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 
-if (OTAPI_Wrap::It()->GetServerCount() >0)
-{
-    //create the role inside OT
-    std::string nymId=OTAPI_Wrap::It()->CreateNym(1024, "","");
-// Load the the nym in OTServer to be visible to other nyms
-    OTString     strNym     (nymId.c_str());
-    OTIdentifier pub_nym_id     (strNym);
-    //Publish the nym
+    std::string nymId = pOTX->createNym(name.toStdString(),1024); // Create and publish a nym in all registered OT servers
 
-   // OTAPI_Wrap::OTAPI()->LoadPublicNym(pub_nym_id);
-
- if (OTAPI_Wrap::It()->SetNym_Name(nymId,nymId,name.toStdString()))
- { // Everything is ok with OT, now create the Role in TProfile
+    if (nymId.compare("NoNymCreated")!=0)
+    { // Everything is ok with OT, now create the Role in TProfile
 #endif
      // Create the new profile in Sopro db
 
@@ -824,22 +861,8 @@ if (OTAPI_Wrap::It()->GetServerCount() >0)
      //Save the new role in xml (force)
      pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
      NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfile);
- }
- else
-  {
-  //delete nymid created
-  OTAPI_Wrap::It()->Wallet_RemoveNym(nymId);
     }
 
-}// if there is a OT server contract
-else
-{
- QMessageBox msg;
- msg.warning(g_pwMainWindow,"Action Required","Please asociate valid OT server.","OK");
-
- pOTX->openContractOTServerScreen();
-
-}
 #endif
 
 return pProfile->POJapiGet();
@@ -982,7 +1005,7 @@ OJapiGroupList::OJapiGroupList(OJapiCambrian *poCambrian)
 POJapiGroup
 OJapiGroupList::build(const QString &type)
 	{
-	return m_poCambrian->m_oMe.newGroup(type);
+    return m_poCambrian->m_oMe.newGroup(type);
 	}
 
 OJapiList

@@ -20,12 +20,15 @@ It is supposed to be declared once in the main window
 #include <opentxs/OTAsymmetricKey.hpp>
 #include <opentxs/OTRecordList.hpp>
 #include <opentxs/OTCaller.hpp>
+#include <filedownloader.h>
 
 #include <QDebug>
 
-class OTX_WRAP
+class OTX_WRAP : public QObject
 {
 
+public slots:
+void SL_DownloadedURL();
 
 
 
@@ -77,15 +80,17 @@ public:
      bool decryptAndVerify(QString signerNymId,QString recipientNymId,QString signedEncryptedText,QString &decryptedText);
     // Contract handle
      void openContractOTServerScreen();
-
-void OTX_WRAP::addOTServerContract(QString Url)
+     bool addOTServerContracts();
+     std::string createNym(std::string name,int keysize);
+     int publishNymAllServers(std::string nymId);
  ~OTX_WRAP();
    private:
  // It will be invoked only once per run in the constructor of this class.
-    QPointer<FileDownloader> m_pDownloader;
+    FileDownloader * m_pImgCtrl;
     bool SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup & theCallback);
     bool SetupPasswordCallback(OTCaller & passwordCaller, OTCallback & passwordCallback);
     void LoadWallewithPassprhase();
+    void addOTServerContract(QString Url);
 
 
 };

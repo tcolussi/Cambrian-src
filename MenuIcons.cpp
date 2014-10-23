@@ -100,7 +100,7 @@ const PSZAC c_mapepszIconResources[eMenuIconMax] =
 
 	"Close",			// eMenuIcon_Close
 	"Quit",				// eMenuIcon_Quit
-    "Menu",			// eMenuIcon_Menu
+	"Menu"				// eMenuIcon_Menu
 	};
 
 //	Array of all icons

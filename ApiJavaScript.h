@@ -726,6 +726,7 @@ public slots:
 	POJapiGroup newGroup(const QString & type);
 	//POJapiGroup getPeerList(const QString & sId);
 	POJapiGroup getGroup(const QString & sId);
+    POJapiContact newPeer(const QString & sUsername);
 };
 #define POJapiMe		POJapi
 

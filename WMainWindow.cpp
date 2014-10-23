@@ -322,7 +322,7 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	setStatusBar(PA_CHILD g_pwStatusBar);
 	void Menu_InitializeAllMenuActionsHavingAccelerators();
 	Menu_InitializeAllMenuActionsHavingAccelerators();
-     #ifdef defCOMPILE_WITH_TOOLBAR
+	#ifdef COMPILE_WITH_TOOLBAR
 	addToolBar(PA_CHILD new WToolbar);
     #endif
 	addDockWidget(Qt::LeftDockWidgetArea, PA_CHILD new WNavigationTree);

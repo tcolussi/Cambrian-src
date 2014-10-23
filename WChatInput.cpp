@@ -50,7 +50,7 @@ WChatInput::EditEventText(CEventMessageTextSent * pEventEdit)
 	}
 
 void
-WChatInput::ChatStateComposingCancelTimer(BOOL fWriteXmlChatStatePaused)
+WChatInput::ChatStateComposingCancelTimer(EUserCommand eUserCommand)
 	{
 	if (m_tidChatStateComposing != d_zNA)
 		{
@@ -58,7 +58,7 @@ WChatInput::ChatStateComposingCancelTimer(BOOL fWriteXmlChatStatePaused)
 		m_tidChatStateComposing = d_zNA;
 		}
 	m_ttcBeforeChatStatePaused = 0;
-	if (fWriteXmlChatStatePaused)
+	if (eUserCommand != eUserCommand_zMessageTextSent)
 		m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_Paused);	// Notify the remote contact the user stopped typing
 	}
 
@@ -119,7 +119,7 @@ WChatInput::event(QEvent * pEvent)
 						m_pEventEdit->EventUpdateMessageText(strText, INOUT m_pwLayoutChatLog);
 						m_pEventEdit = NULL;
 						}
-					ChatStateComposingCancelTimer((BOOL)eUserCommand);	// After sending a message, cancel (reset) the timer to, so a new 'composing' notification will be sent when the user starts typing again. BTW, there is no need to send a 'pause' command since receiving a text message automatically implies a pause.
+					ChatStateComposingCancelTimer(eUserCommand);	// After sending a message, cancel (reset) the timer to, so a new 'composing' notification will be sent when the user starts typing again. BTW, there is no need to send a 'pause' command since receiving a text message automatically implies a pause.
 					} // if
 
 				if (eUserCommand != eUserCommand_Error)
@@ -172,7 +172,7 @@ WChatInput::timerEvent(QTimerEvent * pTimerEvent)
 		{
 		Assert(m_tidChatStateComposing != d_zNA);
 		if (--m_ttcBeforeChatStatePaused <= 0)
-			ChatStateComposingCancelTimer(TRUE);	// If the user is idle for too long, then notify the remote contact he/she stopped typing
+			ChatStateComposingCancelTimer(eUserCommand_ComposingStopped);	// If the user is idle for too long, then notify the remote contact he/she stopped typing
 		}
 	WEditTextArea::timerEvent(pTimerEvent);
 	} // timerEvent()

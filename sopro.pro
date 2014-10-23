@@ -182,9 +182,11 @@ SOURCES += \
     TChannel.cpp \
     WQmlToolbar.cpp \
     MenuIcons.cpp \
-    WChatLogHtml.cpp
-
-
+    filedownloader.cpp \
+    WChatLogHtml.cpp \
+    TCorporation.cpp \
+    WToolbar.cpp \
+    WToolbarActions.cpp
 HEADERS += \
     CArray.h \
     CBin.h \
@@ -264,10 +266,12 @@ HEADERS += \
     TChannel.h \
     WQmlToolbar.h \
     MenuIcons.h \
+    filedownloader.h \
     WChatLogHtml.h \
-    PreCompiledHeaders.h
-
-
+    TCorporation.h \
+    WToolbar.h \
+	WToolbarActions.h \
+	PreCompiledHeaders.h
 
 FORMS += \
     startupscreen.ui

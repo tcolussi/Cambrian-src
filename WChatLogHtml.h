@@ -7,11 +7,7 @@
 #ifdef COMPILE_WITH_CHATLOG_HTML
 
 //	JavaScript APIs available for the HTML Chat Log
-#ifdef Q_OS_MAC
-class OJapiChatLog : public QObject
-#else
-class OJapiChatLog : public OJapi
-#endif
+class OJapiChatLog : public QObject	// There is no need to inherit from class OJapi because this object does not grant access to any other object, threfore there is no need to have a security context
 {
 	Q_OBJECT
 protected:
@@ -22,6 +18,7 @@ public:
 
 public slots:
 	void pin();
+	void typingStarted();
 	void sendMessage(const QString & sMessage);
 };
 
