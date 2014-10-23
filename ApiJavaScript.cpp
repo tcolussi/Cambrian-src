@@ -97,8 +97,8 @@ OJapiCambrian::channelsAvailable()
 	//MessageLog_AppendTextFormatCo(d_coRed, "channelsAvailable()\n");
 	QVariantList oList;
 	CChannelName ** ppChannelNameStop;
-	CChannelName ** ppChannelName = m_pProfile->m_arraypaChannelNamesAvailables.PrgpGetChannelsStop(OUT &ppChannelNameStop);
-	while (ppChannelName != ppChannelNameStop)
+    CChannelName ** ppChannelName = m_pProfile->m_arraypaChannelNamesAvailables.PrgpGetChannelsStop(OUT &ppChannelNameStop);
+    while (ppChannelName != ppChannelNameStop)
 		{
 		CChannelName * pChannelName = *ppChannelName++;
 		//MessageLog_AppendTextFormatCo(d_coRed, "Channel $S\n", &pChannelName->m_strName);
@@ -170,7 +170,7 @@ OJapiMe::newGroup(const QString &type)
 	if ( pAccount == NULL)
 		return NULL;
 
-	EGroupType eGroupType = eGroupType_kzOpen;
+    EGroupType eGroupType = eGroupType_kzOpen;
 	if ( type.compare("Open", Qt::CaseInsensitive) == 0)
 		eGroupType = eGroupType_kzOpen;
 	else if ( type.compare("Broadcast", Qt::CaseInsensitive) == 0 )
@@ -217,8 +217,58 @@ OJapiMe::getGroup(const QString & sId)
 			} // while
 
 		} // while
-	return NULL;
-	}
+    return NULL;
+}
+
+POJapiContact
+OJapiMe::newPeer(const QString &sUsername)
+    {
+    TContact * pContactSelect = NULL;
+    TContact * pContactDuplicate = NULL;
+    CStr strContactsDuplicate;
+    TAccountXmpp * pAccount =  Configuration_PGetAccountSelectedOrFirstAccount();
+    CStr strUsername(sUsername);
+    PSZUC pszUsername = strUsername.PszuGetDataNZ();
+    if (pszUsername != NULL)
+        {
+        if (pAccount->m_strJID.FCompareStringsJIDs(pszUsername))
+            return NULL;	// Skip the contact, since its JID is the same as its parent account JID
+
+        // We have an invitation, so create the contact
+        TContact * pContactInvitation = pAccount->Contact_PFindByJID(pszUsername, eFindContact_zDefault);
+        if (pContactInvitation == NULL)
+            {
+            pContactSelect = pAccount->TreeItemAccount_PContactAllocateNewToNavigationTree_NZ(IN pszUsername);
+            //pContactInvitation->TreeItemW_SelectWithinNavigationTree();
+            }
+        else
+            {
+            if (pContactInvitation->TreeItemFlags_FuIsInvisible())
+                {
+                pContactInvitation->TreeItemContact_DisplayWithinNavigationTreeAndClearInvisibleFlag();
+                pContactSelect = pContactInvitation;
+                }
+            else
+                {
+                pContactDuplicate = pContactInvitation;
+                strContactsDuplicate.AppendSeparatorAndTextU("\n", pszUsername);
+                }
+            }
+        if (pContactSelect == NULL)
+            {
+            // No peer were added, so select one of the duplicate contact.  This dialog "Add Peers" can be used to search for a contact.
+            pContactSelect = pContactDuplicate;
+            }
+        POJapiContact poContact = pContactSelect->POJapiGet();
+        //pAccount->TreeItemW_Expand();
+        return poContact;
+        }
+    else
+        {
+        //pAccount->TreeItemW_Expand();
+         return NULL;
+        }
+    }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 POJapiGroup
@@ -281,7 +331,7 @@ OJapiGroup::members()
 QString
 OJapiGroup::type()
 	{
-	if (m_pGroup->Group_FuIsChannel())
+    if (m_pGroup->Group_FuIsChannel())
 		return "channel";
 	switch (m_pGroup->EGetGroupType())
 		{
@@ -302,7 +352,7 @@ OJapiGroup::channelName() const
 void
 OJapiGroup::channelName(const QString & sNameChannel)
 	{
-	m_pGroup->GroupChannel_SetName(CStr(sNameChannel));
+    m_pGroup->GroupChannel_SetName(CStr(sNameChannel));
 	}
 QString
 OJapiGroup::purpose() const
@@ -959,7 +1009,7 @@ OJapiGroupList::OJapiGroupList(OJapiCambrian *poCambrian)
 POJapiGroup
 OJapiGroupList::build(const QString &type)
 	{
-	return m_poCambrian->m_oMe.newGroup(type);
+    return m_poCambrian->m_oMe.newGroup(type);
 	}
 
 OJapiList
