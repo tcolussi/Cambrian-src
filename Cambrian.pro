@@ -4,6 +4,14 @@
 #
 #-------------------------------------------------
 
+
+
+
+
+
+
+
+
 QT     += core gui multimedia quick
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
@@ -11,8 +19,15 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 TARGET = SocietyPro
 TEMPLATE = app
 
-
 PRECOMPILED_HEADER = PreCompiledHeaders.h
+
+#-------------------------------------------------
+# Compiler options
+#DEFINES += COMPILE_WITH_OPEN_TRANSACTIONS
+#DEFINES += COMPILE_WITH_SPLASH_SCREEN
+#DEFINES += COMPILE_WITH_CRYPTOMANIA
+#DEFINES += COMPILE_WITH_TOOLBAR
+
 
 SOURCES += \
     CArray.cpp \

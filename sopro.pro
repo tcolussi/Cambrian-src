@@ -12,7 +12,7 @@
 #            libraries.
 #-------------------------------------------------
 
-QT       += core gui multimedia quick # sql network
+QT       += core gui multimedia quick sql # network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
@@ -21,10 +21,22 @@ TEMPLATE = app
 
 PRECOMPILED_HEADER = PreCompiledHeaders.h
 
-#INCLUDEPATH += otx/src/jsoncpp
-#INCLUDEPATH += otx/src/core
-#INCLUDEPATH += otx/src/opentxs
-#INCLUDEPATH += otx/src
+#-------------------------------------------------
+# Compiler options
+DEFINES += COMPILE_WITH_OPEN_TRANSACTIONS
+DEFINES += COMPILE_WITH_SPLASH_SCREEN
+DEFINES += COMPILE_WITH_CRYPTOMANIA
+DEFINES += COMPILE_WITH_TOOLBAR
+
+INCLUDEPATH += otx/src/opentxs
+INCLUDEPATH += otx/src/core
+INCLUDEPATH += otx/src/jsoncpp
+INCLUDEPATH += otx/src
+
+QMAKE_CFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
+QMAKE_CXXFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
+#QMAKE_CXXFLAGS += -std=c++11 -DCXX_11
+CONFIG += c++11
 
 
 #-------------------------------------------------
@@ -85,13 +97,6 @@ win32: {
 		LIBS += -lAdvapi32 -lWs2_32
     }
 }
-
-
-QMAKE_CFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
-QMAKE_CXXFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
-#QMAKE_CXXFLAGS += -std=c++11 -DCXX_11
-CONFIG += c++11
-
 
 
 
