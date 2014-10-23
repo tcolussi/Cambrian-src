@@ -180,10 +180,11 @@ SOURCES += \
     TChannel.cpp \
     WQmlToolbar.cpp \
     MenuIcons.cpp \
+    filedownloader.cpp \
     WChatLogHtml.cpp \
-    filedownloader.cpp
-
-
+    TCorporation.cpp \
+    WToolbar.cpp \
+    WToolbarActions.cpp
 HEADERS += \
     CArray.h \
     CBin.h \
@@ -263,10 +264,11 @@ HEADERS += \
     TChannel.h \
     WQmlToolbar.h \
     MenuIcons.h \
+    filedownloader.h \
     WChatLogHtml.h \
-    filedownloader.h
-
-
+    TCorporation.h \
+    WToolbar.h \
+    WToolbarActions.h
 
 FORMS += \
     startupscreen.ui

@@ -83,7 +83,6 @@ WTabs::TabAddP(PSZAC pszName, ITreeItem * pTreeItem)
 	return paTab;
 	}
 
-#if 1
 //	Add the tab only if not already present.
 //	Return NULL of no tab was added
 CTab *
@@ -93,7 +92,6 @@ WTabs::TabAddUniqueP(PSZAC pszName, ITreeItem * pTreeItem)
 		return TabAddP(pszName, pTreeItem);
 	return NULL;
 	}
-#endif
 
 void
 WTabs::TabAddAndSelect(PSZAC pszName, ITreeItem * pTreeItem)
@@ -360,6 +358,10 @@ WTabs::_DrawTab(CPainterCell * pPainter, CTab * pTab)
 		else if (rti == RTI(TGroup))
 			{
 			cMessagesUnread = pContact->m_cMessagesUnread;
+			}
+		else if (rti == RTI(TProfile))
+			{
+			eMenuIcon = eMenuIcon_ClassProfile;
 			}
 		if (eMenuIcon != eMenuIcon_zNull)
 			OGetIcon(eMenuIcon).paint(pPainter, rcText, Qt::AlignLeft | Qt::AlignVCenter);

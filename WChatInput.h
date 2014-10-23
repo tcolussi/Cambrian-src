@@ -23,7 +23,7 @@ public:
 	explicit WChatInput(WLayoutChatLog * pwLayoutChatLog);
 	void ChatInput_UpdateWatermarkText();
 	void EditEventText(CEventMessageTextSent * pEventEdit);
-	void ChatStateComposingCancelTimer(BOOL fWriteXmlChatStatePaused);
+	void ChatStateComposingCancelTimer(EUserCommand eUserCommand); // BOOL fWriteXmlChatStatePaused);
 	
 	virtual QSize minimumSizeHint() const;				// From QWidget
 	virtual QSize sizeHint() const;						// From QWidget
