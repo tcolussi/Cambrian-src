@@ -67,6 +67,9 @@ public:
     int symmetricDecrypt(unsigned char ciphertext[1024], unsigned char (&plainText)[1024]);
     int symmetricEncrypt(unsigned char * plainText, unsigned char (&encrypted)[1024]);
 
+     // nyms messaging
+    bool sendMessageToNymBox(std::string str_serverId, std::string str_fromNymId, std::string str_toNymId, std::string contents);
+
     // symmetric encryption adapted to use std string
     std::string symmetricDecStr(std::string encText);
     std::string symmetricEncStr(std::string plainText);

@@ -55,6 +55,7 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
                   // pszDataEncrypted must be assigned with decryptedText
                    PSZU pszDataDecrypted = (PSZU) decryptedText.toStdString().c_str(); //pXmlNodeXmppXcp->m_pszuTagValue;
                    int dataDecryptedLen = strlen((const char *) pszDataDecrypted);
+
                    //encode base85 the decrypted text
                    oXmlTreeTemp.m_binXmlFileData.BinAppendStringBase85FromBinaryData(pszDataDecrypted,dataDecryptedLen);
                    QString qDataEncodedDecrypted =oXmlTreeTemp.m_binXmlFileData.ToQString();
@@ -1064,11 +1065,19 @@ void
 ITreeItemChatLogEvents::XcpApi_Invoke_RecommendationsGet()
 	{
 	XcpApi_Invoke(c_szaApi_Contact_Recommendations_Get);
-	}
+   #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    //HACK: force to get the rolename and nym when ask for recomendations instead to make it manually
+    //TODO: Dan must move this hack beside the Recomendations call when the contact is added...
+    unsigned char  fetchContainer[2];
+    fetchContainer[0]='f';
+    fetchContainer[1]='\0';
+    XcpApi_Invoke((PSZUC)fetchContainer);
+  #endif
+   }
 
 void
 TContact::XcpApiContact_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const
-	{
+    {
 	Assert(pbinXcpStanzaReply != NULL);
 
 	}
