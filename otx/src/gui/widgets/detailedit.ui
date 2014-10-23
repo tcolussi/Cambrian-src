@@ -39,7 +39,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Role Management</string>
+        <string>OT SERVER CONTRACTS</string>
        </property>
       </widget>
      </item>
@@ -82,39 +82,28 @@
        <item>
         <widget class="QPushButton" name="addButton">
          <property name="toolTip">
-          <string>Add New Role to Society Pro</string>
+          <string>Add OT Server that holds Sopro Pub Nyms</string>
          </property>
          <property name="text">
-          <string>Add Role</string>
+          <string>Add OT SERVER</string>
          </property>
          <property name="icon">
-          <iconset resource="../../../SOPRO-OTX/Cambrian/Resources.qrc">
-           <normaloff>:/ico/Role</normaloff>:/ico/Role</iconset>
+          <iconset resource="../../../../Resources.qrc">
+           <normaloff>:/ico/ServerSecure</normaloff>:/ico/ServerSecure</iconset>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="deleteButton">
          <property name="toolTip">
-          <string>Delete Role</string>
+          <string>Delete contract </string>
          </property>
          <property name="text">
           <string>Delete</string>
          </property>
          <property name="icon">
-          <iconset resource="../../../SOPRO-OTX/Cambrian/Resources.qrc">
+          <iconset resource="../../../../Resources.qrc">
            <normaloff>:/ico/Delete</normaloff>:/ico/Delete</iconset>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="closeBTN">
-         <property name="text">
-          <string>Cancel</string>
-         </property>
-         <property name="icon">
-          <iconset resource="../../../SOPRO-OTX/Cambrian/Resources.qrc">
-           <normaloff>:/ico/Close</normaloff>:/ico/Close</iconset>
          </property>
         </widget>
        </item>
@@ -141,7 +130,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../SOPRO-OTX/Cambrian/Resources.qrc"/>
+  <include location="../../../../Resources.qrc"/>
  </resources>
  <connections/>
 </ui>

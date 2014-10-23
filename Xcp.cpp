@@ -8,7 +8,7 @@
 #endif
 #include "Xcp.h"
 #include "XcpApi.h"
-
+#include <iostream>
 void
 CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData)
 	{
@@ -29,7 +29,12 @@ CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXc
 void
 ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, PSZUC pszXmlApiParameters)
 	{
-	Assert(pszApiName != NULL);
+    std::cout <<"\n  XCPAPI_INVOKE pszApiName: ";
+    std::cout << pszApiName;
+    std::cout << "\n pszXmlApiParameters: ";
+    std::cout << pszXmlApiParameters;
+    std::cout << "\n";
+    Assert(pszApiName != NULL);
 	Assert(pszApiName[0] != '\0');
 	//MessageLog_AppendTextFormatSev(eSeverityComment, "XcpApi_Invoke($s, $s)\n", pszApiName, pszXmlApiParameters);
 	CBinXcpStanza binXcpStanza;
@@ -371,7 +376,9 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 
 	if (m_paData->cbData >= m_cbStanzaThresholdBeforeSplittingIntoTasks)
 		{
-		// The data is too big to fit into one XMPP stanza, therefore allocate a new task to send it by smaller chunks
+        std::cout << "\n !!!!!!Xcp:  The stanza data is too big to fin in ONE XMPP stanza : m_cbStanzaThresholdBeforeSplittingIntoTasks =";
+        std::cout << m_cbStanzaThresholdBeforeSplittingIntoTasks;
+        // The data is too big to fit into one XMPP stanza, therefore allocate a new task to send it by smaller chunks
 		CTaskSendReceive * pTaskSend = pContact->m_listaTasksSendReceive.PAllocateTaskSend_YZ(m_uFlags & F_kfContainsSyncData);
 		if (pTaskSend == NULL)
 			{
@@ -385,17 +392,9 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		}
 
 	SendStanza:
-#ifdef COMPILE_WITH_CRYPTOMANIA
- /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
-    PSZUC pszDataStanzaIN = m_paData->rgbData;
-    std::string strDataStanza =  std::string(reinterpret_cast<const char*>(pszDataStanzaIN));
-    // encrypt ussing openssl symmetric (at the moment..)
-    std::string encryptedStanza=pOTX->symmetricEncStr(strDataStanza);
-    PSZUC pszDataStanza = (PSZUC) encryptedStanza.c_str();
-/*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
-#else
+
  PSZUC pszDataStanza = m_paData->rgbData;
-#endif
+
     const int cbDataStanza = m_paData->cbData;
 	Assert(cbDataStanza >= 0);
 	if (cbDataStanza <= 0)
@@ -416,8 +415,45 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		}
 	// Format the XML envelope for the XMPP protocol.
 	g_strScratchBufferSocket.BinInitFromTextSzv_VE("<$s$s to='^J'><" d_szCambrianProtocol_xcp " " d_szCambrianProtocol_Attribute_hSignature "='{h|}'>", pszStanzaType, pszStanzaAttributesExtra, pContact, &hashSignature);
-	g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanza, cbDataStanza);
+#ifdef COMPILE_WITH_CRYPTOMANIA
+ /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+    // Get Signer and Remote Nym
 
+    std::cout << "\n Profile count:";
+
+    QString signerNymId = g_oConfiguration.m_pProfileSelected->m_strNymID;//pProfile->m_strNymID.ToQString();
+    QString receiverNymId = pContact->m_strNymID.ToQString();
+    std::string strEncryptedText;
+
+    std::string strDataStanza = std::string(reinterpret_cast<const char *>(pszDataStanza));
+    QString qDataStanza = QString::fromStdString(strDataStanza);
+    std::cout << "\n ENCRYPT IN XCP: Signer Nym Id: ";
+    std::cout << signerNymId.toStdString();
+    std::cout << "\n ENCRIPT IN XCP: Receiver Public Nym Id:";
+    std::cout << receiverNymId.toStdString();
+    std::cout << "\n";
+
+    if (!signerNymId.isEmpty())
+    {
+        if (!receiverNymId.isEmpty())
+        {
+            // Begin the Sign and Encrypt process..
+            //The public Nym is retrieved from an OT server if is not stored locally as a "Public Nym"
+            //At the moment test the encryption...
+            strEncryptedText = pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza).toStdString();
+
+        }
+        else { std::cout << "\n!!!!Nym Id Empty (Contact >> Xcp Encryption)!!!!\n";}
+
+    } else { std::cout << "\n!!!!!Nym Id Empty (Signer >> Xcp Encryption)!!!!\n";}
+
+    // pszDataStanzaEnc must be asigned with the return value of above  function
+    PSZUC pszDataStanzaEnc = (PSZUC) strEncryptedText.c_str() ;
+    int cbDataStanzaEnc = strlen ((const char*) pszDataStanzaEnc);
+    g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanzaEnc, cbDataStanzaEnc);
+#else
+    g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanza, cbDataStanza);
+#endif
     // need convert the text to unsigned string...
     g_strScratchBufferSocket.BinAppendText_VE("</" d_szCambrianProtocol_xcp "></$s>", pszStanzaType);
 

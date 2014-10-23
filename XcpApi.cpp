@@ -22,20 +22,87 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 
 	// Attempt to decrypt the data and verify the signature
 #ifdef COMPILE_WITH_CRYPTOMANIA
-/*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
-    PSZU pszDataEncryptedIN = pXmlNodeXmppXcp->m_pszuTagValue;
-    std::string strDataEncrypted=std::string(reinterpret_cast<const char*>(pszDataEncryptedIN));
-    std::string strDataPlain= pOTX->symmetricDecStr(strDataEncrypted);
-    PSZU pszDataEncrypted=(PSZU) strDataPlain.c_str();
-/*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+/*//////////////////////////////////CRYPTOMANIA DECRYPT////////////////////////////////////////////////*/
+
+
+    CXmlTree oXmlTreeTemp;
+    oXmlTreeTemp.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
+    QString qDataDecodedSignedEncrypted =oXmlTreeTemp.m_binXmlFileData.ToQString();
+    PSZU pszDataDecryptedDecoded; //data to be passed after decryption
+    //Get the sender public NymId
+    QString signerNymId = m_strNymID.ToQString();
+    QString receiverNymId= g_oConfiguration.m_pProfileSelected->m_strNymID.ToQString();
+
+    std::cout << "\n Decrypt in XcpApi: Signer Nym Id: ";
+    std::cout << signerNymId.toStdString();
+    std::cout << "\n Decrypt in XcpApi: Receiver Private Nym Id:";
+    std::cout << receiverNymId.toStdString();
+    std::cout << "\n";
+    // the decrypted and verified text:
+    QString decryptedText;
+    if (!signerNymId.isEmpty())
+    {
+        if (!receiverNymId.isEmpty())
+        {
+
+            bool decryptSuccessful=pOTX->decryptAndVerify(signerNymId,receiverNymId,qDataDecodedSignedEncrypted,decryptedText);
+
+             if (decryptSuccessful)
+              {
+                 //succesfull Decryption
+                  std::cout << "\n Decrypted Text in XcpApi: ";
+                  std::cout << decryptedText.toStdString();
+                  // pszDataEncrypted must be assigned with decryptedText
+                   PSZU pszDataDecrypted = (PSZU) decryptedText.toStdString().c_str(); //pXmlNodeXmppXcp->m_pszuTagValue;
+                   int dataDecryptedLen = strlen((const char *) pszDataDecrypted);
+                   //encode base85 the decrypted text
+                   oXmlTreeTemp.m_binXmlFileData.BinAppendStringBase85FromBinaryData(pszDataDecrypted,dataDecryptedLen);
+                   QString qDataEncodedDecrypted =oXmlTreeTemp.m_binXmlFileData.ToQString();
+                   pszDataDecryptedDecoded = (PSZU) qDataEncodedDecrypted.toStdString().c_str();
+
+             }
+             else
+              {
+                // decryption fail handle it
+                 decryptedText= QString::fromUtf8("\n!!!!The decription fails with the next message: ") + decryptedText;
+                std::cout << "\n Decryption FAILED in XcpApi: \n";
+                 std::cout << decryptedText.toStdString();
+
+                }
+        }
+        else { std::cout << "!!!!Nym Id Empty (Contact >> XcpApi Decryption)!!!!";
+
+        }
+
+
+     } else { std::cout << "!!!!Nym Id Empty (Signer >> XcApi Decryption)!!!!";
+
+    }
+
+
+
+/*//////////////////////////////////CRYPTOMANIA///////////////////////////////////////////////////////*/
 #else
-  PSZU pszDataEncrypted = pXmlNodeXmppXcp->m_pszuTagValue;
+  PSZU pszDataDecrypted = pXmlNodeXmppXcp->m_pszuTagValue;
 #endif
-    if (pszDataEncrypted != NULL)
+    if (
+         #ifdef COMPILE_WITH_CRYPTOMANIA
+           pszDataDecryptedDecoded !=NULL
+         #else
+            pszDataDecrypted != NULL
+          #endif
+        )
 		{
 		CXmlTree oXmlTree;
-		oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
-		#if 1
+#ifdef COMPILE_WITH_CRYPTOMANIA
+        oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pszDataDecryptedDecoded);
+
+#else
+        oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
+#endif
+
+
+#if 1
 		MessageLog_AppendTextFormatCo(d_coGray, "XCP Received($S):\n", &m_strJidBare);
 		MessageLog_AppendTextFormatCo(d_coBlack, "{Bm}\n", &oXmlTree.m_binXmlFileData);
 		#endif

@@ -15,11 +15,14 @@
 #include "WDashboard.h"
 #include "WLayoutContainer.h"
 #include "WLayoutBrowser.h"
+#ifdef COMPILE_WITH_TOOLBAR
 #include "WToolbar.h"
+#endif
+
+
 #include <QSound>
 #include <iostream>
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-
 	#include <OTX_WRAP.h>
 	OTX_WRAP * pOTX;
 #endif
@@ -301,9 +304,11 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	#else
 	#ifdef Q_OS_MAC
 	g_pwMenuAdvanced = new WMenuDropdown("Advanced");	// This is necessary because on Mac OSX the 'hamburger menu' does not show up unless there is text
-	#else
+   #else
 	g_pwMenuAdvanced = new WMenuDropdown(NULL);
 	#endif
+
+
 	g_pwMenuAdvanced->InitAsDymanicMenu();
 	WButtonIconForToolbar * pwButtonTest = new WButtonIconForToolbar(eMenuIcon_Menu);
 	pwButtonTest->setStyleSheet("QToolButton { border: none;  padding-top:3px; padding-right:5px; padding-bottom:3px } QToolButton::menu-indicator { image: none; }");
@@ -317,9 +322,9 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	setStatusBar(PA_CHILD g_pwStatusBar);
 	void Menu_InitializeAllMenuActionsHavingAccelerators();
 	Menu_InitializeAllMenuActionsHavingAccelerators();
-
+	#ifdef COMPILE_WITH_TOOLBAR
 	addToolBar(PA_CHILD new WToolbar);
-
+    #endif
 	addDockWidget(Qt::LeftDockWidgetArea, PA_CHILD new WNavigationTree);
 	#if 1
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
@@ -603,9 +608,10 @@ void
 WMainWindow::ConfigurationLoadFromXml()
 	{
 	g_oConfiguration.XmlConfigurationLoadFromFile();
-
+    #ifdef COMPILE_WITH_TOOLBAR
 	void Toolbar_PopulateTabs();
 	Toolbar_PopulateTabs();
+   #endif
 
 	// After loading the configuration, check if there is an invitation stored at the time of installation
 	const QString sPathInvitation = SGetFullPathInvitation();

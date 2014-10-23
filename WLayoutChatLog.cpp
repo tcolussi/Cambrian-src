@@ -264,8 +264,10 @@ ITreeItemChatLogEvents::TreeItemChatLog_IconUpdateOnNewMessageArrivedFromContact
 			Assert(pMember->m_pContact == pContact);
 			pMember->TreeItemW_SetTextToDisplayMessagesUnread(++pMember->m_cMessagesUnread);	// The group member has unread messages as well as its parent group
 			}
-		Toolbar_TabAddWithoutSelecting(this);	// If a contact or group has an unread message, then display it to the tab to draw attention
-		}
+        #ifdef COMPILE_WITH_TOOLBAR
+        Toolbar_TabAddWithoutSelecting(this);	// If a contact or group has an unread message, then display it to the tab to draw attention
+        #endif
+    }
 	TreeItemChatLog_UpdateTextAndIcon();	// Always update the text and icon when a new message arrives.  This is important because before a message arrive, there is usually the 'composing' icon, and after the message arrives, this icon must be changed by either the online presence, or an icon indicating there is a new unread message.
 	if (!m_pAccount->TreeItemW_FIsExpanded())
 		{

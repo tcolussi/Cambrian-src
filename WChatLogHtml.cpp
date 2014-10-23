@@ -11,23 +11,50 @@
 
 #define COLOR_THEME_BLACK				// Use a black background instead of a white background
 //#define BIG_SPACING_BETWEEN_MESSAGES		// Use big spacing between lines
+//#define INPUT_TEXT_WITH_HTML_FORM			// Use an HTML form to input the text rather than using a widget
 
 OJapiChatLog::OJapiChatLog(WChatLogHtml * pwChatLog)
 	{
 	m_pwChatLog = pwChatLog;
 	}
 
+//	pin(), slot
+//	Pin the current contact or group to the toolbar
 void
 OJapiChatLog::pin()
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiChatLog::pin()\n");
-	Toolbar_TabAddAndSelect(m_pwChatLog->m_pContactOrGroup);
+    #ifdef COMPILE_WITH_TOOLBAR
+    Toolbar_TabAddAndSelect(m_pwChatLog->m_pContactOrGroup);
+    #endif
+    }
+
+//	typingStarted(), slot
+//	Call this method to indicate the use started typing something.
+//	This will send a notification to the contact or group, so the UI may display the pen/composing icon
+void
+OJapiChatLog::typingStarted()
+	{
+
 	}
 
+//	sendMessage(), slot
+//	Dispatch the message to the contact or group.
 void
 OJapiChatLog::sendMessage(const QString & sMessage)
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiChatLog::sendMessage($Q)\n", &sMessage);
+	CStr strText = sMessage;
+	if (!strText.FIsEmptyString())
+		{
+		// This code was copied from WChatInput::event()
+		ITreeItemChatLogEvents * pContactOrGroup = m_pwChatLog->m_pContactOrGroup;
+		EUserCommand eUserCommand = pContactOrGroup->Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV strText);
+		WLayoutChatLog * pwLayoutChatLog = pContactOrGroup->ChatLog_PwGetLayout_YZ();
+		Report(pwLayoutChatLog != NULL);	// This pointer should be valid
+		if (pwLayoutChatLog != NULL)
+			pwLayoutChatLog->m_pwChatInput->ChatStateComposingCancelTimer(eUserCommand);
+		}
 	}
 
 
@@ -175,7 +202,15 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		".i0 { background-image: url('qrc:/ico/Avatar1') }"
 		".i1 { background-image: url('qrc:/ico/Avatar2') }"
 
-		"</style></head>"
+		"</style>"
+		"<script>"
+		"function sendMessage(o)"
+			"{"
+			"SocietyPro.sendMessage(o.value);"	// Request SocietyPro to send the message
+			"o.value = '';"	// Clear the value once the message has been sent
+			"}"
+		"</script>"
+		"</head>"
 		"<body style=\""
 
 			// Style for the body
@@ -186,9 +221,16 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			#endif
 
 			"\">" // Close the <body>
+
+			// Draw the pin at the top right of the page
 			"<img src='qrc:/ico/Pin' style='position: fixed; top: 7; right: 8; z-index:1' title='Pin to tab' onClick='SocietyPro.pin();' />"
+
 			// Division for all the messages
-			"<div id='m'>");
+			"<div id='m'"
+			#ifdef INPUT_TEXT_WITH_HTML_FORM
+			//" style='height: 500'"
+			#endif
+			">");
 
 	//	Append the events
 	CArrayPtrEvents arraypEvents;
@@ -202,6 +244,20 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 
 			// Division for the composing message
 			"<div id='-c-' style='font-size: 13px'/></div>"
+
+			#ifdef INPUT_TEXT_WITH_HTML_FORM
+			// Create a footer at the bottom
+			"<div style='position: fixed; bottom: 0; height=100'>"
+
+				// Use an HTML form for the user to type the message
+				"<div style='position: absolute; bottom: 0; left: 52; right: 4px;'>"
+				"<form id='-f-' onSubmit='sendMessage(document.getElementById(\"-i-\"));' style='height: 41px;'>"
+					//"<textarea id='-i-' class='' spellcheck='true' style='overflow-y: hidden; height: 38px;'></textarea>"
+					"<input id='-i-' class='' spellcheck='true' style='overflow-y: hidden; height: 38px; width: 500;'></input>"
+				"</form>"
+				"</div>"
+			"</div>"
+			#endif
 
 		"</body></html>");
 

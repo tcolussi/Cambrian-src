@@ -75,7 +75,9 @@ enum EMenuIcon			// Must be in sync with c_mapepszIconResources[]
 	eMenuIcon_Browser,
 	eMenuIcon_GoBack,
 	eMenuIcon_GoForward,
-
+    #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    eMenuIcon_contractOTserver, // eMenuIcon_contractOTserver
+    #endif
 	eMenuIcon_Toolbar_GoBack,
 	eMenuIcon_Toolbar_GoForward,
 	eMenuIcon_Toolbar_Reload,
@@ -96,11 +98,12 @@ enum EMenuIcon			// Must be in sync with c_mapepszIconResources[]
 	eMenuIcon_ToolbarTab_NewHover,
 	eMenuIcon_ToolbarTab_Close,
 
+
 	eMenuIcon_Close,
 	eMenuIcon_Quit,
-	eMenuIcon_Menu,
+    eMenuIcon_Menu,
 
-	eMenuIconMax	// Must be last
+    eMenuIconMax	// Must be last
 	};
 
 const QIcon & OGetIcon(EMenuIcon eMenuIcon);

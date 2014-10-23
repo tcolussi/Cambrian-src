@@ -348,29 +348,50 @@ CChatConfiguration::NavigationTree_DisplayAllCertificatesToggle()
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
-extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonToolbarSwitchProfile;
 
+
+#ifdef COMPILE_WITH_SPLASH_SCREEN
+extern WButtonTextWithIcon * g_pwButtonSwitchProfile;
+#else
+extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonSwitchProfile;
+#endif
+
+#ifdef COMPILE_WITH_TOOLBAR
+extern WButtonIconForToolbarWithDropDownMenu * g_pwButtonToolbarSwitchProfile;
+#endif
 void
 NavigationTree_UpdateNameOfSelectedProfile()
 	{
-	Assert(g_pwButtonSwitchProfile != NULL);
+        #ifdef COMPILE_WITH_SPLASH_SCREEN
+    Assert(g_pwButtonSwitchProfile != NULL);
+      #endif
+
 	TProfile * pProfileSelected = g_oConfiguration.m_pProfileSelected;
 	if (pProfileSelected == NULL)
 		pProfileSelected = (TProfile *)g_oConfiguration.m_arraypaProfiles.PvGetElementUnique_YZ();
 	if (pProfileSelected != NULL && g_pTreeItemProfiles == NULL)
 		{
 		g_strScratchBufferStatusBar.Format(d_sza_Profile": $S", &pProfileSelected->m_strNameProfile);
-		if (g_pwButtonToolbarSwitchProfile != NULL)
-			g_pwButtonToolbarSwitchProfile->setText(pProfileSelected->m_strNameProfile);
-		}
+
+    #ifdef COMPILE_WITH_TOOLBAR
+        if (g_pwButtonToolbarSwitchProfile != NULL)
+            g_pwButtonToolbarSwitchProfile->setText(pProfileSelected->m_strNameProfile);
+    #else
+        if (g_pwButtonSwitchProfile != NULL)
+            g_pwButtonSwitchProfile->setText(pProfileSelected->m_strNameProfile);
+    #endif
+
+    }
 	else
+
 		g_strScratchBufferStatusBar.Format("Switch " d_sza_Profile);
-	#ifndef COMPILE_WITH_SPLASH_SCREEN
+    #ifdef COMPILE_WITH_SPLASH_SCREEN
 	g_pwButtonSwitchProfile->setText(g_strScratchBufferStatusBar);
 	#endif
 	Dashboard_RefreshAccordingToSelectedProfile(pProfileSelected);
-	Toolbar_TabSelect(pProfileSelected);
+    #ifdef COMPILE_WITH_TOOLBAR
+    Toolbar_TabSelect(pProfileSelected);
+    #endif
 	}
 
 
