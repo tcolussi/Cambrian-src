@@ -180,7 +180,8 @@ SOURCES += \
     TChannel.cpp \
     WQmlToolbar.cpp \
     MenuIcons.cpp \
-    WChatLogHtml.cpp
+    WChatLogHtml.cpp \
+    filedownloader.cpp
 
 
 HEADERS += \
@@ -262,7 +263,8 @@ HEADERS += \
     TChannel.h \
     WQmlToolbar.h \
     MenuIcons.h \
-    WChatLogHtml.h
+    WChatLogHtml.h \
+    filedownloader.h
 
 
 
