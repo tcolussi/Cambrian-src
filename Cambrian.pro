@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network multimedia quick
+QT     += core gui multimedia quick
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
@@ -185,10 +185,10 @@ HEADERS += \
     WToolbarActions.h
 
 
+RC_ICONS = Icons/SocietyPro.ico
+
 FORMS += \
     startupscreen.ui
-
-RC_ICONS = Icons/SocietyPro.ico
 
 OTHER_FILES += \
     FeatureList.txt

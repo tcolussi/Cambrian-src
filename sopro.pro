@@ -12,21 +12,27 @@
 #            libraries.
 #-------------------------------------------------
 
-QT       += core gui network multimedia sql quick
+QT       += core gui multimedia quick # sql network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
 TARGET = SocietyPro
 TEMPLATE = app
-INCLUDEPATH += otx/src/jsoncpp
-INCLUDEPATH += otx/src/core
-INCLUDEPATH += otx/src/opentxs
-INCLUDEPATH += otx/src
+
+PRECOMPILED_HEADER = PreCompiledHeaders.h
+
+#INCLUDEPATH += otx/src/jsoncpp
+#INCLUDEPATH += otx/src/core
+#INCLUDEPATH += otx/src/opentxs
+#INCLUDEPATH += otx/src
+
 
 #-------------------------------------------------
-# Linked Libs
+# Linker options
+
 DEFINES    += "OT_ZMQ_MODE=1"
-# MAC AND LINUX:
+
+# Mac and Linux
 unix: {
 	LIBS += -L$${PWD}/otx/libs/mac
 	libs += -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -lcurl -ldl
@@ -39,19 +45,17 @@ unix: {
     LIBS += -L$${OUT_PWD}/nmcrpc -lnmcrpc
     LIBS += -L$${OUT_PWD}/otx -lOTX
 }
-#windows
-else:  {
-	LIBS += -L$${PWD}/otx/libs/mac
-	LIBS +=  -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
-
-}
-
+# Windows
 win32: {
     QMAKE_LIBDIR += $${DESTDIR}
+	LIBS += -L$${PWD}/otx/libs/win32
 
     equals(TEMPLATE,vcapp):{
-        QMAKE_LIBDIR += $(SystemDrive)/OpenSSL-Win$(PlatformArchitecture)/lib/VC
-        QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/$(PlatformName)/$(Configuration)/
+		QMAKE_LIBDIR += $(SystemDrive)/OpenSSL-Win$(PlatformArchitecture)/lib/VC
+		QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/$(PlatformName)/$(Configuration)/
+
+		LIBS += bitcoin-api.lib	jsoncpp.lib curl.lib nmcrpc.lib otlib.lib otapi.lib Advapi32.lib
+		#[need to fix for VS] LIBS += -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
     }
     else:{
         !contains(QMAKE_HOST.arch, x86_64):{
@@ -72,26 +76,23 @@ win32: {
                 QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Release/
             }
         }
+
+		# xmlrpc and zmq
+		LIBS += -llibxmlrpc -llibxmlrpc_util -llibxmlrpc_xmlparse -llibxmlrpc_xmltok -llibxmlrpcpp -lzmq
+		# otx
+		LIBS += -lbitcoin-api -ljsoncpp -lcurl -lnmcrpc -lotlib -lotapi
+		# windows API
+		LIBS += -lAdvapi32 -lWs2_32
     }
-
-    LIBS += bitcoin-api.lib
-    LIBS += jsoncpp.lib
-    LIBS += curl.lib
-    LIBS += nmcrpc.lib
-
-    LIBS += otlib.lib
-    LIBS += otapi.lib
-
-    LIBS += Advapi32.lib
 }
 
 
 QMAKE_CFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
 QMAKE_CXXFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
-QMAKE_CXXFLAGS += -std=c++11 -DCXX_11
+#QMAKE_CXXFLAGS += -std=c++11 -DCXX_11
 CONFIG += c++11
 
-#PRECOMPILED_HEADER = PreCompiledHeaders.h
+
 
 
 SOURCES += \
@@ -258,7 +259,8 @@ HEADERS += \
     TChannel.h \
     WQmlToolbar.h \
     MenuIcons.h \
-    WChatLogHtml.h
+    WChatLogHtml.h \
+    PreCompiledHeaders.h
 
 
 
