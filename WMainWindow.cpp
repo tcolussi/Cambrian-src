@@ -15,11 +15,14 @@
 #include "WDashboard.h"
 #include "WLayoutContainer.h"
 #include "WLayoutBrowser.h"
+#ifdef COMPILE_WITH_TOOLBAR
 #include "WToolbar.h"
+#endif
+
+
 #include <QSound>
 #include <iostream>
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-
 	#include <OTX_WRAP.h>
 	OTX_WRAP * pOTX;
 #endif
@@ -319,9 +322,9 @@ WMainWindow::WMainWindow() : QMainWindow(),ui(new Ui::startupScreen)
 	setStatusBar(PA_CHILD g_pwStatusBar);
 	void Menu_InitializeAllMenuActionsHavingAccelerators();
 	Menu_InitializeAllMenuActionsHavingAccelerators();
-
+     #ifdef defCOMPILE_WITH_TOOLBAR
 	addToolBar(PA_CHILD new WToolbar);
-
+    #endif
 	addDockWidget(Qt::LeftDockWidgetArea, PA_CHILD new WNavigationTree);
 	#if 1
 	addDockWidget(Qt::RightDockWidgetArea, PA_CHILD new WDashboard);
@@ -605,9 +608,10 @@ void
 WMainWindow::ConfigurationLoadFromXml()
 	{
 	g_oConfiguration.XmlConfigurationLoadFromFile();
-
+    #ifdef COMPILE_WITH_TOOLBAR
 	void Toolbar_PopulateTabs();
 	Toolbar_PopulateTabs();
+   #endif
 
 	// After loading the configuration, check if there is an invitation stored at the time of installation
 	const QString sPathInvitation = SGetFullPathInvitation();

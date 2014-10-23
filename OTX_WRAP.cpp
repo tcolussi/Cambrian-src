@@ -852,6 +852,64 @@ void OTX_WRAP::openRoleCreationScreen()
 
 }
 
+void OTX_WRAP::addOTServerContract(QString Url)
+{
+
+
+    QVariant varDefault(Url);
+    QString qstrURL = theWizard.field("URL").toString();
+                // --------------------------------
+                if (qstrURL.isEmpty())
+                {
+                    QMessageBox::warning(this, tr("URL is Empty"),
+                        tr("No URL was provided to dowload the contract."));
+
+                    return;
+                }
+
+                QUrl theURL(qstrURL);
+                // --------------------------------
+                if (m_pDownloader)
+                {
+                    m_pDownloader->setParent(NULL);
+                    m_pDownloader->disconnect();
+                    m_pDownloader->deleteLater();
+
+                    m_pDownloader = NULL;
+                }
+                // --------------------------------
+                m_pDownloader = new FileDownloader(theURL, this);
+
+                connect(m_pDownloader, SIGNAL(downloaded()), SLOT(DownloadedURL()));
+            }
+            // --------------------------------
+
+                               ImportContract(qstrContents);
+
+            // --------------------------------
+        if (bIsContents)
+            {
+                QString qstrContents = theWizard.getContents();
+
+                if (qstrContents.isEmpty())
+                {
+                    QMessageBox::warning(this, tr("Empty Contract"),
+                        tr("Failure Importing: Contract is Empty."));
+                    return;
+                }
+                // -------------------------
+                ImportContract(qstrContents);
+            }
+        }
+        // --------------------------------
+        else if (bIsCreating)
+        {
+
+        }
+    }
+}
+
+
 OTX_WRAP::~OTX_WRAP()
 {   //std::cout << "Destroying otx wrap";
     OTX::It(pParentWidget,true);

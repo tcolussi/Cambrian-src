@@ -21,8 +21,10 @@ void
 OJapiChatLog::pin()
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiChatLog::pin()\n");
-	Toolbar_TabAddAndSelect(m_pwChatLog->m_pContactOrGroup);
-	}
+    #ifdef COMPILE_WITH_TOOLBAR
+    Toolbar_TabAddAndSelect(m_pwChatLog->m_pContactOrGroup);
+    #endif
+    }
 
 void
 OJapiChatLog::sendMessage(const QString & sMessage)

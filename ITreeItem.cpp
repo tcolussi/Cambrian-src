@@ -243,8 +243,11 @@ ITreeItem::TreeItemW_SetIconWithToolTip(EMenuIcon eMenuIcon, const QString & sTo
 		return;	// Sometimes the Tree Item is not visible in the Navigation Tree, so there is no need to update its icon or tool tip
 	m_paTreeItemW_YZ->setIcon(0, OGetIcon(eMenuIcon));
 	m_paTreeItemW_YZ->setToolTip(0, sToolTip);
-	if (m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItemInToolbarTabs)
-		Toolbar_TabRedraw(this);	// Also update the icon on the toolbar
+    #ifdef COMPILE_WITH_TOOLBAR
+    if (m_uFlagsTreeItem & ITreeItem::FTI_kfTreeItemInToolbarTabs)
+
+        Toolbar_TabRedraw(this);	// Also update the icon on the toolbar
+    #endif
 	}
 
 //	Set the icon of the QTreeWidgetItem from a menu action.

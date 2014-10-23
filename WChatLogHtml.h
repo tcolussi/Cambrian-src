@@ -7,7 +7,11 @@
 #ifdef COMPILE_WITH_CHATLOG_HTML
 
 //	JavaScript APIs available for the HTML Chat Log
+#ifdef Q_OS_MAC
+class OJapiChatLog : public QObject
+#else
 class OJapiChatLog : public OJapi
+#endif
 {
 	Q_OBJECT
 protected:
