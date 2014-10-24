@@ -62,7 +62,7 @@ public:
     NOT_STARTED,
 
     /** name_new has beed called but not yet name_firstupdate.  */
-    REGISTERED,
+	IS_REGISTERED,
 
     /** We're finished, including name_firstupdate.  */
     ACTIVATED

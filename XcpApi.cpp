@@ -10,6 +10,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "XcpApi.h"
+#include "OTX_WRAP.h"
 
 //	Entry point of all XCP stanzas
 void

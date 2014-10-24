@@ -5,8 +5,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef PRECOMPILEDHEADERS_H
-	#include "PreCompiledHeaders.h"
+	//#include "PreCompiledHeaders.h"
 #endif
+#ifndef __SORT_H_
+#define __SORT_H_
+
 
 typedef INT_P	NCompareResult;		// Use the 'native' integer which is capable to store a pointer, therefore making the sorting of pointers quick and efficient
 
@@ -45,3 +48,6 @@ BOOL Sort_FIsSortedAscending(PCVOID prgpvElements[], int cElements, PFn_NCompare
 BOOL Sort_FIsSortedDescending(PCVOID prgpvElements[], int cElements, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
 void Sort_DoSorting(INOUT PCVOID prgpvElements[], const int cElements, BOOL fSortAscending, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
 void Sort_DoReverseIdenticalElements(INOUT PCVOID prgpvElements[], const int cElements, PFn_NCompareSortElements pfnCompareSort, LPARAM lParamCompare = d_zNA);
+
+
+#endif

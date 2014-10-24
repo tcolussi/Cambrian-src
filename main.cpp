@@ -160,6 +160,7 @@ HUNGARIAN PREFIX
 #include <QSharedMemory>
 
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+#include <OTX_WRAP.h>
 #include <iostream>
 // IMPORTS TO ACCESS TO OT API
 #include <../../src/opentxs/OTAPI.hpp>

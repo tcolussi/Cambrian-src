@@ -19,7 +19,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 TARGET = SocietyPro
 TEMPLATE = app
 
-PRECOMPILED_HEADER = PreCompiledHeaders.h
+PRECOMPILED_HEADER = StaticPreCompiledHeaders.h
 
 #-------------------------------------------------
 # Compiler options
@@ -27,15 +27,16 @@ DEFINES += COMPILE_WITH_OPEN_TRANSACTIONS
 DEFINES += COMPILE_WITH_SPLASH_SCREEN
 DEFINES += COMPILE_WITH_CRYPTOMANIA
 DEFINES += COMPILE_WITH_TOOLBAR
+DEFINES += COMPILE_WITH_CHATLOG_HTML
 
-INCLUDEPATH += otx/src/opentxs
+#INCLUDEPATH += otx/src/opentxs
 INCLUDEPATH += otx/src/core
 INCLUDEPATH += otx/src/jsoncpp
 INCLUDEPATH += otx/src
+INCLUDEPATH += C:\bin\OpenSSL-Win32\include
 
-QMAKE_CFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
-QMAKE_CXXFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
-#QMAKE_CXXFLAGS += -std=c++11 -DCXX_11
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter -Wno-unknown-pragmas
+QMAKE_CFLAGS_WARN_ON   += -Wno-unused-parameter -Wno-unknown-pragmas
 CONFIG += c++11
 
 
@@ -89,10 +90,12 @@ win32: {
             }
         }
 
-		# xmlrpc and zmq
-		LIBS += -llibxmlrpc -llibxmlrpc_util -llibxmlrpc_xmlparse -llibxmlrpc_xmltok -llibxmlrpcpp -lzmq
 		# otx
-		LIBS += -lbitcoin-api -ljsoncpp -lcurl -lnmcrpc -lotlib -lotapi
+		LIBS += -lOTX -lbitcoin-api -ljsoncpp -lcurl -lnmcrpc -lotapi -lotlib
+		# xmlrpc and zmq alleg
+		LIBS += -llibxmlrpc -llibxmlrpc_util -llibxmlrpc_xmlparse -llibxmlrpc_xmltok -llibxmlrpcpp -lzmq -lzlib
+		# Open SSL
+		LIBS += -LC:\bin\OpenSSL-Win32\lib\MinGW -leay32 -lssleay32
 		# windows API
 		LIBS += -lAdvapi32 -lWs2_32
     }
@@ -271,7 +274,8 @@ HEADERS += \
     TCorporation.h \
     WToolbar.h \
 	WToolbarActions.h \
-	PreCompiledHeaders.h
+	PreCompiledHeaders.h \
+    StaticPreCompiledHeaders.h
 
 FORMS += \
     startupscreen.ui

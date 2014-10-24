@@ -13,19 +13,25 @@
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
-#define COMPILE_WITH_OPEN_TRANSACTIONS
-#define COMPILE_WITH_SPLASH_SCREEN
+//#define COMPILE_WITH_OPEN_TRANSACTIONS
+//#define COMPILE_WITH_SPLASH_SCREEN
 //#define COMPILE_WITH_CRYPTOMANIA //You need enable COMPILE_WITH_OPEN_TRANSACTIONS TO COMPILE CRYPTO
 //#define COMPILE_WITH_TOOLBAR
 
 
-#define COMPILE_WITH_TOOLBAR
-#define COMPILE_WITH_CHATLOG_HTML
+//#define COMPILE_WITH_CHATLOG_HTML
 
 //#define DEBUG_IMPORT_OLD_CONFIG_XML
 
 #ifndef PRECOMPILEDHEADERS_H
 #define PRECOMPILEDHEADERS_H
+
+#include "StaticPreCompiledHeaders.h"
+
+#if defined(__WIN32__)
+#include <winsock2.h>
+#include <windows.h>
+#endif
 
 //#define QT_NO_CAST_FROM_ASCII
 #include <QtWidgets>
@@ -35,6 +41,8 @@
 #include <QWebFrame>
 #include <QWebElement>
 #include <QMainWindow>
+
+
 
 //	Determine which platform / operating system Cambrian was compiled
 #if defined(Q_OS_WIN)
