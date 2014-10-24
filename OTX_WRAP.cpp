@@ -822,6 +822,31 @@ std::string OTX_WRAP::getNymPublicKey(std::string nymid)
 //====================================OPEN TRANSACTIONS===================================================================
 //=======================================WIDGETS=======================================================================
 
+// send message to nym (send encrypted and store into a nymbox in server)
+bool OTX_WRAP::sendMessageToNymBox(std::string str_serverId, std::string str_fromNymId, std::string str_toNymId, std::string contents)
+{
+    OT_ME madeEasy;
+
+    std::string strResponse;
+    {
+
+
+        strResponse = madeEasy.send_user_msg(str_serverId, str_fromNymId, str_toNymId, contents);
+    }
+
+    int32_t nReturnVal = madeEasy.VerifyMessageSuccess(strResponse);
+
+    if (1 != nReturnVal)
+    {
+        qDebug() << "OT send_message: Failed.";
+
+
+
+        return false;
+
+    }
+ }
+
 // Widget that handles the
 void OTX_WRAP::openContractOTServerScreen()
 	{

@@ -30,7 +30,7 @@ CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXc
 void
 ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, PSZUC pszXmlApiParameters)
 	{
-	MessageLog_AppendTextFormatCo(d_coBlack, "XCAPI_INVOKE pszApiName: $s, pszXmlApiParameters: $s\n", pszApiName, pszXmlApiParameters);
+	//MessageLog_AppendTextFormatCo(d_coBlack, "XCAPI_INVOKE pszApiName: $s, pszXmlApiParameters: $s\n", pszApiName, pszXmlApiParameters);
     Assert(pszApiName != NULL);
 	Assert(pszApiName[0] != '\0');
 	//MessageLog_AppendTextFormatSev(eSeverityComment, "XcpApi_Invoke($s, $s)\n", pszApiName, pszXmlApiParameters);

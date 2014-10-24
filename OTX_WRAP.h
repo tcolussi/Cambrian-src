@@ -88,8 +88,12 @@ public:
 	void openRoleCreationScreen();
 
 	//Signin and Encryption
-
 	void handleErrors(void);
+
+	 // nyms messaging
+	bool sendMessageToNymBox(std::string str_serverId, std::string str_fromNymId, std::string str_toNymId, std::string contents);
+
+
 	// OpenSSl calls with unsigned chars
 	int encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
 				unsigned char *iv, unsigned char *ciphertext);
