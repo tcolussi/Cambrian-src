@@ -726,7 +726,7 @@ public slots:
 	POJapiGroup newGroup(const QString & type);
 	//POJapiGroup getPeerList(const QString & sId);
 	POJapiGroup getGroup(const QString & sId);
-    POJapiContact newPeer(const QString & sUsername);
+	POJapiContact newPeer(const QString & sUsername);
 };
 #define POJapiMe		POJapi
 
@@ -750,13 +750,16 @@ public:
 	OJapiContact(TContact * pContact);
 	QString id();
 	QString name();
+	CBin recommendations();
 
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name)
+	Q_PROPERTY(CBin recommendations READ recommendations)
 	Q_OBJECT
 
 public slots:
 	void openChat();
+	void destroy();
 };
 #define POJapiContact		POJapi
 
