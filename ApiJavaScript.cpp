@@ -464,9 +464,9 @@ OJapiContact::name()
 	return m_pContact->m_strNameDisplayTyped;
 	}
 
-CBin OJapiContact::recommendations()
+void OJapiContact::recommend()
 	{
-	return m_pContact->m_binXmlRecommendations;
+	m_pContact->TreeItem_MarkForRecommendation();
 	}
 
 void OJapiContact::openChat()
@@ -478,7 +478,7 @@ void OJapiContact::destroy()
 	{
 	Assert(m_pContact != NULL);
 
-	#if 0 // The method Group_MarkForDeletion() includes the equivalent of TreeItemGroup_RemoveFromNavigationTree()
+	#if 0
 	m_pContact->TreeItemContact_DeleteFromNavigationTree_MB();
 	#endif
 	m_pContact->Contact_MarkForDeletion();

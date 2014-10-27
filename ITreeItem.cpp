@@ -65,6 +65,11 @@ ITreeItem::TreeItem_MarkForDeletion()
 	TreeItemW_RemoveFromNavigationTree();
 	}
 
+void ITreeItem::TreeItem_MarkForRecommendation()
+	{
+	m_uFlagsTreeItem ^= FTI_kfRecommended;
+	}
+
 //	ITreeItem::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
 ITreeItem::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const

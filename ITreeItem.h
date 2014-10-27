@@ -105,6 +105,7 @@ public:
 	inline UINT TreeItemFlags_FuIsDeletedOrTemporary() const { return (m_uFlagsTreeItem & (FTI_kfTreeItem_DoNotSerializeToDisk | FTI_kfTreeItem_Temporary)); }
 	inline void TreeItemFlags_SetFlagSerializeToDisk_Yes() { m_uFlagsTreeItem &= ~FTI_kfTreeItem_DoNotSerializeToDisk; }
 	void TreeItem_MarkForDeletion();
+	void TreeItem_MarkForRecommendation();
 
 	void TreeItem_SetNameDisplaySuggested(PSZUC pszNameDisplay);
 	CString TreeItem_SGetNameDisplay() CONST_MCC;
