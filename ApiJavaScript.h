@@ -750,9 +750,13 @@ public:
 	OJapiContact(TContact * pContact);
 	QString id();
 	QString name();
+	QString nymId();
+	QString publicKey();
 
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name)
+	Q_PROPERTY(QString nymId READ nymId)
+	Q_PROPERTY(QString publicKey READ publicKey)
 	Q_OBJECT
 
 public slots:

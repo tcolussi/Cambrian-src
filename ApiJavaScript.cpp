@@ -464,6 +464,16 @@ OJapiContact::name()
 	return m_pContact->m_strNameDisplayTyped;
 	}
 
+QString OJapiContact::nymId()
+	{
+	return m_pContact->m_strNymID;
+	}
+
+QString OJapiContact::publicKey()
+	{
+	return m_pContact->m_strKeyPublic;
+	}
+
 void OJapiContact::recommend()
 	{
 	m_pContact->TreeItem_MarkForRecommendation();
