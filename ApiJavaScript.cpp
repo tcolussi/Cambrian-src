@@ -479,6 +479,12 @@ void OJapiContact::recommend()
 	m_pContact->TreeItem_MarkForRecommendation();
 	}
 
+void OJapiContact::ping()
+	{
+	m_pContact->Xmpp_Ping();
+	this->openChat();
+	}
+
 void OJapiContact::openChat()
 	{
 	NavigationTree_SelectTreeItem(m_pContact);

@@ -763,6 +763,7 @@ public slots:
 	void openChat();
 	void destroy();
 	void recommend();
+	void ping();
 };
 #define POJapiContact		POJapi
 
