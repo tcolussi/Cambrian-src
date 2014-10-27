@@ -126,30 +126,30 @@ unix: {
 win32: {
     QMAKE_LIBDIR += $${DESTDIR}
 
-    equals(TEMPLATE,vcapp):{
-        QMAKE_LIBDIR += $(SystemDrive)/OpenSSL-Win$(PlatformArchitecture)/lib/VC
-        QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/$(PlatformName)/$(Configuration)/
-    }
-    else:{
-        !contains(QMAKE_HOST.arch, x86_64):{
-            QMAKE_LIBDIR += C:/OpenSSL-Win32/lib/VC
-            CONFIG(debug, debug|release):{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Debug/
-            }
-            else:{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Release/
-            }
-        }
-        else:{
-            QMAKE_LIBDIR += C:/OpenSSL-Win64/lib/VC
-            CONFIG(debug, debug|release):{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Debug/
-            }
-            else:{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Release/
-            }
-        }
-    }
+#    equals(TEMPLATE,vcapp):{
+#        QMAKE_LIBDIR += $(SystemDrive)/OpenSSL-Win$(PlatformArchitecture)/lib/VC
+#        QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/$(PlatformName)/$(Configuration)/
+#    }
+#    else:{
+#        !contains(QMAKE_HOST.arch, x86_64):{
+#            QMAKE_LIBDIR += C:/OpenSSL-Win32/lib/VC
+#            CONFIG(debug, debug|release):{
+#                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Debug/
+#            }
+#            else:{
+#                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Release/
+#            }
+#        }
+#        else:{
+#            QMAKE_LIBDIR += C:/OpenSSL-Win64/lib/VC
+#            CONFIG(debug, debug|release):{
+#                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Debug/
+#            }
+#            else:{
+#                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Release/
+#            }
+#        }
+#    }
 
     LIBS += bitcoin-api.lib
     LIBS += jsoncpp.lib

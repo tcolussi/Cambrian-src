@@ -15,7 +15,7 @@ win32:{
 
 
     equals(TEMPLATE,vcapp)|equals(TEMPLATE,vclib):{
-        DESTDIR     = $${SOLUTION_DIR}../lib/$(PlatformName)/$(Configuration)
+		DESTDIR     = $${SOLUTION_DIR}../out/$(PlatformName)/$(Configuration)
         MOC_DIR     = $${SOLUTION_DIR}../obj/$${TARGET}
         OBJECTS_DIR = $${SOLUTION_DIR}../obj/$${TARGET}
         RCC_DIR     = $${SOLUTION_DIR}../out/$${TARGET}/resources
@@ -26,18 +26,18 @@ win32:{
     else:{
         !contains(QMAKE_HOST.arch, x86_64):{
             CONFIG(debug, debug|release):{
-                DESTDIR = $${SOLUTION_DIR}../lib/Win32/Debug
+				DESTDIR = $${SOLUTION_DIR}../out/Win32/Debug
             }
             else:{
-                DESTDIR = $${SOLUTION_DIR}../lib/Win32/Debug
+				DESTDIR = $${SOLUTION_DIR}../out/Win32/Release
             }
         }
         else:{
             CONFIG(debug, debug|release):{
-                DESTDIR = $${SOLUTION_DIR}../lib/x64/Debug
+				DESTDIR = $${SOLUTION_DIR}../out/x64/Debug
             }
             else:{
-                DESTDIR = $${SOLUTION_DIR}../lib/x64/Debug
+				DESTDIR = $${SOLUTION_DIR}../out/x64/Release
             }
         }
     }
