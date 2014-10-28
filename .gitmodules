@@ -1,3 +1,6 @@
 [submodule "sopro-dist-root"]
 	path = sopro-dist-root
 	url = https://github.com/sopro-dist/sopro-dist-root.git
+[submodule "sopro-cpp-dependencies"]
+	path = sopro-cpp-dependencies
+	url = https://github.com/sopro-dist/sopro-cpp-dependencies.git
