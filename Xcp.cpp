@@ -400,9 +400,69 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 	if (cbDataStanza <= 0)
 		return;	// Nothing to do
 
-	// TODO: Encrypt the data and sign it.
-	SHashSha1 hashSignature;
-	HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);	// At the moment, use SHA-1 as the 'signature'
+
+
+#ifdef COMPILE_WITH_CRYPTOMANIA
+ /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+
+
+    QString signerNymId = g_oConfiguration.m_pProfileSelected->m_strNymID;//pProfile->m_strNymID.ToQString();
+    QString receiverNymId = pContact->m_strNymID.ToQString();
+    bool hasNyms=true;
+    PSZUC pszDataStanzaEnc;
+    int cbDataStanzaEnc;
+
+    if (!signerNymId.isEmpty() &&  !receiverNymId.isEmpty())
+    {
+    // Get Signer and Remote Nym
+
+
+    std::cout << "\n pre Encrypted Stanza Value: ";
+    std::cout <<pszDataStanza;
+
+
+    std::string strEncryptedText;
+
+    std::string strDataStanza = std::string(reinterpret_cast<const char *>(pszDataStanza));
+    QString qDataStanza = QString::fromStdString(strDataStanza);
+    std::cout << "\n ENCRYPT IN XCP: Signer Nym Id: ";
+    std::cout << signerNymId.toStdString();
+    std::cout << "\n ENCRIPT IN XCP: Receiver Public Nym Id:";
+    std::cout << receiverNymId.toStdString();
+    std::cout << "\n Text About to ENCRYPT in XCP: "+qDataStanza.toStdString();
+
+
+
+            // Begin the Sign and Encrypt process..
+            //The public Nym is retrieved from an OT server if is not stored locally as a "Public Nym"
+            //At the moment test the encryption...
+            strEncryptedText = pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza).toStdString();
+     std::cout << "\nEncrypted Text in XCP: \n"+strEncryptedText;
+
+            // pszDataStanzaEnc must be asigned with the return value of above  function
+             pszDataStanzaEnc = (PSZUC) strEncryptedText.c_str() ;
+             cbDataStanzaEnc = strlen ((const char*) pszDataStanzaEnc);
+             MessageLog_AppendTextFormatCo(d_coBlue,"Encrypted Text about to send to XMPP server:",pszDataStanzaEnc,cbDataStanzaEnc,this);
+
+    } else {
+        hasNyms=false;
+        std::cout << "\n!!!!!Nym Id Empty  >> Xcp Encryption!!!!\n";
+    }
+
+
+#endif
+
+SHashSha1 hashSignature;
+
+#ifdef COMPILE_WITH_CRYPTOMANIA
+  if (hasNyms)
+  HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanzaEnc, cbDataStanzaEnc);	// At the moment, use SHA-1 as the 'signature'
+  else
+  HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);
+#else
+    HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);
+#endif
+
 
 	MessageLog_AppendTextFormatCo(d_coBlue, "XospSendStanzaToContactAndEmpty($s) $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), cbDataStanza, this);
 
@@ -415,45 +475,9 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		}
 	// Format the XML envelope for the XMPP protocol.
 	g_strScratchBufferSocket.BinInitFromTextSzv_VE("<$s$s to='^J'><" d_szCambrianProtocol_xcp " " d_szCambrianProtocol_Attribute_hSignature "='{h|}'>", pszStanzaType, pszStanzaAttributesExtra, pContact, &hashSignature);
-#ifdef COMPILE_WITH_CRYPTOMANIA
- /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
-    // Get Signer and Remote Nym
 
-    std::cout << "\n Profile count:";
-
-    QString signerNymId = g_oConfiguration.m_pProfileSelected->m_strNymID;//pProfile->m_strNymID.ToQString();
-    QString receiverNymId = pContact->m_strNymID.ToQString();
-    std::string strEncryptedText;
-
-    std::string strDataStanza = std::string(reinterpret_cast<const char *>(pszDataStanza));
-    QString qDataStanza = QString::fromStdString(strDataStanza);
-    std::cout << "\n ENCRYPT IN XCP: Signer Nym Id: ";
-    std::cout << signerNymId.toStdString();
-    std::cout << "\n ENCRIPT IN XCP: Receiver Public Nym Id:";
-    std::cout << receiverNymId.toStdString();
-    std::cout << "\n";
-
-    if (!signerNymId.isEmpty())
-    {
-        if (!receiverNymId.isEmpty())
-        {
-            // Begin the Sign and Encrypt process..
-            //The public Nym is retrieved from an OT server if is not stored locally as a "Public Nym"
-            //At the moment test the encryption...
-            strEncryptedText = pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza).toStdString();
-
-        }
-        else { std::cout << "\n!!!!Nym Id Empty (Contact >> Xcp Encryption)!!!!\n";}
-
-    } else { std::cout << "\n!!!!!Nym Id Empty (Signer >> Xcp Encryption)!!!!\n";}
-
-    // pszDataStanzaEnc must be asigned with the return value of above  function
-    PSZUC pszDataStanzaEnc = (PSZUC) strEncryptedText.c_str() ;
-    int cbDataStanzaEnc = strlen ((const char*) pszDataStanzaEnc);
-    g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanzaEnc, cbDataStanzaEnc);
-#else
     g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanza, cbDataStanza);
-#endif
+
     // need convert the text to unsigned string...
     g_strScratchBufferSocket.BinAppendText_VE("</" d_szCambrianProtocol_xcp "></$s>", pszStanzaType);
 

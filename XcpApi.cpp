@@ -24,14 +24,22 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 #ifdef COMPILE_WITH_CRYPTOMANIA
 /*//////////////////////////////////CRYPTOMANIA DECRYPT////////////////////////////////////////////////*/
 
+    //Get the sender public NymId
+    QString signerNymId = m_strNymID;
+    QString receiverNymId=  PGetProfile()->m_strNymID;
+    bool hasNyms=true;
+    PSZU pszDataDecryptedDecoded; //data to be passed before decryption
 
+    if (!signerNymId.isEmpty() &&  !receiverNymId.isEmpty())
+    {
     CXmlTree oXmlTreeTemp;
     oXmlTreeTemp.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
+
     QString qDataDecodedSignedEncrypted =oXmlTreeTemp.m_binXmlFileData.ToQString();
-    PSZU pszDataDecryptedDecoded; //data to be passed after decryption
-    //Get the sender public NymId
-    QString signerNymId = m_strNymID.ToQString();
-    QString receiverNymId= g_oConfiguration.m_pProfileSelected->m_strNymID.ToQString();
+    std::cout << "\n XcpApi.cpp: Receiving message about to decode: "+qDataDecodedSignedEncrypted.toStdString();
+
+
+
 
     std::cout << "\n Decrypt in XcpApi: Signer Nym Id: ";
     std::cout << signerNymId.toStdString();
@@ -71,15 +79,15 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 
                 }
         }
-        else { std::cout << "!!!!Nym Id Empty (Contact >> XcpApi Decryption)!!!!";
-
-        }
-
-
-     } else { std::cout << "!!!!Nym Id Empty (Signer >> XcApi Decryption)!!!!";
-
     }
 
+
+ }
+    else
+    {
+         std::cout << "!!!!Nym Id Empty (Contact >> XcpApi Decryption)!!!!";
+         hasNyms=false;
+     }
 
 
 /*//////////////////////////////////CRYPTOMANIA///////////////////////////////////////////////////////*/
@@ -88,7 +96,7 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 #endif
     if (
          #ifdef COMPILE_WITH_CRYPTOMANIA
-           pszDataDecryptedDecoded !=NULL
+           pszDataDecryptedDecoded !=NULL || !hasNyms
          #else
             pszDataDecrypted != NULL
           #endif
@@ -96,8 +104,10 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 		{
 		CXmlTree oXmlTree;
 #ifdef COMPILE_WITH_CRYPTOMANIA
+      if (hasNyms)
         oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pszDataDecryptedDecoded);
-
+      else
+        oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
 #else
         oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
 #endif
@@ -1072,6 +1082,7 @@ ITreeItemChatLogEvents::XcpApi_Invoke_RecommendationsGet()
     fetchContainer[0]='f';
     fetchContainer[1]='\0';
     XcpApi_Invoke((PSZUC)fetchContainer);
+    std::cout << "\n***Invoke Fetch cointainer with recomendations***\n";
   #endif
    }
 

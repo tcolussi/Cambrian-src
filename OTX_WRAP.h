@@ -12,17 +12,43 @@ It is supposed to be declared once in the main window
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 #include <Qwidget>
 #include <QPointer>
+
 #include <core/passwordcallback.hpp>
 #include "OTX.hpp"
-#include <core/handlers/contacthandler.hpp>
-#include <opentxs/OTAPI.hpp>
-#include <opentxs/OTAPI_Exec.hpp>
-#include <opentxs/OTAsymmetricKey.hpp>
-#include <opentxs/OTRecordList.hpp>
-#include <opentxs/OTCaller.hpp>
-#include <filedownloader.h>
-
 #include <QDebug>
+#include <iostream>
+#include <QMainWindow>
+#include <QComboBox>
+#include "passwordcallback.hpp"
+#include <OTLog.hpp>
+#include <../opentxs/OTAsymmetricKey.hpp>
+#include <../opentxs/OTSymmetricKey.hpp>
+#include <../opentxs/OTRecordList.hpp>
+#include <../opentxs/OTCaller.hpp>
+#include <QDebug>
+#include <opentxs/OTAPI.hpp>
+#include <OTCrypto.hpp>
+#include <opentxs/OTAPI_Exec.hpp>
+#include <opentxs/OT_ME.hpp>
+#include <opentxs/OpenTransactions.hpp>
+#include <OTCrypto.hpp>
+#include <opentxs/OTASCIIArmor.hpp>
+#include <opentxs/OTEnvelope.hpp>
+#include <opentxs/OTPseudonym.hpp>
+#include <opentxs/OTPasswordData.hpp>
+#include <opentxs/OTSignedFile.hpp>
+#include <opentxs/OTContract.hpp>
+#include <core/handlers/contacthandler.hpp>
+#include "filedownloader.h"
+#include <QMessageBox>
+#include <QClipboard>
+#include <qdebug>
+#include <string>
+#include <openssl/conf.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <string.h>
+#include <zlib.h>
 
 class OTX_WRAP : public QObject
 {
@@ -90,6 +116,7 @@ public:
    private:
  // It will be invoked only once per run in the constructor of this class.
     FileDownloader * m_pImgCtrl;
+    bool sayHello(QString fromNymId, QString toNymId);
     bool SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup & theCallback);
     bool SetupPasswordCallback(OTCaller & passwordCaller, OTCallback & passwordCallback);
     void LoadWallewithPassprhase();

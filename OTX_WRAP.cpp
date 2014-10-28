@@ -4,39 +4,6 @@
 #endif
 
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-#include <iostream>
-#include <QMainWindow>
-#include <QComboBox>
-#include "passwordcallback.hpp"
-#include <OTLog.hpp>
-#include <../opentxs/OTAsymmetricKey.hpp>
-#include <../opentxs/OTSymmetricKey.hpp>
-#include <../opentxs/OTRecordList.hpp>
-#include <../opentxs/OTCaller.hpp>
-#include <QDebug>
-#include <opentxs/OTAPI.hpp>
-#include <OTCrypto.hpp>
-#include <opentxs/OTAPI_Exec.hpp>
-#include <opentxs/OT_ME.hpp>
-#include <opentxs/OpenTransactions.hpp>
-#include <OTCrypto.hpp>
-#include <opentxs/OTASCIIArmor.hpp>
-#include <opentxs/OTEnvelope.hpp>
-#include <opentxs/OTPseudonym.hpp>
-#include <opentxs/OTPasswordData.hpp>
-#include <opentxs/OTSignedFile.hpp>
-#include <opentxs/OTContract.hpp>
-#include <core/handlers/contacthandler.hpp>
-#include "filedownloader.h"
-#include <QMessageBox>
-#include <QClipboard>
-#include <qdebug>
-#include <string>
-#include <openssl/conf.h>
-#include <openssl/evp.h>
-#include <openssl/err.h>
-#include <string.h>
-#include <zlib.h>
 
 static OTCaller           passwordCaller;
 static MTPasswordCallback passwordCallback;
@@ -505,12 +472,19 @@ if (!contact_nym_id.IsEmpty())
    // OTPasswordData thePWData("Load Credentials");
 
     OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(contact_nym_id);
+
     if (NULL == pNym)
     {
-    std::cout  << "\n Failed to load Public Nym: " +e_nymId.toStdString() +". Check if exists in this OT server. \n";
-        //QString qstrErrorMsg = QString("%1: %2").
-        //        arg("Failed trying to load the signer ").arg(e_nymId);
-        //QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);
+        // send a Hello message to force to get nym
+
+
+    }
+
+    if (NULL == pNym) // if can´t get the nym..fail
+    {
+
+        std::cout  << "\n Failed to load Public Nym: " +e_nymId.toStdString() +". Check if exists in this OT server. \n";
+
     }
     else
     {
@@ -550,6 +524,8 @@ return encryptedText;
 
 QString OTX_WRAP::signAndEncrypt(QString signerNymId,QString recipientNymId,QString plainText)
 {
+   // say hello in order to check the nym in public OT servers
+  this->sayHello(signerNymId,recipientNymId);
   QString signedAndEncrypted=encryptText(recipientNymId,signText(signerNymId,plainText));
   return signedAndEncrypted;
 }
@@ -679,6 +655,8 @@ bool OTX_WRAP::decryptAndVerify(QString signerNymId, QString recipientNymId,
   std::cout << signedEncryptedText.toStdString()+"\n recipientNymId:";
   std::cout << recipientNymId.toStdString();
 
+  // say hello in order to check the nym existence in public OT servers
+  this->sayHello(signerNymId,recipientNymId);
   QString signedDecrypted=decryptText(recipientNymId,signedEncryptedText);
   QString messagePayload;
   if (!signedDecrypted.contains("<Failed>")){
@@ -877,6 +855,45 @@ bool OTX_WRAP::sendMessageToNymBox(std::string str_serverId, std::string str_fro
     }
  }
 
+// Say Hello to all servers and return a public nym asocciated with toNymId (public Nym)
+// this process is called once at the first pair comunication
+ bool OTX_WRAP::sayHello(QString fromNymId, QString toNymId)
+ {
+     int serverCount= OTAPI_Wrap::GetServerCount();
+     std::string serverId;
+     OT_ME om;
+     OTPseudonym * publicNym;
+
+     for (int i=0; i < serverCount; i++)
+     {
+     serverId=OTAPI_Wrap::GetServer_ID(i);
+     publicNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(toNymId.toStdString());
+        if (NULL != publicNym)
+        {   std::cout << "\n Say Hello from nym: "+fromNymId.toStdString()+ "to nym: "+toNymId.toStdString()+ " at server: "+serverId+" sucessfull.\n";
+            return true; }// found public nym
+        else
+        {
+           //say hello
+            om.send_user_msg(serverId,fromNymId.toStdString(),toNymId.toStdString(),"Hello from nym "+fromNymId.toStdString()+" at server "+serverId);
+        } // say hello and test in other server
+
+     }
+
+    // if the nym was found in the last server:
+     publicNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(toNymId.toStdString());
+     if (NULL != publicNym)
+     {
+         return true;
+     }// found public nym in the last server
+     else
+     {
+     std::cout << "Failed to send Hello message!!! Fix It!";
+     return false; //unable to retrieve the public nym
+     }
+
+ }
+
+
 // Widget that handles the
 void OTX_WRAP::openContractOTServerScreen()
 {
@@ -1001,8 +1018,10 @@ bool OTX_WRAP::addOTServerContracts()
    int maxContracts=1;
     // List all available OT server contracts
    const QString availableOTServerContracts[1] =
-                                          {"http://localhost/societyProOT.otc", //for testing propose
+                                          {//"http://localhost/societyProOT.otc", //for testing propose
                                                                                 // the contracts must reside in Sopro OT servers
+                                           //Plato Bureoucraticservices.agency
+                                           "http://bureaucraticservices.agency/ot-server-bsa-0.1.otc"
                                           };
 
    //Load all available servers
