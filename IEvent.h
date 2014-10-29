@@ -172,6 +172,7 @@ protected:
 
 		F_kfTaskAlreadyIncluded	= 0x0008,	// A task was included to the XMPP stanza, and therefore there should be no more
 		F_kfContainsSyncData	= 0x0010,	// The blob contains synchronization data, and therefore if a task has to be created, then it should be marked as so, so there are no duplicate tasks to synchronize
+		F_kfNoEncryption		= 0x0020,	// Do not encrypt the data
 		};
 	UINT m_uFlags;				// Various flags how to send the XMPP stanza
 public:
@@ -183,6 +184,7 @@ public:
 
 public:
 	CBinXcpStanza();
+	void SetFlags_NoEncryption() { m_uFlags |= F_kfNoEncryption; }
 	int CbGetAvailablePayloadToSendBinaryData() const;
 	inline BOOL FuSerializingEventToDisk() const { return (m_uFlags & F_kfSerializeToDisk); }
 	inline BOOL FuSerializingEventToDiskOrCloning() const { return (m_uFlags & (F_kfSerializeToDisk | F_kfSerializeForCloning)); }

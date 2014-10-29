@@ -445,6 +445,8 @@ TContact::XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza
 	int iContainer = (pszContainerID == NULL) ? 0 : NStringToNumber_ZZR_ML(pszContainerID);
 	MessageLog_AppendTextFormatCo(d_coGrayDark, "\t Fetching container $i\n", iContainer);
 
+	pbinXcpStanzaReply->SetFlags_NoEncryption();
+
 	TProfile * pProfile = PGetProfile();
    // Getting contact info to response with the /f request from peer CBinXcpStanza::XcpApi_ExecuteApiResponse will get this parameters in remote peer
 	pbinXcpStanzaReply->BinAppendText_VE("<f n='^S'><K>", &pProfile->m_strNameProfile);
