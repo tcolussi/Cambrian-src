@@ -442,7 +442,7 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
             // pszDataStanzaEnc must be asigned with the return value of above  function
              pszDataStanzaEnc = (PSZUC) strEncryptedText.c_str() ;
              cbDataStanzaEnc = strlen ((const char*) pszDataStanzaEnc);
-             MessageLog_AppendTextFormatCo(d_coBlue,"Encrypted Text about to send to XMPP server:",pszDataStanzaEnc,cbDataStanzaEnc,this);
+             //MessageLog_AppendTextFormatCo(d_coBlue,"Encrypted Text about to send to XMPP server:",pszDataStanzaEnc,cbDataStanzaEnc,this);
 
     } else {
         hasNyms=false;
@@ -462,7 +462,8 @@ SHashSha1 hashSignature;
 #else
     HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);
 #endif
-
+    std::cout << "\nHash Signature:\n";
+    std::cout  << hashSignature.rgbData;
 
 	MessageLog_AppendTextFormatCo(d_coBlue, "XospSendStanzaToContactAndEmpty($s) $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), cbDataStanza, this);
 
@@ -474,10 +475,17 @@ SHashSha1 hashSignature;
 		pszStanzaAttributesExtra = " type='get'";
 		}
 	// Format the XML envelope for the XMPP protocol.
-	g_strScratchBufferSocket.BinInitFromTextSzv_VE("<$s$s to='^J'><" d_szCambrianProtocol_xcp " " d_szCambrianProtocol_Attribute_hSignature "='{h|}'>", pszStanzaType, pszStanzaAttributesExtra, pContact, &hashSignature);
+     g_strScratchBufferSocket.BinInitFromTextSzv_VE("<$s$s to='^J'><" d_szCambrianProtocol_xcp " " d_szCambrianProtocol_Attribute_hSignature "='{h|}'>", pszStanzaType, pszStanzaAttributesExtra, pContact, &hashSignature);
 
+
+
+#ifdef COMPILE_WITH_CRYPTOMANIA
+  if (hasNyms)
+    g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanzaEnc, cbDataStanzaEnc);
+  else
     g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanza, cbDataStanza);
 
+#endif
     // need convert the text to unsigned string...
     g_strScratchBufferSocket.BinAppendText_VE("</" d_szCambrianProtocol_xcp "></$s>", pszStanzaType);
 

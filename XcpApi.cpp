@@ -33,10 +33,14 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
     if (!signerNymId.isEmpty() &&  !receiverNymId.isEmpty())
     {
     CXmlTree oXmlTreeTemp;
-    oXmlTreeTemp.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
+   oXmlTreeTemp.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
 
-    QString qDataDecodedSignedEncrypted =oXmlTreeTemp.m_binXmlFileData.ToQString();
-    std::cout << "\n XcpApi.cpp: Receiving message about to decode: "+qDataDecodedSignedEncrypted.toStdString();
+
+
+    //QString qDataDecodedSignedEncrypted =oXmlTreeTemp.m_binXmlFileData.ToQString();
+    CStr pszDataDecodedSignedEncrypted =oXmlTreeTemp.m_binXmlFileData;
+    QString qDataDecodedSignedEncrypted = pszDataDecodedSignedEncrypted.ToQString();
+    std::cout << "\n XcpApi.cpp: DECODED MESSAGE READY FOR DECRYPT AND VALIDATE: "+qDataDecodedSignedEncrypted.toStdString();
 
 
 
