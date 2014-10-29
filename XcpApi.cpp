@@ -60,7 +60,9 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 	return;
 #endif
 
-#ifdef COMPILE_WITH_CRYPTOMANIA
+
+#if 0
+#ifdef COMPILE_WITH_CRYPTOMANIA_
 /*//////////////////////////////////CRYPTOMANIA DECRYPT////////////////////////////////////////////////*/
 
     //Get the sender public NymId
@@ -163,7 +165,8 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 			binXcpStanzaReply.XospSendStanzaToContactAndEmpty(this);
 			}
 		}
-	} // XmppXcp_ProcessStanza()
+#endif
+} // XmppXcp_ProcessStanza()
 
 ITreeItemChatLogEvents *
 TContact::PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttributeGroupIdentifier)
