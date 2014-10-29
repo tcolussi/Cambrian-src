@@ -168,7 +168,8 @@ SOURCES += \
     WChatLogHtml.cpp \
     TCorporation.cpp \
     WToolbar.cpp \
-    WToolbarActions.cpp
+    WToolbarActions.cpp \
+    ICrypto.cpp
 HEADERS += \
     CArray.h \
     CBin.h \
@@ -254,7 +255,8 @@ HEADERS += \
     WToolbar.h \
 	WToolbarActions.h \
 	PreCompiledHeaders.h \
-    StaticPreCompiledHeaders.h
+    StaticPreCompiledHeaders.h \
+    ICrypto.h
 
 FORMS += \
     startupscreen.ui

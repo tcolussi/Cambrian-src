@@ -419,8 +419,9 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 		}
 	// Format the XML envelope for the XMPP protocol.
 	g_strScratchBufferSocket.BinInitFromTextSzv_VE("<$s$s to='^J'><" d_szCambrianProtocol_xcp " " d_szCambrianProtocol_Attribute_hSignature "='{h|}'>", pszStanzaType, pszStanzaAttributesExtra, pContact, &hashSignature);
+/*
 #ifdef COMPILE_WITH_CRYPTOMANIA
- /*//////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////*/
+ //////////////////////////////////CRYPTOMANIA////////////////////////////////////////////////
     // Get Signer and Remote Nym
 
     std::cout << "\n Profile count:";
@@ -455,9 +456,9 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
     PSZUC pszDataStanzaEnc = (PSZUC) strEncryptedText.c_str() ;
     int cbDataStanzaEnc = strlen ((const char*) pszDataStanzaEnc);
     g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanzaEnc, cbDataStanzaEnc);
-#else
+#else*/
 	g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN this);
-#endif
+//#endif
     // need convert the text to unsigned string...
     g_strScratchBufferSocket.BinAppendText_VE("</" d_szCambrianProtocol_xcp "></$s>", pszStanzaType);
 

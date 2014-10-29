@@ -22,7 +22,7 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 	m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;
 
 	// Attempt to decrypt the data and verify the signature
-#ifndef COMPILE_WITH_CRYPTOMANIA
+#if 1
 	PSZUC pszXospEncodedBase85 = pXmlNodeXmppXcp->m_pszuTagValue;
 	CXmlTree oXmlTree;
 	oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pszXospEncodedBase85);	// First, decode from base85 to binary
@@ -44,8 +44,12 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 			}
 		}
 	MessageLog_AppendTextFormatCo(d_coGray, "XCP Received($S):\n", &m_strJidBare);
-	MessageLog_AppendTextFormatCo(d_coBlack, "{Bm}\n", &oXmlTree.m_binXmlFileData);
-	if (oXmlTree.EParseFileDataToXmlNodes_ML() == errSuccess)
+#if 1
+    MessageLog_AppendTextFormatCo(d_coBlack, "$B\n", &oXmlTree.m_binXmlFileData);
+#else
+    MessageLog_AppendTextFormatCo(d_coBlack, "{Bm}\n", &oXmlTree.m_binXmlFileData);
+#endif
+    if (oXmlTree.EParseFileDataToXmlNodes_ML() == errSuccess)
 		{
 		CBinXcpStanza binXcpStanzaReply;
 		binXcpStanzaReply.m_pContact = this;
@@ -1148,15 +1152,15 @@ CBinXcpStanza::BinXmlAppendXcpApiMessageSynchronization(const CXmlNode * pXmlNod
 void
 ITreeItemChatLogEvents::XcpApi_Invoke_RecommendationsGet()
 	{
-	XcpApi_Invoke(c_szaApi_Contact_Recommendations_Get);
+    //XcpApi_Invoke(c_szaApi_Contact_Recommendations_Get);
    #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
     //HACK: force to get the rolename and nym when ask for recomendations instead to make it manually
     //TODO: Dan must move this hack beside the Recomendations call when the contact is added...
-    unsigned char  fetchContainer[2];
+   /* unsigned char  fetchContainer[2];
     fetchContainer[0]='f';
     fetchContainer[1]='\0';
     XcpApi_Invoke((PSZUC)fetchContainer);
-    std::cout << "\n***Invoke Fetch cointainer with recomendations***\n";
+    std::cout << "\n***Invoke Fetch cointainer with recomendations***\n";*/
   #endif
    }
 
@@ -1225,7 +1229,7 @@ TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, I
 	} // XcpApiGroup_ProfileUnserialize()
 
 
-
+/*
 BYTE * pbKey = (BYTE *)"12345678";
 BYTE rgbEncrypted[100];
 
@@ -1282,3 +1286,4 @@ OpenSsl_Decrypt()
 		}
 	EVP_CIPHER_CTX_free(PA_DELETING haContext);
 	}
+*/

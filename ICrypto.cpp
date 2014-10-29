@@ -2,7 +2,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-
+#include <OTX_WRAP.h>
 ICrypto::ICrypto()
 	{
 	InitToGarbage(OUT &m_pNext, sizeof(m_pNext));
@@ -302,26 +302,36 @@ CCryptoOpenTransactions::~CCryptoOpenTransactions()
 	{
 
 	}
-
 ECryptoError
 CCryptoOpenTransactions::EEncrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
-	{
-	QString receiverNymId = pContact->m_strNymID;
-	QString signerNymId = pContact->PGetProfile()->m_strNymID;
-	QString qDataStanza = pbin->ToQString();
-	//strEncryptedText = pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza).toStdString();
-	return eCryptoError_zSuccess;
-	}
+    {
+    QString receiverNymId = pContact->m_strNymID;
+    QString signerNymId = pContact->PGetProfile()->m_strNymID;
+    QString qDataStanza = pbin->ToQString();
+    QString strEncryptedText = pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza);
+    QByteArray qbrEncryptedText= (QByteArray) strEncryptedText.toStdString().c_str();
+    pbin->BinInitFromByteArray(qbrEncryptedText);
+    MessageLog_AppendTextFormatCo(d_coRed, "OT Encrypt: $B\n", pbin);
+    return eCryptoError_zSuccess;
+    }
 
 ECryptoError
 CCryptoOpenTransactions::EDecrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
-	{
-	QString receiverNymId = pContact->m_strNymID;
-	QString signerNymId = pContact->PGetProfile()->m_strNymID;
-	QString qDataStanza = pbin->ToQString();
-	//bool decryptSuccessful=pOTX->decryptAndVerify(signerNymId,receiverNymId,qDataDecodedSignedEncrypted,decryptedText);
-	return eCryptoError_zSuccess;
-	}
+    {
+    QString receiverNymId = pContact->m_strNymID;
+    QString signerNymId = pContact->PGetProfile()->m_strNymID;
+    QString qDataStanza = pbin->ToQString();
+    QString decryptedText;
+    bool decryptSuccessful=pOTX->decryptAndVerify(signerNymId,receiverNymId,qDataStanza,decryptedText);
+    QByteArray qbrDecryptedText= (QByteArray) decryptedText.toStdString().c_str();
+    pbin->BinInitFromByteArray(qbrDecryptedText);
+    MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypt QString: $Q\n", &decryptedText);
+            MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypt: $B\n", pbin);
+    if (decryptSuccessful)
+    return eCryptoError_zSuccess;
+    else
+    return eCryptoError_Failure;
+    }
 
 void
 CCryptoOpenTransactions::XmlSerialize(IOUT CBin * pbinXmlAttributes) const
