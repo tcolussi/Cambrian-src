@@ -38,6 +38,7 @@ ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, PSZUC pszXmlApiParameter
 	Assert(pszApiName[0] != '\0');
 	//MessageLog_AppendTextFormatSev(eSeverityComment, "XcpApi_Invoke($s, $s)\n", pszApiName, pszXmlApiParameters);
 	CBinXcpStanza binXcpStanza;
+	binXcpStanza.SetFlags_NoEncryption();
 	binXcpStanza.BinAppendText_VE((pszXmlApiParameters == NULL) ? "<" d_szXop_ApiCall_s "/>" : "<" d_szXop_ApiCall_s ">$s</" d_szXop_ApiCall ">", pszApiName, pszXmlApiParameters);
 	if (EGetRuntimeClass() == RTI(TContact))
 		binXcpStanza.XospSendStanzaToContactAndEmpty((TContact *)this);
