@@ -65,9 +65,17 @@ ITreeItem::TreeItem_MarkForDeletion()
 	TreeItemW_RemoveFromNavigationTree();
 	}
 
-void ITreeItem::TreeItem_MarkForRecommendation()
+void ITreeItem::TreeItem_MarkForRecommendation(bool rec)
 	{
-	m_uFlagsTreeItem ^= FTI_kfRecommended;
+	if (rec)
+		m_uFlagsTreeItem |= FTI_kfRecommended;
+	else
+		m_uFlagsTreeItem &= ~FTI_kfRecommended;
+	}
+
+bool ITreeItem::isRecommended()
+	{
+		return ((m_uFlagsTreeItem & FTI_kfRecommended) != 0);
 	}
 
 //	ITreeItem::IRuntimeObject::PGetRuntimeInterface()

@@ -712,12 +712,14 @@ public:
 	OJapiList groups();
 	OJapiList channels();
 	OJapiList peers();
+	POJapiContact info();
 	//OJapiList peerLists();
 
 	Q_OBJECT
 	Q_PROPERTY(OJapiList groups READ groups)
 	Q_PROPERTY(OJapiList channels READ channels)
 	Q_PROPERTY(OJapiList peers READ peers)
+	Q_PROPERTY(POJapiContact info READ info)
 	//Q_PROPERTY(OJapiList peerLists READ peerLists)
 
 public slots:
@@ -752,17 +754,19 @@ public:
 	QString name();
 	QString nymId();
 	QString publicKey();
+	bool recommend();
+	void recommend(bool rec);
 
 	Q_PROPERTY(QString id READ id)
 	Q_PROPERTY(QString name READ name)
 	Q_PROPERTY(QString nymId READ nymId)
 	Q_PROPERTY(QString publicKey READ publicKey)
+	Q_PROPERTY(bool recommend READ recommend WRITE recommend)
 	Q_OBJECT
 
 public slots:
 	void openChat();
 	void destroy();
-	void recommend();
 	void ping();
 };
 #define POJapiContact		POJapi

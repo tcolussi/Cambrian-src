@@ -143,6 +143,14 @@ OJapiMe::peers()
 	return oList;
 	}
 
+POJapiContact
+OJapiMe::info()
+	{
+	TAccountXmpp * pAccount = m_poCambrian->m_pProfile->PGetFirstAccountOrAllocate_NZ();
+	TContact * m_paContact = new TContact(pAccount);
+	return m_paContact->POJapiGet();
+	}
+
 /*
 POJapiGroup
 OJapiMe::newPeerList()
@@ -227,6 +235,11 @@ OJapiMe::getGroup(const QString & sId)
 POJapiContact
 OJapiMe::newPeer(const QString &sUsername)
     {
+	CStr strUsername(sUsername);
+	TAccountXmpp * pAccount = m_poCambrian->m_pProfile->PGetFirstAccountOrAllocate_NZ();
+	TContact * pContactNew = pAccount->Contact_PFindByJID(strUsername, eFindContact_kmMakeVisibleOrCreateNew);
+	return pContactNew->POJapiGet();
+#if 0
     TContact * pContactSelect = NULL;
     TContact * pContactDuplicate = NULL;
     CStr strContactsDuplicate;
@@ -272,6 +285,7 @@ OJapiMe::newPeer(const QString &sUsername)
         //pAccount->TreeItemW_Expand();
          return NULL;
         }
+#endif
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -474,9 +488,14 @@ QString OJapiContact::publicKey()
 	return m_pContact->m_strKeyPublic;
 	}
 
-void OJapiContact::recommend()
+bool OJapiContact::recommend()
 	{
-	m_pContact->TreeItem_MarkForRecommendation();
+	return m_pContact->isRecommended();
+	}
+
+void OJapiContact::recommend(bool rec)
+	{
+	m_pContact->TreeItem_MarkForRecommendation(rec);
 	}
 
 void OJapiContact::ping()
@@ -493,11 +512,9 @@ void OJapiContact::openChat()
 void OJapiContact::destroy()
 	{
 	Assert(m_pContact != NULL);
-
-	#if 0
-	m_pContact->TreeItemContact_DeleteFromNavigationTree_MB();
-	#endif
-	m_pContact->Contact_MarkForDeletion();
+	m_pContact->Vault_WriteEventsToDiskIfModified();	// Always save the Chat Log. This is important because if the user wants to add the contact again, he/she will recover the entire Chat Log.
+	m_pContact->PGetProfile()->DeleteContact(PA_DELETING m_pContact);
+	Configuration_Save();
 	}
 
 
@@ -512,7 +529,8 @@ CListVariants::CListVariants(OJapiCambrian *poCambrian)
 void
 CListVariants::AddContact(TContact *pContact)
 	{
-	this->append(QVariant::fromValue(pContact->POJapiGet()));
+	if (pContact->TreeItemFlags_FCanDisplayWithinNavigationTree())
+		this->append(QVariant::fromValue(pContact->POJapiGet()));
 	}
 
 void
