@@ -249,6 +249,7 @@ class ITask;
 	class CTaskFileDownload;
 */
 class ICrypto;
+	class CCryptoOpenTransactions;
 
 class IEvent;
 	class IEventMessageText;

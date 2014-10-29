@@ -447,11 +447,11 @@ TContact::XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza
 
 	TProfile * pProfile = PGetProfile();
    // Getting contact info to response with the /f request from peer CBinXcpStanza::XcpApi_ExecuteApiResponse will get this parameters in remote peer
-	pbinXcpStanzaReply->BinAppendText_VE("<f n='^S' k='^S' p='^S'><K>", &pProfile->m_strNameProfile, &pProfile->m_strKeyPublic,&pProfile->m_strNymID);
+	pbinXcpStanzaReply->BinAppendText_VE("<f n='^S'><K>", &pProfile->m_strNameProfile);
 
 	#ifdef COMPILE_WITH_ICRYPTO_OPEN_TRANSACTIONS
 	// Inject the OT crypto public key and nym ID
-	if (!m_strNymID.FIsEmptyString())
+	if (!pProfile->m_strNymID.FIsEmptyString())
 		pbinXcpStanzaReply->BinAppendText_VE("<$U" d_szXmlAttributes_OT_strName_strKeyPublic "/>", eCryptoClass_OpenTransactions, &pProfile->m_strNymID, &pProfile->m_strKeyPublic);
 	#endif
 	// For debugging, generate a key so we have something to serialize
@@ -530,6 +530,7 @@ CBinXcpStanza::XcpApi_ExecuteApiResponse(PSZUC pszApiName, const CXmlNode * pXml
 		{
 		if (chApiName == d_chXv_ApiName_ContainerFetch && pXmlNodeApiResponse != NULL)
 			{
+			/*
 			PSZUC pszKeyPublic = pXmlNodeApiResponse->PszuFindAttributeValue('k');
             PSZUC pszRoleName = pXmlNodeApiResponse->PszuFindAttributeValue('n');
             PSZUC pszNymId = pXmlNodeApiResponse->PszuFindAttributeValue('p');
@@ -539,7 +540,7 @@ CBinXcpStanza::XcpApi_ExecuteApiResponse(PSZUC pszApiName, const CXmlNode * pXml
                 MessageLog_AppendTextFormatSev(eSeverityComment, "Assigning  Nym Id '$s': $s\n", m_pContact->TreeItem_PszGetNameDisplay(), pszNymId);
                 m_pContact->m_strNymID = pszNymId; //set the contactNymId
                 m_pContact->m_strRoleName = pszRoleName; // set the rolename
-
+		   */
 			// Assign all the crypto keys received
 			const CXmlNode * pXmlNodeKeys = pXmlNodeApiResponse->PFindElement(d_chXmlElementKeys);
 			if (pXmlNodeKeys != NULL)
@@ -549,7 +550,7 @@ CBinXcpStanza::XcpApi_ExecuteApiResponse(PSZUC pszApiName, const CXmlNode * pXml
 				}
 			return;
 			}
-		}
+		} // if
 
 
 	if (FCompareStringsNoCase(pszApiName, c_szaApi_Contact_Recommendations_Get))

@@ -22,8 +22,10 @@ ICrypto::S_PaAllocateCrypto_YZ(ECryptoClass eCryptoClass)
 	case eCryptoClass_EVP_aes_256_gcm:
 		return new CCryptoAes256gcm;
 	#endif
+	#ifdef COMPILE_WITH_ICRYPTO_OPEN_TRANSACTIONS
 	case eCryptoClass_OpenTransactions:
 		return new CCryptoOpenTransactions;
+	#endif
 	default:
 		return NULL;
 		}
@@ -305,20 +307,23 @@ CCryptoOpenTransactions::~CCryptoOpenTransactions()
 ECryptoError
 CCryptoOpenTransactions::EEncrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
-    QString receiverNymId = pContact->m_strNymID;
+	#if defined(pOTX)
+	QString receiverNymId = m_strNymID;
     QString signerNymId = pContact->PGetProfile()->m_strNymID;
     QString qDataStanza = pbin->ToQString();
     QString strEncryptedText = pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza);
     QByteArray qbrEncryptedText= (QByteArray) strEncryptedText.toStdString().c_str();
     pbin->BinInitFromByteArray(qbrEncryptedText);
     MessageLog_AppendTextFormatCo(d_coRed, "OT Encrypt: $B\n", pbin);
+	#endif
     return eCryptoError_zSuccess;
     }
 
 ECryptoError
 CCryptoOpenTransactions::EDecrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
-    QString receiverNymId = pContact->m_strNymID;
+	#if defined(pOTX)
+	QString receiverNymId = m_strNymID;
     QString signerNymId = pContact->PGetProfile()->m_strNymID;
     QString qDataStanza = pbin->ToQString();
     QString decryptedText;
@@ -331,6 +336,9 @@ CCryptoOpenTransactions::EDecrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContac
     return eCryptoError_zSuccess;
     else
     return eCryptoError_Failure;
+	#else
+	return eCryptoError_zSuccess;
+	#endif
     }
 
 void
@@ -362,6 +370,18 @@ TContact::PGetCrytoForEncrypting_YZ() CONST_MCC
 		if (pCrypto->m_uFlags & ICrypto::F_kfEncrypt)
 			return pCrypto;
 		pCrypto = pCrypto->m_pNext;
+		}
+	return NULL;
+	}
+
+CCryptoOpenTransactions *
+TContact::PGetCryptoOpenTransactions() const
+	{
+	ICrypto * pCrypto = m_listaCrypto.m_plistCrypto;
+	while (pCrypto != NULL)
+		{
+		if (pCrypto->EGetCryptoClass() == eCryptoClass_OpenTransactions)
+			return (CCryptoOpenTransactions *)pCrypto;
 		}
 	return NULL;
 	}

@@ -19,9 +19,11 @@ public:
 	mutable CStr m_strRessource;				// Resource of the JID.  This field is either empty or begins with "/".  This value is not serialized as it is specific to an XMPP session.  This value may be updated each time the method PFindChatContactByJID() is called.
 	CStr m_strComment;							// Comment regarding the contact.  This comment is also used to store the original invitation for the handshake
 	CBin m_binXmlRecommendations;				// Store the raw XML of the recommendations from the contact
+	/* The NymID and PublicKey have been moved to m_listaCrypto
 	CStr m_strNymID;							// OT nym
 	CStr m_strKeyPublic;						// Public key of the contact (this key is used to encrypt messages)
     CStr m_strRoleName;
+	*/
     /*
 	enum
 		{
@@ -128,6 +130,7 @@ public:
 	void XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza * pbinXcpStanzaReply) CONST_MCC;
 
 	ICrypto * PGetCrytoForEncrypting_YZ() CONST_MCC;
+	CCryptoOpenTransactions * PGetCryptoOpenTransactions() const;
 
 	ITreeItemChatLogEvents * PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttributeGroupIdentifier);
 
