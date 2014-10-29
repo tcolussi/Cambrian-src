@@ -373,7 +373,7 @@ CBin::DataTruncateAtOffsetPv(UINT cbDataKeep)
 //
 //	INTERFACE NOTES
 //	If the buffer is truncated, the data will remain in
-//	the buffer as long as no other data is appended to the bin.
+//	the buffer as long as no other data is appended to the blob.
 //
 void
 CBin::DataTruncateAtOffset(UINT cbDataKeep)
@@ -454,6 +454,53 @@ CBin::BinEnsureContentHasNoNullTerminatorAndIsTerminatedWithVirtualNullTerminato
 	Assert(pchData == m_paData->rgbData);
 	pchData[m_paData->cbData] = '\0';	// Insert the virtual null-terminator
 	} // BinEnsureContentHasNoNullTerminatorAndIsTerminatedWithVirtualNullTerminator()
+
+//	Return TRUE if the blob appears to contain a valid XML node.
+//	At the moment, the method only checks for opening and closing brackets, however may be more sophisticated later.
+BOOL
+CBin::FContainsXmlNode() const
+	{
+	if (m_paData != NULL)
+		{
+		Assert(m_paData->cbData >= 0);
+		Assert(m_paData->cbData <= m_paData->cbAlloc);
+		const BYTE * pbStart = m_paData->rgbData;
+		const BYTE * pbStop = pbStart + m_paData->cbData;
+		while (pbStart < pbStop)
+			{
+			CHS b = *pbStart++;
+			if (Ch_FIsWhiteSpace(b))
+				continue;
+			if (b != '<')
+				return FALSE;	// An XML must begin with an opening bracket
+			break;
+			} // while
+		while (pbStart < pbStop)
+			{
+			CHS b = *--pbStop;
+			if (Ch_FIsWhiteSpaceOrNullTerminator(b))
+				continue;
+			if (b != '>')
+				return FALSE;	// An XML must end with a closing bracket
+			break;
+			} // while
+
+		// Perform basic validation of the XML element namename
+		/*
+		Must begin with letter or underscore(_).
+		After initial character following are allowed
+		digits
+		period(.)
+		hyphen(-)
+		underscore(_)
+		colon(:) - legal but should be used except for namespaces
+		NO other characters are allowed like #, @, $, %
+		*/
+		CHS chElement = *pbStart;
+		return (Ch_FIsAlphaNumeric(chElement) || chElement == '_');
+		}
+	return FALSE;
+	} // FContainsXmlNode()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //	BinInitFromBinaryData()
@@ -2694,6 +2741,14 @@ CBin::BinAppendXmlAttributeCBin(CHS chAttributeName, const CBin & binAttributeVa
 	}
 
 void
+CBin::BinAppendXmlAttributeBinaryPvCb(CHS chAttributeName, const void * pvData, int cbData)
+	{
+	Assert(chAttributeName != '\0');
+	if (cbData > 0)
+		BinAppendText_VE(" $b='{p|}'", chAttributeName, pvData, cbData);
+	}
+
+void
 CBin::BinAppendXmlElementText(PSZAC pszElementName, PSZUC pszElementValue)
 	{
 	Assert(pszElementName != NULL);
@@ -2898,6 +2953,7 @@ CStr::InitFromTextEncodedInBase85(PSZUC pszBase85)
 	if (m_paData != NULL)
 		m_paData->cbData = 0;
 	BinAppendBinaryDataFromBase85Szv_ML(pszBase85);
+	Assert(m_paData != NULL);
 	m_paData->cbData++;	// Include the virtual null-terminator as a null-terminator
 	}
 

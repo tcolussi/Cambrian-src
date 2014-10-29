@@ -85,6 +85,7 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
     pXmlExchanger->XmlExchangeStr("RoleName",&m_strRoleName);
 
 	m_listaTasksSendReceive.XmlExchange(INOUT pXmlExchanger);
+	m_listaCrypto.XmlExchange(INOUT pXmlExchanger);
 
 	if (!pXmlExchanger->m_fSerializing)
 		{

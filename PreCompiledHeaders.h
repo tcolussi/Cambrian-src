@@ -8,8 +8,8 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.6.3"
-#define d_szwApplicationVersion		   L"0.1.6.3"
+#define d_szApplicationVersion			"0.1.6.4"
+#define d_szwApplicationVersion		   L"0.1.6.4"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
@@ -248,6 +248,7 @@ class ITask;
 	class CTaskFileUpload;
 	class CTaskFileDownload;
 */
+class ICrypto;
 
 class IEvent;
 	class IEventMessageText;
@@ -331,6 +332,7 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "FilePathUtilities.h"
 #include "QtUtilities.h"
 #include "InternetWebServices.h"
+#include "ICrypto.h"
 #include "DDialog.h"
 #include "WNotices.h"
 
