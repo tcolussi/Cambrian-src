@@ -18,8 +18,10 @@ ICrypto::S_PaAllocateCrypto_YZ(ECryptoClass eCryptoClass)
 	{
 	switch (eCryptoClass)
 		{
+	#ifdef COMPILE_WITH_ICRYPTO_AES_256_GSM
 	case eCryptoClass_EVP_aes_256_gcm:
 		return new CCryptoAes256gcm;
+	#endif
 	case eCryptoClass_OpenTransactions:
 		return new CCryptoOpenTransactions;
 	default:
@@ -164,6 +166,7 @@ CListCrypto::DisplayKeysToMessageLog() const
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef COMPILE_WITH_ICRYPTO_AES_256_GSM
 CCryptoAes256gcm::CCryptoAes256gcm()
 	{
 	m_haContext = NULL;
@@ -287,6 +290,7 @@ CCryptoAes256gcm::FCompareEqual(const ICrypto * pCryptoCompare) const
 	{
 	return (0 == memcmp(IN &m_data, &((CCryptoAes256gcm *)pCryptoCompare)->m_data, sizeof(m_data)));
 	}
+#endif // COMPILE_WITH_ICRYPTO_AES_256_GSM
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 CCryptoOpenTransactions::CCryptoOpenTransactions()

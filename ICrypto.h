@@ -78,6 +78,9 @@ public:
 
 #define BYTES_FROM_BITS(nBits)		((nBits) / 8)
 
+//	#define COMPILE_WITH_ICRYPTO_AES_256_GSM
+
+#ifdef COMPILE_WITH_ICRYPTO_AES_256_GSM
 class CCryptoAes256gcm : public ICrypto
 {
 protected:
@@ -100,6 +103,7 @@ public:
 	virtual void XmlUnserialize(const CXmlNode * pXmlNodeElement);
 	virtual BOOL FCompareEqual(const ICrypto * pCryptoCompare) const;
 };
+#endif // COMPILE_WITH_ICRYPTO_AES_256_GSM
 
 #define COMPILE_WITH_ICRYPTO_OPEN_TRANSACTIONS
 

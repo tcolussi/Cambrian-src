@@ -447,6 +447,7 @@ TContact::XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza
 			break;
 		pCrypto = pCrypto->m_pNext;
 		}
+	#ifdef COMPILE_WITH_ICRYPTO_AES_256_GSM
 	if (pCrypto == NULL)
 		{
 		CCryptoAes256gcm * pCryptoAES = new CCryptoAes256gcm;
@@ -454,6 +455,7 @@ TContact::XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza
 		pCryptoAES->m_pNext = m_listaCrypto.m_plistCrypto;
 		m_listaCrypto.m_plistCrypto = pCryptoAES;
 		}
+	#endif
 	m_listaCrypto.SerializeKeysToXml(IOUT pbinXcpStanzaReply, FALSE);
 	pbinXcpStanzaReply->BinAppendText("</K></f>");
 	}
