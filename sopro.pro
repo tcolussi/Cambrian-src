@@ -20,6 +20,7 @@ TARGET = SocietyPro
 TEMPLATE = app
 
 PRECOMPILED_HEADER = StaticPreCompiledHeaders.h
+SOLUTION_DIR=$${PWD}/
 
 #-------------------------------------------------
 # Compiler options
@@ -33,7 +34,9 @@ DEFINES += COMPILE_WITH_CHATLOG_HTML
 INCLUDEPATH += otx/src/core
 INCLUDEPATH += otx/src/jsoncpp
 INCLUDEPATH += otx/src
-INCLUDEPATH += C:\bin\OpenSSL-Win32\include
+win32: {
+	INCLUDEPATH += $${SOLUTION_DIR}/sopro-cpp-dependencies/win32/OpenSSL-Win32/include
+}
 
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter -Wno-unknown-pragmas
 QMAKE_CFLAGS_WARN_ON   += -Wno-unused-parameter -Wno-unknown-pragmas
@@ -61,44 +64,20 @@ unix: {
 # Windows
 win32: {
     QMAKE_LIBDIR += $${DESTDIR}
-	LIBS += -L$${PWD}/otx/libs/win32
+	LIBS += -L$${PWD}/sopro-cpp-dependencies/win32/
+	LIBS += -L$${PWD}/sopro-cpp-dependencies/win32/OpenSSL-Win32/lib/MinGW
 
-    equals(TEMPLATE,vcapp):{
-		QMAKE_LIBDIR += $(SystemDrive)/OpenSSL-Win$(PlatformArchitecture)/lib/VC
-		QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/$(PlatformName)/$(Configuration)/
-
-		LIBS += bitcoin-api.lib	jsoncpp.lib curl.lib nmcrpc.lib otlib.lib otapi.lib Advapi32.lib
-		#[need to fix for VS] LIBS += -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
-    }
-    else:{
-        !contains(QMAKE_HOST.arch, x86_64):{
-            QMAKE_LIBDIR += C:/OpenSSL-Win32/lib/VC
-            CONFIG(debug, debug|release):{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Debug/
-            }
-            else:{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Release/
-            }
-        }
-        else:{
-            QMAKE_LIBDIR += C:/OpenSSL-Win64/lib/VC
-            CONFIG(debug, debug|release):{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Debug/
-            }
-            else:{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Release/
-            }
-        }
-
-		# otx
-		LIBS += -lOTX -lbitcoin-api -ljsoncpp -lcurl -lnmcrpc -lotapi -lotlib
-		# xmlrpc and zmq alleg
-		LIBS += -llibxmlrpc -llibxmlrpc_util -llibxmlrpc_xmlparse -llibxmlrpc_xmltok -llibxmlrpcpp -lzmq -lzlib
-		# Open SSL
-		LIBS += -LC:\bin\OpenSSL-Win32\lib\MinGW -leay32 -lssleay32
-		# windows API
-		LIBS += -lAdvapi32 -lWs2_32
-    }
+	# otx
+	LIBS += -lOTX -lbitcoin-api -ljsoncpp -lcurl -lnmcrpc -lotapi -lotlib
+	
+	# xmlrpc and zmq alleg
+	LIBS += -llibxmlrpc -llibxmlrpc_util -llibxmlrpc_xmlparse -llibxmlrpc_xmltok -llibxmlrpcpp -lzmq -lzlib
+	
+	# Open SSL
+	LIBS += -leay32 -lssleay32
+	
+	# windows API
+	LIBS += -lAdvapi32 -lWs2_32
 }
 
 
