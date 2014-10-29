@@ -119,7 +119,7 @@ WDialogPropertyPageContactGeneral::WDialogPropertyPageContactGeneral(TContact * 
 	m_pContact = pContact;
 	OLayoutVerticalAlignTop * poLayoutVertical = new OLayoutVerticalAlignTop(this);
 	OLayoutForm * poLayout = new OLayoutForm(poLayoutVertical);
-	poLayout->Layout_PwAddRowLabelEditTextAreaReadOnly("Name", pContact->m_strNameDisplayTyped,1);
+    poLayout->Layout_PwAddRowLabelEditTextAreaReadOnly("Display Name", pContact->m_strNameDisplayTyped,1);
 	CCryptoOpenTransactions * pCrypto = m_pContact->PGetCryptoOpenTransactions();
 	if (pCrypto != NULL)
 		{

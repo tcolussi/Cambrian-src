@@ -307,9 +307,13 @@ CCryptoOpenTransactions::~CCryptoOpenTransactions()
 ECryptoError
 CCryptoOpenTransactions::EEncrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
-	#if defined(pOTX)
+    #if 1 // defined(pOTX)
 	QString receiverNymId = m_strNymID;
     QString signerNymId = pContact->PGetProfile()->m_strNymID;
+
+    if (receiverNymId.isEmpty()|| signerNymId.isEmpty())
+       return eCryptoError_zSuccess;
+
     QString qDataStanza = pbin->ToQString();
     QString strEncryptedText = pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza);
     QByteArray qbrEncryptedText= (QByteArray) strEncryptedText.toStdString().c_str();
@@ -322,11 +326,14 @@ CCryptoOpenTransactions::EEncrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContac
 ECryptoError
 CCryptoOpenTransactions::EDecrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
-	#if defined(pOTX)
-	QString receiverNymId = m_strNymID;
+    #if 1 //defined(pOTX)
+    QString receiverNymId = m_strNymID;
     QString signerNymId = pContact->PGetProfile()->m_strNymID;
     QString qDataStanza = pbin->ToQString();
     QString decryptedText;
+    if (receiverNymId.isEmpty()|| signerNymId.isEmpty())
+       return eCryptoError_zSuccess;
+
     bool decryptSuccessful=pOTX->decryptAndVerify(signerNymId,receiverNymId,qDataStanza,decryptedText);
     QByteArray qbrDecryptedText= (QByteArray) decryptedText.toStdString().c_str();
     pbin->BinInitFromByteArray(qbrDecryptedText);
