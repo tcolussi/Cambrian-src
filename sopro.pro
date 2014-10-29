@@ -12,90 +12,74 @@
 #            libraries.
 #-------------------------------------------------
 
-QT       += core gui network multimedia sql quick
+QT       += core gui multimedia quick sql # network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
 TARGET = SocietyPro
 TEMPLATE = app
-INCLUDEPATH += otx/src/jsoncpp
-INCLUDEPATH += otx/src/core
-INCLUDEPATH += otx/src/opentxs
-INCLUDEPATH += otx/src
-PRECOMPILED_HEADER = otx/src/core/stable.hpp
+
+PRECOMPILED_HEADER = StaticPreCompiledHeaders.h
+SOLUTION_DIR=$${PWD}/
 
 #-------------------------------------------------
-# Linked Libs
+# Compiler options
+DEFINES += COMPILE_WITH_OPEN_TRANSACTIONS
+DEFINES += COMPILE_WITH_SPLASH_SCREEN
+DEFINES += COMPILE_WITH_CRYPTOMANIA
+DEFINES += COMPILE_WITH_TOOLBAR
+DEFINES += COMPILE_WITH_CHATLOG_HTML
+
+INCLUDEPATH += otx/src/opentxs
+INCLUDEPATH += otx/src/core
+INCLUDEPATH += otx/src/jsoncpp
+INCLUDEPATH += otx/src
+win32: {
+	INCLUDEPATH += $${SOLUTION_DIR}/sopro-cpp-dependencies/win32/OpenSSL-Win32/include
+}
+
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter -Wno-unknown-pragmas
+QMAKE_CFLAGS_WARN_ON   += -Wno-unused-parameter -Wno-unknown-pragmas
+CONFIG += c++11
+
+
+#-------------------------------------------------
+# Linker options
+
 DEFINES    += "OT_ZMQ_MODE=1"
-# MAC AND LINUX:
+
+# Mac and Linux
 unix: {
 
-##  LIBS += -L$${OUT_PWD}/../curl
-##  LIBS += -lcurl
+        LIBS += -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -lcurl -ldl
 
-    LIBS       += -L$${PWD}/otx/libs/mac -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -lcurl -ldl
-    LIBS += -L"/usr/local/lib" -lcrypto -lssl -lz
-    LIBS += -L$${OUT_PWD}/bitcoin-api  -lbitcoin-api
+	LIBS += -L"/usr/local/lib" -lcrypto -lssl -lz
+
+	LIBS += -L$${OUT_PWD}/bitcoin-api  -lbitcoin-api
     LIBS += -L$${OUT_PWD}/jsoncpp -ljsoncpp
     LIBS += -L$${OUT_PWD}/libidn -llibidn
     LIBS += -L$${OUT_PWD}/nmcrpc -lnmcrpc
     LIBS += -L$${OUT_PWD}/otx -lOTX
-
-
-
-
 }
-#windows
-else:  {
-LIBS       +=  -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
-}
-
+# Windows
 win32: {
     QMAKE_LIBDIR += $${DESTDIR}
+	LIBS += -L$${PWD}/sopro-cpp-dependencies/win32/
+	LIBS += -L$${PWD}/sopro-cpp-dependencies/win32/OpenSSL-Win32/lib/MinGW
 
-    equals(TEMPLATE,vcapp):{
-        QMAKE_LIBDIR += $(SystemDrive)/OpenSSL-Win$(PlatformArchitecture)/lib/VC
-        QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/$(PlatformName)/$(Configuration)/
-    }
-    else:{
-        !contains(QMAKE_HOST.arch, x86_64):{
-            QMAKE_LIBDIR += C:/OpenSSL-Win32/lib/VC
-            CONFIG(debug, debug|release):{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Debug/
-            }
-            else:{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Release/
-            }
-        }
-        else:{
-            QMAKE_LIBDIR += C:/OpenSSL-Win64/lib/VC
-            CONFIG(debug, debug|release):{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Debug/
-            }
-            else:{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Release/
-            }
-        }
-    }
-
-    LIBS += bitcoin-api.lib
-    LIBS += jsoncpp.lib
-    LIBS += curl.lib
-    LIBS += nmcrpc.lib
-
-    LIBS += otlib.lib
-    LIBS += otapi.lib
-
-    LIBS += Advapi32.lib
+	# otx
+	LIBS += -lOTX -lbitcoin-api -ljsoncpp -lcurl -lnmcrpc -lotapi -lotlib
+	
+	# xmlrpc and zmq alleg
+	LIBS += -llibxmlrpc -llibxmlrpc_util -llibxmlrpc_xmlparse -llibxmlrpc_xmltok -llibxmlrpcpp -lzmq -lzlib
+	
+	# Open SSL
+	LIBS += -leay32 -lssleay32
+	
+	# windows API
+	LIBS += -lAdvapi32 -lWs2_32
 }
 
-
-QMAKE_CFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
-QMAKE_CXXFLAGS_WARN_OFF += -Wall -Wextra -Wunused-parameter -Wunused-function -Wunneeded-internal-declaration
-QMAKE_CXXFLAGS += -std=c++11 -DCXX_11
-CONFIG += c++11
-
-PRECOMPILED_HEADER = PreCompiledHeaders.h
 
 
 SOURCES += \
@@ -268,7 +252,9 @@ HEADERS += \
     WChatLogHtml.h \
     TCorporation.h \
     WToolbar.h \
-    WToolbarActions.h
+	WToolbarActions.h \
+	PreCompiledHeaders.h \
+    StaticPreCompiledHeaders.h
 
 FORMS += \
     startupscreen.ui

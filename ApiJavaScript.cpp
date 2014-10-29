@@ -5,11 +5,8 @@
 #endif
 #include "TApplicationBallotmaster.h"
 #include "qdebug.h"
-#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-#include <opentxs/OpenTransactions.hpp>
-#include <opentxs/OTPseudonym.hpp>
+#include "OTX_WRAP.h"
 
-#endif
 OJapiApps::OJapiApps(OJapiCambrian * poCambrian)
 	{
     m_poCambrian = poCambrian;

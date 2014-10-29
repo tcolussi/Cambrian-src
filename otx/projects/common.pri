@@ -1,5 +1,5 @@
 
-CONFIG     += debug_and_release silent
+CONFIG     += debug_and_release C++11
 
 SOLUTION_DIR=$${PWD}/
 
@@ -12,30 +12,31 @@ INCLUDEPATH += $${SOLUTION_DIR}../src/jsoncpp
 win32:{
     INCLUDEPATH += $${SOLUTION_DIR}../src/curl/include
     INCLUDEPATH += $${SOLUTION_DIR}../src/libidn/libidn
-    INCLUDEPATH += $${SOLUTION_DIR}../src/libidn/windows/include
+
 
     equals(TEMPLATE,vcapp)|equals(TEMPLATE,vclib):{
-        DESTDIR     = $${SOLUTION_DIR}../lib/$(PlatformName)/$(Configuration)
+		DESTDIR     = $${SOLUTION_DIR}../out/$(PlatformName)/$(Configuration)
+		UI_DIR      = $${SOLUTION_DIR}../out/$${TARGET}/ui/
         MOC_DIR     = $${SOLUTION_DIR}../obj/$${TARGET}
         OBJECTS_DIR = $${SOLUTION_DIR}../obj/$${TARGET}
         RCC_DIR     = $${SOLUTION_DIR}../out/$${TARGET}/resources
-        UI_DIR      = $${SOLUTION_DIR}../out/$${TARGET}/ui/
+		INCLUDEPATH += $${SOLUTION_DIR}../src/libidn/windows/include
     }
     else:{
         !contains(QMAKE_HOST.arch, x86_64):{
             CONFIG(debug, debug|release):{
-                DESTDIR = $${SOLUTION_DIR}../lib/Win32/Debug
+				DESTDIR = $${SOLUTION_DIR}../../sopro-cpp-dependencies/Win32/Debug
             }
             else:{
-                DESTDIR = $${SOLUTION_DIR}../lib/Win32/Debug
+				DESTDIR = $${SOLUTION_DIR}../../sopro-cpp-dependencies/Win32
             }
         }
         else:{
             CONFIG(debug, debug|release):{
-                DESTDIR = $${SOLUTION_DIR}../lib/x64/Debug
+				DESTDIR = $${SOLUTION_DIR}../../sopro-cpp-dependencies/Win64/Debug
             }
             else:{
-                DESTDIR = $${SOLUTION_DIR}../lib/x64/Debug
+				DESTDIR = $${SOLUTION_DIR}../../sopro-cpp-dependencies/Win64
             }
         }
     }
@@ -51,7 +52,10 @@ QMAKE_CXXFLAGS_WARN_ON -= -Wall -Wextra -Wunused-parameter -Wunused-function -Wu
 win32:{
     DEFINES     += "_UNICODE" "NOMINMAX"
     CharacterSet = 1
-    QMAKE_CXXFLAGS += /bigobj /Zm480 /wd4512 /wd4100
+
+	equals(TEMPLATE,vcapp)|equals(TEMPLATE,vclib):{
+		QMAKE_CXXFLAGS += /bigobj /Zm480 /wd4512 /wd4100
+	}
 }
 
 

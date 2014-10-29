@@ -8,7 +8,8 @@
 #endif
 #include "Xcp.h"
 #include "XcpApi.h"
-#include <iostream>
+#include "OTX_WRAP.h"
+
 void
 CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXcpApi, PSZUC pszxErrorData)
 	{
@@ -29,11 +30,7 @@ CBinXcpStanza::BinXmlAppendXcpAttributesForApiRequestError(EErrorXcpApi eErrorXc
 void
 ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, PSZUC pszXmlApiParameters)
 	{
-    /*std::cout <<"\n  XCPAPI_INVOKE pszApiName: ";
-    std::cout << pszApiName;
-    std::cout << "\n pszXmlApiParameters: ";
-    std::cout << pszXmlApiParameters;
-    std::cout << "\n";*/
+	//MessageLog_AppendTextFormatCo(d_coBlack, "XCAPI_INVOKE pszApiName: $s, pszXmlApiParameters: $s\n", pszApiName, pszXmlApiParameters);
     Assert(pszApiName != NULL);
 	Assert(pszApiName[0] != '\0');
 	//MessageLog_AppendTextFormatSev(eSeverityComment, "XcpApi_Invoke($s, $s)\n", pszApiName, pszXmlApiParameters);
@@ -376,8 +373,8 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 
 	if (m_paData->cbData >= m_cbStanzaThresholdBeforeSplittingIntoTasks)
 		{
-        std::cout << "\n !!!!!!Xcp:  The stanza data is too big to fin in ONE XMPP stanza : m_cbStanzaThresholdBeforeSplittingIntoTasks =";
-        std::cout << m_cbStanzaThresholdBeforeSplittingIntoTasks;
+		MessageLog_AppendTextFormatCo(d_coBlack, "!!!!!!Xcp:  The stanza data is too big to fin in ONE XMPP stanza : m_cbStanzaThresholdBeforeSplittingIntoTasks = $i \n", m_cbStanzaThresholdBeforeSplittingIntoTasks);
+
         // The data is too big to fit into one XMPP stanza, therefore allocate a new task to send it by smaller chunks
 		CTaskSendReceive * pTaskSend = pContact->m_listaTasksSendReceive.PAllocateTaskSend_YZ(m_uFlags & F_kfContainsSyncData);
 		if (pTaskSend == NULL)
@@ -458,12 +455,8 @@ SHashSha1 hashSignature;
   if (hasNyms)
   HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanzaEnc, cbDataStanzaEnc);	// At the moment, use SHA-1 as the 'signature'
   else
-  HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);
-#else
-    HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);
 #endif
-    std::cout << "\nHash Signature:\n";
-    std::cout  << hashSignature.rgbData;
+  HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);
 
 	MessageLog_AppendTextFormatCo(d_coBlue, "XospSendStanzaToContactAndEmpty($s) $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), cbDataStanza, this);
 

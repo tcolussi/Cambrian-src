@@ -3,11 +3,7 @@
 #ifndef PRECOMPILEDHEADERS_H
 	#include "PreCompiledHeaders.h"
 #endif
-#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-	#include <OTX_WRAP.h>
-	#include <QPointer>
-	extern  OTX_WRAP * pOTX;
-#endif
+
 #include <WQmlToolbar.h>
 #include "ui_startupscreen.h"
 extern bool g_fIsConnectedToInternet;

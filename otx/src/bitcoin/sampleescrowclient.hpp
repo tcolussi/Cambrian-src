@@ -12,6 +12,10 @@
 #include _MEMORY
 
 #include <QObject>
+#ifdef __MINGW32__
+  #include <stdint.h>
+  typedef UINT64 u_int64_t;
+#endif
 
 class QTimer;
 

@@ -4,15 +4,30 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network multimedia quick
+
+
+
+
+
+
+
+
+QT     += core gui multimedia quick
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
 TARGET = SocietyPro
 TEMPLATE = app
 
-
 PRECOMPILED_HEADER = PreCompiledHeaders.h
+
+#-------------------------------------------------
+# Compiler options
+#DEFINES += COMPILE_WITH_OPEN_TRANSACTIONS
+#DEFINES += COMPILE_WITH_SPLASH_SCREEN
+#DEFINES += COMPILE_WITH_CRYPTOMANIA
+#DEFINES += COMPILE_WITH_TOOLBAR
+
 
 SOURCES += \
     CArray.cpp \
@@ -185,10 +200,10 @@ HEADERS += \
     WToolbarActions.h
 
 
+RC_ICONS = Icons/SocietyPro.ico
+
 FORMS += \
     startupscreen.ui
-
-RC_ICONS = Icons/SocietyPro.ico
 
 OTHER_FILES += \
     FeatureList.txt

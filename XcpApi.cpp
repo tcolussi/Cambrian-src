@@ -10,6 +10,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "XcpApi.h"
+#include "OTX_WRAP.h"
 
 //	Entry point of all XCP stanzas
 void
@@ -33,18 +34,13 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
     if (!signerNymId.isEmpty() &&  !receiverNymId.isEmpty())
     {
     CXmlTree oXmlTreeTemp;
-   oXmlTreeTemp.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
-
-
-
+    std::cout << "\n Encoded base 85 encrypted text:\n";
+    std::cout << pXmlNodeXmppXcp->m_pszuTagValue;
+    oXmlTreeTemp.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pXmlNodeXmppXcp->m_pszuTagValue);
     //QString qDataDecodedSignedEncrypted =oXmlTreeTemp.m_binXmlFileData.ToQString();
     CStr pszDataDecodedSignedEncrypted =oXmlTreeTemp.m_binXmlFileData;
     QString qDataDecodedSignedEncrypted = pszDataDecodedSignedEncrypted.ToQString();
     std::cout << "\n XcpApi.cpp: DECODED MESSAGE READY FOR DECRYPT AND VALIDATE: "+qDataDecodedSignedEncrypted.toStdString();
-
-
-
-
     std::cout << "\n Decrypt in XcpApi: Signer Nym Id: ";
     std::cout << signerNymId.toStdString();
     std::cout << "\n Decrypt in XcpApi: Receiver Private Nym Id:";

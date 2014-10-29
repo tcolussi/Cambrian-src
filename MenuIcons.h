@@ -98,12 +98,11 @@ enum EMenuIcon			// Must be in sync with c_mapepszIconResources[]
 	eMenuIcon_ToolbarTab_NewHover,
 	eMenuIcon_ToolbarTab_Close,
 
-
 	eMenuIcon_Close,
 	eMenuIcon_Quit,
-    eMenuIcon_Menu,
+	eMenuIcon_Menu,
 
-    eMenuIconMax	// Must be last
+	eMenuIconMax	// Must be last
 	};
 
 const QIcon & OGetIcon(EMenuIcon eMenuIcon);

@@ -1,6 +1,5 @@
 #include "filedownloader.h"
-#include "OTAPI.hpp"
-#include "OTAPI_Exec.hpp"
+
 FileDownloader::FileDownloader(QUrl imageUrl, QObject *parent) :
     QObject(parent)
 {

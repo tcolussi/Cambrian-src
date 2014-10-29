@@ -11,6 +11,8 @@
 #include _CINTTYPES
 #include _MEMORY
 
+#include <cinttypes>
+
 
 #ifdef _WIN32
 #include <time.h>
@@ -67,7 +69,10 @@ EXPORT int64_t  OTTimeGetSecondsFromTime(time64_t time); // { return time; }
 EXPORT int64_t  OTTimeGetTimeInterval(time64_t lhs, time64_t rhs); // { return lhs - rhs; }
 EXPORT time64_t OTTimeAddTimeInterval(time64_t lhs, int64_t rhs); // { return lhs + rhs; }
 #else
-typedef int64_t time64_t;
+
+using namespace std;
+
+typedef std::int64_t time64_t;
 
 inline time64_t OTTimeGetCurrentTime() { return time(NULL); }
 inline time64_t OTTimeGetTimeFromSeconds(int64_t seconds) { return seconds; }

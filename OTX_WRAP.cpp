@@ -2,6 +2,7 @@
 #ifndef PRECOMPILEDHEADERS_H
     #include "PreCompiledHeaders.h"
 #endif
+#include "OTX_WRAP.h"
 
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 
