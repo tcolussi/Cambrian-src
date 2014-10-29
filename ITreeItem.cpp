@@ -65,6 +65,19 @@ ITreeItem::TreeItem_MarkForDeletion()
 	TreeItemW_RemoveFromNavigationTree();
 	}
 
+void ITreeItem::TreeItem_MarkForRecommendation(bool rec)
+	{
+	if (rec)
+		m_uFlagsTreeItem |= FTI_kfRecommended;
+	else
+		m_uFlagsTreeItem &= ~FTI_kfRecommended;
+	}
+
+bool ITreeItem::isRecommended()
+	{
+		return ((m_uFlagsTreeItem & FTI_kfRecommended) != 0);
+	}
+
 //	ITreeItem::IRuntimeObject::PGetRuntimeInterface()
 POBJECT
 ITreeItem::PGetRuntimeInterface(const RTI_ENUM rti, IRuntimeObject * piParent) const
