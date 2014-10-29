@@ -399,12 +399,19 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 
 	MessageLog_AppendTextFormatCo(d_coBlue, "XospSendStanzaToContactAndEmpty($s) $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), m_paData->cbData, this);
 
-	// Encrypt the data
-	ICrypto * pCrypto = pContact->PGetCrytoForEncrypting_YZ();
-	if (pCrypto != NULL)
+	if ((m_uFlags & F_kfNoEncryption) == 0)
 		{
-		(void)pCrypto->EEncrypt(INOUT_F_UNCH_S this, pContact);
-		MessageLog_AppendTextFormatCo(d_coPurple, "{B|}\n", this);
+		// Encrypt the data
+		ICrypto * pCrypto = pContact->PGetCrytoForEncrypting_YZ();
+		if (pCrypto != NULL)
+			{
+			(void)pCrypto->EEncrypt(INOUT_F_UNCH_S this, pContact);
+			MessageLog_AppendTextFormatCo(d_coPurple, "{B|}\n", this);
+			}
+		}
+	else
+		{
+		MessageLog_AppendTextFormatCo(d_coBlue, "\t Skipping encryption because of F_kfNoEncryption\n");
 		}
 
 	SHashSha1 hashSignature;
