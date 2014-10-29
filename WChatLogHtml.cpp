@@ -75,9 +75,16 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 //	connect(m_poFrame, SIGNAL(initialLayoutCompleted()),this, SLOT(SL_ScrollToDisplayLastEvent()));
 	connect(m_poFrame, SIGNAL(contentsSizeChanged(QSize)),this, SLOT(SL_SizeChanged(QSize)));
 
+	CBin binCSS;	// External CSS
+	#ifdef INPUT_TEXT_WITH_HTML_FORM
+	QString sFileNameCSS = QCoreApplication::applicationDirPath() + "/ChatLog.css";
+	binCSS.BinFileReadE(sFileNameCSS);
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "Opening file '$Q':\n'$B'\n", &sFileNameCSS, &binCSS);
+	#endif
+
 	CBin binHtml;
 	binHtml.PbbAllocateMemoryAndEmpty_YZ(8*1024);	// Pre-allocate 8 KiB
-	binHtml.BinAppendText(
+	binHtml.BinAppendText_VE(
 		"<html><head><style>"
 
 		// Style for each division
@@ -202,6 +209,18 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		".i0 { background-image: url('qrc:/ico/Avatar1') }"
 		".i1 { background-image: url('qrc:/ico/Avatar2') }"
 
+		"#body {"
+			"font-family: Lato, sans-serif; font-size: 15px; color: #3D3C40; "
+			#ifdef COLOR_THEME_BLACK // Black background style with a 'space' background image
+			"color: white; background-color: black; background-image: url('qrc:/backgrounds/Space'); background-attachment: fixed;"
+			#endif
+			 "}"
+		"#footer { position: fixed; bottom: 0; height=100; }"
+		"#fd { position: absolute; bottom: 0; left: 52; right: 4px; }"
+		"#-f- { height: 41px; }"
+		"#-i- { overflow-y: hidden; height: 38px; width: 500; }"
+
+		"\n$B\n"		// Include the external CSS
 		"</style>"
 		"<script>"
 		"function sendMessage(o)"
@@ -211,26 +230,18 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			"}"
 		"</script>"
 		"</head>"
-		"<body style=\""
-
-			// Style for the body
-			"font-family: Lato, sans-serif; font-size: 15px; color: #3D3C40; "
-
-			#ifdef COLOR_THEME_BLACK // Black background style with a 'space' background image
-			"color: white; background-color: black; background-image: url('qrc:/backgrounds/Space'); background-attachment: fixed;"
-			#endif
-
-			"\">" // Close the <body>
+		"<body id='body'>" // Close the <body>
 
 			// Draw the pin at the top right of the page
 			"<img src='qrc:/ico/Pin' style='position: fixed; top: 7; right: 8; z-index:1' title='Pin to tab' onClick='SocietyPro.pin();' />"
 
 			// Division for all the messages
-			"<div id='m'"
+			"<div id='-m-'"
+			//" style='overflow: scroll;'"
 			#ifdef INPUT_TEXT_WITH_HTML_FORM
 			//" style='height: 500'"
 			#endif
-			">");
+			">", &binCSS);
 
 	//	Append the events
 	CArrayPtrEvents arraypEvents;
@@ -247,13 +258,13 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 
 			#ifdef INPUT_TEXT_WITH_HTML_FORM
 			// Create a footer at the bottom
-			"<div style='position: fixed; bottom: 0; height=100'>"
+			"<div id='footer'>"
 
 				// Use an HTML form for the user to type the message
-				"<div style='position: absolute; bottom: 0; left: 52; right: 4px;'>"
-				"<form id='-f-' onSubmit='sendMessage(document.getElementById(\"-i-\"));' style='height: 41px;'>"
+				"<div id='fd'>"
+				"<form id='-f-' onSubmit='sendMessage(document.getElementById(\"-i-\"));'>"
 					//"<textarea id='-i-' class='' spellcheck='true' style='overflow-y: hidden; height: 38px;'></textarea>"
-					"<input id='-i-' class='' spellcheck='true' style='overflow-y: hidden; height: 38px; width: 500;'></input>"
+					"<input id='-i-' spellcheck='true'></input>"
 				"</form>"
 				"</div>"
 			"</div>"
@@ -264,7 +275,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 	setContent(binHtml.ToQByteArrayShared(), "text/html; charset=utf-8");	// Should work, but produces artifacts for special HTML characters
 //	_ScrollToDisplayLastEvent();		// This line is necessary in case the setContent() is synchronous
 
-	m_oElementMessages = m_poFrame->findFirstElement("#m");
+	m_oElementMessages = m_poFrame->findFirstElement("#-m-");
 	m_oElementComposing = m_poFrame->findFirstElement("#-c-");
 
 	//m_oElementMessages.setPlainText(c_sEmpty);

@@ -38,6 +38,7 @@ public:
 	TIMESTAMP m_tsGuiLastSeenOnline;				// Date & time when the contact was last seen online
 	TIMESTAMP_MINUTES m_tsmLastStanzaReceived;		// Timestamp where the last network packet was received by the contact. This is useful to determine if the contact became idle.
 	CListTasksSendReceive m_listaTasksSendReceive;	// Pending tasks to be completed (sent or received) when the contact becomes online
+	CListCrypto m_listaCrypto;						// Linked list of all crypto algorithms supported by the contact
 
 protected:
 	enum
@@ -124,7 +125,9 @@ public:
 
 	void XcpApiContact_ProfileSerialize(INOUT CBinXcpStanza * pbinXcpStanzaReply) const;
 	void XcpApiContact_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters);
-	void XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza * pbinXcpStanzaReply) const;
+	void XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza * pbinXcpStanzaReply) CONST_MCC;
+
+	ICrypto * PGetCrytoForEncrypting_YZ() CONST_MCC;
 
 	ITreeItemChatLogEvents * PGetContactOrGroupDependingOnIdentifier_YZ(const CXmlNode * pXmlAttributeGroupIdentifier);
 

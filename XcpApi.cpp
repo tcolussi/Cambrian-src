@@ -21,6 +21,40 @@ TContact::XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp)
 	m_tsmLastStanzaReceived = g_tsmMinutesSinceApplicationStarted;
 
 	// Attempt to decrypt the data and verify the signature
+#ifndef COMPILE_WITH_CRYPTOMANIA
+	PSZUC pszXospEncodedBase85 = pXmlNodeXmppXcp->m_pszuTagValue;
+	CXmlTree oXmlTree;
+	oXmlTree.m_binXmlFileData.BinAppendBinaryDataFromBase85Szv_ML(pszXospEncodedBase85);	// First, decode from base85 to binary
+
+	if (!oXmlTree.m_binXmlFileData.FContainsXmlNode())
+		{
+		// The data is not a valid XML, therefore it may be encrypted
+		ICrypto * pCrypto = m_listaCrypto.m_plistCrypto;
+		if (pCrypto != NULL)
+			{
+			//CBin binDecrypted;
+			ECryptoError eCryptoError = pCrypto->EDecrypt(INOUT_F_UNCH_S &oXmlTree.m_binXmlFileData, this);
+			if (eCryptoError != eCryptoError_zSuccess || !oXmlTree.m_binXmlFileData.FContainsXmlNode())
+				{
+				MessageLog_AppendTextFormatSev(eSeverityErrorAssert, "Decryption error with 0x$p $U\n", pCrypto, pCrypto->EGetCryptoClass());
+				return;
+				}
+			MessageLog_AppendTextFormatCo(d_coPurple, "Decryption successful using $U\n", pCrypto->EGetCryptoClass());
+			}
+		}
+	MessageLog_AppendTextFormatCo(d_coGray, "XCP Received($S):\n", &m_strJidBare);
+	MessageLog_AppendTextFormatCo(d_coBlack, "{Bm}\n", &oXmlTree.m_binXmlFileData);
+	if (oXmlTree.EParseFileDataToXmlNodes_ML() == errSuccess)
+		{
+		CBinXcpStanza binXcpStanzaReply;
+		binXcpStanzaReply.m_pContact = this;
+		binXcpStanzaReply.XcpApi_ExecuteApiList(IN &oXmlTree);
+		binXcpStanzaReply.XospSendStanzaToContactAndEmpty(this);
+		}
+
+	return;
+#endif
+
 #ifdef COMPILE_WITH_CRYPTOMANIA
 /*//////////////////////////////////CRYPTOMANIA DECRYPT////////////////////////////////////////////////*/
 
@@ -381,15 +415,47 @@ const CHU c_szaApi_Group_Profile_Get[] = "Group.Profile.Get";
 
 const CHU c_szaApi_Contact_Recommendations_Get[] = "Contact.Recommendations.Get";
 
+
+enum EContainer	// This enum is also the index of the container
+	{
+	eContainer_EncryptionKeys,
+	eContainer_PersonalData,
+
+	eContainerMax
+	};
+
 void
-TContact::XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza * pbinXcpStanzaReply) const
+TContact::XospApiContact_ContainerFetch(PSZUC pszContainerID, IOUT CBinXcpStanza * pbinXcpStanzaReply) CONST_MCC
 	{
 	int iContainer = (pszContainerID == NULL) ? 0 : NStringToNumber_ZZR_ML(pszContainerID);
 	MessageLog_AppendTextFormatCo(d_coGrayDark, "\t Fetching container $i\n", iContainer);
 
 	TProfile * pProfile = PGetProfile();
    // Getting contact info to response with the /f request from peer CBinXcpStanza::XcpApi_ExecuteApiResponse will get this parameters in remote peer
-    pbinXcpStanzaReply->BinAppendText_VE("<f n='^S' k='^S' p='^S'/>", &pProfile->m_strNameProfile, &pProfile->m_strKeyPublic,&pProfile->m_strNymID);
+	pbinXcpStanzaReply->BinAppendText_VE("<f n='^S' k='^S' p='^S'><K>", &pProfile->m_strNameProfile, &pProfile->m_strKeyPublic,&pProfile->m_strNymID);
+
+	#ifdef COMPILE_WITH_ICRYPTO_OPEN_TRANSACTIONS
+	// Inject the OT crypto public key and nym ID
+	if (!m_strNymID.FIsEmptyString())
+		pbinXcpStanzaReply->BinAppendText_VE("<$U" d_szXmlAttributes_OT_strName_strKeyPublic "/>", eCryptoClass_OpenTransactions, &pProfile->m_strNymID, &pProfile->m_strKeyPublic);
+	#endif
+	// For debugging, generate a key so we have something to serialize
+	ICrypto * pCrypto = m_listaCrypto.m_plistCrypto;
+	while (pCrypto != NULL)
+		{
+		if ((pCrypto->m_uFlags & ICrypto::F_kfDecrypt) && pCrypto->EGetCryptoClass() == eCryptoClass_EVP_aes_256_gcm)
+			break;
+		pCrypto = pCrypto->m_pNext;
+		}
+	if (pCrypto == NULL)
+		{
+		CCryptoAes256gcm * pCryptoAES = new CCryptoAes256gcm;
+		pCryptoAES->GenerateKey();
+		pCryptoAES->m_pNext = m_listaCrypto.m_plistCrypto;
+		m_listaCrypto.m_plistCrypto = pCryptoAES;
+		}
+	m_listaCrypto.SerializeKeysToXml(IOUT pbinXcpStanzaReply, FALSE);
+	pbinXcpStanzaReply->BinAppendText("</K></f>");
 	}
 
 
@@ -457,7 +523,13 @@ CBinXcpStanza::XcpApi_ExecuteApiResponse(PSZUC pszApiName, const CXmlNode * pXml
                 m_pContact->m_strNymID = pszNymId; //set the contactNymId
                 m_pContact->m_strRoleName = pszRoleName; // set the rolename
 
-
+			// Assign all the crypto keys received
+			const CXmlNode * pXmlNodeKeys = pXmlNodeApiResponse->PFindElement(d_chXmlElementKeys);
+			if (pXmlNodeKeys != NULL)
+				{
+				m_pContact->m_listaCrypto.UnserializeKeysFromXml(pXmlNodeKeys->m_pElementsList, FALSE);
+				//m_pContact->m_listaCrypto.DisplayKeysToMessageLog();
+				}
 			return;
 			}
 		}
@@ -1130,3 +1202,61 @@ TGroup::XcpApiGroup_ProfileUnserialize(const CXmlNode * pXmlNodeApiParameters, I
 	TreeItemChatLog_UpdateTextAndIcon();	// Need to optimize this
 	} // XcpApiGroup_ProfileUnserialize()
 
+
+
+BYTE * pbKey = (BYTE *)"12345678";
+BYTE rgbEncrypted[100];
+
+void
+OpenSsl_Encrypt()
+	{
+	const BYTE * pszText = (BYTE *)"hello world";
+	const int cbText = strlenU(pszText);
+	EVP_CIPHER_CTX * haContext = EVP_CIPHER_CTX_new();
+
+	BYTE rgbInitializationVector[128 / 8];
+	InitToZeroes(&rgbInitializationVector, sizeof(rgbInitializationVector));
+	if (eEvp_Success == EVP_EncryptInit_ex(haContext, EVP_aes_256_gcm(), NULL, IN pbKey, IN rgbInitializationVector))
+		{
+		InitToGarbage(OUT rgbEncrypted, sizeof(rgbEncrypted));
+		//int cbEncrypted = LENGTH(rgbEncrypted);
+		int cbEncrypted;
+		InitToGarbage(OUT &cbEncrypted, sizeof(cbEncrypted));
+		if (eEvp_Success == EVP_EncryptUpdate(haContext, OUT rgbEncrypted, OUT &cbEncrypted, IN pszText, cbText))
+			{
+			int cbEncryptedExtra;
+			InitToGarbage(OUT &cbEncryptedExtra, sizeof(cbEncryptedExtra));
+			if (eEvp_Success == EVP_EncryptFinal_ex(haContext, IN rgbEncrypted + cbEncrypted, OUT &cbEncryptedExtra))
+				cbEncrypted += cbEncryptedExtra;
+			MessageLog_AppendTextFormatCo(d_coRed, "Enctypted '$s' $I bytes into $I bytes: {pf} \n", pszText, cbText, cbEncrypted, rgbEncrypted, cbEncrypted);
+			}
+		}
+	EVP_CIPHER_CTX_free(PA_DELETING haContext);
+
+	void OpenSsl_Decrypt();
+	OpenSsl_Decrypt();
+	}
+
+
+void
+OpenSsl_Decrypt()
+	{
+	EVP_CIPHER_CTX * haContext = EVP_CIPHER_CTX_new();
+
+	BYTE rgbInitializationVector[128 / 8];
+	InitToZeroes(&rgbInitializationVector, sizeof(rgbInitializationVector));
+	rgbInitializationVector[0] = 5;
+	if (eEvp_Success == EVP_DecryptInit_ex(haContext, EVP_aes_256_gcm(), NULL, IN pbKey, IN rgbInitializationVector))
+		{
+		BYTE rgbText[100];
+		int cbText;
+		EVP_DecryptUpdate(haContext, OUT rgbText, &cbText, IN rgbEncrypted, 11);
+		int cbTextExtra;
+		EVP_DecryptFinal_ex(haContext, IN rgbText + cbText, OUT &cbTextExtra);
+		cbText += cbTextExtra;
+		if (cbText < (int)LENGTH(rgbText))
+			rgbText[cbText] = '\0';
+		MessageLog_AppendTextFormatCo(d_coRed, "Decrypted '$s'\n", rgbText);
+		}
+	EVP_CIPHER_CTX_free(PA_DELETING haContext);
+	}

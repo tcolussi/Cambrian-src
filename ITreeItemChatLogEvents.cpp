@@ -449,10 +449,19 @@ ITreeItemChatLogEvents::Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV CStr & st
 			goto Done;
 			}
 
-		pszParameters =  PszrCompareStringBeginCommand(pszCommand, d_szXv_ApiName_ContainerFetch);
+		pszParameters =  PszrCompareStringBeginCommand(pszCommand, d_szXv_ApiName_ContainerFetch);	// "/f"
 		if (pszParameters != NULL)
 			{
 			XcpApi_Invoke(IN (PSZUC)d_szXv_ApiName_ContainerFetch, pszParameters);
+			goto Done;
+			}
+		if (PszrCompareStringBeginCommand(pszCommand, "k") != NULL)	// "/k"
+			{
+			if (fIsContact)
+				{
+				MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "Crypto keys related to ^j:\n", this);
+				((TContact *)this)->m_listaCrypto.DisplayKeysToMessageLog();
+				}
 			goto Done;
 			}
 		pszParameters = PszrCompareStringBeginCommand(pszCommand, "sendxml");

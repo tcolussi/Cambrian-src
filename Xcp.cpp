@@ -393,18 +393,22 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 
 	SendStanza:
 
- PSZUC pszDataStanza = m_paData->rgbData;
-
-    const int cbDataStanza = m_paData->cbData;
-	Assert(cbDataStanza >= 0);
-	if (cbDataStanza <= 0)
+	Assert(m_paData->cbData >= 0);
+	if (m_paData->cbData <= 0)
 		return;	// Nothing to do
 
-	// TODO: Encrypt the data and sign it.
-	SHashSha1 hashSignature;
-	HashSha1_CalculateFromBinary(OUT &hashSignature, IN pszDataStanza, cbDataStanza);	// At the moment, use SHA-1 as the 'signature'
+	MessageLog_AppendTextFormatCo(d_coBlue, "XospSendStanzaToContactAndEmpty($s) $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), m_paData->cbData, this);
 
-	MessageLog_AppendTextFormatCo(d_coBlue, "XospSendStanzaToContactAndEmpty($s) $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), cbDataStanza, this);
+	// Encrypt the data
+	ICrypto * pCrypto = pContact->PGetCrytoForEncrypting_YZ();
+	if (pCrypto != NULL)
+		{
+		(void)pCrypto->EEncrypt(INOUT_F_UNCH_S this, pContact);
+		MessageLog_AppendTextFormatCo(d_coPurple, "{B|}\n", this);
+		}
+
+	SHashSha1 hashSignature;
+	HashSha1_CalculateFromCBin(OUT &hashSignature, IN *this);	// At the moment, use SHA-1 as the 'signature'
 
 	PSZAC pszStanzaType = c_sza_message;
 	PSZAC pszStanzaAttributesExtra = NULL;
@@ -452,7 +456,7 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
     int cbDataStanzaEnc = strlen ((const char*) pszDataStanzaEnc);
     g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanzaEnc, cbDataStanzaEnc);
 #else
-    g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN pszDataStanza, cbDataStanza);
+	g_strScratchBufferSocket.BinAppendStringBase85FromBinaryData(IN this);
 #endif
     // need convert the text to unsigned string...
     g_strScratchBufferSocket.BinAppendText_VE("</" d_szCambrianProtocol_xcp "></$s>", pszStanzaType);

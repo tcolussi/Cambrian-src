@@ -1407,14 +1407,28 @@ CXmlNode::UpdateAttributeValueCBin(CHS chAttributeName, OUT_F_UNCH CBin * pbinVa
 		}
 	}
 
+//	Return TRUE if all the binary data was stored into pvData.
+//	Return FALSE if the attribute was not found, or if the binary data does was shorter or longer than cbData.
+BOOL
+CXmlNode::UpdateAttributeValueBinary(CHS chAttributeName, OUT_F_UNCH void * pvData, int cbData) const
+	{
+	CXmlNode * pNodeAttribute = PFindAttribute(chAttributeName);
+	if (pNodeAttribute != NULL)
+		return Base85_FDecodeToBinary_ZZR_ML(IN pNodeAttribute->m_pszuTagValue, OUT_ZZR (BYTE *)pvData, cbData);
+	return FALSE;
+	}
+
 //	Return TRUE if a valid hash value was extracted
 BOOL
 CXmlNode::UpdateAttributeValueHashSha1(CHS chAttributeName, OUT_F_UNCH SHashSha1 * pHashSha1) const
 	{
+	return UpdateAttributeValueBinary(chAttributeName, OUT_F_UNCH pHashSha1, sizeof(*pHashSha1));
+	/*
 	CXmlNode * pNodeAttribute = PFindAttribute(chAttributeName);
 	if (pNodeAttribute != NULL)
 		return Base85_FDecodeToBinary_ZZR_ML(IN pNodeAttribute->m_pszuTagValue, OUT_ZZR (BYTE *)pHashSha1, sizeof(*pHashSha1));
 	return FALSE;
+	*/
 	}
 
 

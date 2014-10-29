@@ -135,6 +135,7 @@ public:
 	void BinAppendXmlAttributeCStr(CHS chAttributeName, const CStr & strAttributeValue);
 	void BinAppendXmlAttributeCStr2(CHS chAttributeName, const CStr & strAttributeValue, PSZUC pszAttributeValuePriority = NULL);
 	void BinAppendXmlAttributeCBin(CHS chAttributeName, const CBin & binAttributeValue);
+	void BinAppendXmlAttributeBinaryPvCb(CHS chAttributeName, const void * pvData, int cbData);
 	void BinAppendXmlAttributeOfContactIdentifier(CHS chAttributeName, const TContact * pContact);
 	void BinAppendXmlElementText(PSZAC pszElementName, PSZUC pszElementValue);
 	void BinAppendXmlElementText(PSZAC pszElementName, WEdit * pwEdit);
@@ -174,6 +175,7 @@ public:
 	PSZUC BinAppendTextVirtualSzv_VL(OUT int * pcbDataFormatted, IN PSZAC pszFmtTemplate, va_list vlArgs) CONST_TEMPORARY_MODIFIED;
 	PSZUC PszAppendVirtualXmlAttributes(PSZAC pszFmtTemplateAttributes, ...) CONST_TEMPORARY_MODIFIED;
 	void BinEnsureContentHasNoNullTerminatorAndIsTerminatedWithVirtualNullTerminator();
+	BOOL FContainsXmlNode() const;
 
 	BOOL FIsPointerAddressWithinBinaryObject(const void * pvData) const;
 

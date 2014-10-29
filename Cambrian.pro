@@ -11,6 +11,11 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 TARGET = SocietyPro
 TEMPLATE = app
 
+INCLUDEPATH += C:\OpenSSL-Win32\include
+
+LIBS +=  -LC:\OpenSSL-Win32\lib\MinGW -lssleay32 -leay32
+
+#QMAKE_LIBDIR += C:\OpenSSL-Win32\lib
 
 PRECOMPILED_HEADER = PreCompiledHeaders.h
 
@@ -98,7 +103,8 @@ SOURCES += \
 	WChatLogHtml.cpp \
     TCorporation.cpp \
     WToolbar.cpp \
-    WToolbarActions.cpp
+    WToolbarActions.cpp \
+    ICrypto.cpp
 
 
 HEADERS += \
@@ -182,7 +188,8 @@ HEADERS += \
 	WChatLogHtml.h \
     TCorporation.h \
     WToolbar.h \
-    WToolbarActions.h
+    WToolbarActions.h \
+    ICrypto.h
 
 
 FORMS += \
