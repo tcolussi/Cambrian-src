@@ -8,14 +8,14 @@
 #define d_szApplicationName				"SocietyPro"
 #define d_szwApplicationName		   L"SocietyPro"
 #define d_szwApplicationNameSetup	   L"SocietyPro Setup"	// Used for project CambrianSetup
-#define d_szApplicationVersion			"0.1.6.3"
-#define d_szwApplicationVersion		   L"0.1.6.3"
+#define d_szApplicationVersion			"0.1.6.5"
+#define d_szwApplicationVersion		   L"0.1.6.5"
 #define d_szUrlBaseDowloadInvitation	"http://download.cambrian.org/"	// Base URL to download the installation program (this field is used to create an invitation)
 #define d_szXmppServerDefault			"xmpp.cambrian.org"	// Default server to create a new XMPP account
 
 //#define COMPILE_WITH_OPEN_TRANSACTIONS
 //#define COMPILE_WITH_SPLASH_SCREEN
-//#define COMPILE_WITH_CRYPTOMANIA
+//#define COMPILE_WITH_CRYPTOMANIA //You need enable COMPILE_WITH_OPEN_TRANSACTIONS TO COMPILE CRYPTO
 
 #define COMPILE_WITH_TOOLBAR
 #define COMPILE_WITH_CHATLOG_HTML
@@ -25,6 +25,13 @@
 #ifndef PRECOMPILEDHEADERS_H
 #define PRECOMPILEDHEADERS_H
 
+#include "StaticPreCompiledHeaders.h"
+
+#if defined(__WIN32__)
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 //#define QT_NO_CAST_FROM_ASCII
 #include <QtWidgets>
 #include <QtNetwork>
@@ -33,6 +40,8 @@
 #include <QWebFrame>
 #include <QWebElement>
 #include <QMainWindow>
+
+
 
 //	Determine which platform / operating system Cambrian was compiled
 #if defined(Q_OS_WIN)
@@ -238,6 +247,8 @@ class ITask;
 	class CTaskFileUpload;
 	class CTaskFileDownload;
 */
+class ICrypto;
+	class CCryptoOpenTransactions;
 
 class IEvent;
 	class IEventMessageText;
@@ -321,6 +332,7 @@ extern const QBrush c_brushDebugPurple;			// Display debugging events with a lig
 #include "FilePathUtilities.h"
 #include "QtUtilities.h"
 #include "InternetWebServices.h"
+#include "ICrypto.h"
 #include "DDialog.h"
 #include "WNotices.h"
 

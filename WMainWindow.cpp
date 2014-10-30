@@ -15,21 +15,22 @@
 #include "WDashboard.h"
 #include "WLayoutContainer.h"
 #include "WLayoutBrowser.h"
-#ifdef COMPILE_WITH_TOOLBAR
-#include "WToolbar.h"
-#endif
-
-
 #include <QSound>
-#include <iostream>
+#include <OTX_WRAP.h>
+
+
+#ifdef COMPILE_WITH_TOOLBAR
+	#include "WToolbar.h"
+#endif
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-	#include <OTX_WRAP.h>
 	OTX_WRAP * pOTX;
 #endif
-
 #ifdef DEBUG
 	//#define DEBUG_DISABLE_TIMER		// Useful for debugging the code booting the application without displaying the connection notifications in the Message Log
 #endif
+
+
+
 
 QString g_sUrlPathHtmlApplications;		// URL where the HTML applications are located (typically this is a sub-folder where SocietyPro.exe is installed, however for developers, they may change the Registry value to another folder).  Since this value is used in a browser, it begins with either "file://" or "http://"
 #ifdef Q_OS_WIN

@@ -2,41 +2,9 @@
 #ifndef PRECOMPILEDHEADERS_H
     #include "PreCompiledHeaders.h"
 #endif
+#include "OTX_WRAP.h"
 
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-#include <iostream>
-
-#include <QMainWindow>
-#include <QComboBox>
-#include "passwordcallback.hpp"
-#include <OTLog.hpp>
-#include <../opentxs/OTAsymmetricKey.hpp>
-#include <../opentxs/OTSymmetricKey.hpp>
-#include <../opentxs/OTRecordList.hpp>
-#include <../opentxs/OTCaller.hpp>
-#include <QDebug>
-#include <opentxs/OTAPI.hpp>
-#include <OTCrypto.hpp>
-#include <opentxs/OTAPI_Exec.hpp>
-#include <opentxs/OT_ME.hpp>
-#include <opentxs/OpenTransactions.hpp>
-#include <OTCrypto.hpp>
-#include <opentxs/OTASCIIArmor.hpp>
-#include <opentxs/OTEnvelope.hpp>
-#include <opentxs/OTPseudonym.hpp>
-#include <opentxs/OTPasswordData.hpp>
-#include <opentxs/OTSignedFile.hpp>
-#include <opentxs/OTContract.hpp>
-#include <core/handlers/contacthandler.hpp>
-#include <QMessageBox>
-#include <QClipboard>
-#include <qdebug>
-#include <string>
-#include <openssl/conf.h>
-#include <openssl/evp.h>
-#include <openssl/err.h>
-#include <string.h>
-#include <zlib.h>
 
 static OTCaller           passwordCaller;
 static MTPasswordCallback passwordCallback;
@@ -47,35 +15,26 @@ OTX_WRAP::OTX_WRAP(QWidget *parent)
     this->LoadWallewithPassprhase();
 }
 
-bool OTX_WRAP::SetupPasswordCallback(OTCaller & passwordCaller, OTCallback & passwordCallback)
+//=======================================UTILITIES==============================================================
+
+void OTX_WRAP::SL_DownloadedURL()
 {
-    passwordCaller.setCallback(&passwordCallback);
+    QString qstrContents(m_pImgCtrl->downloadedData());
+    std::cout << "\nSLOT Downloaded Data: \n";
+    std::cout << qstrContents.toStdString();
+    std::cout << "\n============DATA========\n";
+    // ----------------------------
+       int32_t nAdded;
+     // OT Server relationship with Sopro Client
+       if (!qstrContents.isEmpty())
+       nAdded = OTAPI_Wrap::It()->AddServerContract(qstrContents.toStdString());
+        else
+        {
+            std::cout << "Failed Importing Server Contract. Failed trying to import contract. Is it already in the wallet?";
+            return;
+        }
 
-    bool bSuccess = OT_API_Set_PasswordCallback(passwordCaller);
 
-    if (!bSuccess)
-    {
-        qDebug() << QString("Error setting password callback!");
-        return false;
-    }
-
-    return true;
-}
-
-
-bool OTX_WRAP::SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup & theCallback)
-{
-    theCaller.setCallback(&theCallback);
-
-    bool bSuccess = OT_API_Set_AddrBookCallback(theCaller);
-
-    if (!bSuccess)
-    {
-        qDebug() << QString("Error setting address book callback!");
-        return false;
-    }
-
-    return true;
 }
 
 // private compression and decompression functions to support encoded strings
@@ -166,10 +125,8 @@ std::string OTX_WRAP::decompress_string(const std::string& str)
 }
 
 
-// Symetric Encryption functions
-
-// symmetric encryption using standard strings
-
+//====================================CRYPTO=======================================================================
+//====================================SYMMETRIC (OPENSSL)================================================================
 std::string OTX_WRAP::symmetricEncStr(std::string plainText)
 {
 
@@ -431,7 +388,8 @@ int OTX_WRAP::encrypt(unsigned char *plaintext, int plaintext_len, unsigned char
 
 
 
-//Asymetric Encryption functions
+  //====================================CRYPTO===================================================================
+  //====================================ASYMMETRIC (OT)================================================================
 QString OTX_WRAP::signText(QString s_nymId,QString qstrText)
 {
 
@@ -515,12 +473,19 @@ if (!contact_nym_id.IsEmpty())
    // OTPasswordData thePWData("Load Credentials");
 
     OTPseudonym * pNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(contact_nym_id);
+
     if (NULL == pNym)
     {
-    std::cout  << "\n Failed to load Public Nym: " +e_nymId.toStdString() +". Check if exists in this OT server. \n";
-        //QString qstrErrorMsg = QString("%1: %2").
-        //        arg("Failed trying to load the signer ").arg(e_nymId);
-        //QMessageBox::warning(pParentWidget, "Failed Loading Signer", qstrErrorMsg);
+        // send a Hello message to force to get nym
+
+
+    }
+
+    if (NULL == pNym) // if can´t get the nym..fail
+    {
+
+        std::cout  << "\n Failed to load Public Nym: " +e_nymId.toStdString() +". Check if exists in this OT server. \n";
+
     }
     else
     {
@@ -560,6 +525,8 @@ return encryptedText;
 
 QString OTX_WRAP::signAndEncrypt(QString signerNymId,QString recipientNymId,QString plainText)
 {
+   // say hello in order to check the nym in public OT servers
+  this->sayHello(signerNymId,recipientNymId);
   QString signedAndEncrypted=encryptText(recipientNymId,signText(signerNymId,plainText));
   return signedAndEncrypted;
 }
@@ -689,6 +656,8 @@ bool OTX_WRAP::decryptAndVerify(QString signerNymId, QString recipientNymId,
   std::cout << signedEncryptedText.toStdString()+"\n recipientNymId:";
   std::cout << recipientNymId.toStdString();
 
+  // say hello in order to check the nym existence in public OT servers
+  this->sayHello(signerNymId,recipientNymId);
   QString signedDecrypted=decryptText(recipientNymId,signedEncryptedText);
   QString messagePayload;
   if (!signedDecrypted.contains("<Failed>")){
@@ -705,7 +674,38 @@ bool OTX_WRAP::decryptAndVerify(QString signerNymId, QString recipientNymId,
     return true;
 }
 
+//====================================OPEN TRANSACTIONS===================================================================
+//====================================ACCESS TO CORE=========================================================================
 
+bool OTX_WRAP::SetupPasswordCallback(OTCaller & passwordCaller, OTCallback & passwordCallback)
+{
+    passwordCaller.setCallback(&passwordCallback);
+
+    bool bSuccess = OT_API_Set_PasswordCallback(passwordCaller);
+
+    if (!bSuccess)
+    {
+        qDebug() << QString("Error setting password callback!");
+        return false;
+    }
+
+    return true;
+}
+
+bool OTX_WRAP::SetupAddressBookCallback(OTLookupCaller & theCaller, OTNameLookup & theCallback)
+{
+    theCaller.setCallback(&theCallback);
+
+    bool bSuccess = OT_API_Set_AddrBookCallback(theCaller);
+
+    if (!bSuccess)
+    {
+        qDebug() << QString("Error setting address book callback!");
+        return false;
+    }
+
+    return true;
+}
 
 void OTX_WRAP::LoadWallewithPassprhase()
 {
@@ -741,6 +741,72 @@ void OTX_WRAP::LoadWallewithPassprhase()
 
 
 }
+// Publish the nym in all OT servers added
+
+int OTX_WRAP::publishNymAllServers(std::string nymId)
+{
+    std::string serverId;
+    int c=0;
+      int serverCount=OTAPI_Wrap::It()->GetServerCount();
+   for (int i=0; i < serverCount; i++) // verify all servers
+     {
+       serverId=OTAPI_Wrap::It()->GetServer_ID(i);
+       if (!OTAPI_Wrap::It()->IsNym_RegisteredAtServer(nymId,serverId))
+        { // the nym is not published in this server.. publish it
+
+               OT_ME       madeEasy;
+                std::string response;
+                {
+                   response = madeEasy.register_nym(serverId, nymId);
+                }
+
+                qDebug() << QString("Nym Creation Response: %1").arg(QString::fromStdString(response));
+
+                int32_t nReturnVal = madeEasy.VerifyMessageSuccess(response);
+
+                if (1 != nReturnVal)
+                {
+                 qDebug() << QString::fromStdString("Nym : "+nymId +" not published in server: "+serverId);
+                }
+                else
+                {
+                    qDebug() << QString::fromStdString("Nym : "+nymId +" was published successfully in server: "+serverId);
+                   c++;
+                }
+            }   // if nym is registered into the server
+        } // loop
+
+   return c; // return the number of servers where the nym was published
+}
+
+std::string OTX_WRAP::createNym(std::string name,int keysize)
+{
+    int serverCount=OTAPI_Wrap::It()->GetServerCount();
+
+    if (serverCount > 0)
+    {
+        //create the role inside OT
+        std::string nymId=OTAPI_Wrap::It()->CreateNym(keysize, "","");
+
+     if (OTAPI_Wrap::It()->SetNym_Name(nymId,nymId,name))
+     {
+       // before return the created nym, publish it in all OT servers loaded
+        publishNymAllServers(nymId);
+        return nymId;
+     }
+     else
+     {
+       return "NoNymCreated";
+     }
+  }
+  else
+   {
+     // No server loaded (maybe deleted in the ui?) load the available servers from internet and display and inform
+
+       this->addOTServerContracts();
+       return "NoNymCreated";
+    }
+}
 
 std::string OTX_WRAP::getNymID(int32_t nymIndex)
 {
@@ -759,13 +825,84 @@ std::string OTX_WRAP::getNymPublicKey(std::string nymid)
 
 
 return OTAPI_Wrap::GetNym_SourceForID(nymid);
+
 }
 
+//====================================OPEN TRANSACTIONS===================================================================
+//=======================================WIDGETS=======================================================================
+
+// send message to nym (send encrypted and store into a nymbox in server)
+bool OTX_WRAP::sendMessageToNymBox(std::string str_serverId, std::string str_fromNymId, std::string str_toNymId, std::string contents)
+{
+    OT_ME madeEasy;
+
+    std::string strResponse;
+    {
+
+
+        strResponse = madeEasy.send_user_msg(str_serverId, str_fromNymId, str_toNymId, contents);
+    }
+
+    int32_t nReturnVal = madeEasy.VerifyMessageSuccess(strResponse);
+
+    if (1 != nReturnVal)
+    {
+        qDebug() << "OT send_message: Failed.";
+
+
+
+        return false;
+
+    }
+ }
+
+// Say Hello to all servers and return a public nym asocciated with toNymId (public Nym)
+// this process is called once at the first pair comunication
+ bool OTX_WRAP::sayHello(QString fromNymId, QString toNymId)
+ {
+     int serverCount= OTAPI_Wrap::GetServerCount();
+     std::string serverId;
+     OT_ME om;
+     OTPseudonym * publicNym;
+
+     for (int i=0; i < serverCount; i++)
+     {
+     serverId=OTAPI_Wrap::GetServer_ID(i);
+     publicNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(toNymId.toStdString());
+        if (NULL != publicNym)
+        {   std::cout << "\n Say Hello from nym: "+fromNymId.toStdString()+ "to nym: "+toNymId.toStdString()+ " at server: "+serverId+" sucessfull.\n";
+            return true; }// found public nym
+        else
+        {
+           //say hello
+            om.send_user_msg(serverId,fromNymId.toStdString(),toNymId.toStdString(),"Hello from nym "+fromNymId.toStdString()+" at server "+serverId);
+        } // say hello and test in other server
+
+     }
+
+    // if the nym was found in the last server:
+     publicNym = OTAPI_Wrap::OTAPI()->GetOrLoadPublicNym(toNymId.toStdString());
+     if (NULL != publicNym)
+     {
+         return true;
+     }// found public nym in the last server
+     else
+     {
+     std::cout << "Failed to send Hello message!!! Fix It!";
+     return false; //unable to retrieve the public nym
+     }
+
+ }
+
+
+// Widget that handles the
 void OTX_WRAP::openContractOTServerScreen()
 {
  OTX::It(pParentWidget)->mc_defaultserver_slot();
 
 }
+
+// Widget that handle the role nym creation integrated with sopro
 void OTX_WRAP::openRoleCreationScreen()
 {
     // Get the current profile in Cambrian
@@ -852,63 +989,52 @@ void OTX_WRAP::openRoleCreationScreen()
 
 }
 
+
 void OTX_WRAP::addOTServerContract(QString Url)
 {
 
 
-    QVariant varDefault(Url);
-    QString qstrURL = theWizard.field("URL").toString();
                 // --------------------------------
-                if (qstrURL.isEmpty())
+                if (Url.isEmpty())
                 {
-                    QMessageBox::warning(this, tr("URL is Empty"),
-                        tr("No URL was provided to dowload the contract."));
+
+                      std::cout <<"No URL was provided to dowload the contract.";
 
                     return;
                 }
 
-                QUrl theURL(qstrURL);
-                // --------------------------------
-                if (m_pDownloader)
-                {
-                    m_pDownloader->setParent(NULL);
-                    m_pDownloader->disconnect();
-                    m_pDownloader->deleteLater();
+                QUrl theURL(Url);
 
-                    m_pDownloader = NULL;
-                }
-                // --------------------------------
-                m_pDownloader = new FileDownloader(theURL, this);
+                std::cout << "\nUrl about to download:"+Url.toStdString();
+                m_pImgCtrl = new FileDownloader(theURL,this);
 
-                connect(m_pDownloader, SIGNAL(downloaded()), SLOT(DownloadedURL()));
-            }
-            // --------------------------------
 
-                               ImportContract(qstrContents);
+                // Download the contract
 
-            // --------------------------------
-        if (bIsContents)
-            {
-                QString qstrContents = theWizard.getContents();
+            //connect(m_pImgCtrl, SIGNAL(downloaded()),SIGNAL(this->SL_DownloadedURL()));
+               // connect(&m_pImgCtrl, &FileDownloader::downloaded,this,&OTX_WRAP::SL_DownloadedURL);
+ }
+bool OTX_WRAP::addOTServerContracts()
+{
+   int maxContracts=1;
+    // List all available OT server contracts
+   const QString availableOTServerContracts[1] =
+                                          {//"http://localhost/societyProOT.otc", //for testing propose
+                                                                                // the contracts must reside in Sopro OT servers
+                                           //Plato Bureoucraticservices.agency
+                                           "http://bureaucraticservices.agency/ot-server-bsa-0.1.otc"
+                                          };
 
-                if (qstrContents.isEmpty())
-                {
-                    QMessageBox::warning(this, tr("Empty Contract"),
-                        tr("Failure Importing: Contract is Empty."));
-                    return;
-                }
-                // -------------------------
-                ImportContract(qstrContents);
-            }
-        }
-        // --------------------------------
-        else if (bIsCreating)
-        {
+   //Load all available servers
+   for (int i=0; i < maxContracts;i++ )
+      {
+     this->addOTServerContract(availableOTServerContracts[i]);
+     }
+   int srvCount=OTAPI_Wrap::GetServerCount();
+   std::cout << "\To Log: All contract and server loaded. Number of server loaded: " ;
+   std::cout << srvCount;
 
-        }
-    }
 }
-
 
 OTX_WRAP::~OTX_WRAP()
 {   //std::cout << "Destroying otx wrap";

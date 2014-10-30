@@ -1,7 +1,9 @@
-Cambrian.pro.user.350e1f1
-Cambrian.pro.user.gx6212
+Cambrian.pro.user*
+sopro.pro.user*
 debug/
 ipch/
 SocietyPro.sdf
-Cambrian.pro.user
-sopro.pro.user.350e1f1
+otx/projects/otx.pro.user*
+otx/build-otx-Desktop_Qt_5_3_MinGW_32bit-Debug/
+otx/build-otx-Desktop_Qt_5_3_MinGW_32bit-Release/
+.DS_Store

@@ -62,7 +62,7 @@ NameRegistration::registerName (const NamecoinInterface::Name& nm)
 
   /* Update state as last action, so that it is not changed if some action
      above throws.  */
-  state = REGISTERED;
+  state = IS_REGISTERED;
 }
 
 /**
@@ -73,7 +73,7 @@ NameRegistration::registerName (const NamecoinInterface::Name& nm)
 const std::string&
 NameRegistration::getRand () const
 {
-  if (state != REGISTERED)
+  if (state != IS_REGISTERED)
     throw std::runtime_error ("rand value is only available"
                               " in REGISTERED state.");
 
@@ -87,7 +87,7 @@ NameRegistration::getRand () const
 bool
 NameRegistration::canActivate () const
 {
-  if (state != REGISTERED)
+  if (state != IS_REGISTERED)
     return false;
 
   return (nc.getNumberOfConfirmations (tx) >= FIRSTUPDATE_DELAY);
@@ -100,7 +100,7 @@ NameRegistration::canActivate () const
 void
 NameRegistration::activate ()
 {
-  if (state != REGISTERED)
+  if (state != IS_REGISTERED)
     throw std::runtime_error ("Can activate() only in REGISTERED state.");
   if (!canActivate ())
     throw std::runtime_error ("Can't yet activate, please wait longer.");
@@ -149,7 +149,7 @@ operator<< (std::ostream& out, const NameRegistration& obj)
 
   switch (obj.state)
     {
-    case NameRegistration::REGISTERED:
+	case NameRegistration::IS_REGISTERED:
       outVal["state"] = "registered";
       outVal["value"] = obj.value;
       outVal["rand"] = obj.rand;
@@ -192,7 +192,7 @@ operator>> (std::istream& in, NameRegistration& obj)
   const std::string state = inVal["state"].asString ();
   if (state == "registered")
     {
-      obj.state = NameRegistration::REGISTERED;
+	  obj.state = NameRegistration::IS_REGISTERED;
       obj.value = inVal["value"].asString ();
       obj.rand = inVal["rand"].asString ();
       obj.tx = inVal["tx"].asString ();

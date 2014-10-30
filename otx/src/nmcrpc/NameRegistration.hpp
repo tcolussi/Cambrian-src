@@ -62,7 +62,7 @@ public:
     NOT_STARTED,
 
     /** name_new has beed called but not yet name_firstupdate.  */
-    REGISTERED,
+	IS_REGISTERED,
 
     /** We're finished, including name_firstupdate.  */
     ACTIVATED
@@ -138,7 +138,7 @@ public:
    */
   inline void setValue (const std::string& val)
   {
-    if (state != REGISTERED)
+	if (state != IS_REGISTERED)
       throw std::runtime_error ("Can setValue() only in REGISTERED state.");
 
     value = val;

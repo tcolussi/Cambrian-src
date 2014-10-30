@@ -7,7 +7,8 @@
 //	the ability to chain errors and making it easier for the developer to display errors to the user.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
+#ifndef __ERROR_CODES_H_
+#define __ERROR_CODES_H_
 
 ///////////////////////////////////////
 //	Enumeration of application-specific error codes.
@@ -65,3 +66,6 @@ QRgb CoFromSeverity(ESeverity eSeverity);
 
 class CErrorMessage;
 
+
+
+#endif

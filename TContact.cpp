@@ -80,11 +80,14 @@ TContact::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	pXmlExchanger->XmlExchangeTimestamp("tsSync", INOUT_F_UNCH_S &m_tsOtherLastSynchronized);
 	pXmlExchanger->XmlExchangeStr("Comment", INOUT &m_strComment);
 	pXmlExchanger->XmlExchangeBin("Rec", INOUT &m_binXmlRecommendations);
+	/*
 	pXmlExchanger->XmlExchangeStr("NymID", INOUT &m_strNymID);
 	pXmlExchanger->XmlExchangeStr("KeyPublic", INOUT &m_strKeyPublic);
     pXmlExchanger->XmlExchangeStr("RoleName",&m_strRoleName);
+	*/
 
 	m_listaTasksSendReceive.XmlExchange(INOUT pXmlExchanger);
+	m_listaCrypto.XmlExchange(INOUT pXmlExchanger);
 
 	if (!pXmlExchanger->m_fSerializing)
 		{

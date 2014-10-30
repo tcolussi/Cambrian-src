@@ -10,9 +10,9 @@
 #-------------------------------------------------
 # Global
 
-TEMPLATE    = lib
-CONFIG     += precompile_header
-CONFIG += staticlib
+TEMPLATE     = lib
+CONFIG       += precompile_header
+CONFIG       += staticlib
 win32:CONFIG += console
 
 TARGET      = OTX
@@ -22,10 +22,10 @@ QT         += core gui sql network widgets
 DEFINES    += "OT_ZMQ_MODE=1"
 
 unix:{
-LIBS       += -L"/usr/local/lib" -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
+	LIBS       += -L"/usr/local/lib" -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
 }
 else: {
-LIBS       +=  -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
+	LIBS       +=  -lzmq -lxmlrpc_client++ -lxmlrpc -lxmlrpc++ -lotapi -lot -ldl
 }
 
 #-------------------------------------------------
@@ -126,30 +126,30 @@ unix: {
 win32: {
     QMAKE_LIBDIR += $${DESTDIR}
 
-    equals(TEMPLATE,vcapp):{
-        QMAKE_LIBDIR += $(SystemDrive)/OpenSSL-Win$(PlatformArchitecture)/lib/VC
-        QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/$(PlatformName)/$(Configuration)/
-    }
-    else:{
-        !contains(QMAKE_HOST.arch, x86_64):{
-            QMAKE_LIBDIR += C:/OpenSSL-Win32/lib/VC
-            CONFIG(debug, debug|release):{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Debug/
-            }
-            else:{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Release/
-            }
-        }
-        else:{
-            QMAKE_LIBDIR += C:/OpenSSL-Win64/lib/VC
-            CONFIG(debug, debug|release):{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Debug/
-            }
-            else:{
-                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Release/
-            }
-        }
-    }
+#    equals(TEMPLATE,vcapp):{
+#        QMAKE_LIBDIR += $(SystemDrive)/OpenSSL-Win$(PlatformArchitecture)/lib/VC
+#        QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/$(PlatformName)/$(Configuration)/
+#    }
+#    else:{
+#        !contains(QMAKE_HOST.arch, x86_64):{
+#            QMAKE_LIBDIR += C:/OpenSSL-Win32/lib/VC
+#            CONFIG(debug, debug|release):{
+#                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Debug/
+#            }
+#            else:{
+#                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/Win32/Release/
+#            }
+#        }
+#        else:{
+#            QMAKE_LIBDIR += C:/OpenSSL-Win64/lib/VC
+#            CONFIG(debug, debug|release):{
+#                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Debug/
+#            }
+#            else:{
+#                QMAKE_LIBDIR += $${SOLUTION_DIR}../../Open-Transactions/lib/x64/Release/
+#            }
+#        }
+#    }
 
     LIBS += bitcoin-api.lib
     LIBS += jsoncpp.lib

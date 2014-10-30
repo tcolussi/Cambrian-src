@@ -349,7 +349,7 @@ BtcNetMsg* SampleEscrowServerZmq::SendData(BtcNetMsg* message)
     if(zmq_msg_send(request, socket, 0) == -1)
 #else
 #ifndef Q_OS_MAC
-    if(zmq_send(socket, request, 0) == -1)
+	if(zmq_send(socket, request, size, 0) == -1)
 #endif
 #endif
     {
@@ -393,7 +393,7 @@ BtcNetMsg* SampleEscrowServerZmq::SendData(BtcNetMsg* message)
     zmq_msg_recv(&reply, socket, 0);
 #else
     #ifndef Q_OS_MAC
-    zmq_recv(socket, &reply, 0);
+	zmq_recv(socket, &reply, size, 0);
 #endif
 #endif
 
@@ -479,7 +479,7 @@ void SampleEscrowServerZmq::UpdateServer()
         if(zmq_msg_recv(&request, this->serverSocket, ZMQ_DONTWAIT) == -1)
 #else
         #ifndef Q_OS_MAC
-        if(zmq_recv(this->serverSocket, &request, ZMQ_NOBLOCK) == -1)
+		if(zmq_recv(this->serverSocket, &request, 0, ZMQ_NOBLOCK) == -1)
 #endif
 #endif
         {
@@ -642,7 +642,7 @@ void SampleEscrowServerZmq::UpdateServer()
         zmq_msg_send(&reply, this->serverSocket, 0);
 #else
         #ifndef Q_OS_MAC
-        zmq_send(this->serverSocket, &reply, 0);
+		zmq_send(this->serverSocket, &reply, 0, 0);
 #endif
 #endif
 

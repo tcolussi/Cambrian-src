@@ -4,15 +4,26 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network multimedia quick
+
+QT     += core gui multimedia quick
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
 TARGET = SocietyPro
 TEMPLATE = app
 
+INCLUDEPATH += C:\OpenSSL-Win32\include
+LIBS +=  -LC:\OpenSSL-Win32\lib\MinGW -lssleay32 -leay32
 
 PRECOMPILED_HEADER = PreCompiledHeaders.h
+
+#-------------------------------------------------
+# Compiler options
+#DEFINES += COMPILE_WITH_OPEN_TRANSACTIONS
+#DEFINES += COMPILE_WITH_SPLASH_SCREEN
+#DEFINES += COMPILE_WITH_CRYPTOMANIA
+#DEFINES += COMPILE_WITH_TOOLBAR
+
 
 SOURCES += \
     CArray.cpp \
@@ -98,7 +109,8 @@ SOURCES += \
 	WChatLogHtml.cpp \
     TCorporation.cpp \
     WToolbar.cpp \
-    WToolbarActions.cpp
+	WToolbarActions.cpp \
+	ICrypto.cpp
 
 
 HEADERS += \
@@ -182,13 +194,14 @@ HEADERS += \
 	WChatLogHtml.h \
     TCorporation.h \
     WToolbar.h \
-    WToolbarActions.h
+	WToolbarActions.h \
+	ICrypto.h
 
+
+RC_ICONS = Icons/SocietyPro.ico
 
 FORMS += \
     startupscreen.ui
-
-RC_ICONS = Icons/SocietyPro.ico
 
 OTHER_FILES += \
     FeatureList.txt

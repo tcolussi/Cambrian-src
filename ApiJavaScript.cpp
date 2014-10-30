@@ -5,11 +5,8 @@
 #endif
 #include "TApplicationBallotmaster.h"
 #include "qdebug.h"
-#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
-#include <opentxs/OpenTransactions.hpp>
-#include <opentxs/OTPseudonym.hpp>
+#include "OTX_WRAP.h"
 
-#endif
 OJapiApps::OJapiApps(OJapiCambrian * poCambrian)
 	{
     m_poCambrian = poCambrian;
@@ -480,12 +477,18 @@ OJapiContact::name()
 
 QString OJapiContact::nymId()
 	{
-	return m_pContact->m_strNymID;
+	CCryptoOpenTransactions * pCrypto = m_pContact->PGetCryptoOpenTransactions();
+	if (pCrypto != NULL)
+		return pCrypto->m_strNymID;
+	return c_sEmpty;
 	}
 
 QString OJapiContact::publicKey()
 	{
-	return m_pContact->m_strKeyPublic;
+	CCryptoOpenTransactions * pCrypto = m_pContact->PGetCryptoOpenTransactions();
+	if (pCrypto != NULL)
+		return pCrypto->m_strKeyPublic;
+	return c_sEmpty;
 	}
 
 bool OJapiContact::recommend()
@@ -750,10 +753,6 @@ OJapiProfile::jurisdiction()
 	}
 
 
-
-
-
-
 OJapiProfilesList::OJapiProfilesList(OCapiRootGUI *pRootGui)
 	{
 	m_pRootGui = pRootGui;
@@ -890,25 +889,16 @@ return successDeletion;
 POJapiProfile
 OJapiProfilesList::create(const QString & name)
 {
-QVariantList profile;
-TProfile * pProfile = new TProfile(&g_oConfiguration);
+    QVariantList profile;
+    TProfile * pProfile = new TProfile(&g_oConfiguration);
     //Create the new Role
 
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 
-if (OTAPI_Wrap::It()->GetServerCount() >0)
-{
-    //create the role inside OT
-    std::string nymId=OTAPI_Wrap::It()->CreateNym(1024, "","");
-// Load the the nym in OTServer to be visible to other nyms
-    OTString     strNym     (nymId.c_str());
-    OTIdentifier pub_nym_id     (strNym);
-    //Publish the nym
+    std::string nymId = pOTX->createNym(name.toStdString(),1024); // Create and publish a nym in all registered OT servers
 
-   // OTAPI_Wrap::OTAPI()->LoadPublicNym(pub_nym_id);
-
- if (OTAPI_Wrap::It()->SetNym_Name(nymId,nymId,name.toStdString()))
- { // Everything is ok with OT, now create the Role in TProfile
+    if (nymId.compare("NoNymCreated")!=0)
+    { // Everything is ok with OT, now create the Role in TProfile
 #endif
      // Create the new profile in Sopro db
 
@@ -923,22 +913,8 @@ if (OTAPI_Wrap::It()->GetServerCount() >0)
      //Save the new role in xml (force)
      pProfile->m_pConfigurationParent->XmlConfigurationSaveToFile();
      NavigationTree_PopulateTreeItemsAccordingToSelectedProfile(pProfile);
- }
- else
-  {
-  //delete nymid created
-  OTAPI_Wrap::It()->Wallet_RemoveNym(nymId);
     }
 
-}// if there is a OT server contract
-else
-{
- QMessageBox msg;
- msg.warning(g_pwMainWindow,"Action Required","Please asociate valid OT server.","OK");
-
- pOTX->openContractOTServerScreen();
-
-}
 #endif
 
 return pProfile->POJapiGet();

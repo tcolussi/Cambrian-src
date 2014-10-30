@@ -42,9 +42,9 @@ public:
 	void DeleteAllTasks();
 	CTaskSendReceive * PFindTaskSend(TIMESTAMP tsTaskID) const;
 	void XmlExchange(INOUT CXmlExchanger * pXmlExchanger);
-	void SerializeToXml(IOUT CBin * pbinXmlTasks);
-	void UnserializeFromXml(const CXmlNode * pXmlNodeElementTask);
-	void DisplayTasksToMessageLog();
+	void SerializeTasksToXml(IOUT CBin * pbinXmlTasks) const;
+	void UnserializeTasksFromXml(const CXmlNode * pXmlNodeElementTask);
+	void DisplayTasksToMessageLog() const;
 };
 
 #endif // SOCKETTASKS_H

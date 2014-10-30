@@ -11,6 +11,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "WLayoutBrowser.h"
+#include "OTX_WRAP.h"
 
 #define _			d_sz0	// Use the underscore as a separator between menu actions (this is much simpler to read than d_sz0)
 

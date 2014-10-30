@@ -125,6 +125,7 @@ public:
 	void UpdateAttributeValueTimestamp(CHS chAttributeName, OUT_F_UNCH TIMESTAMP * ptsValue) const;
 	void UpdateAttributeValueCStr(CHS chAttributeName, OUT_F_UNCH CStr * pstrValue) const;
 	void UpdateAttributeValueCBin(CHS chAttributeName, OUT_F_UNCH CBin * pbinValue) const;
+	BOOL UpdateAttributeValueBinary(CHS chAttributeName, OUT_F_UNCH void * pvData, int cbData) const;
 	BOOL UpdateAttributeValueHashSha1(CHS chAttributeName, OUT_F_UNCH SHashSha1 * pHashSha1) const;
 
 	inline UINT GetLineNumber() const { return (m_lParam & kmLineNumberMask); }

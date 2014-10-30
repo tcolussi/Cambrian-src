@@ -10,6 +10,7 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #include "WNavigationTree.h"
+#include "OTX_WRAP.h"
 
 extern CChatConfiguration g_oConfiguration;
 const QString c_sNavigation("Navigation");

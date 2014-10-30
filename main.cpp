@@ -160,6 +160,7 @@ HUNGARIAN PREFIX
 #include <QSharedMemory>
 
 #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+#include <OTX_WRAP.h>
 #include <iostream>
 // IMPORTS TO ACCESS TO OT API
 #include <../../src/opentxs/OTAPI.hpp>
@@ -167,6 +168,7 @@ HUNGARIAN PREFIX
 #include <../../src/opentxs/OTLog.hpp>
 #include <../../src/opentxs/OTPaths.hpp>
 #include <core/OTX.hpp>
+#include <OT_ME.hpp>
 
 class __OTclient_RAII
 {
@@ -230,25 +232,36 @@ main(int argc, char *argv[])
     wMainWindow.ConfigurationLoadFromXml();
 
     #ifdef COMPILE_WITH_SPLASH_SCREEN
-
-    if (OTAPI_Wrap::GetServerCount() > 0) // if at least one OT server is selected
-    {
+    #ifdef COMPILE_WITH_OPEN_TRANSACTIONS
+    if (OTAPI_Wrap::GetServerCount() == 0) // first run, add OT SERVERS
+    { // load all the available servers
+    pOTX->addOTServerContracts();
+    } //TODO: This contract must be refreshed in order
+     #endif
     wMainWindow.showMaximized();
     wMainWindow.maximizeApp("sopro-rolepage/index.html");
-    }
-    else{
-        QMessageBox msg;
-        msg.warning(g_pwMainWindow,"Welcome to Society Pro","A valid digital contract is need in order to securing comunications. \nPlease add a contract server.  \nFor more info please visit www.societypro.org","OK");
-        msg.showNormal();
-        //OTAPI_Wrap::It()->Sleep(5000);
-        pOTX->openContractOTServerScreen();
-        //wMainWindow.showMaximized();
-        wMainWindow.maximizeApp("sopro-rolepage/index.html");}
-
-
-    #else
+    #else //compile with splash screen
     wMainWindow.show();
 	#endif
+
+
+    // Crypto Testing
+   /* std::string localNym="FT9qZq3osmilrcMkCrKFSZ5D08VMGhLja5cZA6UZcjf";
+    std::string remoteNym="KXpCX9DDobFbxxzPTjkHGkEXM5isGqU5ERjsEPiH0Dz";
+    std::string serverId=OTAPI_Wrap::GetServer_ID(0);
+    std::string plainText="Central Services rocks!";
+    std::cout << "\nEncryption tests at server: "+serverId+" \n LocalNym: "+localNym +"\n remoteNym: "+remoteNym+"\n Encrypted Text(OT Asymmetric): ";
+    OT_ME om;
+    // std::cout << "\ncheck user:"+om.check_user(serverId,remoteNym,remoteNym);
+    //om.send_user_msg(serverId,localNym,remoteNym,plainText);
+  //QString encrypted = pOTX->signAndEncrypt(QString::fromStdString(localNym),QString::fromStdString(remoteNym),QString::fromStdString(plainText));
+    QString encrypted = pOTX->signAndEncrypt(QString::fromStdString(localNym),QString::fromStdString(remoteNym),QString::fromStdString(plainText));
+
+
+
+    std::cout << encrypted.toStdString();*/
+
+
 
 
     return oApplication.exec();

@@ -17,6 +17,7 @@
 
 CTaskSendReceive::CTaskSendReceive()
 	{
+	InitToGarbage(OUT &m_tsTaskID, sizeof(m_tsTaskID));
 	m_pNext = NULL;
 	m_cbTotal = d_zNA;
 	}
@@ -204,6 +205,7 @@ CListTasksSendReceive::PFindTaskSend(TIMESTAMP tsTaskID) const
 	return NULL;
 	}
 
+//	The tasks will always be serialized under the XML element 'T'
 void
 CListTasksSendReceive::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 	{
@@ -212,19 +214,19 @@ CListTasksSendReceive::XmlExchange(INOUT CXmlExchanger * pXmlExchanger)
 		if (m_plistTasks == NULL)
 			return;	// Nothing to serialize
 		CBin * pbinTemp = pXmlExchanger->PGetBinTemporaryDuringSerializationInitAlreadyEncoded();	// Use the temporary buffer to serialize all the tasks
-		SerializeToXml(IOUT pbinTemp);
+		SerializeTasksToXml(IOUT pbinTemp);
 		(void)pXmlExchanger->XmlExchange_PAllocateElementFromCBinString('T', IN_MOD_TMP *pbinTemp);
 		}
 	else
 		{
 		const CXmlNode * pXmlTasks = pXmlExchanger->XmlExchange_PFindElement('T');
 		if (pXmlTasks != NULL)
-			UnserializeFromXml(pXmlTasks->m_pElementsList);
+			UnserializeTasksFromXml(pXmlTasks->m_pElementsList);
 		}
 	}
 
 void
-CListTasksSendReceive::SerializeToXml(IOUT CBin * pbinXmlTasks)
+CListTasksSendReceive::SerializeTasksToXml(IOUT CBin * pbinXmlTasks) const
 	{
 	CTaskSendReceive * pTask = m_plistTasks;
 	while (pTask != NULL)
@@ -236,7 +238,7 @@ CListTasksSendReceive::SerializeToXml(IOUT CBin * pbinXmlTasks)
 	}
 
 void
-CListTasksSendReceive::UnserializeFromXml(const CXmlNode * pXmlNodeElementTask)
+CListTasksSendReceive::UnserializeTasksFromXml(const CXmlNode * pXmlNodeElementTask)
 	{
 	Assert(m_plistTasks == NULL);
 	CTaskSendReceive ** ppaTask = &m_plistTasks;
@@ -252,13 +254,13 @@ CListTasksSendReceive::UnserializeFromXml(const CXmlNode * pXmlNodeElementTask)
 		pXmlNodeElementTask = pXmlNodeElementTask->m_pNextSibling;
 		}
 
-	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "CListTasksSendReceive::UnserializeFromXml():\n");
+	MessageLog_AppendTextFormatCo(COX_MakeBold(d_coGreen), "CListTasksSendReceive::UnserializeTasksFromXml():\n");
 	DisplayTasksToMessageLog();
 	}
 
 //	For debugging
 void
-CListTasksSendReceive::DisplayTasksToMessageLog()
+CListTasksSendReceive::DisplayTasksToMessageLog() const
 	{
 	int cTasks = 0;
 	TIMESTAMP tsNow = Timestamp_GetCurrentDateTime();
