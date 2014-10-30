@@ -255,7 +255,7 @@ CBinXcpStanza::CBinXcpStanza()
 	PbbAllocateMemoryAndEmpty_YZ(300);	// Pre-allocate 300 bytes, which should be enough for a small stanza
 	Assert(m_paData != NULL);
 	#ifdef DEBUG_XCP_TASKS
-	m_cbStanzaThresholdBeforeSplittingIntoTasks = 200; // 80;	// Use a low threshold to we use tasks often
+    m_cbStanzaThresholdBeforeSplittingIntoTasks = 7000; // 80;	// Use a low threshold to we use tasks often
 	#endif
 	}
 

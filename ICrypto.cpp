@@ -327,18 +327,18 @@ ECryptoError
 CCryptoOpenTransactions::EDecrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
     #if 1 //defined(pOTX)
-    QString receiverNymId = m_strNymID;
-    QString signerNymId = pContact->PGetProfile()->m_strNymID;
+    QString receiverNymId = pContact->PGetProfile()->m_strNymID;
+    QString signerNymId = m_strNymID;
     QString qDataStanza = pbin->ToQString();
     QString decryptedText;
     if (receiverNymId.isEmpty()|| signerNymId.isEmpty())
        return eCryptoError_zSuccess;
-
+MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypt qDataStanza: \n$Q\n", &qDataStanza);
     bool decryptSuccessful=pOTX->decryptAndVerify(signerNymId,receiverNymId,qDataStanza,decryptedText);
     QByteArray qbrDecryptedText= (QByteArray) decryptedText.toStdString().c_str();
     pbin->BinInitFromByteArray(qbrDecryptedText);
-    MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypt QString: $Q\n", &decryptedText);
-            MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypt: $B\n", pbin);
+
+    MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypted: \n$B\n", pbin);
     if (decryptSuccessful)
     return eCryptoError_zSuccess;
     else
