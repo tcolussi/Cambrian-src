@@ -112,7 +112,7 @@ public:
 
 class CCryptoOpenTransactions : public ICrypto
 {
-protected:
+public:
 	CStr m_strNymID;							// OT nym
 	CStr m_strKeyPublic;						// Public key of the contact (this key is used to encrypt messages)
 

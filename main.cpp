@@ -261,5 +261,8 @@ main(int argc, char *argv[])
 
     std::cout << encrypted.toStdString();*/
 
+
+
+
     return oApplication.exec();
 	} // main()

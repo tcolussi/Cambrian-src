@@ -5,13 +5,15 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #ifdef COMPILE_WITH_CHATLOG_HTML
+//#define COMPILE_WITH_CSS_FROM_RESOURCE
+//#define INPUT_TEXT_WITH_HTML_FORM			// Use an HTML form to input the text rather than using a widget
 
 #define d_cEventsMaxDefault		500	// By default, display the first 500 events
 #define d_nEventsMultiplyBy		3	// Triple the number of events (this gives the illusion of doubling the number of events to fetch)
 
 #define COLOR_THEME_BLACK				// Use a black background instead of a white background
 //#define BIG_SPACING_BETWEEN_MESSAGES		// Use big spacing between lines
-//#define INPUT_TEXT_WITH_HTML_FORM			// Use an HTML form to input the text rather than using a widget
+
 
 OJapiChatLog::OJapiChatLog(WChatLogHtml * pwChatLog)
 	{
@@ -76,10 +78,32 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 	connect(m_poFrame, SIGNAL(contentsSizeChanged(QSize)),this, SLOT(SL_SizeChanged(QSize)));
 
 	CBin binCSS;	// External CSS
-	#ifdef INPUT_TEXT_WITH_HTML_FORM
+	#ifdef COMPILE_WITH_CSS_FROM_RESOURCE
 	QString sFileNameCSS = QCoreApplication::applicationDirPath() + "/ChatLog.css";
 	binCSS.BinFileReadE(sFileNameCSS);
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "Opening file '$Q':\n'$B'\n", &sFileNameCSS, &binCSS);
+	if (binCSS.FIsEmptyBinary())
+		binCSS.BinFileReadE(":/css/ChatLog.css");
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "CSS used:\n'$B'\n", &binCSS);
+	#endif
+	CBin binFooter;
+	QString sFileNameFooter = QCoreApplication::applicationDirPath() + "/Footer.htm";
+	binFooter.BinFileReadE(sFileNameFooter);
+	#ifdef INPUT_TEXT_WITH_HTML_FORM
+	if (binFooter.FIsEmptyBinary())
+		binFooter.BinAppendText(
+		// Create a footer at the bottom
+		"<div id='footer'>"
+
+			// Use an HTML form for the user to type the message
+			"<div id='fd'>"
+			"<form id='-f-' onSubmit='sendMessage(document.getElementById(\"-i-\"));'>"
+				//"<textarea id='-i-' class='' spellcheck='true' style='overflow-y: hidden; height: 38px;'></textarea>"
+				"<input id='-i-' spellcheck='true'></input>"
+			"</form>"
+			"</div>"
+		"</div>"
+		);
 	#endif
 
 	CBin binHtml;
@@ -87,6 +111,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 	binHtml.BinAppendText_VE(
 		"<html><head><style>"
 
+		#ifndef COMPILE_WITH_CSS_FROM_RESOURCE
 		// Style for each division
 		//".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 3rem; }"
 		#ifdef BIG_SPACING_BETWEEN_MESSAGES
@@ -219,6 +244,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		"#fd { position: absolute; bottom: 0; left: 52; right: 4px; }"
 		"#-f- { height: 41px; }"
 		"#-i- { overflow-y: hidden; height: 38px; width: 500; }"
+		#endif // COMPILE_WITH_CSS_FROM_RESOURCE
 
 		"\n$B\n"		// Include the external CSS
 		"</style>"
@@ -250,12 +276,14 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 	IEvent ** ppEventFirst = arraypEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	_BinAppendHtmlForEvents(IOUT &binHtml, ppEventFirst, ppEventStop);
 
-	binHtml.BinAppendText(
+	binHtml.BinAppendText_VE(
 			"</div>"
 
 			// Division for the composing message
 			"<div id='-c-' style='font-size: 13px'/></div>"
 
+			"$B"
+			/*
 			#ifdef INPUT_TEXT_WITH_HTML_FORM
 			// Create a footer at the bottom
 			"<div id='footer'>"
@@ -269,8 +297,9 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 				"</div>"
 			"</div>"
 			#endif
+			*/
 
-		"</body></html>");
+		"</body></html>", &binFooter);
 
 	setContent(binHtml.ToQByteArrayShared(), "text/html; charset=utf-8");	// Should work, but produces artifacts for special HTML characters
 //	_ScrollToDisplayLastEvent();		// This line is necessary in case the setContent() is synchronous

@@ -38,6 +38,7 @@ ITreeItemChatLogEvents::XcpApi_Invoke(PSZUC pszApiName, PSZUC pszXmlApiParameter
 	Assert(pszApiName[0] != '\0');
 	//MessageLog_AppendTextFormatSev(eSeverityComment, "XcpApi_Invoke($s, $s)\n", pszApiName, pszXmlApiParameters);
 	CBinXcpStanza binXcpStanza;
+	binXcpStanza.SetFlags_NoEncryption();
 	binXcpStanza.BinAppendText_VE((pszXmlApiParameters == NULL) ? "<" d_szXop_ApiCall_s "/>" : "<" d_szXop_ApiCall_s ">$s</" d_szXop_ApiCall ">", pszApiName, pszXmlApiParameters);
 	if (EGetRuntimeClass() == RTI(TContact))
 		binXcpStanza.XospSendStanzaToContactAndEmpty((TContact *)this);
@@ -254,7 +255,7 @@ CBinXcpStanza::CBinXcpStanza()
 	PbbAllocateMemoryAndEmpty_YZ(300);	// Pre-allocate 300 bytes, which should be enough for a small stanza
 	Assert(m_paData != NULL);
 	#ifdef DEBUG_XCP_TASKS
-	m_cbStanzaThresholdBeforeSplittingIntoTasks = 200; // 80;	// Use a low threshold to we use tasks often
+    m_cbStanzaThresholdBeforeSplittingIntoTasks = 7000; // 80;	// Use a low threshold to we use tasks often
 	#endif
 	}
 
@@ -399,12 +400,19 @@ CBinXcpStanza::XospSendStanzaToContactAndEmpty(TContact * pContact) CONST_MCC
 
 	MessageLog_AppendTextFormatCo(d_coBlue, "XospSendStanzaToContactAndEmpty($s) $I bytes:\n{Bm}\n", pContact->ChatLog_PszGetNickname(), m_paData->cbData, this);
 
-	// Encrypt the data
-	ICrypto * pCrypto = pContact->PGetCrytoForEncrypting_YZ();
-	if (pCrypto != NULL)
+	if ((m_uFlags & F_kfNoEncryption) == 0)
 		{
-		(void)pCrypto->EEncrypt(INOUT_F_UNCH_S this, pContact);
-		MessageLog_AppendTextFormatCo(d_coPurple, "{B|}\n", this);
+		// Encrypt the data
+		ICrypto * pCrypto = pContact->PGetCrytoForEncrypting_YZ();
+		if (pCrypto != NULL)
+			{
+			(void)pCrypto->EEncrypt(INOUT_F_UNCH_S this, pContact);
+			MessageLog_AppendTextFormatCo(d_coPurple, "{B|}\n", this);
+			}
+		}
+	else
+		{
+		MessageLog_AppendTextFormatCo(d_coBlue, "\t Skipping encryption because of F_kfNoEncryption\n");
 		}
 
 	SHashSha1 hashSignature;

@@ -477,12 +477,18 @@ OJapiContact::name()
 
 QString OJapiContact::nymId()
 	{
-	return m_pContact->m_strNymID;
+	CCryptoOpenTransactions * pCrypto = m_pContact->PGetCryptoOpenTransactions();
+	if (pCrypto != NULL)
+		return pCrypto->m_strNymID;
+	return c_sEmpty;
 	}
 
 QString OJapiContact::publicKey()
 	{
-	return m_pContact->m_strKeyPublic;
+	CCryptoOpenTransactions * pCrypto = m_pContact->PGetCryptoOpenTransactions();
+	if (pCrypto != NULL)
+		return pCrypto->m_strKeyPublic;
+	return c_sEmpty;
 	}
 
 bool OJapiContact::recommend()

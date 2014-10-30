@@ -22,8 +22,10 @@ ICrypto::S_PaAllocateCrypto_YZ(ECryptoClass eCryptoClass)
 	case eCryptoClass_EVP_aes_256_gcm:
 		return new CCryptoAes256gcm;
 	#endif
+	#ifdef COMPILE_WITH_ICRYPTO_OPEN_TRANSACTIONS
 	case eCryptoClass_OpenTransactions:
 		return new CCryptoOpenTransactions;
+	#endif
 	default:
 		return NULL;
 		}
@@ -305,32 +307,45 @@ CCryptoOpenTransactions::~CCryptoOpenTransactions()
 ECryptoError
 CCryptoOpenTransactions::EEncrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
-    QString receiverNymId = pContact->m_strNymID;
+    #if 1 // defined(pOTX)
+	QString receiverNymId = m_strNymID;
     QString signerNymId = pContact->PGetProfile()->m_strNymID;
+
+    if (receiverNymId.isEmpty()|| signerNymId.isEmpty())
+       return eCryptoError_zSuccess;
+
     QString qDataStanza = pbin->ToQString();
     QString strEncryptedText = pOTX->signAndEncrypt(signerNymId,receiverNymId,qDataStanza);
     QByteArray qbrEncryptedText= (QByteArray) strEncryptedText.toStdString().c_str();
     pbin->BinInitFromByteArray(qbrEncryptedText);
     MessageLog_AppendTextFormatCo(d_coRed, "OT Encrypt: $B\n", pbin);
+	#endif
     return eCryptoError_zSuccess;
     }
 
 ECryptoError
 CCryptoOpenTransactions::EDecrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
-    QString receiverNymId = pContact->m_strNymID;
-    QString signerNymId = pContact->PGetProfile()->m_strNymID;
+    #if 1 //defined(pOTX)
+    QString receiverNymId = pContact->PGetProfile()->m_strNymID;
+    QString signerNymId = m_strNymID;
     QString qDataStanza = pbin->ToQString();
     QString decryptedText;
+    if (receiverNymId.isEmpty()|| signerNymId.isEmpty())
+       return eCryptoError_zSuccess;
+MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypt qDataStanza: \n$Q\n", &qDataStanza);
     bool decryptSuccessful=pOTX->decryptAndVerify(signerNymId,receiverNymId,qDataStanza,decryptedText);
     QByteArray qbrDecryptedText= (QByteArray) decryptedText.toStdString().c_str();
     pbin->BinInitFromByteArray(qbrDecryptedText);
-    MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypt QString: $Q\n", &decryptedText);
-            MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypt: $B\n", pbin);
+
+    MessageLog_AppendTextFormatSev(eSeverityWarningToErrorLog, "OT Decrypted: \n$B\n", pbin);
     if (decryptSuccessful)
     return eCryptoError_zSuccess;
     else
     return eCryptoError_Failure;
+	#else
+	return eCryptoError_zSuccess;
+	#endif
     }
 
 void
@@ -362,6 +377,18 @@ TContact::PGetCrytoForEncrypting_YZ() CONST_MCC
 		if (pCrypto->m_uFlags & ICrypto::F_kfEncrypt)
 			return pCrypto;
 		pCrypto = pCrypto->m_pNext;
+		}
+	return NULL;
+	}
+
+CCryptoOpenTransactions *
+TContact::PGetCryptoOpenTransactions() const
+	{
+	ICrypto * pCrypto = m_listaCrypto.m_plistCrypto;
+	while (pCrypto != NULL)
+		{
+		if (pCrypto->EGetCryptoClass() == eCryptoClass_OpenTransactions)
+			return (CCryptoOpenTransactions *)pCrypto;
 		}
 	return NULL;
 	}
