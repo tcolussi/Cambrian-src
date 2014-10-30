@@ -3,4 +3,4 @@
 	url = https://github.com/sopro-dist/sopro-dist-root.git
 [submodule "sopro-cpp-dependencies"]
 	path = sopro-cpp-dependencies
-	url = https://github.com/sopro-dist/sopro-cpp-dependencies.git
+	url = https://github.com/SocietyPro/sopro-cpp-dependencies.git
