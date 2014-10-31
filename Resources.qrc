@@ -199,7 +199,14 @@
     <qresource prefix="/backgrounds">
         <file alias="Space">Backgrounds/Space.jpg</file>
     </qresource>
-    <qresource prefix="/css">
-        <file>ChatLog.css</file>
+	<qresource prefix="/">
+		<file>ChatLog/ChatLog.css</file>
+		<file>ChatLog/footer.htm</file>
+        <file>ChatLog/fonts/BurlingamePro-CondBlack.otf</file>
+        <file>ChatLog/fonts/BurlingamePro-Light.otf</file>
+        <file>ChatLog/images/ballot.png</file>
+        <file>ChatLog/images/bitcoins.png</file>
+        <file>ChatLog/images/peers.png</file>
+        <file>ChatLog/images/upload.png</file>
     </qresource>
 </RCC>

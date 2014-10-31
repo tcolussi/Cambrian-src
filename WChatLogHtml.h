@@ -11,7 +11,7 @@ class OJapiChatLog : public QObject	// There is no need to inherit from class OJ
 {
 	Q_OBJECT
 protected:
-	WChatLogHtml * m_pwChatLog;
+	WChatLogHtml * m_pwChatLog_NZ;
 
 public:
 	OJapiChatLog(WChatLogHtml * pwChatLog);
@@ -20,13 +20,16 @@ public slots:
 	void pin();
 	void typingStarted();
 	void sendMessage(const QString & sMessage);
+
+protected:
+	WLayoutChatLog * PwGetLayout_NZ() const;
 };
 
 class WChatLogHtml : public QWebView
 {
 	Q_OBJECT
 protected:
-	ITreeItemChatLogEvents * m_pContactOrGroup;
+	ITreeItemChatLogEvents * m_pContactOrGroup_NZ;	// Parent contact or group 'owning' the events to be displayed
 	CArrayPtrContacts m_arraypContactsComposing;	// All the users currently composing text (typically there is only one, however for group chat, there may be several)
 	QWebFrame * m_poFrame;
 	QWebElement m_oElementMessages;			// Reference of the HTML node to append the HTML messages

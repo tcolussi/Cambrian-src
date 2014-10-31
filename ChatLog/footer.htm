@@ -1,0 +1,17 @@
+<div id="footer">
+  <div id="dropdown"> <a class="upload" href="">Upload a File</a> <a class="bitcoins" href="">Send Bitcoins</a> <a class="peers" href="">Add Peers</a> <a class="ballot" href="">Send a Ballot</a> </div>
+  <form id="-f-" onsubmit="sendMessage(document.getElementById("-i-"));">
+  <button id="clickme"></button>
+    <input id="-i-" spellcheck="true" placeholder="Send a message"/>
+  </form>
+</div>
+<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script>
+$( "#clickme" ).click(function() {
+  $( "#dropdown" ).toggle( "slow", function() {
+    // Animation complete.
+  });
+});
+
+
+</script>

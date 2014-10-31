@@ -75,8 +75,10 @@ CTab *
 WTabs::TabAddP(PSZAC pszName, ITreeItem * pTreeItem)
 	{
 	CTab * paTab = new CTab((PSZUC)pszName, pTreeItem);
+	/*
 	if (m_pdTabSelected == NULL)
 		m_pdTabSelected = paTab;
+	*/
 	m_arraypaTabs.Add(PA_CHILD paTab);
 	updateGeometry();
 	_Redraw();

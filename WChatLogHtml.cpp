@@ -5,8 +5,8 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #ifdef COMPILE_WITH_CHATLOG_HTML
-//#define COMPILE_WITH_CSS_FROM_RESOURCE
-//#define INPUT_TEXT_WITH_HTML_FORM			// Use an HTML form to input the text rather than using a widget
+#define COMPILE_WITH_EXTERNAL_CSS
+#define INPUT_TEXT_WITH_HTML_FORM			// Use an HTML form to input the text rather than using a widget
 
 #define d_cEventsMaxDefault		500	// By default, display the first 500 events
 #define d_nEventsMultiplyBy		3	// Triple the number of events (this gives the illusion of doubling the number of events to fetch)
@@ -17,7 +17,16 @@
 
 OJapiChatLog::OJapiChatLog(WChatLogHtml * pwChatLog)
 	{
-	m_pwChatLog = pwChatLog;
+	Assert(pwChatLog != NULL);
+	m_pwChatLog_NZ = pwChatLog;
+	}
+
+//	Return the layout hosting the Chat Log.
+WLayoutChatLog *
+OJapiChatLog::PwGetLayout_NZ() const
+	{
+	Assert(m_pwChatLog_NZ->m_pContactOrGroup_NZ->ChatLog_PwGetLayout_YZ() != NULL);	// The there should be a parent layout in this context
+	return m_pwChatLog_NZ->m_pContactOrGroup_NZ->ChatLog_PwGetLayout_NZ();	// For safety, use the _NZ() version to make sure we never return a NULL pointer.
 	}
 
 //	pin(), slot
@@ -27,7 +36,7 @@ OJapiChatLog::pin()
 	{
 	MessageLog_AppendTextFormatSev(eSeverityNoise, "OJapiChatLog::pin()\n");
     #ifdef COMPILE_WITH_TOOLBAR
-    Toolbar_TabAddAndSelect(m_pwChatLog->m_pContactOrGroup);
+	Toolbar_TabAddAndSelect(m_pwChatLog_NZ->m_pContactOrGroup_NZ);
     #endif
     }
 
@@ -37,7 +46,7 @@ OJapiChatLog::pin()
 void
 OJapiChatLog::typingStarted()
 	{
-
+	PwGetLayout_NZ()->ChatStateComposingTimerStart();
 	}
 
 //	sendMessage(), slot
@@ -50,12 +59,9 @@ OJapiChatLog::sendMessage(const QString & sMessage)
 	if (!strText.FIsEmptyString())
 		{
 		// This code was copied from WChatInput::event()
-		ITreeItemChatLogEvents * pContactOrGroup = m_pwChatLog->m_pContactOrGroup;
+		ITreeItemChatLogEvents * pContactOrGroup = m_pwChatLog_NZ->m_pContactOrGroup_NZ;
 		EUserCommand eUserCommand = pContactOrGroup->Xmpp_EParseUserCommandAndSendEvents(IN_MOD_INV strText);
-		WLayoutChatLog * pwLayoutChatLog = pContactOrGroup->ChatLog_PwGetLayout_YZ();
-		Report(pwLayoutChatLog != NULL);	// This pointer should be valid
-		if (pwLayoutChatLog != NULL)
-			pwLayoutChatLog->m_pwChatInput->ChatStateComposingCancelTimer(eUserCommand);
+		PwGetLayout_NZ()->ChatStateComposingTimerCancel(eUserCommand);
 		}
 	}
 
@@ -63,7 +69,7 @@ OJapiChatLog::sendMessage(const QString & sMessage)
 WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContactOrGroup) : QWebView(pwParent), m_oJapi(this)
 	{
 	Assert(pContactOrGroup != NULL);
-	m_pContactOrGroup = pContactOrGroup;
+	m_pContactOrGroup_NZ = pContactOrGroup;
 	m_tsMidnightNext = d_ts_zNA;
 	m_hSenderPreviousEvent = d_zNA;	// No previous sender yet
 	m_cEventsMax = d_cEventsMaxDefault;
@@ -77,17 +83,20 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 //	connect(m_poFrame, SIGNAL(initialLayoutCompleted()),this, SLOT(SL_ScrollToDisplayLastEvent()));
 	connect(m_poFrame, SIGNAL(contentsSizeChanged(QSize)),this, SLOT(SL_SizeChanged(QSize)));
 
+	QString sPathExe = QCoreApplication::applicationDirPath();	// Path where the .exe is located
+
 	CBin binCSS;	// External CSS
-	#ifdef COMPILE_WITH_CSS_FROM_RESOURCE
-	QString sFileNameCSS = QCoreApplication::applicationDirPath() + "/ChatLog.css";
+	#ifdef COMPILE_WITH_EXTERNAL_CSS
+	QString sFileNameCSS = sPathExe + "/ChatLog.css";
 	binCSS.BinFileReadE(sFileNameCSS);
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "Opening file '$Q':\n'$B'\n", &sFileNameCSS, &binCSS);
-	if (binCSS.FIsEmptyBinary())
-		binCSS.BinFileReadE(":/css/ChatLog.css");
-	MessageLog_AppendTextFormatSev(eSeverityNoise, "CSS used:\n'$B'\n", &binCSS);
+	MessageLog_AppendTextFormatSev(eSeverityNoise, "Opening file '$Q' of $I bytes:\n$B\n", &sFileNameCSS, binCSS.CbGetData(), &binCSS);
+	const BOOL fIsCssExternalEmpty = binCSS.FIsEmptyBinary();
+	if (fIsCssExternalEmpty)
+		binCSS.BinFileReadE(":/ChatLog/ChatLog.css");
+	MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "CSS used ($I bytes):\n$B\n", binCSS.CbGetData(), &binCSS);
 	#endif
 	CBin binFooter;
-	QString sFileNameFooter = QCoreApplication::applicationDirPath() + "/Footer.htm";
+	QString sFileNameFooter = sPathExe + "/Footer.htm";
 	binFooter.BinFileReadE(sFileNameFooter);
 	#ifdef INPUT_TEXT_WITH_HTML_FORM
 	if (binFooter.FIsEmptyBinary())
@@ -98,8 +107,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			// Use an HTML form for the user to type the message
 			"<div id='fd'>"
 			"<form id='-f-' onSubmit='sendMessage(document.getElementById(\"-i-\"));'>"
-				//"<textarea id='-i-' class='' spellcheck='true' style='overflow-y: hidden; height: 38px;'></textarea>"
-				"<input id='-i-' spellcheck='true'></input>"
+				"<input id='-i-' onKeyPress='onKeyPressed(event)' spellcheck='true'></input>"
 			"</form>"
 			"</div>"
 		"</div>"
@@ -111,7 +119,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 	binHtml.BinAppendText_VE(
 		"<html><head><style>"
 
-		#ifndef COMPILE_WITH_CSS_FROM_RESOURCE
+		#ifndef COMPILE_WITH_EXTERNAL_CSS
 		// Style for each division
 		//".d { min-height: 1rem; line-height: 22px; padding: .25rem .1rem .1rem 3rem; }"
 		#ifdef BIG_SPACING_BETWEEN_MESSAGES
@@ -232,6 +240,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		#endif
 
 		".i0 { background-image: url('qrc:/ico/Avatar1') }"
+		//".i0 { background-image: url('test.png') }"
 		".i1 { background-image: url('qrc:/ico/Avatar2') }"
 
 		"#body {"
@@ -240,15 +249,23 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			"color: white; background-color: black; background-image: url('qrc:/backgrounds/Space'); background-attachment: fixed;"
 			#endif
 			 "}"
-		"#footer { position: fixed; bottom: 0; height=100; }"
+		"#footer { position: fixed; bottom: 0; height:100; }"
 		"#fd { position: absolute; bottom: 0; left: 52; right: 4px; }"
 		"#-f- { height: 41px; }"
 		"#-i- { overflow-y: hidden; height: 38px; width: 500; }"
-		#endif // COMPILE_WITH_CSS_FROM_RESOURCE
+		#endif // COMPILE_WITH_EXTERNAL_CSS
 
 		"\n$B\n"		// Include the external CSS
 		"</style>"
 		"<script>"
+		"function onKeyPressed(e)"	// Function to filter what the user type
+			"{"
+			#if 0
+			"var c = e.which;"		// Fetch the character code
+			"alert(c)"
+			#endif
+			"SocietyPro.typingStarted();"	// Request SocietyPro to send a notification indicating the user started typing
+			"}"
 		"function sendMessage(o)"
 			"{"
 			"SocietyPro.sendMessage(o.value);"	// Request SocietyPro to send the message
@@ -256,7 +273,8 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 			"}"
 		"</script>"
 		"</head>"
-		"<body id='body'>" // Close the <body>
+		//"<body id='body' style='background-image:url(images/ballot.png)'>"
+		"<body id='body'>"
 
 			// Draw the pin at the top right of the page
 			"<img src='qrc:/ico/Pin' style='position: fixed; top: 7; right: 8; z-index:1' title='Pin to tab' onClick='SocietyPro.pin();' />"
@@ -271,7 +289,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 
 	//	Append the events
 	CArrayPtrEvents arraypEvents;
-	m_pContactOrGroup->Vault_GetEventsForChatLog(OUT &arraypEvents);
+	m_pContactOrGroup_NZ->Vault_GetEventsForChatLog(OUT &arraypEvents);
 	IEvent ** ppEventStop;
 	IEvent ** ppEventFirst = arraypEvents.PrgpGetEventsStop(OUT &ppEventStop);
 	_BinAppendHtmlForEvents(IOUT &binHtml, ppEventFirst, ppEventStop);
@@ -301,7 +319,12 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 
 		"</body></html>", &binFooter);
 
-	setContent(binHtml.ToQByteArrayShared(), "text/html; charset=utf-8");	// Should work, but produces artifacts for special HTML characters
+	QUrl urlBase = fIsCssExternalEmpty ? QUrl("qrc:/ChatLog/") : QUrl::fromLocalFile(sPathExe + "/");
+	#if 1
+	QString sUrlBase = urlBase.toString();
+	MessageLog_AppendTextFormatSev(eSeverityComment, "URL Base: $Q\n", &sUrlBase);
+	#endif
+	setContent(binHtml.ToQByteArrayShared(), "text/html; charset=utf-8", urlBase);	// Should work, but produces artifacts for special HTML characters
 //	_ScrollToDisplayLastEvent();		// This line is necessary in case the setContent() is synchronous
 
 	m_oElementMessages = m_poFrame->findFirstElement("#-m-");
@@ -509,7 +532,7 @@ WChatLogHtml::ChatLog_EventsRepopulate()
 	{
 	m_oElementMessages.setPlainText(c_sEmpty);	// Clear the previous messages
 	CArrayPtrEvents arraypEvents;
-	m_pContactOrGroup->Vault_GetEventsForChatLog(OUT &arraypEvents);
+	m_pContactOrGroup_NZ->Vault_GetEventsForChatLog(OUT &arraypEvents);
 	ChatLog_EventsAppend(IN arraypEvents);
 	}
 
@@ -588,13 +611,13 @@ WChatLogHtml::ChatLog_ChatStateTextUpdate(INOUT TContact * pContact, EChatState 
 		{
 		if (!m_arraypContactsComposing.AddUniqueF(pContact))
 			return;
-		pContact->TreeItemContact_UpdateIconComposingStarted(m_pContactOrGroup);
+		pContact->TreeItemContact_UpdateIconComposingStarted(m_pContactOrGroup_NZ);
 		}
 	else
 		{
 		if (m_arraypContactsComposing.RemoveElementI(pContact) < 0)
 			return;
-		pContact->TreeItemContact_UpdateIconComposingStopped(m_pContactOrGroup);
+		pContact->TreeItemContact_UpdateIconComposingStopped(m_pContactOrGroup_NZ);
 		}
 	if (eChatState != eChatState_PausedNoUpdateChatLog)
 		ChatLog_ChatStateTextRefresh();
@@ -605,7 +628,7 @@ bool
 WChatLogHtml::event(QEvent * pEvent)
 	{
 	if (pEvent->type() == QEvent::FocusIn)
-		m_pContactOrGroup->TreeItem_IconUpdateOnMessagesRead();
+		m_pContactOrGroup_NZ->TreeItem_IconUpdateOnMessagesRead();
 	return QWebView::event(pEvent);
 	}
 
@@ -642,7 +665,7 @@ WChatLogHtml::SL_HyperlinkMouseHovering(const QUrl & url)
 			TIMESTAMP tsEventID;
 			PSZUC pszAction = Timestamp_PchDecodeFromBase64Url(OUT &tsEventID, pszUrl + 2);
 			Assert(pszAction[0] == d_chSchemeCambrianActionSeparator);
-			IEvent * pEvent = m_pContactOrGroup->Vault_PFindEventByID(tsEventID);
+			IEvent * pEvent = m_pContactOrGroup_NZ->Vault_PFindEventByID(tsEventID);
 			if (pEvent != NULL)
 				pEvent->HyperlinkGetTooltipText(pszAction + 1, IOUT &strTip);
 			else
@@ -668,7 +691,7 @@ WChatLogHtml::SL_HyperlinkClicked(const QUrl & url)
 			TIMESTAMP tsEventID;
 			PSZUC pszAction = Timestamp_PchDecodeFromBase64Url(OUT &tsEventID, pszUrl + 2);
 			Assert(pszAction[0] == d_chSchemeCambrianActionSeparator);
-			IEvent * pEvent = m_pContactOrGroup->Vault_PFindEventByID(tsEventID);
+			IEvent * pEvent = m_pContactOrGroup_NZ->Vault_PFindEventByID(tsEventID);
 			if (pEvent != NULL)
 				{
 				EGui eGui = pEvent->HyperlinkClickedE(pszAction + 1);

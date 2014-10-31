@@ -307,7 +307,7 @@ CCryptoOpenTransactions::~CCryptoOpenTransactions()
 ECryptoError
 CCryptoOpenTransactions::EEncrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
-    #if 1 // defined(pOTX)
+	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 	QString receiverNymId = m_strNymID;
     QString signerNymId = pContact->PGetProfile()->m_strNymID;
 
@@ -326,7 +326,7 @@ CCryptoOpenTransactions::EEncrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContac
 ECryptoError
 CCryptoOpenTransactions::EDecrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
-    #if 1 //defined(pOTX)
+	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
     QString receiverNymId = pContact->PGetProfile()->m_strNymID;
     QString signerNymId = m_strNymID;
     QString qDataStanza = pbin->ToQString();
