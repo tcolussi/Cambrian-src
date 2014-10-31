@@ -5,8 +5,8 @@
 	#include "PreCompiledHeaders.h"
 #endif
 #ifdef COMPILE_WITH_CHATLOG_HTML
-#define COMPILE_WITH_EXTERNAL_CSS
-#define INPUT_TEXT_WITH_HTML_FORM			// Use an HTML form to input the text rather than using a widget
+//#define COMPILE_WITH_EXTERNAL_CSS
+//#define INPUT_TEXT_WITH_HTML_FORM			// Use an HTML form to input the text rather than using a widget
 
 #define d_cEventsMaxDefault		500	// By default, display the first 500 events
 #define d_nEventsMultiplyBy		3	// Triple the number of events (this gives the illusion of doubling the number of events to fetch)
@@ -319,10 +319,14 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 
 		"</body></html>", &binFooter);
 
+	#ifdef COMPILE_WITH_EXTERNAL_CSS
 	QUrl urlBase = fIsCssExternalEmpty ? QUrl("qrc:/ChatLog/") : QUrl::fromLocalFile(sPathExe + "/");
 	#if 1
 	QString sUrlBase = urlBase.toString();
 	MessageLog_AppendTextFormatSev(eSeverityComment, "URL Base: $Q\n", &sUrlBase);
+	#endif
+	#else
+	QUrl urlBase;
 	#endif
 	setContent(binHtml.ToQByteArrayShared(), "text/html; charset=utf-8", urlBase);	// Should work, but produces artifacts for special HTML characters
 //	_ScrollToDisplayLastEvent();		// This line is necessary in case the setContent() is synchronous
