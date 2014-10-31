@@ -307,6 +307,9 @@ CCryptoOpenTransactions::~CCryptoOpenTransactions()
 ECryptoError
 CCryptoOpenTransactions::EEncrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
+	Assert(pbin != NULL);
+	Assert(pbin->CbGetData() > 0);
+	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
 	QString receiverNymId = m_strNymID;
     QString signerNymId = pContact->PGetProfile()->m_strNymID;
@@ -326,6 +329,9 @@ CCryptoOpenTransactions::EEncrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContac
 ECryptoError
 CCryptoOpenTransactions::EDecrypt(INOUT_F_UNCH_S CBin * pbin, TContact * pContact)
     {
+	Assert(pbin != NULL);
+	Assert(pbin->CbGetData() > 0);
+	Assert(pContact->EGetRuntimeClass() == RTI(TContact));
 	#ifdef COMPILE_WITH_OPEN_TRANSACTIONS
     QString receiverNymId = pContact->PGetProfile()->m_strNymID;
     QString signerNymId = m_strNymID;

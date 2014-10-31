@@ -96,8 +96,13 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 	MessageLog_AppendTextFormatSev(eSeverityInfoTextBlack, "CSS used ($I bytes):\n$B\n", binCSS.CbGetData(), &binCSS);
 	#endif
 	CBin binFooter;
-	QString sFileNameFooter = sPathExe + "/Footer.htm";
+	#ifdef INPUT_TEXT_WITH_HTML_FORM
+	QString sFileNameFooter = sPathExe + "/footer.htm";
 	binFooter.BinFileReadE(sFileNameFooter);
+	if (binFooter.FIsEmptyBinary())
+		binFooter.BinFileReadE(":/ChatLog/footer.htm");
+	#endif
+	/*
 	#ifdef INPUT_TEXT_WITH_HTML_FORM
 	if (binFooter.FIsEmptyBinary())
 		binFooter.BinAppendText(
@@ -113,6 +118,7 @@ WChatLogHtml::WChatLogHtml(QWidget * pwParent, ITreeItemChatLogEvents * pContact
 		"</div>"
 		);
 	#endif
+	*/
 
 	CBin binHtml;
 	binHtml.PbbAllocateMemoryAndEmpty_YZ(8*1024);	// Pre-allocate 8 KiB
