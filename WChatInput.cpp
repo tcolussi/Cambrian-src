@@ -9,15 +9,11 @@
 	#include "PreCompiledHeaders.h"
 #endif
 
-#define d_ttiChatState				1000	// Create a 1-second timer tick interval (tti)
-#define d_ttcChatStateEventPaused	10		// Consider the user paused after 10 timer ticks (10 seconds)
-
 WChatInput::WChatInput(WLayoutChatLog * pwLayoutChatLog) : WEditTextArea(pwLayoutChatLog)
 	{
 	Assert(pwLayoutChatLog != NULL);	// In the future, this may be NULL
 	m_pwLayoutChatLog = pwLayoutChatLog;
 	ChatInput_UpdateWatermarkText();
-	m_tidChatStateComposing = d_zNA;
 	m_pEventEdit = NULL;
 	/*
 	setMinimumSize(10, 10);
@@ -49,19 +45,6 @@ WChatInput::EditEventText(CEventMessageTextSent * pEventEdit)
 		}
 	}
 
-void
-WChatInput::ChatStateComposingCancelTimer(EUserCommand eUserCommand)
-	{
-	if (m_tidChatStateComposing != d_zNA)
-		{
-		killTimer(m_tidChatStateComposing);
-		m_tidChatStateComposing = d_zNA;
-		}
-	m_ttcBeforeChatStatePaused = 0;
-	if (eUserCommand != eUserCommand_zMessageTextSent)
-		m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_Paused);	// Notify the remote contact the user stopped typing
-	}
-
 //	WChatInput::QWidget::minimumSizeHint()
 QSize
 WChatInput::minimumSizeHint() const
@@ -90,15 +73,7 @@ WChatInput::event(QEvent * pEvent)
 		const Qt::Key eKey = (Qt::Key)pEventKey->key();
 		//MessageLog_AppendTextFormatSev(eSeverityNoise, "WChatInput::event(QEvent::KeyPress, key=0x$p, modifiers=$x)\n", eKey, pEventKey->modifiers());
 		if ((eKey & d_kmKeyboardSpecialKeys) == 0)
-			{
-			// The user typed something other than a special key
-			m_ttcBeforeChatStatePaused = d_ttcChatStateEventPaused;
-			if (m_tidChatStateComposing == d_zNA)
-				{
-				m_tidChatStateComposing = startTimer(d_ttiChatState);	// Create a timer to determine when the user 'stopped' typing
-				m_pwLayoutChatLog->Socket_WriteXmlChatState(eChatState_zComposing);
-				}
-			}
+			m_pwLayoutChatLog->ChatStateComposingTimerStart();	// The user typed something other than a special key, therefore assume he/she started typing
 		if ((pEventKey->modifiers() & ~Qt::KeypadModifier) == Qt::NoModifier)
 			{
 			ITreeItemChatLogEvents * pContactOrGroup = m_pwLayoutChatLog->PGetContactOrGroup_NZ();
@@ -119,7 +94,7 @@ WChatInput::event(QEvent * pEvent)
 						m_pEventEdit->EventUpdateMessageText(strText, INOUT m_pwLayoutChatLog);
 						m_pEventEdit = NULL;
 						}
-					ChatStateComposingCancelTimer(eUserCommand);	// After sending a message, cancel (reset) the timer to, so a new 'composing' notification will be sent when the user starts typing again. BTW, there is no need to send a 'pause' command since receiving a text message automatically implies a pause.
+					m_pwLayoutChatLog->ChatStateComposingTimerCancel(eUserCommand);	// After sending a message, cancel (reset) the timer to, so a new 'composing' notification will be sent when the user starts typing again. BTW, there is no need to send a 'pause' command since receiving a text message automatically implies a pause.
 					} // if
 
 				if (eUserCommand != eUserCommand_Error)
@@ -161,21 +136,6 @@ WChatInput::event(QEvent * pEvent)
 		}
 	return WEditTextArea::event(pEvent);
 	} // event()
-
-
-//	WChatInput::QObject::timerEvent()
-void
-WChatInput::timerEvent(QTimerEvent * pTimerEvent)
-	{
-//	MessageLog_AppendTextFormatSev(eSeverityNoise, "WChatInput::timerEvent(id=$i)\n", e->timerId());
-	if (pTimerEvent->timerId() == m_tidChatStateComposing)
-		{
-		Assert(m_tidChatStateComposing != d_zNA);
-		if (--m_ttcBeforeChatStatePaused <= 0)
-			ChatStateComposingCancelTimer(eUserCommand_ComposingStopped);	// If the user is idle for too long, then notify the remote contact he/she stopped typing
-		}
-	WEditTextArea::timerEvent(pTimerEvent);
-	} // timerEvent()
 
 bool
 WChatInput::canInsertFromMimeData(const QMimeData * poMimeDataSource) const

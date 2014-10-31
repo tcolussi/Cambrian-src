@@ -118,7 +118,6 @@ public:
 	void XmppRosterSubscriptionUpdate(PSZUC pszSubscription);
 	PSZUC XmppRoster_PszGetSubscription() const;
 	void XmppPresenceUpdateIcon(const CXmlNode * pXmlNodeStanzaPresence);
-	void Xmpp_WriteXmlChatState(EChatState eChatState) CONST_MCC;
 	CSocketXmpp * Xmpp_PGetSocketOnlyIfContactIsUnableToCommunicateViaXcp() const;
 	void XmppXcp_ProcessStanza(const CXmlNode * pXmlNodeXmppXcp);
 	void Xcp_ProcessStanzasAndUnserializeEvents(const CXmlNode * pXmlNodeXcpEvent);
