@@ -1,0 +1,1 @@
+This folder contains the HTML elements for the HTML Chat Log

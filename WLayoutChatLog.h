@@ -24,6 +24,8 @@ protected:
 	class WFindText * m_pwFindText;			// Widget to search text within the chat history.  Eventually this widget should be built-in to WChatLog
 	WButtonIconForToolbar * m_pwButtonSendBitcoin;
 	//WButtonIconForToolbar * m_pwButtonSendFile;
+	int m_tidChatStateComposing;						// Timer identifier for the 'chat state'
+	int m_ttcBeforeChatStatePaused;						// Number of timer ticks before considering the 'chat state' as paused (when the user stopped typing)
 
 public:
 	explicit WLayoutChatLog(ITreeItemChatLogEvents * pContactOrGroupParent);
@@ -40,8 +42,10 @@ public:
 	void WidgetFindText_Hide();
 	void WidgetContactInvitation_Show();
 
-	void Socket_WriteXmlChatState(EChatState eChatState) const;
-	void TreeItem_UpdateIconMessageRead();
+	//void Socket_WriteXmlChatState(EChatState eChatState) const;
+	void ChatStateComposingTimerStart();
+	void ChatStateComposingTimerCancel(EUserCommand eUserCommand);
+	virtual void timerEvent(QTimerEvent * pTimerEvent);	// From QObject
 
 //	virtual void paintEvent(QPaintEvent * pPaintEvent);
 	virtual void dragEnterEvent(QDragEnterEvent * pDragEnterEvent);

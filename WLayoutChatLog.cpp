@@ -15,6 +15,10 @@
 #include "WFindText.h"
 #include "DialogInvitations.h"
 
+#define d_ttiChatState				1000	// Create a 1-second timer tick interval (tti)
+#define d_ttcChatStateEventPaused	10		// Consider the user paused after 10 timer ticks (10 seconds)
+
+
 WLayoutChatLog *
 ITreeItemChatLogEvents::ChatLog_PwGetLayout_NZ() CONST_MCC
 	{
@@ -433,19 +437,53 @@ WLayoutChatLog::WidgetContactInvitation_Show()
 		Layout_NoticeAuxiliaryAdd(PA_DELETING new WNoticeContactInvite(m_pContactParent_YZ));
 	}
 
+/*
 void
 WLayoutChatLog::Socket_WriteXmlChatState(EChatState eChatState) const
 	{
 	m_pContactOrGroup_NZ->Xmpp_WriteXmlChatState(eChatState);
 	}
-
-/*
-void
-WLayoutChatLog::TreeItem_UpdateIconMessageRead()
-	{
-	PGetContactOrGroup_NZ()->TreeItem_IconUpdateOnMessagesRead();
-	}
 */
+
+//	Start a timer to determine when the user stopped typing
+void
+WLayoutChatLog::ChatStateComposingTimerStart()
+	{
+	m_ttcBeforeChatStatePaused = d_ttcChatStateEventPaused;
+	if (m_tidChatStateComposing == d_zNA)
+		{
+		m_tidChatStateComposing = startTimer(d_ttiChatState);	// Create a timer to determine when the user 'stopped' typing
+		m_pContactOrGroup_NZ->Xmpp_WriteXmlChatState(eChatState_zComposing);
+		}
+	}
+
+void
+WLayoutChatLog::ChatStateComposingTimerCancel(EUserCommand eUserCommand)
+	{
+	if (m_tidChatStateComposing != d_zNA)
+		{
+		killTimer(m_tidChatStateComposing);
+		m_tidChatStateComposing = d_zNA;
+		}
+	m_ttcBeforeChatStatePaused = 0;
+	if (eUserCommand != eUserCommand_zMessageTextSent)
+		m_pContactOrGroup_NZ->Xmpp_WriteXmlChatState(eChatState_Paused);	// Notify the remote contact the user stopped typing
+	}
+
+//	WLayoutChatLog::QObject::timerEvent()
+void
+WLayoutChatLog::timerEvent(QTimerEvent * pTimerEvent)
+	{
+//	MessageLog_AppendTextFormatSev(eSeverityNoise, "WChatInput::timerEvent(id=$i)\n", e->timerId());
+	if (pTimerEvent->timerId() == m_tidChatStateComposing)
+		{
+		Assert(m_tidChatStateComposing != d_zNA);
+		if (--m_ttcBeforeChatStatePaused <= 0)
+			ChatStateComposingTimerCancel(eUserCommand_ComposingStopped);	// If the user is idle for too long, then notify the remote contact he/she stopped typing
+		}
+	WLayout::timerEvent(pTimerEvent);
+	} // timerEvent()
+
 
 /*
 class WWidgetMessageInputLayout : public QWidget
@@ -470,6 +508,7 @@ WLayoutChatLog::WLayoutChatLog(ITreeItemChatLogEvents * pContactOrGroupParent)
 	m_pContactOrGroup_NZ = pContactOrGroupParent;
 	m_pContactParent_YZ = (pContactOrGroupParent->EGetRuntimeClass() == RTI(TContact)) ? (TContact *)pContactOrGroupParent : NULL;
 	m_pwFindText = NULL;
+	m_tidChatStateComposing = d_zNA;
 
 	#ifdef COMPILE_WITH_CHATLOG_HTML
 	m_pwChatLog_NZ = new WChatLogHtml(this, pContactOrGroupParent);
